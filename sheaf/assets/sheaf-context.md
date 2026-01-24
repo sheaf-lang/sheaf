@@ -268,7 +268,6 @@ nil              ; None
 (defn name [args] body)              ; Standard function
 (defn :jit name [args] body)         ; JIT-compiled (faster, limited control flow)
 (fn [args] body)                     ; Anonymous function (preferred)
-(lambda [args] body)                 ; Anonymous function (legacy alias for fn)
 ```
 
 **Binding & Scope**
