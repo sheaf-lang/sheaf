@@ -43,6 +43,12 @@ dev = [
     "ruff",
 ]
 
+examples = [
+    "streamlit",
+    "numpy",
+    "matplotlib",
+]
+
 [project.urls]
 Homepage = "https://github.com/yourusername/sheaf"
 Documentation = "https://sheaf.readthedocs.io"
