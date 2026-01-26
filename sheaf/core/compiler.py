@@ -11,9 +11,16 @@ import types
 
 from ..runtime import core_ops, jax_ops, math_ops, nn_ops, string_ops
 from .error_handler import format_error, set_source
-from .macro_engine import create_macro_engine
-from .parser import SheafRuntimeError, SheafSyntaxError, SheafVector, parse_full
 from .forms import special_forms
+from .macro_engine import create_macro_engine
+from .parser import (
+    SheafList,
+    SheafRuntimeError,
+    SheafSymbol,
+    SheafSyntaxError,
+    SheafVector,
+    parse_full,
+)
 from .tracer import sheaf_probe, shf_tracer
 
 
@@ -123,7 +130,8 @@ class Sheaf:
                 )
             if isinstance(op, str) and op.startswith('"'):
                 raise SheafRuntimeError(
-                    f"Cannot call a string as a function: {op}\nHint: Use square brackets [...] instead of parentheses for data literals.", exp
+                    f"Cannot call a string as a function: {op}\nHint: Use square brackets [...] instead of parentheses for data literals.",
+                    exp,
                 )
 
             # --- Tensor Literal ---
@@ -136,8 +144,31 @@ class Sheaf:
                 if len(args) != 1:
                     raise ValueError("quote requires exactly one argument")
                 expr = args[0]
+
+                # Reject quoted s-expressions '(...) when used as data
+                # They should only be used for symbolic/macro purposes
+                if (
+                    isinstance(expr, SheafList)
+                    and hasattr(expr, "_bracket_type")
+                    and expr._bracket_type == "("
+                ):
+                    # Check if it looks like data (numbers/primitives) vs symbolic code (has symbols)
+                    # Allow if it contains any SheafSymbol (like 'defn', 'foo', etc.) - it's symbolic code
+                    has_symbols = any(isinstance(item, SheafSymbol) for item in expr)
+                    has_nested_lists = any(
+                        isinstance(item, (SheafList, list)) for item in expr
+                    )
+
+                    # Only reject if it's purely data (no symbols, no nested s-expressions)
+                    if expr and not has_symbols and not has_nested_lists:
+                        raise SheafSyntaxError(
+                            f"Type Error: expected a data sequence (Tensor or Literal List), but received a Symbolic S-Expression '{self._format_expr(expr)}. Did you mean to use '[]?",
+                            line_num=getattr(expr, "line", None),
+                        )
+
                 # For vectors, return as raw Python tuple (useful for shapes)
                 if isinstance(expr, SheafVector):
+
                     def vec_to_tuple(v):
                         result = []
                         for item in v:
@@ -146,6 +177,7 @@ class Sheaf:
                             else:
                                 result.append(item)
                         return tuple(result)
+
                     return vec_to_tuple(expr)
                 # For other expressions, return as-is
                 return expr
@@ -210,7 +242,11 @@ class Sheaf:
         op = exp[0]
         if isinstance(op, (int, float)):
             return True
-        if isinstance(op, SheafVector) and len(op) > 0 and isinstance(op[0], (int, float)):
+        if (
+            isinstance(op, SheafVector)
+            and len(op) > 0
+            and isinstance(op[0], (int, float))
+        ):
             return True
         return False
 
@@ -459,7 +495,9 @@ class Sheaf:
 
                 # Flag without value: :keepdims, :normalize, etc.
                 # Check if next arg is also a keyword or if we're at end of args
-                if (i + 1) >= len(args) or (isinstance(args[i + 1], str) and args[i + 1].startswith(":")):
+                if (i + 1) >= len(args) or (
+                    isinstance(args[i + 1], str) and args[i + 1].startswith(":")
+                ):
                     # This is a flag - set to True
                     kwargs[key_name] = True
                     i += 1
@@ -544,6 +582,17 @@ class Sheaf:
         with open(path, "r") as f:
             code = f.read()
         return self.load(code, filename=path)
+
+    def _format_expr(self, expr):
+        """Format an expression for error messages."""
+        if isinstance(expr, SheafList):
+            items = " ".join(str(item) for item in expr)
+            return f"({items})"
+        elif isinstance(expr, SheafVector):
+            items = " ".join(str(item) for item in expr)
+            return f"[{items}]"
+        else:
+            return str(expr)
 
     def __getattr__(self, name):
         # Avoid infinite recursion on special attributes
