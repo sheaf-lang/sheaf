@@ -12,11 +12,13 @@ import jax.numpy as jnp
 
 def sheaf_append(lst, x):
     """
-    Appends an element to a list or a JAX array.
+    Appends an element to a list, tuple, or JAX array.
     Used for accumulating generated tokens.
     """
     if isinstance(lst, list):
         return lst + [x]
+    if isinstance(lst, tuple):
+        return lst + (x,)
     # Fallback for JAX arrays (note: this creates a new array)
     return jnp.append(lst, x)
 
