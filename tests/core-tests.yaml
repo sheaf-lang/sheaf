@@ -248,16 +248,16 @@
   test: (len [1 2 3])
   expected: "3"
 - name: len, count
-  test: (count '(1 2 3 4))
+  test: (count '[1 2 3 4])
   expected: "4"
 - name: len, count
   test: (count [[1 2] [3 4]])
   expected: "2"
 - name: reshape
-  test: (reshape (arange 6) '(2 3))
+  test: (reshape (arange 6) '[2 3])
   expected: "[[0 1 2]\n [3 4 5]]"
 - name: reshape
-  test: (reshape (arange 9) '(3 -1))
+  test: (reshape (arange 9) '[3 -1])
   expected: "[[0 1 2]\n [3 4 5]\n [6 7 8]]"
 - name: transpose
   test: "[3 4]"
@@ -284,7 +284,7 @@
   test: (roll [1 2 3] -1)
   expected: "[2. 3. 1.]"
 - name: concat
-  test: (concat '(1 2) '(3 4))
+  test: (concat '[1 2] '[3 4])
   expected: "[1, 2, 3, 4]"
 - name: concat
   test: (concat '[1 2] '[3 4])
@@ -390,7 +390,7 @@
   test: (last '[1 2 3])
   expected: "3"
 - name: rest
-  test: (rest '(1 2 3))
+  test: (rest '[1 2 3])
   expected: "[2, 3]"
 - name: nth
   test: (nth '[10 20 30] 1)
@@ -399,16 +399,16 @@
   test: (nth [10 20 30] 1)
   expected: "20.0"
 - name: cons
-  test: (cons 0 '(1 2 3))
-  expected: "[0, 1, 2, 3]"
+  test: (cons 0 '[1 2 3])
+  expected: "(0, 1, 2, 3)"
 - name: append
-  test: (append '(1 2) 3)
-  expected: "[1, 2, 3]"
+  test: (append '[1 2] 3)
+  expected: "(1, 2, 3)"
 - name: empty?
-  test: (empty? '())
+  test: (empty? '[])
   expected: "True"
 - name: empty?
-  test: (empty? '(1))
+  test: (empty? '[1])
   expected: "False"
 - name: empty?
   test: (empty? [1 2 3])
@@ -429,7 +429,7 @@
   test: (tree-reduce + {:a 1 :b 2 :c 3} 0)
   expected: "6"
 - name: tree-reduce
-  test: (tree-reduce * '(2 3 4) 1)
+  test: (tree-reduce * '[2 3 4] 1)
   expected: "24"
 - name: tree-reduce
   test: (tree-reduce maximum {:l1 [1.0 5.0] :l2 [2.0]} -1e9)
@@ -570,8 +570,8 @@
   test: "'symbol"
   expected: symbol
 - name: "' (quote)"
-  test: "'(1 2 3)"
-  expected: "[1, 2, 3]"
+  test: "'[1 2 3]"
+  expected: "(1, 2, 3)"
 - name: "' (quote)"
   test: "'[1 2 3]"
   expected: (1, 2, 3)
