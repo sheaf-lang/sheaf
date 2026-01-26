@@ -10,6 +10,21 @@ import jax
 import jax.numpy as jnp
 
 
+def sheaf_tensor(data):
+    """
+    Converts a list, tuple, or nested structure to a JAX tensor.
+
+    Useful for converting quoted lists '[1 2 3] or dynamically generated
+    lists (via cons, append, etc.) into tensors for computation.
+
+    Examples:
+        (tensor '[1 2 3 4 5 6])           ; => f32[6]
+        (reshape (tensor '[1 2 3 4 5 6]) '[2 3]) ; => f32[2x3]
+        (+ (tensor (cons 1 '[2 3])) 10)  ; => f32[3]
+    """
+    return jnp.array(data)
+
+
 def sheaf_append(lst, x):
     """
     Appends an element to a list, tuple, or JAX array.
@@ -181,6 +196,7 @@ def get_jax_env():
         "append-and-roll": sheaf_append_and_roll,
         "arange": jnp.arange,
         "choice": jax.random.choice,
+        "tensor": sheaf_tensor,
         "einsum": jnp.einsum,
         "flatten": sheaf_flatten,
         "maximum": jnp.maximum,
