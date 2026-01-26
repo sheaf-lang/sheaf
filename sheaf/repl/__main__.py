@@ -175,6 +175,20 @@ def format_result(value):
             # Regular string - show with quotes
             return repr(value)
 
+    elif isinstance(value, tuple):
+        # Format tuples using Sheaf quoted list syntax '[...]
+        if not value:
+            return "'[]"
+        items = ", ".join(format_result(item) for item in value)
+        return f"'[{items}]"
+
+    elif isinstance(value, list):
+        # Format Python lists using Sheaf quoted list syntax '[...]
+        if not value:
+            return "'[]"
+        items = ", ".join(format_result(item) for item in value)
+        return f"'[{items}]"
+
     elif isinstance(value, dict):
         # Format dictionaries with keys and values (like params trees)
         if not value:
