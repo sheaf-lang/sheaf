@@ -95,14 +95,19 @@ def cons(head, tail):
 
     Args:
         head: element to prepend
-        tail: list to prepend to
+        tail: list or tuple to prepend to
 
     Returns:
-        new list with head prepended to tail
+        new list/tuple with head prepended to tail
     """
-    if not isinstance(tail, list):
-        raise TypeError(f"cons: second argument must be a list, got {type(tail)}")
-    return [head] + tail
+    if isinstance(tail, list):
+        return [head] + tail
+    elif isinstance(tail, tuple):
+        return (head,) + tail
+    else:
+        raise TypeError(
+            f"cons: second argument must be a list or tuple, got {type(tail)}"
+        )
 
 
 def generic_concat(*args, **kwargs):
