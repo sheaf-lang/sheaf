@@ -3,7 +3,6 @@ CLEVR Neuro-Symbolic Reasoning Demo
 """
 
 import os
-import pickle
 import sys
 
 import jax

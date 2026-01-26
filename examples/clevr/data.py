@@ -23,14 +23,14 @@ def generate_scene(key, n_objects=4):
     Returns dict with 'objects' list and 'n_objects' count.
     Each object has: shape, color, x, y (positions in [0.1, 0.9])
     """
-    keys = jax.random.split(key, n_objects * 3)
+    keys = jax.random.split(key, n_objects * 4)
     objects = []
 
     for i in range(n_objects):
-        shape = SHAPES[int(jax.random.randint(keys[i * 3], (), 0, len(SHAPES)))]
-        color = COLORS[int(jax.random.randint(keys[i * 3 + 1], (), 0, len(COLORS)))]
-        x = float(jax.random.uniform(keys[i * 3 + 2], minval=0.1, maxval=0.9))
-        y = float(jax.random.uniform(keys[i * 3 + 2], minval=0.1, maxval=0.9))
+        shape = SHAPES[int(jax.random.randint(keys[i * 4], (), 0, len(SHAPES)))]
+        color = COLORS[int(jax.random.randint(keys[i * 4 + 1], (), 0, len(COLORS)))]
+        x = float(jax.random.uniform(keys[i * 4 + 2], minval=0.1, maxval=0.9))
+        y = float(jax.random.uniform(keys[i * 4 + 3], minval=0.1, maxval=0.9))
         objects.append({"shape": shape, "color": color, "x": x, "y": y})
 
     return {"objects": objects, "n_objects": n_objects}
