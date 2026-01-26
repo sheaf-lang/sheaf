@@ -22,7 +22,7 @@
 ;; Takes the current model state and returns a deeper model
 ;; while preserving existing knowledge.
 ;;
-;; Note: Sheaf supports structural mutation within JIT-compiled functions
+;; Note: Sheaf supports structural transformation within JIT-compiled functions
 (defn grow-hydra [params key config] :jit
   ; Get current model configuration
   (let [D       (get config "d_model")
