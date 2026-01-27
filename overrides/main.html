@@ -10,7 +10,7 @@
 <style>
   /* Replace mkdocs logo with custom logo - header */
   .md-header__button.md-logo {
-    background-image: url('../../images/sheaf-light.png');
+    background-image: url('{{ 'images/sheaf-light.png' | url }}');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
@@ -24,7 +24,7 @@
 
   /* Replace mkdocs logo with custom logo - sidebar (responsive menu) */
   .md-nav__title {
-    background-image: url('../../images/sheaf-light.png');
+    background-image: url('{{ 'images/sheaf-light.png' | url }}');
     background-size: 64px 64px;
     background-repeat: no-repeat;
     background-position: center;
@@ -43,7 +43,7 @@
 {% block footer %}
 <footer class="md-footer">
     <div class="md-footer__inner md-grid" style="display: flex; justify-content: center; align-items: center; gap: 10px;">
-      <img src="../../images/sheaf-light.png" alt="Logo" style="height: 24px;"/>
+      <img src="{{ 'images/sheaf-light.png' | url }}" alt="Logo" style="height: 24px;"/>
       <span>| © 2025-2026 Damien Boureille</span>
     </div>
 </footer>
