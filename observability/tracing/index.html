@@ -309,6 +309,14 @@
       width: 100% !important;
     }
 
+    /* Mobile navigation drawer */
+    .md-nav--primary {
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      transform: none !important;
+    }
+
     /* Mobile navigation drawer header background */
     .md-nav__title {
       background-color: var(--sheaf-primary) !important;
@@ -354,8 +362,8 @@
       padding: 0.5rem !important;
     }
 
-    /* Force parent containers too */
-    .flex-section > div {
+    /* Force parent containers too - but not the navigation */
+    .md-content .flex-section > div {
       width: 100% !important;
       min-width: 0 !important;
       max-width: 100% !important;
