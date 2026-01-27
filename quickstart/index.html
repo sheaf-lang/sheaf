@@ -264,15 +264,53 @@
     /* Force mobile viewport */
     body, html {
       overflow-x: hidden !important;
-      max-width: 100vw !important;
+      width: 100vw !important;
     }
 
     .md-container,
     .md-main,
-    .md-content,
-    .md-content__inner {
-      max-width: 100% !important;
+    .md-content {
+      width: 100% !important;
       overflow-x: hidden !important;
+    }
+
+    .md-content__inner {
+      width: calc(100vw - 2rem) !important;
+      max-width: calc(100vw - 2rem) !important;
+      padding-left: 1rem !important;
+      padding-right: 1rem !important;
+      overflow-x: hidden !important;
+    }
+
+    /* Fix tabs overflow on mobile */
+    .tabbed-set {
+      width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    .tabbed-labels,
+    .tabbed-labels--linked {
+      width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      transform: none !important;
+      display: flex !important;
+      overflow-x: auto !important;
+      -webkit-overflow-scrolling: touch !important;
+      position: relative !important;
+    }
+
+    .tabbed-labels > * {
+      flex-shrink: 0 !important;
+    }
+
+    .tabbed-content {
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100% !important;
     }
 
     /* Mobile navigation drawer header background */
@@ -301,14 +339,40 @@
     }
 
     .flex-section .highlight {
+      width: auto !important;
+      min-width: 0 !important;
       max-width: 100% !important;
+      box-sizing: border-box !important;
       overflow-x: auto;
+      margin: 0 !important;
     }
 
     .highlight {
+      width: auto !important;
+      min-width: 0 !important;
       max-width: 100% !important;
+      box-sizing: border-box !important;
       overflow-x: auto !important;
       font-size: 0.75rem !important;
+      margin: 0 !important;
+      padding: 0.5rem !important;
+    }
+
+    /* Force parent containers too */
+    .flex-section > div {
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: 100% !important;
+    }
+
+    /* Force all code containers */
+    pre, code {
+      width: 100% !important;
+      max-width: 100% !important;
+      box-sizing: border-box !important;
+      overflow-x: auto !important;
+      white-space: pre !important;
+      word-wrap: normal !important;
     }
 
     .highlight code {
