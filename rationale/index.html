@@ -259,6 +259,20 @@
 
   /* === RESPONSIVE DESIGN === */
   @media (max-width: 768px) {
+    /* Force mobile viewport */
+    body, html {
+      overflow-x: hidden !important;
+      max-width: 100vw !important;
+    }
+
+    .md-container,
+    .md-main,
+    .md-content,
+    .md-content__inner {
+      max-width: 100% !important;
+      overflow-x: hidden !important;
+    }
+
     /* Mobile navigation drawer header background */
     .md-nav__title {
       background-color: var(--sheaf-primary) !important;
