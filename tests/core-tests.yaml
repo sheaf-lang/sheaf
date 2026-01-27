@@ -322,6 +322,12 @@
 - name: one-hot
   test: (one-hot [0 2 1] 3)
   expected: "[[1. 0. 0.]\n [0. 0. 1.]\n [0. 1. 0.]]"
+- name: tensor
+  test: (tensor '[1 2 3])
+  expected: "[1 2 3]"
+- name: tensor
+  test: (tensor '[1. 2. 3.])
+  expected: "[1. 2. 3.]"
 - name: init-zeros, init-ones
   test: (init-zeros (random-key 0) '[128])
   expected:
