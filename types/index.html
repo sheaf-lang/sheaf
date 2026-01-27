@@ -1,0 +1,1470 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://sheaf.dev/types/">
+      
+      
+        <link rel="prev" href="../starting/">
+      
+      
+        <link rel="next" href="../python/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+
+      
+        <title>Data types - Sheaf</title>
+      
+    
+<link rel="icon" type="image/png" href="../images/favicon.png">
+<style>
+  /* Replace mkdocs logo with custom logo - header */
+  .md-header__button.md-logo {
+    background-image: url('../../images/sheaf-light.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+
+
+  .md-header__button.md-logo img,
+  .md-header__button.md-logo svg {
+    opacity: 0;
+  }
+
+  /* Replace mkdocs logo with custom logo - sidebar (responsive menu) */
+  .md-nav__title {
+    background-image: url('../../images/sheaf-light.png');
+    background-size: 64px 64px;
+    background-repeat: no-repeat;
+    background-position: center;
+    padding-left: 30px !important;
+    font-size: 0 !important;
+    height: 24px !important;
+  }
+
+  .md-nav__title img,
+  .md-nav__title svg {
+    opacity: 0;
+  }
+</style>
+
+    
+
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+<style>
+  /* === GLOBAL STYLES (all pages) === */
+
+  /* === COLOR PALETTE #418d95ff, #421168 === */
+  :root {
+    --sheaf-primary: #612156;
+    --md-primary-fg-color: #421168;
+    --md-primary-fg-color--light: #5a1a8c;
+    --md-primary-fg-color--dark: #2d0b4a;
+  }
+
+  /* Override primary color from Material theme */
+  .md-header,
+  .md-tabs,
+  .md-nav__link--active,
+  .md-nav__item:target > .md-nav__link,
+  a {
+    --md-primary-fg-color: var(--sheaf-primary) !important;
+  }
+
+  .md-header {
+    background-color: var(--sheaf-primary) !important;
+  }
+
+
+  .md-tabs {
+    background-color: var(--sheaf-primary) !important;
+  }
+
+  .md-nav__link:hover {
+    color: var(--sheaf-primary) !important;
+  }
+
+  .md-nav__link--active {
+    color: var(--sheaf-primary) !important;
+    border-color: var(--sheaf-primary) !important;
+  }
+
+  a:hover {
+    opacity: 0.8;
+  }
+
+  .md-footer {
+    background-color: #410136;
+    font-size: 0.5rem !important;
+  }
+
+  .md-footer__inner {
+    justify-content: center !important;
+    margin: 0 auto !important;
+  }
+
+  .md-footer__inner,
+  .md-footer span,
+  .md-footer div {
+    font-size: 0.6rem !important;
+  }
+
+  /* Reduce TOC (right sidebar) width */
+  .md-sidebar--secondary {
+    width: 10rem;
+  }
+
+
+  /* Optionally reduce left sidebar too */
+  .md-sidebar--primary {
+    width: 10rem;
+  }
+
+  /* Code block styling */
+  .highlight {
+    color : black;
+    font-size: 0.9rem;
+    background-color: #f5f5f5 !important;
+    border-radius: 0.9rem;
+    padding: 0.75rem !important;
+    overflow-x: auto;
+  }
+
+  /* Sheaf/Lisp syntax highlighting */
+  .language-sheaf .k { color: #d73a49; }  /* Keywords */
+  .language-sheaf .n { color: #24292e; }  /* Names */
+  .language-sheaf .s { color: #032f62; }  /* Strings */
+  .language-sheaf .m { color: #005cc5; }  /* Numbers */
+  .language-sheaf .c { color: #6a737d; }  /* Comments */
+
+  /* Pygments theme for code blocks */
+  .highlight .c { color: #6a737d; font-style: italic; }     /* Comment */
+  .highlight .k { color: #d73a49; font-weight: bold; }      /* Keyword */
+  .highlight .n { color: #24292e; }                         /* Name */
+  .highlight .s { color: #032f62; }                         /* String */
+  .highlight .m { color: #005cc5; }                         /* Number */
+  .highlight .nb { color: #6f42c1; }                        /* Name.Builtin */
+  .highlight .p { color: #24292e; }                         /* Punctuation */
+
+  /* Hero section: 2 columns, 50/50 split */
+  .flex-section-header {
+    width: 95% !important;
+    margin: 1rem auto 4rem auto !important;
+    padding-left: 2rem !important;
+    padding-right: 2rem !important;
+    padding-bottom: 3rem;
+    background-color: #f5f5f5 !important;
+    border-radius: 0.9rem !important;
+    display: flex !important;
+    gap: 2rem !important;
+    align-items: flex-start !important;
+    font-size: inherit !important;
+  }
+
+  .flex-section-header > div {
+    flex: 0 0 50% !important;
+    padding: 0 1rem !important;
+    margin-top: -1rem;
+    margin-right: -1rem;
+    min-width: 0 !important;
+  }
+
+  /* Flex section layout (replaces old feature-columns tables) */
+  .flex-section {
+    display: flex;
+    gap: 2rem;
+    padding: 1rem 0;
+    margin: 1rem 0 3rem 0;
+    align-items: center;
+    font-size: 0.9rem !important;
+  }
+
+  /* Center single code block vertically (only if it's the only code child) */
+  .flex-section > *:last-child:has(.highlight):only-of-type {
+    display: flex;
+    align-items: center;
+  }
+
+  .flex-section > * {
+    flex: 1;
+  }
+
+  .flex-section > *:first-child {
+    flex: 0 0 33.33%;
+    padding-right: 1rem;
+  }
+
+  .flex-section > *:last-child {
+    flex: 0 0 66.67%;
+    min-width: 0;  /* Allow flex child to shrink below content size */
+    overflow: hidden;
+  }
+
+  .flex-section .highlight {
+    margin: 0 !important;
+    padding: 0.75rem !important;
+  }
+
+  .flex-section .highlight {
+    overflow-x: auto !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .flex-section .highlight code {
+    line-height: 1.5 !important;
+  }
+
+  .flex-section pre {
+    margin: 0 !important;
+    overflow-x: auto !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Flex grid styling (for markdown content in flex containers) */
+  div[style*="display: flex"] {
+    font-size: 0.9rem;
+    margin: 1rem 0;
+  }
+
+  div[style*="display: flex"] code {
+    font-size: 0.85rem;
+  }
+
+  div[style*="display: flex"] pre {
+    font-size: 0.85rem;
+  }
+
+  /* === RESPONSIVE DESIGN === */
+  @media (max-width: 768px) {
+    /* Mobile navigation drawer header background */
+    .md-nav__title {
+      background-color: var(--sheaf-primary) !important;
+    }
+
+    .flex-section {
+      flex-direction: column !important;
+      padding: 1rem !important;
+    }
+
+    .flex-section-header {
+      width: 100% !important;
+      flex-direction: column !important;
+    }
+
+    .flex-section-header > div {
+      flex: 0 0 100% !important;
+      padding: 1rem 0 !important;
+    }
+
+    .flex-section > *:last-child:has(.highlight):only-of-type {
+      flex-direction: column !important;
+      width: 100% !important;
+    }
+
+    .flex-section .highlight {
+      max-width: 100% !important;
+      overflow-x: auto;
+    }
+
+    .highlight {
+      max-width: 100% !important;
+      overflow-x: auto !important;
+      font-size: 0.75rem !important;
+    }
+
+    .highlight code {
+      font-size: 0.75rem !important;
+    }
+
+    pre {
+      max-width: 100% !important;
+      overflow-x: auto !important;
+      padding: 0.5rem !important;
+    }
+
+    .md-footer__inner {
+      justify-content: center !important;
+    }
+  }
+</style>
+
+
+
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="deep-orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#sheaf-data-types" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Sheaf" class="md-header__button md-logo" aria-label="Sheaf" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Sheaf
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Data types
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/sheaf-lang/sheaf" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../rationale/" class="md-tabs__link">
+          
+  
+  
+  Documentation
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../reference/" class="md-tabs__link">
+          
+  
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Sheaf" class="md-nav__button md-logo" aria-label="Sheaf" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Sheaf
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/sheaf-lang/sheaf" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Documentation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Documentation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rationale/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rationale
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../starting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Starting with Sheaf
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data types
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data types
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#summary-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary Table
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tensors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tensors
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Tensors">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#basic-tensors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basic Tensors
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dtype-specification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dtype Specification
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#literal-lists" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Literal Lists
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dictionaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dictionaries
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Dictionaries">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dictionary-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dictionary Operations
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keywords" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Keywords
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#booleans" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Booleans
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#strings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pytrees" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PyTrees
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../python/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Python Interoperability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Version history
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Roadmap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Builtins
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#summary-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary Table
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tensors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tensors
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Tensors">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#basic-tensors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basic Tensors
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dtype-specification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dtype Specification
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#literal-lists" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Literal Lists
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dictionaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dictionaries
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Dictionaries">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dictionary-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dictionary Operations
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keywords" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Keywords
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#booleans" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Booleans
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#strings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pytrees" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PyTrees
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="sheaf-data-types">Sheaf Data Types</h1>
+<p>Sheaf is <strong>tensor-first</strong>: all numeric values are JAX tensors by default, with <code>f32</code> (32-bit float) as the default dtype.</p>
+<h2 id="summary-table">Summary Table</h2>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Notation</th>
+<th>Example</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tensor</td>
+<td><code>[...]</code></td>
+<td><code>[1 2 3]</code></td>
+<td>JAX array, default f32</td>
+</tr>
+<tr>
+<td>Tensor (typed)</td>
+<td><code>[...] :dtype</code></td>
+<td><code>[1 2] :bf16</code></td>
+<td>Explicit dtype</td>
+</tr>
+<tr>
+<td>Shape literal</td>
+<td><code>'[...]</code></td>
+<td><code>'[3 4]</code></td>
+<td>Quoted shape for tensor creation</td>
+</tr>
+<tr>
+<td>Dictionary</td>
+<td><code>{...}</code></td>
+<td><code>{:x 1}</code></td>
+<td>Key-value pairs (pytree node)</td>
+</tr>
+<tr>
+<td>Keyword</td>
+<td><code>:name</code></td>
+<td><code>:weight</code></td>
+<td>Dictionary keys, options</td>
+</tr>
+<tr>
+<td>Boolean</td>
+<td>Literal</td>
+<td><code>true</code>, <code>false</code></td>
+<td>Boolean values</td>
+</tr>
+<tr>
+<td>String</td>
+<td><code>"..."</code></td>
+<td><code>"hello"</code></td>
+<td>Text strings</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="tensors">Tensors</h2>
+<p>Tensors are the primary data type in Sheaf. All numeric literals and vectors become JAX tensors.</p>
+<div class="admonition note">
+<p class="admonition-title"><strong>Note: Syntactic Context Matters</strong></p>
+<p>Brackets <code>[]</code> become tensors in <em>expression</em> context. In <em>syntactic</em> positions, they serve other purposes:</p>
+<ul>
+<li>
+<p><code>(defn f [x y] ...)</code> — parameter list, not a tensor</p>
+</li>
+<li>
+<p><code>(let [[a b] val] ...)</code> — destructuring pattern, not a tensor</p>
+</li>
+<li>
+<p><code>'[3 4]</code> — quoted shape literal, not a tensor</p>
+</li>
+</ul>
+</div>
+<h3 id="basic-tensors">Basic Tensors</h3>
+<div class="language-text highlight"><pre><span></span><code>42                    ; Scalar tensor (f32)
+3.14                  ; Scalar tensor (f32)
+[1 2 3]               ; 1D tensor, shape (3,)
+[[1 2] [3 4]]         ; 2D tensor, shape (2, 2)
+</code></pre></div>
+<h3 id="dtype-specification">Dtype Specification</h3>
+<p>A dtype keyword may follow a vector literal to specify its precision:</p>
+<div class="language-text highlight"><pre><span></span><code>[1 2 3]               ; Default f32
+[1 2 3] :f32          ; Explicit f32
+[1 2 3] :bf16         ; BFloat16
+[1 2 3] :f16          ; Float16
+[1 2 3] :i32          ; 32-bit integer
+[1 2 3] :u32          ; 32-bit unsigned integer
+[1 2 3] :bool         ; Boolean
+</code></pre></div>
+<h3 id="literal-lists">Literal Lists</h3>
+<p>The quote <code>'</code> prevents evaluation, treating the following form as literal data rather than code or a numerical tensor. It is typically used to pass structural metadata, such as shapes for tensor creation functions:</p>
+<div class="language-text highlight"><pre><span></span><code>;; Without the quote, [2 3] is evaluated as a tensor
+(nth [2 3] 0)  ; =&gt; Tensor f32[] = 2.0
+
+;; With the quote, &#39;[2 3] is passed as a literal list
+(nth &#39;[2 3] 0) ; =&gt; 2
+
+;; Passing shapes is a typical use for quoted vectors
+(random-normal (random-key 0) &#39;[3 4])   ; 3x4 random matrix from N(0,1)
+(zeros &#39;[2 3])                          ; 2x3 tensor of zeros
+(ones &#39;[10])                            ; 1D tensor of ones, length 10
+(reshape (arange 6) &#39;[2 3])             ; Reshape to 2x3
+</code></pre></div>
+<hr />
+<h2 id="dictionaries">Dictionaries</h2>
+<p>Key-value structures using curly braces. Keys are typically keywords.</p>
+<div class="language-text highlight"><pre><span></span><code>{}                    ; Empty dictionary
+{:x 1 :y 2}           ; Simple dictionary
+{:layer1 {:W [[1 2] [3 4]] :b [0.1 0.2]}}  ; Nested (pytree)
+</code></pre></div>
+<h3 id="dictionary-operations">Dictionary Operations</h3>
+<div class="language-text highlight"><pre><span></span><code>(get {:x 1 :y 2} :x)              ; =&gt; 1
+(assoc {:x 1} :y 2)               ; =&gt; {:x 1 :y 2}
+(dissoc {:x 1 :y 2} [:x])         ; =&gt; {:y 2} (pass keys as a list)
+(dissoc {:x 1 :y 2} [:x :y])      ; =&gt; {} (remove multiple keys)
+(keys {:x 1 :y 2})                ; =&gt; &#39;[:x :y] (literal list)
+(vals {:x 1 :y 2})                ; =&gt; &#39;[1 2] (literal list)
+(merge {:x 1} {:y 2})             ; =&gt; {:x 1 :y 2}
+</code></pre></div>
+<p>Dictionaries are <strong>pytree nodes</strong>: JAX can differentiate through them and apply transformations like <code>vmap</code> to their contents.</p>
+<hr />
+<h2 id="keywords">Keywords</h2>
+<p>Identifiers prefixed with <code>:</code>. Self-evaluating and used as dictionary keys.</p>
+<div class="language-text highlight"><pre><span></span><code>:x                    ; Keyword
+:learning-rate        ; Keyword with hyphen
+(get params :layer1)  ; Access dictionary value
+</code></pre></div>
+<hr />
+<h2 id="booleans">Booleans</h2>
+<div class="language-text highlight"><pre><span></span><code>true                  ; Boolean true
+false                 ; Boolean false
+</code></pre></div>
+<p>Comparison operations return boolean tensors:</p>
+<div class="language-text highlight"><pre><span></span><code>(&gt; [1 2 3] 2)         ; =&gt; [false false true]
+(= [1 2 1] 1)         ; =&gt; [true false true]
+</code></pre></div>
+<hr />
+<h2 id="strings">Strings</h2>
+<div class="language-text highlight"><pre><span></span><code>&quot;hello&quot;               ; String literal
+</code></pre></div>
+<p>String operations use <code>str-call</code> which dispatches to Python string methods.
+Methods called through <code>str-call</code> return strings, literal lists, or booleans—never tensors.</p>
+<div class="language-text highlight"><pre><span></span><code>(str-call &quot;upper&quot; &quot;hello&quot;)           ; =&gt; &quot;HELLO&quot; (string)
+(str-call &quot;split&quot; &quot;a,b,c&quot; &quot;,&quot;)       ; =&gt; &#39;[&quot;a&quot; &quot;b&quot; &quot;c&quot;] (literal list)
+(str-call &quot;replace&quot; &quot;foo&quot; &quot;o&quot; &quot;a&quot;)   ; =&gt; &quot;faa&quot; (string)
+(str-call &quot;startswith&quot; &quot;hello&quot; &quot;he&quot;) ; =&gt; true (boolean)
+</code></pre></div>
+<p>Note: <code>str-call</code> is evaluated at compile time before JIT compilation. The result is then embedded in the compiled function, so string operations don't impact runtime performance.</p>
+<hr />
+<h2 id="pytrees">PyTrees</h2>
+<p>Nested structures of dictionaries and tensors that JAX understands natively. Used for neural network parameters:</p>
+<div class="language-text highlight"><pre><span></span><code>{:layer1 {:W (random-normal (random-key 0) &#39;[4 8]) :b (zeros &#39;[8])}
+ :layer2 {:W (random-normal (random-key 1) &#39;[8 1]) :b (zeros &#39;[1])}}
+</code></pre></div>
+<p>PyTrees enable:</p>
+<ul>
+<li>Gradient computation through nested structures via <code>value-and-grad</code></li>
+<li>Batch operations via <code>vmap</code></li>
+<li>Efficient iteration via <code>scan</code></li>
+</ul>
+<div class="language-text highlight"><pre><span></span><code>(flatten params)           ; Get all tensor leaves
+(tree-reduce + params 0.0) ; Sum all values in pytree
+</code></pre></div>
+<hr />
+<p>For function signatures and detailed examples, see the <a href="../reference/">Function Reference</a>.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+<footer class="md-footer">
+    <div class="md-footer__inner md-grid" style="display: flex; justify-content: center; align-items: center; gap: 10px;">
+      <img src="../../images/sheaf-light.png" alt="Logo" style="height: 24px;"/>
+      <span>| © 2025-2026 Damien Boureille</span>
+    </div>
+</footer>
+
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

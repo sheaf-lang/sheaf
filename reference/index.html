@@ -1,0 +1,6026 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://sheaf.dev/reference/">
+      
+      
+        <link rel="prev" href="../roadmap/">
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+
+      
+        <title>Builtins - Sheaf</title>
+      
+    
+<link rel="icon" type="image/png" href="../images/favicon.png">
+<style>
+  /* Replace mkdocs logo with custom logo - header */
+  .md-header__button.md-logo {
+    background-image: url('../../images/sheaf-light.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+
+
+  .md-header__button.md-logo img,
+  .md-header__button.md-logo svg {
+    opacity: 0;
+  }
+
+  /* Replace mkdocs logo with custom logo - sidebar (responsive menu) */
+  .md-nav__title {
+    background-image: url('../../images/sheaf-light.png');
+    background-size: 64px 64px;
+    background-repeat: no-repeat;
+    background-position: center;
+    padding-left: 30px !important;
+    font-size: 0 !important;
+    height: 24px !important;
+  }
+
+  .md-nav__title img,
+  .md-nav__title svg {
+    opacity: 0;
+  }
+</style>
+
+    
+
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+<style>
+  /* === GLOBAL STYLES (all pages) === */
+
+  /* === COLOR PALETTE #418d95ff, #421168 === */
+  :root {
+    --sheaf-primary: #612156;
+    --md-primary-fg-color: #421168;
+    --md-primary-fg-color--light: #5a1a8c;
+    --md-primary-fg-color--dark: #2d0b4a;
+  }
+
+  /* Override primary color from Material theme */
+  .md-header,
+  .md-tabs,
+  .md-nav__link--active,
+  .md-nav__item:target > .md-nav__link,
+  a {
+    --md-primary-fg-color: var(--sheaf-primary) !important;
+  }
+
+  .md-header {
+    background-color: var(--sheaf-primary) !important;
+  }
+
+
+  .md-tabs {
+    background-color: var(--sheaf-primary) !important;
+  }
+
+  .md-nav__link:hover {
+    color: var(--sheaf-primary) !important;
+  }
+
+  .md-nav__link--active {
+    color: var(--sheaf-primary) !important;
+    border-color: var(--sheaf-primary) !important;
+  }
+
+  a:hover {
+    opacity: 0.8;
+  }
+
+  .md-footer {
+    background-color: #410136;
+    font-size: 0.5rem !important;
+  }
+
+  .md-footer__inner {
+    justify-content: center !important;
+    margin: 0 auto !important;
+  }
+
+  .md-footer__inner,
+  .md-footer span,
+  .md-footer div {
+    font-size: 0.6rem !important;
+  }
+
+  /* Reduce TOC (right sidebar) width */
+  .md-sidebar--secondary {
+    width: 10rem;
+  }
+
+
+  /* Optionally reduce left sidebar too */
+  .md-sidebar--primary {
+    width: 10rem;
+  }
+
+  /* Code block styling */
+  .highlight {
+    color : black;
+    font-size: 0.9rem;
+    background-color: #f5f5f5 !important;
+    border-radius: 0.9rem;
+    padding: 0.75rem !important;
+    overflow-x: auto;
+  }
+
+  /* Sheaf/Lisp syntax highlighting */
+  .language-sheaf .k { color: #d73a49; }  /* Keywords */
+  .language-sheaf .n { color: #24292e; }  /* Names */
+  .language-sheaf .s { color: #032f62; }  /* Strings */
+  .language-sheaf .m { color: #005cc5; }  /* Numbers */
+  .language-sheaf .c { color: #6a737d; }  /* Comments */
+
+  /* Pygments theme for code blocks */
+  .highlight .c { color: #6a737d; font-style: italic; }     /* Comment */
+  .highlight .k { color: #d73a49; font-weight: bold; }      /* Keyword */
+  .highlight .n { color: #24292e; }                         /* Name */
+  .highlight .s { color: #032f62; }                         /* String */
+  .highlight .m { color: #005cc5; }                         /* Number */
+  .highlight .nb { color: #6f42c1; }                        /* Name.Builtin */
+  .highlight .p { color: #24292e; }                         /* Punctuation */
+
+  /* Hero section: 2 columns, 50/50 split */
+  .flex-section-header {
+    width: 95% !important;
+    margin: 1rem auto 4rem auto !important;
+    padding-left: 2rem !important;
+    padding-right: 2rem !important;
+    padding-bottom: 3rem;
+    background-color: #f5f5f5 !important;
+    border-radius: 0.9rem !important;
+    display: flex !important;
+    gap: 2rem !important;
+    align-items: flex-start !important;
+    font-size: inherit !important;
+  }
+
+  .flex-section-header > div {
+    flex: 0 0 50% !important;
+    padding: 0 1rem !important;
+    margin-top: -1rem;
+    margin-right: -1rem;
+    min-width: 0 !important;
+  }
+
+  /* Flex section layout (replaces old feature-columns tables) */
+  .flex-section {
+    display: flex;
+    gap: 2rem;
+    padding: 1rem 0;
+    margin: 1rem 0 3rem 0;
+    align-items: center;
+    font-size: 0.9rem !important;
+  }
+
+  /* Center single code block vertically (only if it's the only code child) */
+  .flex-section > *:last-child:has(.highlight):only-of-type {
+    display: flex;
+    align-items: center;
+  }
+
+  .flex-section > * {
+    flex: 1;
+  }
+
+  .flex-section > *:first-child {
+    flex: 0 0 33.33%;
+    padding-right: 1rem;
+  }
+
+  .flex-section > *:last-child {
+    flex: 0 0 66.67%;
+    min-width: 0;  /* Allow flex child to shrink below content size */
+    overflow: hidden;
+  }
+
+  .flex-section .highlight {
+    margin: 0 !important;
+    padding: 0.75rem !important;
+  }
+
+  .flex-section .highlight {
+    overflow-x: auto !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .flex-section .highlight code {
+    line-height: 1.5 !important;
+  }
+
+  .flex-section pre {
+    margin: 0 !important;
+    overflow-x: auto !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Flex grid styling (for markdown content in flex containers) */
+  div[style*="display: flex"] {
+    font-size: 0.9rem;
+    margin: 1rem 0;
+  }
+
+  div[style*="display: flex"] code {
+    font-size: 0.85rem;
+  }
+
+  div[style*="display: flex"] pre {
+    font-size: 0.85rem;
+  }
+
+  /* === RESPONSIVE DESIGN === */
+  @media (max-width: 768px) {
+    /* Mobile navigation drawer header background */
+    .md-nav__title {
+      background-color: var(--sheaf-primary) !important;
+    }
+
+    .flex-section {
+      flex-direction: column !important;
+      padding: 1rem !important;
+    }
+
+    .flex-section-header {
+      width: 100% !important;
+      flex-direction: column !important;
+    }
+
+    .flex-section-header > div {
+      flex: 0 0 100% !important;
+      padding: 1rem 0 !important;
+    }
+
+    .flex-section > *:last-child:has(.highlight):only-of-type {
+      flex-direction: column !important;
+      width: 100% !important;
+    }
+
+    .flex-section .highlight {
+      max-width: 100% !important;
+      overflow-x: auto;
+    }
+
+    .highlight {
+      max-width: 100% !important;
+      overflow-x: auto !important;
+      font-size: 0.75rem !important;
+    }
+
+    .highlight code {
+      font-size: 0.75rem !important;
+    }
+
+    pre {
+      max-width: 100% !important;
+      overflow-x: auto !important;
+      padding: 0.5rem !important;
+    }
+
+    .md-footer__inner {
+      justify-content: center !important;
+    }
+  }
+</style>
+
+
+
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="deep-orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#sheaf-language-reference" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Sheaf" class="md-header__button md-logo" aria-label="Sheaf" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Sheaf
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Builtins
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/sheaf-lang/sheaf" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../rationale/" class="md-tabs__link">
+          
+  
+  
+  Documentation
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="./" class="md-tabs__link">
+          
+  
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Sheaf" class="md-nav__button md-logo" aria-label="Sheaf" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Sheaf
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/sheaf-lang/sheaf" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Documentation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Documentation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rationale/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rationale
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../starting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Starting with Sheaf
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data types
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../python/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Python Interoperability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Version history
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Roadmap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Builtins
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Builtins
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#arithmetic-math" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Arithmetic &amp; Math
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Arithmetic &amp; Math">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        +
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        *
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        /
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        //
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mod" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        mod
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        **
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#abs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        abs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        exp
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#log" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        log
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sqrt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sqrt
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        @
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#comparison" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Comparison
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Comparison">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        =
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ==
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        !=
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        &lt;, &gt;, &lt;=, &gt;=
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#logic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Logic
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Logic">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#and" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        and
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#or" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        or
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#not" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        not
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#true-false-nil" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        true, false, nil
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#activation-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Activation Functions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Activation Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#relu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        relu
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#leaky-relu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        leaky-relu
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sigmoid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sigmoid
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tanh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tanh
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gelu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        gelu
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#selu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        selu
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#celu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        celu
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#silu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        silu
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#softmax" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        softmax
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#log-softmax" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        log-softmax
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reductions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reductions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Reductions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sum" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sum
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mean" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        mean
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#product" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        product
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#min-max" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        min, max
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#minimum-maximum" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        minimum, maximum
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tensor-shape-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tensor Shape &amp; Structure
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Tensor Shape &amp; Structure">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#shape" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        shape
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ndim" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ndim
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#len-count" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        len, count
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reshape" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        reshape
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#transpose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        transpose
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#swapaxes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        swapaxes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#slice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        slice
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#roll" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        roll
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#concat" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        concat
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tril" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tril
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#where" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        where
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tensor-creation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tensor Creation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Tensor Creation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ones-zeros" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ones, zeros
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arange" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        arange
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#one-hot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        one-hot
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#initializers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Initializers
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Initializers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#init-zeros-init-ones" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        init-zeros, init-ones
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#init-xavier-normal-init-xavier-uniform" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        init-xavier-normal, init-xavier-uniform
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#init-kaiming-normal-init-kaiming-uniform" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        init-kaiming-normal, init-kaiming-uniform
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#init-lecun-normal-init-lecun-uniform" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        init-lecun-normal, init-lecun-uniform
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#init-orthogonal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        init-orthogonal
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#random-sampling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Random Sampling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Random Sampling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#random-key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        random-key
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#random-split" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        random-split
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#random-normal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        random-normal
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#random-uniform" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        random-uniform
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#random-randint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        random-randint
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#choice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        choice
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#list-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        List Operations
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="List Operations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#first-second-last" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        first, second, last
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rest" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        rest
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        nth
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cons" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        cons
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#append" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        append
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#empty" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        empty?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#higher-order-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Higher-Order Functions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Higher-Order Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#map" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        map
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tree-map" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tree-map
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tree-map-zeros" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tree-map-zeros
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#apply" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        apply
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dictionary-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dictionary Operations
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Dictionary Operations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dict" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        dict
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get-in
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#assoc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        assoc
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dissoc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        dissoc
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#merge" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        merge
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        keys
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vals
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#control-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Control Flow
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Control Flow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#if" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        if
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#case" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        case
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#let" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        let
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#function-definition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Function Definition
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Function Definition">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#defn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        defn
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        fn
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#macros" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Macros
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Macros">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#defmacro" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        defmacro
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#threading-composition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Threading &amp; Composition
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Threading &amp; Composition">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#-_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -&gt;
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#as-" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        as-&gt;
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#parameter-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameter Management
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Parameter Management">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#with-params" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        with-params
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#jax-transforms" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        JAX Transforms
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="JAX Transforms">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vmap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vmap
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        scan
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#value-and-grad" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        value-and-grad
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#loss-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Loss &amp; Metrics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Loss &amp; Metrics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sparse-cross-entropy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sparse-cross-entropy
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advanced-tensor-ops" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Advanced Tensor Ops
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Advanced Tensor Ops">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#einsum" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        einsum
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#top_k" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        top_k
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tensor-split" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tensor-split
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamic-slice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        dynamic-slice
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#utilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Utilities
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Utilities">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#normalize" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        normalize
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#str-gensym-symbol" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        str, gensym, symbol?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#module-system" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Module System
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Module System">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#use" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        use
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quoting-metaprogramming" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quoting &amp; Metaprogramming
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Quoting &amp; Metaprogramming">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#quote" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ' (quote)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quasiquote" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ` (quasiquote)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#static" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        static
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#additional" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Additional
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Additional">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#append-and-roll" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        append-and-roll
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#range" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        range
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#var" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        var
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#standard-library-modules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Standard Library Modules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Standard Library Modules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#neural-network-operations-nnshf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Neural Network Operations (nn.shf)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Neural Network Operations (nn.shf)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#linear" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        linear
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cross-entropy-loss" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        cross-entropy-loss
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mse-loss" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        mse-loss
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mae-loss" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        mae-loss
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#layer-norm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        layer-norm
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#xavier-init" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        xavier-init
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optimizer-operations-optimshf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optimizer Operations (optim.shf)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Optimizer Operations (optim.shf)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sgd-step" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sgd-step
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adam-step" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        adam-step
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#global-norm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        global-norm
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#clip-by-global-norm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        clip-by-global-norm
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#macros-macrosshf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Macros (macros.shf)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Macros (macros.shf)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#when" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        when
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unless" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        unless
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#comment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        comment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#defmodel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        defmodel
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#defbatch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        defbatch
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#arithmetic-math" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Arithmetic &amp; Math
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Arithmetic &amp; Math">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        +
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        *
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        /
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        //
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mod" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        mod
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        **
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#abs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        abs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        exp
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#log" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        log
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sqrt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sqrt
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        @
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#comparison" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Comparison
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Comparison">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        =
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ==
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        !=
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        &lt;, &gt;, &lt;=, &gt;=
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#logic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Logic
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Logic">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#and" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        and
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#or" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        or
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#not" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        not
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#true-false-nil" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        true, false, nil
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#activation-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Activation Functions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Activation Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#relu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        relu
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#leaky-relu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        leaky-relu
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sigmoid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sigmoid
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tanh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tanh
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gelu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        gelu
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#selu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        selu
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#celu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        celu
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#silu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        silu
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#softmax" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        softmax
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#log-softmax" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        log-softmax
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reductions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reductions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Reductions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sum" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sum
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mean" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        mean
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#product" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        product
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#min-max" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        min, max
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#minimum-maximum" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        minimum, maximum
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tensor-shape-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tensor Shape &amp; Structure
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Tensor Shape &amp; Structure">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#shape" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        shape
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ndim" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ndim
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#len-count" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        len, count
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reshape" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        reshape
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#transpose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        transpose
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#swapaxes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        swapaxes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#slice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        slice
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#roll" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        roll
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#concat" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        concat
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tril" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tril
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#where" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        where
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tensor-creation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tensor Creation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Tensor Creation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ones-zeros" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ones, zeros
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arange" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        arange
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#one-hot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        one-hot
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#initializers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Initializers
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Initializers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#init-zeros-init-ones" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        init-zeros, init-ones
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#init-xavier-normal-init-xavier-uniform" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        init-xavier-normal, init-xavier-uniform
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#init-kaiming-normal-init-kaiming-uniform" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        init-kaiming-normal, init-kaiming-uniform
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#init-lecun-normal-init-lecun-uniform" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        init-lecun-normal, init-lecun-uniform
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#init-orthogonal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        init-orthogonal
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#random-sampling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Random Sampling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Random Sampling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#random-key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        random-key
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#random-split" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        random-split
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#random-normal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        random-normal
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#random-uniform" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        random-uniform
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#random-randint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        random-randint
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#choice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        choice
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#list-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        List Operations
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="List Operations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#first-second-last" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        first, second, last
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rest" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        rest
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        nth
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cons" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        cons
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#append" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        append
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#empty" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        empty?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#higher-order-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Higher-Order Functions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Higher-Order Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#map" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        map
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tree-map" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tree-map
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tree-map-zeros" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tree-map-zeros
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#apply" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        apply
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dictionary-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dictionary Operations
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Dictionary Operations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dict" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        dict
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get-in
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#assoc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        assoc
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dissoc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        dissoc
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#merge" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        merge
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        keys
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vals
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#control-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Control Flow
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Control Flow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#if" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        if
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#case" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        case
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#let" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        let
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#function-definition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Function Definition
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Function Definition">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#defn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        defn
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        fn
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#macros" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Macros
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Macros">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#defmacro" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        defmacro
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#threading-composition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Threading &amp; Composition
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Threading &amp; Composition">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#-_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -&gt;
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#as-" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        as-&gt;
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#parameter-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameter Management
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Parameter Management">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#with-params" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        with-params
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#jax-transforms" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        JAX Transforms
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="JAX Transforms">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vmap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vmap
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        scan
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#value-and-grad" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        value-and-grad
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#loss-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Loss &amp; Metrics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Loss &amp; Metrics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sparse-cross-entropy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sparse-cross-entropy
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advanced-tensor-ops" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Advanced Tensor Ops
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Advanced Tensor Ops">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#einsum" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        einsum
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#top_k" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        top_k
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tensor-split" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tensor-split
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamic-slice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        dynamic-slice
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#utilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Utilities
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Utilities">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#normalize" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        normalize
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#str-gensym-symbol" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        str, gensym, symbol?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#module-system" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Module System
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Module System">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#use" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        use
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quoting-metaprogramming" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quoting &amp; Metaprogramming
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Quoting &amp; Metaprogramming">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#quote" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ' (quote)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quasiquote" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ` (quasiquote)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#static" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        static
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#additional" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Additional
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Additional">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#append-and-roll" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        append-and-roll
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#range" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        range
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#var" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        var
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#standard-library-modules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Standard Library Modules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Standard Library Modules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#neural-network-operations-nnshf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Neural Network Operations (nn.shf)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Neural Network Operations (nn.shf)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#linear" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        linear
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cross-entropy-loss" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        cross-entropy-loss
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mse-loss" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        mse-loss
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mae-loss" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        mae-loss
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#layer-norm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        layer-norm
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#xavier-init" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        xavier-init
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optimizer-operations-optimshf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optimizer Operations (optim.shf)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Optimizer Operations (optim.shf)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sgd-step" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sgd-step
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adam-step" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        adam-step
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#global-norm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        global-norm
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#clip-by-global-norm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        clip-by-global-norm
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#macros-macrosshf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Macros (macros.shf)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Macros (macros.shf)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#when" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        when
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unless" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        unless
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#comment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        comment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#defmodel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        defmodel
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#defbatch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        defbatch
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="sheaf-language-reference">Sheaf Language Reference</h1>
+<hr />
+<h2 id="arithmetic-math">Arithmetic &amp; Math</h2>
+<h3 id="_1">+</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(+ a b [c ...])</code></p>
+<p>Performs element-wise addition supporting standard broadcasting rules. The function is variadic and accepts two or more arguments.</p>
+<div class="language-text highlight"><pre><span></span><code>(+ 1 2)              ; =&gt; 3
+(+ [1 2] [3 4])      ; =&gt; [4. 6.]
+(+ 1 [2 3] 4)        ; =&gt; [7. 8.]
+</code></pre></div>
+<hr />
+<h3 id="-">-</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(- a [b ...])</code></p>
+<p>Performs unary negation if a single argument is provided. If multiple arguments are provided, performs element-wise subtraction of all subsequent arguments from the first.</p>
+<div class="language-text highlight"><pre><span></span><code>(- 5)                ; =&gt; -5
+(- 10 3)             ; =&gt; 7
+(- [5 10] [2 3])     ; =&gt; [3. 7.]
+</code></pre></div>
+<hr />
+<h3 id="_2">*</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(* a b [c ...])</code></p>
+<p>Computes element-wise multiplication between inputs with broadcasting support. Variadic for 2+ arguments. For matrix multiplication (dot product), see @.</p>
+<div class="language-text highlight"><pre><span></span><code>(* 2 3)              ; =&gt; 6
+(* [1 2] 3)          ; =&gt; [3. 6.]
+(* [2 3] [4 5])      ; =&gt; [ 8. 15.]
+</code></pre></div>
+<hr />
+<h3 id="_3">/</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(/ a b)</code></p>
+<p>Computes element-wise division. Inputs are automatically promoted to floating-point types to maintain precision.</p>
+<div class="language-text highlight"><pre><span></span><code>(/ 10.0 2.0)         ; =&gt; 5.0
+(/ [10 20] 2)        ; =&gt; [ 5. 10.]
+</code></pre></div>
+<hr />
+<h3 id="_4">//</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(// a b)</code></p>
+<p>Computes element-wise integer division, rounding the result toward negative infinity (floor division). Supporting broadcasting, it returns the largest integer less than or equal to the algebraic quotient.</p>
+<div class="language-text highlight"><pre><span></span><code>(// 7 2)             ; =&gt; 3
+(// [7 9] 2)         ; =&gt; [3. 4.]
+</code></pre></div>
+<hr />
+<h3 id="mod">mod</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(mod a b)</code> or <code>(% a b)</code></p>
+<p>Computes the element-wise modulo operation (remainder after division). The result has the same sign as the divisor. The <code>%</code> operator can also be used as an alias.</p>
+<div class="language-text highlight"><pre><span></span><code>(mod 7 3)            ; =&gt; 1
+(% 7 3)              ; =&gt; 1 (same, using % alias)
+(mod [7 9] 2)        ; =&gt; [1. 1.]
+(mod -7 3)           ; =&gt; 2 (same sign as divisor)
+</code></pre></div>
+<hr />
+<h3 id="_5">**</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(** base exponent)</code></p>
+<p>Computes element-wise exponentiation, raising the first input to the power of the second. Supports broadcasting between base and exponent tensors.</p>
+<div class="language-text highlight"><pre><span></span><code>(** 2.0 3.0)         ; =&gt; 8.0
+(** [2 3] 2)         ; =&gt; [4. 9.]
+</code></pre></div>
+<hr />
+<h3 id="abs">abs</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(abs x)</code></p>
+<p>Computes the element-wise absolute value of the input. For complex inputs, this returns the magnitude.</p>
+<div class="language-text highlight"><pre><span></span><code>(abs -5.0)           ; =&gt; 5.0
+(abs [-3 2 -1])      ; =&gt; [3. 2. 1.]
+</code></pre></div>
+<hr />
+<h3 id="exp">exp</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(exp x)</code></p>
+<p>Computes the element-wise exponential of the input (e^x). It is a fundamental building block for activation functions like Softmax and Sigmoid.</p>
+<div class="language-text highlight"><pre><span></span><code>(exp 0.0)            ; =&gt; 1.0
+(exp 1.0)            ; =&gt; 2.7182817
+</code></pre></div>
+<hr />
+<h3 id="log">log</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(log x)</code></p>
+<p>Computes the element-wise natural logarithm (base e). The function is defined for positive real inputs; values outside this domain may result in <code>NaN</code>.</p>
+<div class="language-text highlight"><pre><span></span><code>(log 1.0)            ; =&gt; 0.0
+(log 2.718281828)    ; =&gt; 1.0
+(log [1.0 2.0])      ; =&gt; [0.        0.6931472]
+</code></pre></div>
+<hr />
+<h3 id="sqrt">sqrt</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(sqrt x)</code></p>
+<p>Computes the element-wise non-negative square root of the input. For real-valued tensors, results are undefined for negative inputs.</p>
+<div class="language-text highlight"><pre><span></span><code>(sqrt 4.0)           ; =&gt; 2.0
+(sqrt [1.0 4.0 9.0]) ; =&gt; [1. 2. 3.]
+</code></pre></div>
+<hr />
+<h3 id="_6">@</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(@ a b)</code></p>
+<p>Performs matrix multiplication, dot product, or tensor contraction depending on input dimensionality. It follows standard linear algebra rules for inner products and matrix-matrix or matrix-vector operations.</p>
+<div class="language-text highlight"><pre><span></span><code>;; Vector dot product
+(@ [1 2 3] [4 5 6])  ; =&gt; 32.0
+
+;; Matrix multiply: 2x3 @ 3x2 =&gt; 2x2
+(@ [[1 2 3] [4 5 6]] [[1 2] [3 4] [5 6]]) ; =&gt; [[22. 28.]  [49. 64.]]
+</code></pre></div>
+<hr />
+<h2 id="comparison">Comparison</h2>
+<h3 id="_7">=</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(= a b)</code></p>
+<p>Performs structural equality comparison. Returns a single scalar boolean indicating whether the two inputs have the same shape and identical values across all elements.</p>
+<div class="language-text highlight"><pre><span></span><code>(= 1 1)              ; =&gt; True
+(= [1 2] [1 2])      ; =&gt; True
+(= [1 2] [1 3])      ; =&gt; False
+</code></pre></div>
+<hr />
+<h3 id="_8">==</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(== a b)</code></p>
+<p>Performs element-wise equality comparison with broadcasting support. Returns a boolean tensor of the same shape as the broadcasted inputs where each element represents the result of the local equality check.</p>
+<div class="language-text highlight"><pre><span></span><code>(== [1 2] [1 3])     ; =&gt; [ true false]
+(== 1 [1 1 2])       ; =&gt; [ true  true false]
+</code></pre></div>
+<hr />
+<h3 id="_9">!=</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(!= a b)</code></p>
+<p>Performs element-wise inequality comparison with broadcasting support. Returns a boolean tensor where each entry is true if the corresponding elements are not equal.</p>
+<div class="language-text highlight"><pre><span></span><code>(!= [1 2] [1 3])     ; =&gt; [False  True]
+(!= 1 2)             ; =&gt; true
+</code></pre></div>
+<hr />
+<h3 id="_10">&lt;, &gt;, &lt;=, &gt;=</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(&lt; a b)</code>, <code>(&gt; a b)</code>, etc.</p>
+<p>Perform element-wise relational comparisons using standard broadcasting rules. These functions return boolean tensors suitable for masking operations such as <code>where</code> or <code>select</code>.</p>
+<div class="language-text highlight"><pre><span></span><code>(&lt; [1 5] 3)          ; =&gt; [ true false]
+(&gt; 5 2)              ; =&gt; true
+(&lt;= [1 2 3] 2)       ; =&gt; [ true  true false]
+</code></pre></div>
+<hr />
+<h2 id="logic">Logic</h2>
+<h3 id="and">and</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(and expr1 expr2 [...])</code></p>
+<p>Evaluates expressions from left to right. It short-circuits and returns <code>false</code> (or <code>nil</code>) at the first falsy value encountered. If all expressions evaluate to truthy, it returns the value of the last expression.</p>
+<div class="language-text highlight"><pre><span></span><code>(and true false)     ; =&gt; false
+(and true (&gt; 2 1))   ; =&gt; true
+(and 1 2 3)          ; =&gt; 3
+</code></pre></div>
+<hr />
+<h3 id="or">or</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(or expr1 expr2 [...])</code></p>
+<p>Evaluates expressions from left to right. It short-circuits and returns the first truthy value encountered. If all expressions are falsy, it returns the value of the last expression.</p>
+<div class="language-text highlight"><pre><span></span><code>(or false true)      ; =&gt; true
+(or false false nil) ; =&gt; nil
+(or nil 42)          ; =&gt; 42
+</code></pre></div>
+<hr />
+<h3 id="not">not</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(not x)</code></p>
+<p>Computes the logical negation of the input. Returns <code>true</code> if the argument is <code>false</code> or <code>nil</code>, and <code>false</code> for any other truthy value.</p>
+<div class="language-text highlight"><pre><span></span><code>(not true)           ; =&gt; False
+(not false)          ; =&gt; True
+</code></pre></div>
+<hr />
+<h3 id="true-false-nil">true, false, nil</h3>
+<p><strong>Type:</strong> literals</p>
+<p>Represent the fundamental constants for logical operations. In Sheaf, only <code>false</code> and <code>nil</code> are considered falsy; all other values (including <code>0</code>, empty strings, or empty tensors) are treated as truthy in logical contexts.</p>
+<div class="language-text highlight"><pre><span></span><code>true                 ; Boolean true
+false                ; Boolean false
+nil                  ; Null/None value
+</code></pre></div>
+<hr />
+<h2 id="activation-functions">Activation Functions</h2>
+<h3 id="relu">relu</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(relu x)</code></p>
+<p>Computes the Rectified Linear Unit activation function. It returns the element-wise maximum of <code>0</code> and the input <code>x</code>. This function is computationally efficient and helps mitigate the vanishing gradient problem.</p>
+<div class="language-text highlight"><pre><span></span><code>(relu -1.0)          ; =&gt; 0.0
+(relu [1.0 -2.0 3.0]) ; =&gt; [1. 0. 3.]
+</code></pre></div>
+<hr />
+<h3 id="leaky-relu">leaky-relu</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(leaky-relu x [:alpha a])</code></p>
+<p>Computes the Leaky Rectified Linear Unit activation function. Unlike standard ReLU, it allows a small non-zero gradient when the input is negative, defined as <code>alpha * x</code>. This prevents "dead" neurons during training.</p>
+<div class="language-text highlight"><pre><span></span><code>(leaky-relu -1.0)    ; =&gt; -0.01 (default negative_slope=0.01)
+(leaky-relu [-1.0 2.0] :negative_slope 0.1) ; =&gt; [-0.1  2. ]
+</code></pre></div>
+<hr />
+<h3 id="sigmoid">sigmoid</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(sigmoid x)</code></p>
+<p>Applies the element-wise logistic sigmoid function. It maps any real-valued input into a range between <code>0</code> and <code>1</code>. Often used for binary classification or as a gating mechanism in recurrent architectures.</p>
+<div class="language-text highlight"><pre><span></span><code>(sigmoid 0.0)        ; =&gt; 0.5
+(sigmoid -100.0)     ; =&gt; 0.0
+</code></pre></div>
+<hr />
+<h3 id="tanh">tanh</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(tanh x)</code></p>
+<p>Computes the element-wise hyperbolic tangent. It maps inputs to the range `(-1, 1), providing a zero-centered output which often leads to faster convergence than the sigmoid function in hidden layers.</p>
+<div class="language-text highlight"><pre><span></span><code>(tanh 0.0)           ; =&gt; 0.0
+(tanh 1.0)           ; =&gt; 0.7615942
+</code></pre></div>
+<hr />
+<h3 id="gelu">gelu</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(gelu x)</code></p>
+<p>Computes the Gaussian Error Linear Unit activation. It weights inputs by their percentile according to a normal distribution. Standard in modern Transformer architectures (like BERT and GPT) for its smooth non-linearity.</p>
+<div class="language-text highlight"><pre><span></span><code>(gelu 0.0)           ; =&gt; 0.0
+(gelu 1.0)           ; =&gt; 0.841192
+</code></pre></div>
+<hr />
+<h3 id="selu">selu</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(selu x)</code></p>
+<p>Applies the Scaled Exponential Linear Unit. When used with correct initialization, SELU enables self-normalizing neural networks, where the mean and variance of activations are naturally preserved across layers.</p>
+<div class="language-text highlight"><pre><span></span><code>(selu [-1.0 1.0])    ; =&gt; [-1.1113307  1.050701 ]
+</code></pre></div>
+<hr />
+<h3 id="celu">celu</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(celu x [:alpha a])</code></p>
+<p>Computes the Continuously Differentiable Exponential Linear Unit. Similar to ELU but ensures the derivative is continuous at <code>x=0</code>, facilitating smoother optimization.</p>
+<div class="language-text highlight"><pre><span></span><code>(celu [-1.0 1.0])    ; =&gt; [-0.63212055  1.        ]
+</code></pre></div>
+<hr />
+<h3 id="silu">silu</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(silu x)</code></p>
+<p>Computes the Sigmoid Linear Unit (also known as Swish). Defined as <code>x * sigmoid(x)</code>, it is a smooth, non-monotonic function that frequently outperforms ReLU in deep convolutional and transformer models.</p>
+<div class="language-text highlight"><pre><span></span><code>(silu 0.0)           ; =&gt; 0.0
+(silu 1.0)           ; =&gt; 0.7310586
+</code></pre></div>
+<hr />
+<h3 id="softmax">softmax</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(softmax x [:axis axis])</code></p>
+<p>Applies the Softmax function along the specified axis. It rescales elements such that they fall in the range <code>[0, 1]</code> and sum to <code>1</code>, effectively representing a categorical probability distribution.</p>
+<div class="language-text highlight"><pre><span></span><code>(softmax [1.0 1.0])  ; =&gt; [0.5 0.5]
+(softmax [1.0 2.0 3.0] :axis 0) ; =&gt; [0.09003057 0.24472848 0.66524094]
+</code></pre></div>
+<hr />
+<h3 id="log-softmax">log-softmax</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(log-softmax x [:axis axis])</code></p>
+<p>Computes the natural logarithm of the Softmax function. This implementation is numerically stable, preventing overflow/underflow issues that occur when computing <code>log</code> and <code>softmax</code> separately. Essential for training with cross-entropy loss.</p>
+<div class="language-text highlight"><pre><span></span><code>(log-softmax [1.0 2.0]) ; =&gt; [-1.3132616  -0.31326163]
+</code></pre></div>
+<hr />
+<h2 id="reductions">Reductions</h2>
+<h3 id="sum">sum</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(sum x [:axis axis :keepdims])</code></p>
+<p>Computes the sum of all elements in the input tensor. If an axis is specified, the reduction is performed along that dimension, collapsing it in the output.</p>
+<div class="language-text highlight"><pre><span></span><code>(sum [1 2 3])        ; =&gt; 6.0
+(sum [[1 2] [3 4]] :axis 0) ; =&gt; [4. 6.]
+</code></pre></div>
+<hr />
+<h3 id="mean">mean</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(mean x [:axis axis :keepdims])</code></p>
+<p>Computes the arithmetic mean of tensor elements. When an axis is provided, it calculates the average along that specific dimension.</p>
+<div class="language-text highlight"><pre><span></span><code>(mean [1.0 2.0 3.0]) ; =&gt; 2.0
+(mean [[1 2] [3 4]] :axis 1) ; =&gt; [1.5 3.5]
+</code></pre></div>
+<hr />
+<h3 id="product">product</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(product x [:axis axis :keepdims])</code></p>
+<p>Computes the product of all elements in the input. Like other reduction functions, it supports axis-specific operations to multiply elements along a given dimension.</p>
+<div class="language-text highlight"><pre><span></span><code>(product [1 2 3])    ; =&gt; 6.0
+(product [2.0 3.0 4.0] :axis 0) ; =&gt; 24.0
+</code></pre></div>
+<hr />
+<h3 id="min-max">min, max</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(min x [:axis axis :keepdims])</code>, <code>(max x [:axis axis :keepdims])</code></p>
+<p>Return the single smallest or largest scalar value present in the entire input tensor. These functions perform a total reduction across all dimensions.</p>
+<div class="language-text highlight"><pre><span></span><code>(min [3 1 4])        ; =&gt; 1.0
+(max [1.0 2.0 10.0]) ; =&gt; 10.0
+</code></pre></div>
+<hr />
+<h3 id="minimum-maximum">minimum, maximum</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(minimum a b)</code>, <code>(maximum a b)</code></p>
+<p>Perform element-wise comparison between two tensors and return a new tensor containing the minimum or maximum value at each position. These functions support broadcasting if the input shapes differ.</p>
+<div class="language-text highlight"><pre><span></span><code>(minimum [1 10] [5 2]) ; =&gt; [1. 2.]
+(maximum [1 10] [5 2]) ; =&gt; [ 5. 10.]
+</code></pre></div>
+<hr />
+<h2 id="tensor-shape-structure">Tensor Shape &amp; Structure</h2>
+<h3 id="shape">shape</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(shape x [axis])</code></p>
+<p>Returns tensor dimensions as a tuple. With axis, returns size of that axis.</p>
+<div class="language-text highlight"><pre><span></span><code>;; 3D tensor: 2 matrices of 3x2
+(shape [[[1 2]
+         [3 4]
+         [5 6]]
+        [[7 8]
+         [9 10]
+         [11 12]]])      ; =&gt; (2 3 2)
+
+;; Size of axis 1 (middle dimension)
+(shape [[[1 2]
+         [3 4]
+         [5 6]]
+        [[7 8]
+         [9 10]
+         [11 12]]] 1)    ; =&gt; 3
+</code></pre></div>
+<hr />
+<h3 id="ndim">ndim</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(ndim x)</code></p>
+<p>Number of tensor dimensions.</p>
+<div class="language-text highlight"><pre><span></span><code>;; 3D tensor (shape 2x3x2)
+(ndim [[[1 2]
+        [3 4]
+        [5 6]]
+       [[7 8]
+        [9 10]
+        [11 12]]])       ; =&gt; 3
+
+;; 1D tensor (shape 3)
+(ndim [1 2 3])           ; =&gt; 1
+</code></pre></div>
+<hr />
+<h3 id="len-count">len, count</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(len x)</code>, <code>(count x)</code></p>
+<p>Return the length of the first dimension for arrays/tensors, or number of elements in a sequence.</p>
+<div class="language-text highlight"><pre><span></span><code>(len [1 2 3])              ; =&gt; 3
+(count &#39;[1 2 3 4])         ; =&gt; 4
+(count [[1 2] [3 4]])      ; =&gt; 2
+</code></pre></div>
+<hr />
+<h3 id="reshape">reshape</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(reshape x new-shape)</code></p>
+<p>Gives a new shape to a tensor without changing its underlying data. The total number of elements must remain constant. A dimension value of <code>-1</code> may be used to let the compiler infer the correct size based on the remaining dimensions.</p>
+<div class="language-text highlight"><pre><span></span><code>;; Explicit reshape
+(reshape (arange 6) &#39;[2 3]) ; =&gt; [[0 1 2]
+ [3 4 5]]
+
+;; Infer dimension with -1
+(reshape (arange 9) &#39;[3 -1]) ; =&gt; [[0 1 2] [3 4 5] [6 7 8]]
+</code></pre></div>
+<hr />
+<h3 id="transpose">transpose</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(transpose x [perm])</code></p>
+<p>Permutes the dimensions of a tensor according to the sequence of axes provided. This is a zero-copy operation in XLA that is critical for reordering dimensions (e.g., swapping batch and sequence axes or head dimensions).</p>
+<div class="language-text highlight"><pre><span></span><code>;; Default transpose (reverse axes): (2 3 2) -&gt; (2 3 2)
+(shape (transpose [[[1 2]
+                    [3 4]
+                    [5 6]]
+                   [[7 8]
+                    [9 10]
+                    [11 12]]])) ; =&gt; (2 3 2)
+
+;; Custom permutation &#39;[2 0 1]: (2 3 2) -&gt; (2 2 3)
+(shape (transpose [[[1 2]
+                    [3 4]
+                    [5 6]]
+                   [[7 8]
+                    [9 10]
+                    [11 12]]] &#39;[2 0 1])) ; =&gt; (2 2 3)
+</code></pre></div>
+<hr />
+<h3 id="swapaxes">swapaxes</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(swapaxes x axis1 axis2)</code></p>
+<p>Interchanges two specified axes of a tensor. This is a specialized version of transpose used to reorder dimensions, commonly used to switch between "batch-first" and "sequence-first" formats.</p>
+<div class="language-text highlight"><pre><span></span><code>(shape (swapaxes [[1 2 3] [4 5 6]] 0 1)) ; =&gt; (3, 2)
+</code></pre></div>
+<hr />
+<h3 id="slice">slice</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(slice x start end)</code></p>
+<p>Extracts a continuous sub-section of a tensor along its first axis, starting from the <code>start</code> index (inclusive) and stopping at the <code>end</code> index (exclusive).</p>
+<div class="language-text highlight"><pre><span></span><code>(slice [0 1 2 3 4] 1 4)    ; =&gt; [1. 2. 3.]
+</code></pre></div>
+<hr />
+<h3 id="roll">roll</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(roll x shift [:axis axis])</code></p>
+<p>Rolls tensor elements along the specified axis. Elements that roll off one end are reintroduced at the other. If no axis is provided, the tensor is flattened, rolled, and restored to its original shape.</p>
+<div class="language-text highlight"><pre><span></span><code>(roll [1 2 3] 1)           ; =&gt; [3. 1. 2.]
+(roll [1 2 3] -1)          ; =&gt; [2. 3. 1.]
+</code></pre></div>
+<hr />
+<h3 id="concat">concat</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(concat x1 x2 [...] [:axis axis])</code></p>
+<p>Concatenate sequences (lists or JAX arrays). Returns a list for list inputs, JAX array for array inputs. Supports <code>:axis</code> for array concatenation (default 0).</p>
+<div class="language-text highlight"><pre><span></span><code>;; Concatenate lists
+(concat &#39;[1 2] &#39;[3 4])          ; =&gt; [1, 2, 3, 4]
+
+;; Concatenate tensor (axis=0, default)
+(concat [1 2] [3 4])          ;  =&gt; Tensor f32[4] [1. 2. 3. 4.]
+
+;; Concatenate tensors along specific axis
+(concat [[1 2]] [[3 4]] :axis 0) ; =&gt; Tensor f32[4] [ [1. 2.] [ 3. 4.]]
+(concat [[1] [2]] [[3] [4]] :axis 1) ; =&gt; Tensor f32[4] [ [1. 3.] [ 2. 4.]]
+</code></pre></div>
+<hr />
+<h3 id="tril">tril</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(tril x)</code></p>
+<p>Returns the lower triangular part of a matrix or a stack of matrices. Elements above the main diagonal are set to zero.</p>
+<div class="language-text highlight"><pre><span></span><code>(tril [[1 2] [3 4]]) ; =&gt; [[1. 0.]
+ [3. 4.]]
+</code></pre></div>
+<hr />
+<h3 id="where">where</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(where condition x y)</code></p>
+<p>Performs element-wise selection between <code>x</code> and <code>y</code> based on a boolean condition. If the condition is true, it selects the element from <code>x</code>, otherwise from <code>y</code>. This is the functionally pure equivalent of an if-else statement for tensors and is compatible with JIT compilation.</p>
+<div class="language-text highlight"><pre><span></span><code>(where (&gt; [1 3 2] 2) [10 20 30] 0) ; =&gt; [ 0. 20.  0.]
+</code></pre></div>
+<hr />
+<h2 id="tensor-creation">Tensor Creation</h2>
+<h3 id="ones-zeros">ones, zeros</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(ones shape)</code>, <code>(zeros shape)</code></p>
+<p>Fill tensor with 1.0 or 0.0. Shape must be a tuple/list (use quote for vector literals).</p>
+<div class="language-text highlight"><pre><span></span><code>(ones &#39;[2 3])        ; =&gt; [[1. 1. 1.]
+ [1. 1. 1.]]
+(zeros &#39;[3])         ; =&gt; [0. 0. 0.]
+</code></pre></div>
+<hr />
+<h3 id="arange">arange</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(arange [start] stop [step])</code></p>
+<p>Generates a 1D tensor containing a sequence of evenly spaced values within a given interval. The sequence starts at <code>start</code> (default 0), increments by <code>step</code> (default 1), and ends before reaching <code>stop</code>.</p>
+<div class="language-text highlight"><pre><span></span><code>(arange 5)           ; =&gt; [0 1 2 3 4]
+(arange 2 7)         ; =&gt; [2 3 4 5 6]
+(arange 0 10 2)      ; =&gt; [0 2 4 6 8]
+</code></pre></div>
+<hr />
+<h3 id="one-hot">one-hot</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(one-hot indices num-classes)</code></p>
+<p>Converts integer indices into a one-hot representation. For an input of shape <code>(...)</code>, the output will have shape <code>(..., num-classes)</code>, where the specified indices are set to <code>1</code> and all other entries to <code>0</code>.</p>
+<div class="language-text highlight"><pre><span></span><code>(one-hot 1 3)        ; =&gt; [0. 1. 0.]
+(one-hot [0 2 1] 3)
+
+; =&gt; [[1. 0. 0.]
+; [0. 0. 1.]
+; [0. 1. 0.]]
+</code></pre></div>
+<hr />
+<h2 id="initializers">Initializers</h2>
+<h3 id="init-zeros-init-ones">init-zeros, init-ones</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(init-zeros key shape)</code>, <code>(init-ones key shape)</code></p>
+<p>Initialize a tensor of the specified shape filled entirely with <code>0.0</code> or <code>1.0</code>. While a PRNG <code>key</code> is required for signature consistency, the output of these functions is deterministic.</p>
+<div class="language-text highlight"><pre><span></span><code>(init-zeros (random-key 0) &#39;[128])  ; =&gt; f32[128] (μ=0.000 min=0.000 max=0.000)
+(init-ones (random-key 0) &#39;[128])   ; =&gt; f32[128] (μ=1.000 min=1.000 max=1.000)
+</code></pre></div>
+<hr />
+<h3 id="init-xavier-normal-init-xavier-uniform">init-xavier-normal, init-xavier-uniform</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(init-xavier-* key shape)</code></p>
+<p>Implements Xavier (also known as Glorot) initialization. It scales the weights such that the variance of the activations remains constant across layers. This is highly effective for networks using symmetric activation functions like <code>tanh</code> or <code>sigmoid</code>.</p>
+<p><strong>Note:</strong> Use a quoted vector (e.g., <code>'[256 256]</code>) for the shape to ensure it is treated as static data and not as a tensor.</p>
+<div class="language-text highlight"><pre><span></span><code>(let [key (random-key 42)]
+  (init-xavier-normal key &#39;[256 256]))
+
+; =&gt; f32[256x256]
+</code></pre></div>
+<hr />
+<h3 id="init-kaiming-normal-init-kaiming-uniform">init-kaiming-normal, init-kaiming-uniform</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(init-kaiming-* key shape)</code></p>
+<p>Implements Kaiming (also known as He) initialization. This method accounts for the non-linearity of ReLU-based activations by doubling the variance of the weights, preventing the signal from vanishing in deep architectures.</p>
+<div class="language-text highlight"><pre><span></span><code>(init-kaiming-normal (random-key 0) [512 512])
+</code></pre></div>
+<hr />
+<h3 id="init-lecun-normal-init-lecun-uniform">init-lecun-normal, init-lecun-uniform</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(init-lecun-* key shape)</code></p>
+<p>Implements LeCun initialization. It draws weights from a distribution scaled by the inverse square root of the fan-in. This is the default initialization for many classic neural network architectures and is particularly effective when using the SELU activation.</p>
+<div class="language-text highlight"><pre><span></span><code>(init-lecun-normal (random-key 0) [256 256])
+</code></pre></div>
+<hr />
+<h3 id="init-orthogonal">init-orthogonal</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(init-orthogonal key shape)</code></p>
+<p>Initializes a square or rectangular matrix as an orthogonal (or semi-orthogonal) matrix. Orthogonal initialization is particularly useful in recurrent networks (RNNs) and deep transformers to preserve the norm of the gradient and prevent explosion or vanishing.</p>
+<div class="language-text highlight"><pre><span></span><code>(init-orthogonal (random-key 0) [128 128])
+</code></pre></div>
+<hr />
+<h2 id="random-sampling">Random Sampling</h2>
+<h3 id="random-key">random-key</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(random-key seed)</code></p>
+<p>Generates a Pseudo-Random Number Generator (PRNG) key starting from an integer seed. Unlike many other frameworks, randomness in Sheaf is explicit and deterministic: the state is never hidden, ensuring identical results across different runs and hardwares.</p>
+<div class="language-text highlight"><pre><span></span><code>(random-key 42)      ; =&gt; key&lt;fry&gt;[] = Array((), overlaying: [ 0 42]
+</code></pre></div>
+<hr />
+<h3 id="random-split">random-split</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(random-split key [num])</code></p>
+<p>Splits a single PRNG key into a specified number <code>num</code> of independent sub-keys. This is a cornerstone of stochastic modeling in Sheaf: to maintain statistical independence, a key should be used for exactly one operation and then "discarded" in favor of its split children.</p>
+<div class="language-text highlight"><pre><span></span><code>(let [key (random-key 0)
+      [k1 k2 k3] (random-split key 3)]
+  (dict :w1 (random-normal k1 &#39;[10])
+        :w2 (random-normal k2 &#39;[10])
+        :noise (random-uniform k3 &#39;[10])))
+
+; =&gt;  {:w1 f32[10], :w2 f32[10], :noise f32[10]}
+</code></pre></div>
+<hr />
+<h3 id="random-normal">random-normal</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(random-normal key shape [:dtype dtype])</code></p>
+<p>Samples random values from a standard normal distribution (mean 0, variance 1) with the specified shape.</p>
+<div class="language-text highlight"><pre><span></span><code>(random-normal (random-key 0) &#39;[100 100])  ; =&gt; Tensor i32[100x100]
+</code></pre></div>
+<hr />
+<h3 id="random-uniform">random-uniform</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(random-uniform key [shape])</code></p>
+<p>Samples random values from a uniform distribution over the semi-open interval <code>[0.0, 1.0)</code>. This is often used as a base for custom probability transforms or simple noise injection.</p>
+<div class="language-text highlight"><pre><span></span><code>(random-uniform (random-key 0) &#39;[10 10])  ; =&gt; Tensor i32[10x10]
+</code></pre></div>
+<hr />
+<h3 id="random-randint">random-randint</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(random-randint key shape low high)</code></p>
+<p>Generates random integers sampled uniformly from the range <code>[low, high)</code>. This is useful for generating random indices, selecting data augmentations, or creating dummy datasets.</p>
+<div class="language-text highlight"><pre><span></span><code>(random-randint (random-key 0) &#39;[100] 0 10)  ; =&gt; ⇒ Tensor i32[100]
+</code></pre></div>
+<hr />
+<h3 id="choice">choice</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(choice key a shape [:p p :replace replace])</code></p>
+<p>Generates a random sample from a given 1D array or a range.</p>
+<ul>
+<li>
+<p><code>a</code>: If an integer, the sample is taken from <code>(arange a)</code>. If a tensor, the sample is taken from its elements.</p>
+</li>
+<li>
+<p><code>shape</code>: The shape of the output sample.</p>
+</li>
+<li>
+<p><code>p</code>: An optional tensor of probabilities associated with each entry in <code>a</code>.</p>
+</li>
+<li>
+<p><code>replace</code>: Whether the sample is with or without replacement.</p>
+</li>
+</ul>
+<div class="language-text highlight"><pre><span></span><code>;; Samples 5 random integers from the range [0, 100).
+(choice (random-key 0) 100 &#39;[5])  ; =&gt; [89  0 12 73 71]
+
+;; Samples 10 indices from the range [0, 3) according to the
+;; provided probability distribution.
+(choice (random-key 0) 3 &#39;[10] :p [0.1 0.3 0.6])  ; =&gt; [0 0 2 2 2 2 2 1 1 2]
+</code></pre></div>
+<hr />
+<h2 id="list-operations">List Operations</h2>
+<h3 id="first-second-last">first, second, last</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(first seq)</code>, <code>(second seq)</code>, <code>(last seq)</code></p>
+<p>Provides positional access to elements within a list.
+To access elements in a tensor, use <code>nth</code> or <code>slice</code>.</p>
+<div class="language-text highlight"><pre><span></span><code>(first &#39;[1 2 3])      ; =&gt; 1
+(second &#39;[1 2 3])     ; =&gt; 2
+(last &#39;[1 2 3])       ; =&gt; 3
+</code></pre></div>
+<hr />
+<h3 id="rest">rest</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(rest seq)</code></p>
+<p>Returns a new sequence containing all elements of the input except for the first one. In Lisp terms, this is the <code>cdr</code> operation. If the sequence is empty, it returns an empty list.</p>
+<div class="language-text highlight"><pre><span></span><code>(rest &#39;[1 2 3])      ; =&gt; [2, 3]
+</code></pre></div>
+<hr />
+<h3 id="nth">nth</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(nth seq index)</code></p>
+<p>Retrieves the element at the specified zero-based <code>index</code>. This function is polymorphic in Sheaf: it performs a pointer-based lookup on lists and a coordinate-based extraction on tensors.</p>
+<div class="language-text highlight"><pre><span></span><code>(nth &#39;[10 20 30] 1)  ; =&gt; 20 (Sheaf list)
+(nth [10 20 30] 1)   ; =&gt; f32[] 20.0 (Tensor)
+</code></pre></div>
+<hr />
+<h3 id="cons">cons</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(cons elem seq)</code></p>
+<p>Constructs a new list by prepending <code>elem</code> to the front of <code>seq</code>. This is a constant-time O(1) operation for lists, making it the preferred way to build sequences dynamically.</p>
+<div class="language-text highlight"><pre><span></span><code>(cons 0 &#39;[1 2 3])    ; =&gt; [0, 1, 2, 3]
+</code></pre></div>
+<hr />
+<h3 id="append">append</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(append seq elem)</code></p>
+<p>Creates a new sequence by adding <code>elem</code> to the end of <code>seq</code>. Unlike cons, this operation requires traversing the entire sequence, resulting in O(N) complexity for lists.</p>
+<div class="language-text highlight"><pre><span></span><code>(append &#39;[1 2] 3)    ; =&gt; [1, 2, 3]
+
+(append [1 2] 3)     ; =&gt; Tensor f32[3] = [1. 2. 3.]
+</code></pre></div>
+<hr />
+<h3 id="empty">empty?</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(empty? seq)</code></p>
+<p>Returns <code>true</code> if the provided sequence (list or tensor) contains no elements. For tensors, this checks if any dimension in the shape is <code>0</code>.</p>
+<div class="language-text highlight"><pre><span></span><code>(empty? &#39;[])         ; =&gt; true
+(empty? &#39;[1])        ; =&gt; false
+(empty? [1 2 3])     ; =&gt; false (tensor)
+</code></pre></div>
+<hr />
+<h2 id="higher-order-functions">Higher-Order Functions</h2>
+<h3 id="map">map</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(map func seq)</code></p>
+<p>Applies a function to each element of a sequence and returns a list of the results. In Sheaf, <code>map</code> is the primary way to transform collections without using explicit loops. While <code>map</code> is sequential in logic, the underlying execution on tensors can often be optimized by the compiler.</p>
+<div class="language-text highlight"><pre><span></span><code>;; Basic numeric transformation
+(map (fn [x] (* x 2)) [1 2 3])
+
+; =&gt; [2.0 4.0 6.0]
+
+;; Mapping over a list of parameter dictionaries
+(map (fn [p] (with-params [p] (+ W b)))
+     [{:W 1 :b 0.1} {:W 2 :b 0.2}])
+
+; =&gt; [1.1 2.2]
+</code></pre></div>
+<hr />
+<h3 id="tree-map">tree-map</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(tree-map f tree1 [tree2 ...])</code></p>
+<p>Applies a function <code>f</code> to every leaf in a tree (or multiple trees) and returns a new tree with the same structure. This is the primary tool for manipulating model parameters, such as applying an optimizer update or scaling weights, without manually flattening the structures.</p>
+<div class="language-text highlight"><pre><span></span><code>;; Square all elements in a nested structure
+(let [params {:layer1 {:w [2.0 4.0] :b 0.5}
+              :layer2 {:w [10.0]}}]
+  (tree-map (fn [x] (* x x)) params))
+
+; =&gt; {:layer1 {:w [4.0 16.0], :b 0.25}, :layer2 {:w [100.0]}}
+</code></pre></div>
+<hr />
+<h3 id="tree-map-zeros">tree-map-zeros</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(tree-map-zeros tree)</code></p>
+<p>Creates a new tree with the same structure as the input, but where every leaf is replaced by a zero of the same numerical type. This is primarily used to initialize gradient accumulators or optimizer states.</p>
+<div class="language-text highlight"><pre><span></span><code>;; Zero all elements in a nested structure
+(let [params {:layer1 {:w [2.0 4.0] :b 0.5}
+              :layer2 {:w [10.0]}}]
+  (tree-map-zeros params))
+
+;=&gt; {:layer1 {:b 0.0 :w [0.0, 0.0]}, :layer2 {:w [0.0]}}
+
+---
+
+### flatten
+
+**Type:** function
+**Signature:** `(flatten tree)`
+
+Flattens a PyTree into a pair of (leaves, tree-structure). The leaves are a flat list of all leaf values in the tree, and tree-structure is metadata that can be used to reconstruct the original tree. Useful for examining all parameter values or applying global operations.
+
+```sheaf
+;; Extract all leaves from a nested structure
+(let [params {:layer1 {:w 1.0 :b 2.0} :layer2 {:w 3.0}}]
+  (first (flatten params)))
+
+; =&gt; [2.0 1.0 3.0]
+
+;; Count total leaves
+(len (first (flatten {:a 1 :b 2 :c 3}))) ; =&gt; 3
+```
+
+---
+
+### tree-reduce
+
+**Type:** function
+**Signature:** `(tree-reduce func tree [init])`
+
+Reduces all leaves of a PyTree to a single value by applying a binary function cumulatively. If an initial value is provided, it becomes the first accumulator; otherwise the first leaf is used. This is useful for computing aggregate statistics across all parameters, such as the total number of learnable weights or the sum of all gradients.
+
+```sheaf
+;; Sum all leaf values
+(tree-reduce + {:a 1 :b 2 :c 3} 0) ; =&gt; 6
+
+;; Multiply all values (starting from 1)
+(tree-reduce * &#39;[2 3 4] 1) ; =&gt; 24
+
+;; Find maximum across all leaves
+(tree-reduce maximum {:l1 [1.0 5.0] :l2 [2.0]} -1e9) ; =&gt; [2. 5.]
+```
+
+---
+
+### reduce
+
+**Type:** function
+**Signature:** `(reduce func init seq)`
+
+Reduces a collection to a single value by applying a binary function func cumulatively to the elements of seq, from left to right, starting with the init value. Each step takes the current accumulator and the next element to produce the new accumulator.
+
+```sheaf
+;; Simple sum: 0 + 1 + 2 + 3 + 4
+(reduce + 0 [1 2 3 4]) ; =&gt; 10.
+
+;; Finding the maximum value across multiple tensors
+;; Useful for tracking the peak activation across different layers
+(reduce maximum -1e9 [[1 5] [2 3] [8 4]]) ; =&gt; [8. 5.]
+</code></pre></div>
+<hr />
+<h3 id="apply">apply</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(apply func seq)</code></p>
+<p>Calls the provided function func using the elements of seq as its individual arguments. It "unpacks" a list or a tensor so that each element becomes a separate argument to the function.</p>
+<div class="language-text highlight"><pre><span></span><code>;; Unpacking a list for a variadic function
+;; Equivalent to (+ 1 2 3 4)
+(apply + [1 2 3 4])      ; =&gt; 10.0
+
+;; Finding the global maximum of a list of scalars
+;; Equivalent to (max [10 52 8])
+(apply max [10 52 8])  ; =&gt; 52.0
+
+;; Dynamic shape generation
+;; Passing a list of dimensions to a constructor
+;; Equivalent to (ones &#39;[2 3 4])
+(let [dims &#39;[2 3 4]]
+  (apply ones dims))
+
+; =&gt; f32[2x3x4] (μ=1.000 min=1.000 max=1.000)
+</code></pre></div>
+<hr />
+<h2 id="dictionary-operations">Dictionary Operations</h2>
+<h3 id="dict">dict</h3>
+<p><strong>Type:</strong> special-form<br />
+<strong>Signature:</strong> <code>(dict :key1 val1 :key2 val2 ...)</code></p>
+<p>Creates a dictionary (map) from a sequence of alternating keys and values. This is useful for dynamically constructing parameter maps or configurations where keys and values are computed or passed as arguments.</p>
+<div class="language-text highlight"><pre><span></span><code>;; Basic construction
+(dict :learning-rate 0.001 :batch-size 32)
+
+; =&gt; {:learning-rate 0.001, :batch-size 32}
+
+;; Constructing from variables
+(let [w (ones &#39;[10])
+      b (zeros &#39;[1])]
+  (dict :W w :b b))
+
+; =&gt; {:W f32[10], :b f32[1]}
+</code></pre></div>
+<hr />
+<h3 id="get">get</h3>
+<p><strong>Type:</strong> special-form<br />
+<strong>Signature:</strong> <code>(get coll key [default])</code></p>
+<p>Retrieves the value associated with a key in a map or an index in a tensor.</p>
+<p>If the key/index exists, returns the corresponding value.
+If it does not exist:</p>
+<ul>
+<li>Returns <code>nil</code> if no <code>default</code> is provided.</li>
+<li>Returns the <code>default</code> value if provided.</li>
+</ul>
+<div class="language-text highlight"><pre><span></span><code>(get {:a 1 :b 2} :a)  ; =&gt; 1
+(get {:a 1} :missing 99) ; =&gt; 99
+</code></pre></div>
+<hr />
+<h3 id="get-in">get-in</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(get-in collection key-vector [default])</code></p>
+<p>Navigates through nested data structures (maps, lists, or tensors) using a sequence of keys. If the path exists, returns the value at the destination; otherwise, returns nil or the optional not-found value.</p>
+<div class="language-text highlight"><pre><span></span><code>;; Deep navigation in a parameter dictionary
+(get-in {:layers {:l1 {:w 10}}} [:layers :l1 :w])
+
+; =&gt; 10
+
+;; Missing path with default value (very common for configs)
+(get-in {:a 1} [:layers :l1 :depth] 12)
+
+; =&gt; 12
+
+;; Mixed navigation (Map and Tensors)
+;; Accesses: layer1 -&gt; weights -&gt; 1st row
+(get-in {:l1 {:w [[1 2] [3 4]]}} [:l1 :w 0])  ;  ==&gt; [1. 2.]
+(get-in {:a {:b {:c 5}}} [:a :b :c]) ;  ==&gt; 5
+</code></pre></div>
+<hr />
+<h3 id="assoc">assoc</h3>
+<p><strong>Type:</strong> special-form<br />
+<strong>Signature:</strong> <code>(assoc dict :key1 val1 :key2 val2 ...)</code></p>
+<p>Creates a new dictionary with updated key-value pairs. Does not mutate the original dictionary (functional update).</p>
+<div class="language-text highlight"><pre><span></span><code>;; Add a new key
+(assoc {:a 1} :b 2)
+
+; =&gt; {:a 1, :b 2}
+
+;; Update an existing key
+(assoc {:a 1 :b 2} :a 10)
+
+; =&gt; {:a 10, :b 2}
+
+;; Multiple updates at once
+(assoc {:layer1 {:w w1 :b b1}} :learning-rate 0.001 :epochs 100)
+
+; =&gt; {:layer1 {...}, :learning-rate 0.001, :epochs 100}
+</code></pre></div>
+<hr />
+<h3 id="dissoc">dissoc</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(dissoc dict keys-list)</code></p>
+<p>Creates a new dictionary with specified keys removed. Does not mutate the original dictionary (functional update). Keys are passed as a list.</p>
+<div class="language-text highlight"><pre><span></span><code>;; Remove a single key
+(dissoc {:a 1 :b 2 :c 3} [:b])
+
+; =&gt; {:a 1, :c 3}
+
+;; Remove multiple keys
+(dissoc {:a 1 :b 2 :c 3} [:a :c])
+
+; =&gt; {:b 2}
+
+;; Remove keys that don&#39;t exist (no error, returns same dict)
+(dissoc {:a 1} [:x :y])
+
+; =&gt; {:a 1}
+
+;; Useful for filtering state in scan/reduce
+(let [state {:p params :m momentum :v velocity :t t :loss 0.5}]
+  (dissoc state [:loss]))  ; Remove loss before scan
+
+; =&gt; {:p ..., :m ..., :v ..., :t ...}
+</code></pre></div>
+<hr />
+<h3 id="merge">merge</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(merge dict1 dict2 ...)</code></p>
+<p>Merges multiple dictionaries into one. Later dictionaries override earlier ones for conflicting keys. Does not mutate the originals (creates new dict).</p>
+<div class="language-text highlight"><pre><span></span><code>;; Merge two dicts
+(merge {:a 1} {:b 2})
+
+; =&gt; {:a 1, :b 2}
+
+;; Override on conflict (later dict wins)
+(merge {:a 1 :b 2} {:b 20 :c 30})
+
+; =&gt; {:a 1, :b 20, :c 30}
+
+;; Merge configuration with defaults
+(let [defaults {:lr 0.001 :epochs 10 :batch-size 32}
+      user-config {:lr 0.0001 :batch-size 64}]
+  (merge defaults user-config))
+
+; =&gt; {:lr 0.0001, :epochs 10, :batch-size 64}
+</code></pre></div>
+<hr />
+<h3 id="keys">keys</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(keys dict)</code></p>
+<p>Returns a list containing all the keys present in the dictionary. The order of keys is generally consistent with the insertion order but should not be relied upon for critical logic.</p>
+<div class="language-text highlight"><pre><span></span><code>(keys {:a 1 :b 2 :c 3})
+
+; =&gt; [&#39;a&#39;, &#39;b&#39;, &#39;c&#39;]
+</code></pre></div>
+<hr />
+<h3 id="vals">vals</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(vals dict)</code></p>
+<p>Returns a list of all values stored in the dictionary. This is particularly useful when combined with <code>tree-map</code> or other sequence operations to process all parameters of a model layer simultaneously.</p>
+<div class="language-text highlight"><pre><span></span><code>(vals {:a 1 :b 2 :c 3})
+
+; =&gt; [1, 2, 3]
+</code></pre></div>
+<hr />
+<h2 id="control-flow">Control Flow</h2>
+<h3 id="if">if</h3>
+<p><strong>Type:</strong> special-form<br />
+<strong>Signature:</strong> <code>(if condition then-expr [else-expr])</code></p>
+<p>The fundamental conditional operator. It evaluates the <code>condition</code>; if truthy, it evaluates and returns <code>then-expr</code>. If falsy, it evaluates and returns <code>else-expr</code> (or <code>nil</code> if no else branch is provided). In compiled JIT contexts, <code>if</code> is used for structural control flow, not for element-wise tensor masking (use <code>where</code> for that).</p>
+<div class="language-text highlight"><pre><span></span><code>(if (&gt; 1 0) :yes :no) ; =&gt; :yes
+(if false :a :b)      ; =&gt; :b
+</code></pre></div>
+<hr />
+<h3 id="case">case</h3>
+<p><strong>Type:</strong> special-form<br />
+<strong>Signature:</strong> <code>(case x match1 result1 ... [default])</code></p>
+<p>Provides efficient multi-branch dispatch. It evaluates <code>x</code> and compares it against each <code>match</code> literal. When a match is found, the corresponding <code>result</code> is returned. If no matches succeed and a <code>default</code> value is provided at the end, it is returned; otherwise, the result is <code>nil</code>.</p>
+<div class="language-text highlight"><pre><span></span><code>(case 2
+  1 :low
+  2 :mid
+  3 :high
+  :unknown)           ; =&gt; :mid
+</code></pre></div>
+<hr />
+<h3 id="let">let</h3>
+<p><strong>Type:</strong> special-form<br />
+<strong>Signature:</strong> <code>(let [var1 val1 var2 val2 ...] body)</code></p>
+<p>Evaluates expressions in a local scope where each variable name is bound to its corresponding value sequentially. Each binding can reference previously defined variables within the same block before returning the result of the body.</p>
+<div class="language-text highlight"><pre><span></span><code>(let [x 1] x)         ; =&gt; 1
+
+(let [x 1 y 2]
+  (+ x y))            ; =&gt; 3
+</code></pre></div>
+<hr />
+<h2 id="function-definition">Function Definition</h2>
+<h3 id="defn">defn</h3>
+<p><strong>Type:</strong> special-form<br />
+<strong>Signature:</strong> <code>(defn name [params] [:jit] body)</code></p>
+<p>Binds a global name to a function defined by a parameter vector and a body expression. The optional <code>:jit</code> keyword enables XLA compilation for the function, optimizing it for accelerated backends.</p>
+<div class="language-text highlight"><pre><span></span><code>(defn square [x]
+  (* x x))
+
+(square 5)            ; =&gt; 25
+
+(defn fast-predict [x w b] :jit
+  (sigmoid (+ (@ x w) b)))
+</code></pre></div>
+<hr />
+<h3 id="fn">fn</h3>
+<p><strong>Type:</strong> special-form<br />
+<strong>Signature:</strong> <code>(fn [params] body)</code></p>
+<p>Defines an anonymous function (lambda) that captures no external state (pure function). It is primarily used for short-lived transformations, mapping operations, or as arguments to higher-order functions like <code>map</code> or <code>vmap</code>.</p>
+<div class="language-text highlight"><pre><span></span><code>((fn [x] (+ x 1)) 10)         ; =&gt; 11
+
+(map (fn [x] (* x 2)) [1 2])  ; =&gt; [2 4]
+
+;; Binding an anonymous function to a local name
+(let [double (fn [n] (* n 2))]
+  (double 21))                ; =&gt; 42
+</code></pre></div>
+<hr />
+<h2 id="macros">Macros</h2>
+<h3 id="defmacro">defmacro</h3>
+<p><strong>Type:</strong> special-form<br />
+<strong>Signature:</strong> <code>(defmacro name [params] body)</code></p>
+<p>Defines a macro that performs code transformation at compile-time. Unlike functions, macros receive their arguments as unevaluated data (S-expressions) and return a new expression that replaces the macro call before execution. This is primarily used for syntax extension and code generation without runtime overhead.</p>
+<div class="language-text highlight"><pre><span></span><code>;; Define a &#39;when&#39; macro (syntactic sugar for if)
+(defmacro when [cond body]
+  `(if ~cond ~body nil))
+
+;; At compile-time, this call:
+(when (&gt; x 0) (log x))
+
+;; ...is expanded into:
+(if (&gt; x 0) (log x) nil)
+
+;; Logic for ensuring positive values
+(when (&gt; 5 0)
+  (+ 1 2))   ; =&gt; 3
+
+(when (&lt; 5 0)
+  (+ 1 2))   ; =&gt; nil (condition false)
+</code></pre></div>
+<hr />
+<h2 id="threading-composition">Threading &amp; Composition</h2>
+<h3 id="-_1">-&gt;</h3>
+<p><strong>Type:</strong> special-form<br />
+<strong>Signature:</strong> <code>(-&gt; x (f1) (f2 a) ...)</code></p>
+<p>Threads the expression <code>x</code> through the provided forms. It inserts <code>x</code> as the first argument of the first form, then inserts the result as the first argument of the next form, and so on. This macro linearizes nested function calls, improving readability for sequential data transformations.</p>
+<div class="language-text highlight"><pre><span></span><code>;; Linear sequence: (f3 (f2 (f1 x a) b))
+(-&gt; x
+  (f1 a)     ; expands to (f1 x a)
+  (f2 b)     ; expands to (f2 (result-f1) b)
+  (f3))      ; expands to (f3 (result-f2))
+
+;; Compute operations on an array
+(-&gt; [1 2 3]
+  (sum)             ; =&gt; 6.0
+  (+ 10))           ; =&gt; 16.0
+
+;; Practical tensor pipeline
+(-&gt; (arange 12)
+  (reshape 3 4)     ; Reshape to [3, 4]
+  (sum :axis 0)     ; Sum columns =&gt; [12 13 14 15]
+  (+ 10))           ; Add bias =&gt; [22 23 24 25]
+</code></pre></div>
+<hr />
+<h3 id="as-">as-&gt;</h3>
+<p><strong>Type:</strong> special-form<br />
+<strong>Signature:</strong> <code>(as-&gt; init name form1 form2 ...)</code></p>
+<p>Threads the initial expression init through the provided forms by binding its result to a symbol name. At each step, name is updated with the result of the previous form, allowing the data to be placed at any position within the next expression. This is the preferred way to handle pipelines where functions do not accept the threaded data as their first argument.</p>
+<div class="language-text highlight"><pre><span></span><code>;; Simple math pipeline
+(as-&gt; 5 x
+  (+ x 1)           ; x is bound to 5, result is 6
+  (* x 2)           ; x is now 6, result is 12
+  (- x 3))          ; x is now 12, result is 9
+
+;; Non-first position (data used as second arg):
+(as-&gt; [1 2 3] data
+  (map (fn [x] (* x 2)) data)  ; [Array(2.) Array(4.) Array(6.)]
+  (apply + data))              ; =&gt; 12.0 (sum of mapped values)
+
+;; Multiple uses in one step:
+(as-&gt; {:a 1 :b 2} m
+  {:sum (+ (get m :a) (get m :b))
+   :prod (* (get m :a) (get m :b))}) ; =&gt; {:sum 3 :prod 2}
+</code></pre></div>
+<hr />
+<h2 id="parameter-management">Parameter Management</h2>
+<h3 id="with-params">with-params</h3>
+<p><strong>Type:</strong> special-form<br />
+<strong>Signature:</strong> <code>(with-params [dict] body)</code> or <code>(with-params [dict :key] body)</code></p>
+<p>Unpacks the keys of a dictionary into the local scope as bound variables. If a <code>:key</code> is provided, it destructures the nested dictionary located at <code>(get dict :key)</code>.</p>
+<div class="language-text highlight"><pre><span></span><code>;; Access root level keys (params dict)
+(with-params [params]
+  (+ W b))          ; W and b from root of params
+
+;; Destructure a nested sub-dictionary
+;; Accesses weights stored in p[:layer1]
+(with-params [params :l1]
+  (+ (@ x W) b))    ; W and b from params[:l1]
+
+;; Functional composition
+;; Dynamically select a layer&#39;s parameters from a list
+(let [layers [{:W [[1.0] [2.0]] :b [0.1]}  ; Layer 0
+              {:W [[3.0] [4.0]] :b [0.5]}] ; Layer 1
+      layer-id 1                           ; Pick Layer 1
+      x [1.0 1.0]]                         ; Input
+  (with-params (get layers layer-id)
+    (relu (+ (@ x W) b))))
+</code></pre></div>
+<hr />
+<h2 id="jax-transforms">JAX Transforms</h2>
+<h3 id="vmap">vmap</h3>
+<p><strong>Type:</strong> special-form<br />
+<strong>Signature:</strong> <code>(vmap func)</code> or <code>(vmap func in-axes)</code></p>
+<p>Vectorized mapping over batches. Applies function independently to each element along specified axes. Optional second argument controls axis mapping for multiple parameters.</p>
+<div class="language-text highlight"><pre><span></span><code>;; Apply function to each row (default axis=0)
+((vmap (fn [x] (sum x))) [[1 2 3] [4 5 6]]) ; =&gt; [ 6. 15.]
+
+;; Specify axis explicitly (axis=0)
+((vmap (fn [x] (* x 2)) 0) [[1 2 3] [4 5 6]]) ; =&gt; [[ 2.  4.  6.]
+ [ 8. 10. 12.]]
+
+;; Vmap along axis 1 (columns)
+((vmap (fn [x] (sum x)) 1) [[1 2] [3 4]]) ; =&gt; [4. 6.]
+
+;; Multiple parameters: vmap first arg, keep second fixed
+((vmap (fn [x w] (+ x w)) [0 nil]) [[1 2] [3 4]] 10) ; =&gt; [[11. 12.]
+ [13. 14.]]
+</code></pre></div>
+<hr />
+<h3 id="scan">scan</h3>
+<p><strong>Type:</strong> special-form<br />
+<strong>Signature:</strong> <code>(scan func init-state xs)</code></p>
+<p>Iterates over <code>xs</code> while carrying a state. At each step, <code>func</code> is applied to the current state and the next element of <code>xs</code>.</p>
+<p>The function <code>func</code> must return a pair: <code>[new-state, output]</code>.</p>
+<p>Returns a vector <code>[final-state, stacked-outputs]</code>.</p>
+<p><strong>Example 1: Accumulator (running sum)</strong></p>
+<div class="language-text highlight"><pre><span></span><code>;; Simple accumulator: state is the running sum
+(scan (fn [state x]
+        [(+ state x)          ; new-state: accumulated sum
+         (+ state x)])        ; output: emit current sum
+      0.0
+      [1.0 2.0 3.0])
+
+; =&gt; [6.0, [1.0 3.0 6.0]]  ;; final state=6, outputs=[1, 1+2, 1+2+3]
+</code></pre></div>
+<p><strong>Example 2: RNN-style recurrence (state threading)</strong></p>
+<p>For RNNs, state is the hidden vector. Each step processes <code>(h_prev, x_t) -&gt; (h_next, output)</code>:</p>
+<div class="language-text highlight"><pre><span></span><code>;; Concrete RNN example: h_t+1 = tanh(W_hh @ h_t + W_xh @ x_t + b_h)
+;; Parameters: W_hh=[0.5 0.1; 0.2 0.3], W_xh=[0.1 0.2; 0.3 0.4], b_h=[0 0]
+(let [W_hh [[0.5 0.1] [0.2 0.3]]
+      W_xh [[0.1 0.2] [0.3 0.4]]
+      b_h [0.0 0.0]
+      h0 [0.0 0.0]                          ; initial hidden state
+      X [[1.0 0.0] [0.0 1.0] [1.0 1.0]]]   ; sequence of 3 inputs
+  (let [[h_final outputs]
+        (scan (fn [h_prev x_t]
+                (let [h_next (tanh (+ (@ W_hh h_prev)
+                                      (@ W_xh x_t)
+                                      b_h))]
+                  [h_next h_next]))          ; [new_state, output]
+              h0 X)]
+    outputs))                                ; Return all hidden states
+
+; =&gt; [[0.09966799 0.36936549]
+;     [0.29131263 0.47375143]
+;     [0.36652097 0.52315444]]
+</code></pre></div>
+<p><strong>Example 3: Multiple state components (like LSTM)</strong></p>
+<div class="language-text highlight"><pre><span></span><code>;; State is a dict: {:h hidden :c cell}
+;; Output is a vector (just the hidden state)
+(fn [{:keys [h c]} x_t]
+  (let [h_new (tanh (+ (@ W_hh h) (@ W_xh x_t)))
+        c_new (+ (* f_t c) (* i_t (tanh (+ ...))))]
+    [{:h h_new :c c_new}   ; new_state: dict with both h and c
+     h_new]))              ; output: emit only h
+</code></pre></div>
+<p><strong>Notes:</strong></p>
+<ul>
+<li>If <code>func</code> returns only one element, <code>scan</code> will fail</li>
+<li>If state and output structures mismatch between iterations, <code>scan</code> will also fail</li>
+<li><code>scan</code> is fully differentiable; use with <code>value-and-grad</code> for learning</li>
+</ul>
+<hr />
+<h3 id="value-and-grad">value-and-grad</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(value-and-grad func)</code></p>
+<p>A higher-order function that transforms a scalar-valued function <code>func</code> into a new function. This new function returns a list containing two elements: the original result (value) and the gradient(s) with respect to the first argument of <code>func</code>. The gradients share the same structure (Pytree) as the input parameters.</p>
+<div class="language-text highlight"><pre><span></span><code>;; Basic scalar optimization
+;; f(x) = x² + 1  =&gt; f&#39;(x) = 2x
+(let [loss-fn (fn [x] (+ (* x x) 1))
+      grad-fn (value-and-grad loss-fn)
+      [val grad] (grad-fn 3.0)]
+  [val grad])
+
+: =&gt; [10. 6.]
+
+;; Optimization on parameter dictionaries
+(let [p {:w 2.0 :b 1.0}
+      loss (fn [params] (with-params [params] (+ (* w w) b)))
+      [val grads] ((value-and-grad loss) p)]
+  [(get grads :w) (get grads :b)])
+
+; =&gt; [4. 1.]  ;; 2*w = 4.0, derivative of b = 1.0
+</code></pre></div>
+<hr />
+<h2 id="loss-metrics">Loss &amp; Metrics</h2>
+<h3 id="sparse-cross-entropy">sparse-cross-entropy</h3>
+<p><strong>Type:</strong> function
+<strong>Signature:</strong> <code>(sparse-cross-entropy logits targets :i32)</code></p>
+<p>Computes the categorical cross-entropy loss between logits (unnormalized predictions) and targets (integer class indices). This function internally applies a softmax to the logits, making it more numerically stable than manual computation.</p>
+<p>Note: <code>targets</code> must be integers. Specify the <code>:i32</code> type to avoid JAX type errors.</p>
+<div class="language-text highlight"><pre><span></span><code>(sparse-cross-entropy [[0.9 0.1] [0.2 0.8]] [0 1] :i32) ; =&gt; 0.40429434
+</code></pre></div>
+<hr />
+<h2 id="advanced-tensor-ops">Advanced Tensor Ops</h2>
+<h3 id="einsum">einsum</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(einsum pattern x1 x2 [...])</code></p>
+<p>Computes the Einstein summation of the input tensors according to the specified <code>pattern</code>.</p>
+<div class="language-text highlight"><pre><span></span><code>;; Dot product: i,i-&gt;
+(einsum &quot;i,i-&gt;&quot; [1 2 3] [4 5 6]) ; =&gt; 32.0
+
+;; Matrix multiply: ij,jk-&gt;ik
+(einsum &quot;ij,jk-&gt;ik&quot; [[1 2] [3 4]] [[5 6] [7 8]]) ; =&gt; [[19. 22.] [43. 50.]]
+
+;; Batch multiply: bij,bjk-&gt;bik
+(einsum &quot;bij,bjk-&gt;bik&quot; [[[1 2] [3 4]]] [[[5 6] [7 8]]]) ; =&gt; [[[19. 22.] [43. 50.]]]
+
+;; Element-wise with wildcard: ...i,...i-&gt;...
+(einsum &quot;...i,...i-&gt;...&quot; [1 2 3] [4 5 6]) ; =&gt; 32.0
+</code></pre></div>
+<hr />
+<h3 id="top_k">top_k</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(top_k x k)</code></p>
+<p>Finds the <code>k</code> largest elements and their corresponding indices in the input tensor along the last axis. This is the standard operation for selecting the most likely next tokens during language model decoding and inference.</p>
+<div class="language-text highlight"><pre><span></span><code>(let [[vals idxs] (top_k [0.1 0.9 0.3 0.7] 2)]
+  {:values vals :indices idxs})     ; =&gt; values and indices of top 2
+</code></pre></div>
+<hr />
+<h3 id="tensor-split">tensor-split</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(tensor-split x num-sections [:axis axis])</code></p>
+<p>Splits a tensor into <code>num-sections</code> sub-tensors along the specified axis. This function is often used to divide a large hidden state into separate Query, Key, and Value projections in Transformer layers.</p>
+<div class="language-text highlight"><pre><span></span><code>(let [[a b c] (tensor-split [1 2 3 4 5 6] 3)]
+  a)  ; =&gt; [ 1. 2.] (first third)
+</code></pre></div>
+<hr />
+<h3 id="dynamic-slice">dynamic-slice</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(dynamic-slice x start length)</code></p>
+<p>Extracts a slice of a fixed <code>length</code> starting from a dynamic <code>start</code> index. Unlike standard Lisp slicing, this operation is compatible with JAX JIT-compilation because the output shape (length) remains constant even when the starting position is a computed value.</p>
+<div class="language-text highlight"><pre><span></span><code>(dynamic-slice (arange 5) 1 3)  ; =&gt; [1 2 3]
+</code></pre></div>
+<hr />
+<h2 id="utilities">Utilities</h2>
+<h3 id="normalize">normalize</h3>
+<p><strong>Type:</strong> functions</p>
+<p>Scales the elements of a tensor so they sum to 1.0. This is a common utility for processing probability distributions or attention weights.</p>
+<div class="language-text highlight"><pre><span></span><code>(normalize [1 2 3])  ; =&gt; [0.16666667 0.33333334 0.5       ]
+</code></pre></div>
+<hr />
+<h3 id="str-gensym-symbol">str, gensym, symbol?</h3>
+<p><strong>Type:</strong> functions</p>
+<ul>
+<li><code>str</code>: Convert to string</li>
+<li><code>gensym</code>: Generate unique symbol</li>
+<li><code>symbol?</code>: Is it a symbol?</li>
+</ul>
+<div class="language-text highlight"><pre><span></span><code>(str 42)                ; =&gt; &#39;42
+(gensym &quot;var&quot;)          ; =&gt; Unique symbol
+(symbol? &#39;W)            ; =&gt; true
+</code></pre></div>
+<hr />
+<h2 id="module-system">Module System</h2>
+<h3 id="use">use</h3>
+<p><strong>Type:</strong> special-form<br />
+<strong>Signature:</strong> <code>(use module-name)</code></p>
+<p>Loads a library module and imports its public functions into the current global namespace. Use ':registry' to see what functions have been imported.</p>
+<div class="language-text highlight"><pre><span></span><code>(use nn)              ; Load neural network ops
+(use optim)           ; Load optimizer ops
+</code></pre></div>
+<hr />
+<h2 id="quoting-metaprogramming">Quoting &amp; Metaprogramming</h2>
+<h3 id="quote">' (quote)</h3>
+<p><strong>Type:</strong> reader macro<br />
+<strong>Signature:</strong> <code>'expr</code> or <code>(quote expr)</code></p>
+<p>Prevents evaluation of <code>expr</code>. It treats the expression as raw data (S-expression) instead of code to be executed.</p>
+<ul>
+<li><code>[1 2 3]</code> -&gt; Evaluates immediately into a JAX Tensor.</li>
+<li><code>'[1 2 3]</code> -&gt; Remains a List/Vector of constants.</li>
+</ul>
+<p>Quotes are used to pass arguments like shapes to functions like <code>reshape</code> or <code>ones</code>, which do not accept JAX Tensors as inputs.</p>
+<div class="language-text highlight"><pre><span></span><code>&#39;symbol              ; =&gt; symbol (not evaluated)
+&#39;[1 2 3]             ; =&gt; (1, 2, 3)
+(ones [2 2])         ; Will fail as [2 2] is seen as a dynamic tensor
+(ones &#39;[2 2])        ; Success: shape is passed as static data
+</code></pre></div>
+<hr />
+<h3 id="quasiquote"><code>`</code> (quasiquote)</h3>
+<p><strong>Type:</strong> reader macro<br />
+<strong>Signature:</strong> <code>`expr</code> or <code>(quasiquote expr)</code></p>
+<p>Quote with selective evaluation using <code>~</code> and <code>~@</code>.</p>
+<div class="language-text highlight"><pre><span></span><code>`(+ ~x 1)            ; x is evaluated, + and 1 are not
+
+;; In macros:
+(defmacro add1 [x]
+  `(+ ~x 1))
+
+(add1 5)              ; Expands to (+ 5 1) =&gt; 6
+
+;; Unquote-splicing:
+`(list ~@(range 3))  ; =&gt; (list 0 1 2)
+</code></pre></div>
+<hr />
+<h3 id="static">static</h3>
+<p><strong>Type:</strong> special-form<br />
+<strong>Signature:</strong> <code>(static expr)</code></p>
+<p>Forces the evaluation of an expression at compile-time. The result is embedded into the code as a literal constant. This is essential for JIT backends (like XLA) that require tensor shapes and axis indices to be fixed and known before execution starts.</p>
+<div class="language-text highlight"><pre><span></span><code>;; Example: 128 is computed once at compile time, not at every forward pass.
+(let [x (arange 128)]
+  (reshape x (static (* 4 32)) -1))  ; 128 computed at compile time
+                                     ; =&gt; reshaped to [ 4. 32.]
+</code></pre></div>
+<hr />
+<h2 id="additional">Additional</h2>
+<h3 id="append-and-roll">append-and-roll</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(append-and-roll buffer value)</code></p>
+<p>Append value to buffer and roll (for autoregressive state).</p>
+<div class="language-text highlight"><pre><span></span><code>(append-and-roll [1 2 3] 4) ; =&gt; [2. 3. 4.]
+</code></pre></div>
+<hr />
+<h3 id="range">range</h3>
+<p><strong>Type:</strong> function
+<strong>Signature:</strong> <code>(range [start] stop [step])</code></p>
+<p>Alias for <code>arange</code>. Generate integer sequence.</p>
+<div class="language-text highlight"><pre><span></span><code>(range 5)            ; =&gt; [0 1 2 3 4]
+(range 10 25 5)      ; =&gt; [10 15 20]
+</code></pre></div>
+<hr />
+<h3 id="var">var</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(var x [:axis axis :keepdims])</code></p>
+<p>Computes the variance of the tensor elements along the specified axis. It measures the spread of the data around the mean, a core component of normalization layers.</p>
+<div class="language-text highlight"><pre><span></span><code>(var [1 2 3])        ; =&gt; 0.6666667
+</code></pre></div>
+<hr />
+<h2 id="standard-library-modules">Standard Library Modules</h2>
+<h3 id="neural-network-operations-nnshf">Neural Network Operations (nn.shf)</h3>
+<p>The <code>nn</code> module provides essential building blocks for neural network construction.</p>
+<h4 id="linear">linear</h4>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(linear x w b)</code></p>
+<p>Linear transformation: <code>y = x @ w + b</code>. Applies a fully-connected layer to input <code>x</code> using weight matrix <code>w</code> and bias vector <code>b</code>.</p>
+<div class="language-text highlight"><pre><span></span><code>(let [x [1.0 2.0]
+      w [[1.0 0.5] [0.0 1.0]]
+      b [0.1 0.2]]
+  (linear x w b))
+
+; =&gt; [1.1 2.7]
+</code></pre></div>
+<h4 id="cross-entropy-loss">cross-entropy-loss</h4>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(cross-entropy-loss logits targets)</code></p>
+<p>Categorical cross-entropy loss. Logits are unnormalized predictions; targets are integer class indices.</p>
+<div class="language-text highlight"><pre><span></span><code>(let [logits [[10.0 1.0 0.1] [1.0 10.0 0.1]]
+      targets [0 1] :i32]
+  (cross-entropy-loss logits targets))
+
+; =&gt; 0.00017355366435367614
+</code></pre></div>
+<h4 id="mse-loss">mse-loss</h4>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(mse-loss predictions targets)</code></p>
+<p>Mean squared error loss: <code>mean((predictions - targets)²)</code>. Heavily penalizes large outliers.</p>
+<div class="language-text highlight"><pre><span></span><code>(mse-loss [1.0 2.0 3.0] [1.1 1.9 3.1])
+
+; =&gt; 0.009999996982514858  (average squared error)
+</code></pre></div>
+<h4 id="mae-loss">mae-loss</h4>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(mae-loss predictions targets)</code></p>
+<p>Mean absolute error loss: <code>mean(|predictions - targets|)</code>. Provides a more robust linear penalty for errors compared to the MSE.</p>
+<div class="language-text highlight"><pre><span></span><code>(mae-loss [1.0 2.0 3.0] [1.2 1.8 3.1])
+
+; =&gt; 0.1666666716337204  (average absolute error)
+</code></pre></div>
+<h4 id="layer-norm">layer-norm</h4>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(layer-norm x p axis)</code></p>
+<p>Applies Layer Normalization. It re-centers and re-scales the input <code>x</code> along the specified <code>axis</code> to improve training stability. It uses the parameters in <code>p</code> (expected keys: <code>:gamma</code> and `:beta).</p>
+<p>Default epsilon is <code>1e-5</code>.</p>
+<div class="language-text highlight"><pre><span></span><code>(let [x [1.0 2.0 3.0]
+      p {:gamma (ones [3]) :beta (zeros [3])}]
+  (layer-norm x p 0))
+
+; =&gt; [-1.2247356  0.         1.2247356]
+</code></pre></div>
+<h4 id="xavier-init">xavier-init</h4>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(xavier-init key shape)</code></p>
+<p>Xavier (Glorot) initialization for weight matrices. Draws from uniform distribution with bounds based on fan-in/fan-out. This is a pure Sheaf implementation of <code>init-xavier</code>.</p>
+<div class="language-text highlight"><pre><span></span><code>(let [key (random-key 42)]
+  (xavier-init key &#39;[256 256]))
+
+; =&gt; f32[256x256]  (suitable for dense layer weights)
+</code></pre></div>
+<hr />
+<h3 id="optimizer-operations-optimshf">Optimizer Operations (optim.shf)</h3>
+<p>The <code>optim</code> module provides optimization utilities for training neural networks.</p>
+<h4 id="sgd-step">sgd-step</h4>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(sgd-step params grads learning-rate)</code></p>
+<p>Updates model parameters using Stochastic Gradient Descent. It performs the operation <code>p = p - (lr * g)</code> across the entire Pytree of parameters, maintaining the model's structural integrity.</p>
+<div class="language-text highlight"><pre><span></span><code>(let [params {:w [1.0 2.0] :b 0.5}
+      grads {:w [0.1 0.2] :b 0.05}
+      lr 0.01]
+  (sgd-step params grads lr))
+
+; =&gt; {:w [0.999 1.998], :b 0.4995}
+</code></pre></div>
+<h4 id="adam-step">adam-step</h4>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(adam-step params grads m v t lr [beta1 beta2 eps])</code>
+Adam optimizer step. Maintains first moment <code>m</code> (mean) and second moment <code>v</code> (variance). Returns <code>[new-params, new-m, new-v]</code>.</p>
+<div class="language-text highlight"><pre><span></span><code>(let [p {:w 1.0} g {:w 0.1}  ; Params and gradients
+      m {:w 0.0} v {:w 0.0}  ; Moments
+      t 0]                   ; Steps
+  (let [[p1 m1 v1 t1] (adam-step p g m v t 0.001 0.9 0.999 1e-8)]
+    p1))
+
+; =&gt; [{:w 0.999}, {:w 0.0001}, {:w 0.00001}]
+</code></pre></div>
+<h4 id="global-norm">global-norm</h4>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(global-norm grads)</code></p>
+<p>Computes the Euclidean (L2) norm of all scalar values contained within a Pytree. This is primarily used for gradient clipping, preventing numerical instability by scaling down gradients if their total magnitude exceeds a threshold.</p>
+<div class="language-text highlight"><pre><span></span><code>(global-norm {:w [3.0 4.0] :b 0.0})
+
+; =&gt; 5.0  (sqrt(3^2 + 4^2))
+</code></pre></div>
+<h4 id="clip-by-global-norm">clip-by-global-norm</h4>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(clip-by-global-norm grads max-norm)</code></p>
+<p>Clips gradients by global norm to prevent gradient explosion. If global norm &gt; max-norm, scales all gradients down proportionally.</p>
+<div class="language-text highlight"><pre><span></span><code>(clip-by-global-norm {:w [3.0 4.0] :b 0.0} 2.0)
+
+; =&gt; {:w [1.2 1.6] :b 0.0}  (scaled by 2.0/5.0)
+</code></pre></div>
+<hr />
+<h3 id="macros-macrosshf">Macros (macros.shf)</h3>
+<p>Macros are powerful meta-programming tools that allow allow architectural patterns to be abstracted once and expanded at compile-time.</p>
+<h4 id="when">when</h4>
+<p><strong>Type:</strong> macro<br />
+<strong>Signature:</strong> <code>(when condition body)</code></p>
+<p>Conditional execution without else branch. Expands to <code>(if condition body nil)</code>.</p>
+<div class="language-text highlight"><pre><span></span><code>(when (&gt; x 0)
+  (log x))
+
+;; Expands to:
+(if (&gt; x 0) (log x) nil)
+</code></pre></div>
+<h4 id="unless">unless</h4>
+<p><strong>Type:</strong> macro<br />
+<strong>Signature:</strong> <code>(unless condition body)</code></p>
+<p>Negated conditional. Expands to <code>(if (not condition) body nil)</code>.</p>
+<div class="language-text highlight"><pre><span></span><code>(unless (zero? x)
+  (/ 1 x))
+
+;; Expands to:
+(if (not (zero? x)) (/ 1 x) nil)
+</code></pre></div>
+<h4 id="comment">comment</h4>
+<p><strong>Type:</strong> macro<br />
+<strong>Signature:</strong> <code>(comment expr ...)</code></p>
+<p>Ignores expressions and returns nil. Useful for multi-line comments.</p>
+<div class="language-text highlight"><pre><span></span><code>(comment
+  &quot;This is a long analysis of the algorithm&quot;
+  &quot;Multiple lines can go here&quot;
+  &quot;They&#39;re all discarded at compile-time&quot;)
+
+; =&gt; nil
+</code></pre></div>
+<h4 id="defmodel">defmodel</h4>
+<p><strong>Type:</strong> macro<br />
+<strong>Signature:</strong> <code>(defmodel name params body)</code></p>
+<p>Convenience macro for defining model functions with parameter destructuring.</p>
+<div class="language-text highlight"><pre><span></span><code>(defmodel forward [x params]
+  (with-params [params :layers]
+    (-&gt; x
+      (linear W1 b1)
+      (relu)
+      (linear W2 b2))))
+</code></pre></div>
+<h4 id="defbatch">defbatch</h4>
+<p><strong>Type:</strong> macro<br />
+<strong>Signature:</strong> <code>(defbatch name func)</code></p>
+<p>Wraps a function with automatic batching via <code>vmap</code> over the first dimension.</p>
+<div class="language-text highlight"><pre><span></span><code>(defbatch process-batch process-single-item)
+
+;; Now process-batch can handle batches of items
+(process-batch [[1 2] [3 4] [5 6]])
+</code></pre></div>
+<hr />
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+<footer class="md-footer">
+    <div class="md-footer__inner md-grid" style="display: flex; justify-content: center; align-items: center; gap: 10px;">
+      <img src="../../images/sheaf-light.png" alt="Logo" style="height: 24px;"/>
+      <span>| © 2025-2026 Damien Boureille</span>
+    </div>
+</footer>
+
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

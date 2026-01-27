@@ -1,0 +1,1561 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://sheaf.dev/starting/">
+      
+      
+        <link rel="prev" href="../quickstart/">
+      
+      
+        <link rel="next" href="../types/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+
+      
+        <title>Starting with Sheaf - Sheaf</title>
+      
+    
+<link rel="icon" type="image/png" href="../images/favicon.png">
+<style>
+  /* Replace mkdocs logo with custom logo - header */
+  .md-header__button.md-logo {
+    background-image: url('../../images/sheaf-light.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+
+
+  .md-header__button.md-logo img,
+  .md-header__button.md-logo svg {
+    opacity: 0;
+  }
+
+  /* Replace mkdocs logo with custom logo - sidebar (responsive menu) */
+  .md-nav__title {
+    background-image: url('../../images/sheaf-light.png');
+    background-size: 64px 64px;
+    background-repeat: no-repeat;
+    background-position: center;
+    padding-left: 30px !important;
+    font-size: 0 !important;
+    height: 24px !important;
+  }
+
+  .md-nav__title img,
+  .md-nav__title svg {
+    opacity: 0;
+  }
+</style>
+
+    
+
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+<style>
+  /* === GLOBAL STYLES (all pages) === */
+
+  /* === COLOR PALETTE #418d95ff, #421168 === */
+  :root {
+    --sheaf-primary: #612156;
+    --md-primary-fg-color: #421168;
+    --md-primary-fg-color--light: #5a1a8c;
+    --md-primary-fg-color--dark: #2d0b4a;
+  }
+
+  /* Override primary color from Material theme */
+  .md-header,
+  .md-tabs,
+  .md-nav__link--active,
+  .md-nav__item:target > .md-nav__link,
+  a {
+    --md-primary-fg-color: var(--sheaf-primary) !important;
+  }
+
+  .md-header {
+    background-color: var(--sheaf-primary) !important;
+  }
+
+
+  .md-tabs {
+    background-color: var(--sheaf-primary) !important;
+  }
+
+  .md-nav__link:hover {
+    color: var(--sheaf-primary) !important;
+  }
+
+  .md-nav__link--active {
+    color: var(--sheaf-primary) !important;
+    border-color: var(--sheaf-primary) !important;
+  }
+
+  a:hover {
+    opacity: 0.8;
+  }
+
+  .md-footer {
+    background-color: #410136;
+    font-size: 0.5rem !important;
+  }
+
+  .md-footer__inner {
+    justify-content: center !important;
+    margin: 0 auto !important;
+  }
+
+  .md-footer__inner,
+  .md-footer span,
+  .md-footer div {
+    font-size: 0.6rem !important;
+  }
+
+  /* Reduce TOC (right sidebar) width */
+  .md-sidebar--secondary {
+    width: 10rem;
+  }
+
+
+  /* Optionally reduce left sidebar too */
+  .md-sidebar--primary {
+    width: 10rem;
+  }
+
+  /* Code block styling */
+  .highlight {
+    color : black;
+    font-size: 0.9rem;
+    background-color: #f5f5f5 !important;
+    border-radius: 0.9rem;
+    padding: 0.75rem !important;
+    overflow-x: auto;
+  }
+
+  /* Sheaf/Lisp syntax highlighting */
+  .language-sheaf .k { color: #d73a49; }  /* Keywords */
+  .language-sheaf .n { color: #24292e; }  /* Names */
+  .language-sheaf .s { color: #032f62; }  /* Strings */
+  .language-sheaf .m { color: #005cc5; }  /* Numbers */
+  .language-sheaf .c { color: #6a737d; }  /* Comments */
+
+  /* Pygments theme for code blocks */
+  .highlight .c { color: #6a737d; font-style: italic; }     /* Comment */
+  .highlight .k { color: #d73a49; font-weight: bold; }      /* Keyword */
+  .highlight .n { color: #24292e; }                         /* Name */
+  .highlight .s { color: #032f62; }                         /* String */
+  .highlight .m { color: #005cc5; }                         /* Number */
+  .highlight .nb { color: #6f42c1; }                        /* Name.Builtin */
+  .highlight .p { color: #24292e; }                         /* Punctuation */
+
+  /* Hero section: 2 columns, 50/50 split */
+  .flex-section-header {
+    width: 95% !important;
+    margin: 1rem auto 4rem auto !important;
+    padding-left: 2rem !important;
+    padding-right: 2rem !important;
+    padding-bottom: 3rem;
+    background-color: #f5f5f5 !important;
+    border-radius: 0.9rem !important;
+    display: flex !important;
+    gap: 2rem !important;
+    align-items: flex-start !important;
+    font-size: inherit !important;
+  }
+
+  .flex-section-header > div {
+    flex: 0 0 50% !important;
+    padding: 0 1rem !important;
+    margin-top: -1rem;
+    margin-right: -1rem;
+    min-width: 0 !important;
+  }
+
+  /* Flex section layout (replaces old feature-columns tables) */
+  .flex-section {
+    display: flex;
+    gap: 2rem;
+    padding: 1rem 0;
+    margin: 1rem 0 3rem 0;
+    align-items: center;
+    font-size: 0.9rem !important;
+  }
+
+  /* Center single code block vertically (only if it's the only code child) */
+  .flex-section > *:last-child:has(.highlight):only-of-type {
+    display: flex;
+    align-items: center;
+  }
+
+  .flex-section > * {
+    flex: 1;
+  }
+
+  .flex-section > *:first-child {
+    flex: 0 0 33.33%;
+    padding-right: 1rem;
+  }
+
+  .flex-section > *:last-child {
+    flex: 0 0 66.67%;
+    min-width: 0;  /* Allow flex child to shrink below content size */
+    overflow: hidden;
+  }
+
+  .flex-section .highlight {
+    margin: 0 !important;
+    padding: 0.75rem !important;
+  }
+
+  .flex-section .highlight {
+    overflow-x: auto !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .flex-section .highlight code {
+    line-height: 1.5 !important;
+  }
+
+  .flex-section pre {
+    margin: 0 !important;
+    overflow-x: auto !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Flex grid styling (for markdown content in flex containers) */
+  div[style*="display: flex"] {
+    font-size: 0.9rem;
+    margin: 1rem 0;
+  }
+
+  div[style*="display: flex"] code {
+    font-size: 0.85rem;
+  }
+
+  div[style*="display: flex"] pre {
+    font-size: 0.85rem;
+  }
+
+  /* === RESPONSIVE DESIGN === */
+  @media (max-width: 768px) {
+    /* Mobile navigation drawer header background */
+    .md-nav__title {
+      background-color: var(--sheaf-primary) !important;
+    }
+
+    .flex-section {
+      flex-direction: column !important;
+      padding: 1rem !important;
+    }
+
+    .flex-section-header {
+      width: 100% !important;
+      flex-direction: column !important;
+    }
+
+    .flex-section-header > div {
+      flex: 0 0 100% !important;
+      padding: 1rem 0 !important;
+    }
+
+    .flex-section > *:last-child:has(.highlight):only-of-type {
+      flex-direction: column !important;
+      width: 100% !important;
+    }
+
+    .flex-section .highlight {
+      max-width: 100% !important;
+      overflow-x: auto;
+    }
+
+    .highlight {
+      max-width: 100% !important;
+      overflow-x: auto !important;
+      font-size: 0.75rem !important;
+    }
+
+    .highlight code {
+      font-size: 0.75rem !important;
+    }
+
+    pre {
+      max-width: 100% !important;
+      overflow-x: auto !important;
+      padding: 0.5rem !important;
+    }
+
+    .md-footer__inner {
+      justify-content: center !important;
+    }
+  }
+</style>
+
+
+
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="deep-orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#starting-with-sheaf" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Sheaf" class="md-header__button md-logo" aria-label="Sheaf" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Sheaf
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Starting with Sheaf
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/sheaf-lang/sheaf" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../rationale/" class="md-tabs__link">
+          
+  
+  
+  Documentation
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../reference/" class="md-tabs__link">
+          
+  
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Sheaf" class="md-nav__button md-logo" aria-label="Sheaf" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Sheaf
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/sheaf-lang/sheaf" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Documentation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Documentation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rationale/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rationale
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Starting with Sheaf
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Starting with Sheaf
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-functional-mindset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Functional Mindset
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-first-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A first example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#expressions-and-lambdas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Expressions and Lambdas
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#local-bindings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Local bindings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prefix-notation-polish-notation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prefix Notation (Polish Notation)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conditionals-if-and-where" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conditionals: if and where
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recursion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recursion
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#working-with-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Working with Parameters
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-threading-operators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The threading operators
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#some-quick-exercices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Some quick exercices
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#glossary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Glossary
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data types
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../python/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Python Interoperability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Version history
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Roadmap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Builtins
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-functional-mindset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Functional Mindset
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-first-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A first example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#expressions-and-lambdas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Expressions and Lambdas
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#local-bindings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Local bindings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prefix-notation-polish-notation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prefix Notation (Polish Notation)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conditionals-if-and-where" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conditionals: if and where
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recursion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recursion
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#working-with-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Working with Parameters
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-threading-operators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The threading operators
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#some-quick-exercices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Some quick exercices
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#glossary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Glossary
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="starting-with-sheaf">Starting with Sheaf</h1>
+<h3 id="the-functional-mindset">The Functional Mindset</h3>
+<p>Sheaf is a <em>functional</em> language rather than an <em>imperative</em> one. An imperative language like Python instructs the computer to change its internal state step-by-step. In Sheaf, transformations are defined by how data flows through nested functions to produce a result.</p>
+<p>Functional programming avoids side effects, which makes code deterministic. It maps naturally to computational graphs and machine learning workloads.</p>
+<h3 id="a-first-example">A first example</h3>
+<p>A functional language can appear confusing at first, because even a classic <code>val = 2 ; print val</code> example does not translate directly. Since "everything is a function", we would write a function <code>(defn val [] 2)</code> and then call it: <code>(val)</code>. Or, alternatively, evaluate both immediately: <code>((defn val [] 2))</code></p>
+<p>In Sheaf, as in all Lisp dialects, the fundamental unit of computation is the <em>expression</em>. There is no structural difference between a mathematical operator, a control flow structure, or a complex neural layer: they all follow the same notation.</p>
+<p>For this reason, a global "variable" is effectively a nullary function (a function with no arguments) that returns a constant.</p>
+<p>To define a function, we use the <code>defn</code> form, followed by the function name and its arguments enclosed in square brackets <code>[]</code> rather than parentheses <code>()</code>. This is borrowed from Clojure to differentiate the parameter list from the function calls.</p>
+<p>Let's see what this example would look like in Sheaf's REPL:</p>
+<div class="language-text highlight"><pre><span></span><code>$ sheaf
+Welcome to Sheaf Console v1.0.0
+Type :help or :h for help, :quit or :q to exit
+
+sheaf&gt; ;; &quot;Define a function `val` which takes no args and returns 2&quot;:
+sheaf&gt; (defn val [] 2)
+⇒ &lt;function DefnForm.compile.&lt;locals&gt;.generated_func at 0x10acf8ae0&gt;
+sheaf&gt; (val) ; Call that function
+⇒ 2
+</code></pre></div>
+<p>Now let's try adding <code>2</code> to it. Sheaf uses the prefix notation, which we'll talk about later. For now, we'll just write <code>(+ 2 val)</code> instead of <code>(2 + val)</code>.</p>
+<div class="language-clojure highlight"><pre><span></span><code><span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="nb">+ </span><span class="mi">2</span><span class="w"> </span><span class="nv">val</span><span class="p">)</span><span class="w"> </span><span class="c1">; This actually won&#39;t work: `val` is a function, not a scalar</span>
+
+<span class="nv">error</span><span class="err">:</span><span class="w"> </span><span class="nv">add</span><span class="w"> </span><span class="nv">requires</span><span class="w"> </span><span class="nv">ndarray</span><span class="w"> </span><span class="nb">or </span><span class="nv">scalar</span><span class="w"> </span><span class="nv">arguments</span>,<span class="w"> </span><span class="nv">got</span><span class="w"> </span><span class="nv">&lt;class</span><span class="w"> </span><span class="ss">&#39;function&#39;&gt;</span><span class="w"> </span><span class="nv">at</span><span class="w"> </span><span class="nv">position</span><span class="w"> </span><span class="mi">1</span><span class="nv">.</span>
+<span class="w"> </span><span class="nv">--&gt;</span><span class="w"> </span><span class="nv">&lt;repl&gt;</span><span class="ss">:1</span>
+<span class="w">    </span><span class="nv">|</span>
+<span class="w">  </span><span class="mi">1</span><span class="w"> </span><span class="nv">|</span><span class="w"> </span><span class="p">(</span><span class="nb">+ </span><span class="mi">2</span><span class="w"> </span><span class="nv">val</span><span class="p">)</span>
+<span class="w">    </span><span class="nv">|</span><span class="w">  </span><span class="o">^</span>
+<span class="w">    </span><span class="nv">|</span>
+<span class="w">  </span><span class="nb">= </span><span class="nv">note</span><span class="err">:</span><span class="w"> </span><span class="nv">Check</span><span class="w"> </span><span class="nv">the</span><span class="w"> </span><span class="nv">number</span><span class="w"> </span><span class="nv">of</span><span class="w"> </span><span class="nv">arguments</span><span class="w"> </span><span class="nv">you</span><span class="ss">&#39;re</span><span class="w"> </span><span class="nv">passing</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="nv">the</span><span class="w"> </span><span class="nv">function.</span>
+
+<span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="nb">+ </span><span class="mi">2</span><span class="w"> </span><span class="p">(</span><span class="nf">val</span><span class="p">))</span><span class="w"> </span><span class="c1">; We use parens to call `val` as a function</span>
+<span class="err">⇒</span><span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[]</span><span class="w"> </span><span class="nb">= </span><span class="mi">4</span><span class="w"> </span><span class="c1">; Now it works!</span>
+<span class="nv">sheaf&gt;</span>
+<span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="kd">defn </span><span class="nb">val </span><span class="p">[]</span><span class="w"> </span><span class="mi">4</span><span class="p">)</span><span class="w"> </span><span class="c1">; Let&#39;s try to redefine our function to 4</span>
+
+<span class="nv">Error</span><span class="err">:</span>
+<span class="nv">Function</span><span class="w"> </span><span class="ss">&#39;val</span><span class="o">&#39;</span><span class="w"> </span><span class="nv">is</span><span class="w"> </span><span class="nv">already</span><span class="w"> </span><span class="nv">defined</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">user</span><span class="w"> </span><span class="nv">code.</span><span class="w"> </span><span class="nv">Redefinition</span><span class="w"> </span><span class="nv">is</span><span class="w"> </span><span class="nb">not </span><span class="nv">allowed</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="nv">prevent</span><span class="w"> </span><span class="nv">shadowing</span><span class="w"> </span><span class="nv">bugs.</span>
+</code></pre></div>
+<p>The inability to change the value of <code>val</code> may come as surprise.</p>
+<p>In Sheaf, every value is immutable by default: once a function is defined, it becomes stateless and cannot be changed. This is required both for predictability and performance reasons in the JIT engine.</p>
+<h3 id="expressions-and-lambdas">Expressions and Lambdas</h3>
+<p>Remember that in Lisp, everything is an expression.</p>
+<p>When an expression like <code>(+ 1 2)</code> is evaluated, the interpreter does not simply perform an addition. It evaluates a <em>form</em> where the symbol <code>+</code> refers to a sum function, and <code>1</code> <code>2</code> are its arguments, much like <code>np.add(1,2)</code> in NumPy.</p>
+<p>Conceptually, a Sheaf program is not a sequence of instructions, but a single, nested tree of expressions.</p>
+<p>While <code>(+ 1 2)</code> will execute immediately, it can also be explicitly defined as a lambda with <code>(fn [] (+ 1 2))</code>.
+When defined with <code>fn</code>, the logic won't be executed immediately but will return an anonymous function that can be called from within the parent function.
+This is used when a small transformation is needed just once, without giving the function a permanent name.</p>
+<p>Let's see this in action:</p>
+<div class="language-clojure highlight"><pre><span></span><code><span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="nb">* </span><span class="mi">5</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span>
+<span class="err">⇒</span><span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[]</span><span class="w"> </span><span class="nb">= </span><span class="mi">50</span>
+<span class="nv">sheaf&gt;</span><span class="w"> </span><span class="c1">;; Now let&#39;s use a variable</span>
+<span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="nb">* </span><span class="nv">x</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="c1">;; Won&#39;t work: `x` is not defined in the current scope</span>
+
+<span class="nv">error</span><span class="err">:</span><span class="w"> </span><span class="nv">Symbol</span><span class="w"> </span><span class="nb">not </span><span class="nv">found</span><span class="w"> </span><span class="p">(</span><span class="nf">line</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="err">:</span><span class="w"> </span><span class="ss">&#39;x</span><span class="o">&#39;</span>
+<span class="w"> </span><span class="nv">--&gt;</span><span class="w"> </span><span class="nv">&lt;repl&gt;</span><span class="ss">:1</span>
+<span class="w">    </span><span class="nv">|</span>
+<span class="w">  </span><span class="mi">1</span><span class="w"> </span><span class="nv">|</span><span class="w"> </span><span class="p">(</span><span class="nb">+ </span><span class="nv">x</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span>
+<span class="w">    </span><span class="nv">|</span><span class="w">    </span><span class="o">^</span>
+<span class="w">    </span><span class="nv">|</span>
+<span class="w">  </span><span class="nb">= </span><span class="nv">note</span><span class="err">:</span><span class="w"> </span><span class="nv">Check</span><span class="w"> </span><span class="nb">for </span><span class="nv">typos</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">function</span><span class="w"> </span><span class="nb">or </span><span class="nv">variable</span><span class="w"> </span><span class="nv">names.</span>
+
+<span class="nv">sheaf&gt;</span><span class="w"> </span><span class="c1">;; Instead, define it as a lambda and pass it the value `5`</span>
+<span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">((</span><span class="k">fn </span><span class="p">[</span><span class="nv">x</span><span class="p">]</span><span class="w"> </span><span class="p">(</span><span class="nb">* </span><span class="nv">x</span><span class="w"> </span><span class="mi">10</span><span class="p">))</span><span class="w"> </span><span class="mi">5</span><span class="p">)</span>
+<span class="err">⇒</span><span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[]</span><span class="w"> </span><span class="nb">= </span><span class="mi">50</span>
+<span class="nv">sheaf&gt;</span><span class="w"> </span><span class="c1">;; Notice the double (( )) to call the lambda immediately</span>
+<span class="nv">sheaf&gt;</span><span class="w"> </span><span class="c1">;; Without them, this defines the function but does not apply it</span>
+<span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">x</span><span class="p">]</span><span class="w"> </span><span class="p">(</span><span class="nb">* </span><span class="nv">x</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="mi">5</span><span class="p">)</span>
+<span class="err">⇒</span><span class="w"> </span><span class="nv">&lt;function</span><span class="w"> </span><span class="nv">LambdaForm.compile.&lt;locals&gt;.anonymous_func</span><span class="w"> </span><span class="nv">at</span><span class="w"> </span><span class="mi">0</span><span class="nv">x10e4949a0&gt;</span>
+</code></pre></div>
+<h3 id="local-bindings">Local bindings</h3>
+<p>Defining a function to return a scalar value isn't very helpful. Usually, Sheaf functions apply transformations to tensors and pass them to other functions.
+Sheaf doesn't <em>assign variables</em>; it <em>binds local symbols</em> with the form <code>let</code>. Variables exist within the function's scope and disappear after the evaluation is complete.</p>
+<p>Let's try binding values:</p>
+<div class="language-text highlight"><pre><span></span><code>sheaf&gt; ;; Binding a tensor [1 2 3] to x, then returning x
+sheaf&gt; (let [x [1 2 3]]
+...    x)
+⇒ Tensor f32[3] = [1. 2. 3.]
+
+sheaf&gt; ;; Automatic broadcasting: adding 2 to the tensor
+sheaf&gt; (let (x [1 2 3])
+...    (+ x 2))
+⇒ Tensor f32[3] = [3. 4. 5.]
+</code></pre></div>
+<p>Because of immutability, <code>x</code> is also not modified in the second example. Instead, a new tensor is created and returned. Once the command ends, it is no longer accessible.</p>
+<h3 id="prefix-notation-polish-notation">Prefix Notation (Polish Notation)</h3>
+<p>Another confusing aspect in our example may be the operation order: <code>(+ x 2)</code> instead of <code>(x + 2)</code>.</p>
+<p>Sheaf, like Clojure, Scheme and other Lisps, use prefix notation, where the operator always precedes its operands.</p>
+<p>This approach serves two critical purposes:</p>
+<ul>
+<li>
+<p>Variadic Operations: Functions can take any number of arguments without repeating the operator. Instead of <code>1 + 2 + 3 + 4</code>, one simply writes <code>(+ 1 2 3 4)</code>.</p>
+</li>
+<li>
+<p>Consistency: Since everything between parens is a function, mathematical operators, built-in functions, and user-defined functions all follow the exact same structure: <code>(function argument1 argument2 ...)</code>. This uniformity is what allows the language to treat code as data.</p>
+</li>
+</ul>
+<p>To make this simpler, let's just remember that the first <em>symbol</em> after a parenthesis is always a function.</p>
+<h3 id="conditionals-if-and-where">Conditionals: <code>if</code> and <code>where</code></h3>
+<p>Most programming languages have an <code>if</code> statement for branching logic. Sheaf has two distinct forms for conditional evaluation, and understanding when to use each is important.</p>
+<p>The <code>if</code> form works like a traditional conditional: it evaluates a condition, then returns either the "then" branch or the "else" branch:</p>
+<div class="language-clojure highlight"><pre><span></span><code><span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="k">if </span><span class="p">(</span><span class="nb">&gt; </span><span class="mi">5</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="ss">:yes</span><span class="w"> </span><span class="ss">:no</span><span class="p">)</span>
+<span class="err">⇒</span><span class="w"> </span><span class="ss">:yes</span>
+<span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="k">if </span><span class="nv">false</span><span class="w"> </span><span class="s">&quot;not returned&quot;</span><span class="w"> </span><span class="s">&quot;returned&quot;</span><span class="p">)</span>
+<span class="err">⇒</span><span class="w"> </span><span class="ss">&#39;returned</span><span class="o">&#39;</span>
+</code></pre></div>
+<p>This works well for decisions based on configuration values or scalars. However, <code>if</code> cannot be used with tensor values inside JIT-compiled functions. JAX needs to know the control flow at compile time, and tensor values are only known at runtime.</p>
+<div class="language-clojure highlight"><pre><span></span><code><span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="kd">defn </span><span class="nv">broken</span><span class="w"> </span><span class="p">[</span><span class="nv">x</span><span class="p">]</span>
+<span class="nv">...</span><span class="w">      </span><span class="p">(</span><span class="k">if </span><span class="p">(</span><span class="nb">&gt; </span><span class="nv">x</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span><span class="w">  </span><span class="c1">;; This will fail in JIT context</span>
+</code></pre></div>
+<p>For element-wise conditionals on tensors, <code>where</code> is used instead. It evaluates both branches and selects values based on a boolean mask:</p>
+<div class="language-clojure highlight"><pre><span></span><code><span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="nf">where</span><span class="w"> </span><span class="p">(</span><span class="nb">&gt; </span><span class="mi">5</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="mi">100</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="err">⇒</span><span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[]</span><span class="w"> </span><span class="nb">= </span><span class="mi">100</span>
+<span class="nv">sheaf&gt;</span><span class="w"> </span><span class="c1">;; Element-wise on tensors:</span>
+<span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="nf">where</span><span class="w"> </span><span class="p">(</span><span class="nb">&gt; </span><span class="p">[</span><span class="mi">1</span><span class="w"> </span><span class="mi">5</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="mi">8</span><span class="p">]</span><span class="w"> </span><span class="mi">4</span><span class="p">)</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="w"> </span><span class="mi">5</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="mi">8</span><span class="p">]</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="err">⇒</span><span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="w"> </span><span class="nb">= </span><span class="p">[</span><span class="mi">0</span><span class="w"> </span><span class="mi">5</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">8</span><span class="p">]</span>
+</code></pre></div>
+<p>The last example replaces all values less than or equal to 4 with zero, keeping the others. This is the functional equivalent of NumPy's <code>np.where</code>.</p>
+<p>Let's see another example. Common pattern is implementing ReLU (Rectified Linear Unit), which returns <code>x</code> if positive, else <code>0</code>:</p>
+<div class="language-clojure highlight"><pre><span></span><code><span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="kd">defn </span><span class="nv">my-relu</span><span class="w"> </span><span class="p">[</span><span class="nv">x</span><span class="p">]</span>
+<span class="nv">...</span><span class="w">      </span><span class="p">(</span><span class="nf">where</span><span class="w"> </span><span class="p">(</span><span class="nb">&gt; </span><span class="nv">x</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span>
+<span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="nf">my-relu</span><span class="w"> </span><span class="p">[</span><span class="mi">-2</span><span class="w"> </span><span class="mi">-1</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="p">])</span>
+<span class="err">⇒</span><span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="w"> </span><span class="nb">= </span><span class="p">[</span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="p">]</span>
+</code></pre></div>
+<p>In summary: use <code>if</code> for static branching (configs, flags), and <code>where</code> for tensor operations.</p>
+<h3 id="recursion">Recursion</h3>
+<p>When reading Sheaf code, the lack of imperative loops (<code>for</code> and <code>while</code> loops) may come as another surprise.</p>
+<p>In Sheaf, iteration is handled through recursion rather than imperative loops. Since data is immutable, a process is not described by updating a counter, but by repeatedly applying a transformation to a value.</p>
+<p>Let's take a look at a typical loop in Python:</p>
+<div class="language-python highlight"><pre><span></span><code><span class="c1"># Imperative loop</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">total</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+<span class="o">&gt;&gt;&gt;</span>     <span class="n">total</span> <span class="o">+=</span> <span class="n">i</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">total</span><span class="p">)</span>
+<span class="mi">45</span>
+
+<span class="c1"># Vectorized imperative loop</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>
+<span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">(</span><span class="mi">45</span><span class="p">)</span>
+</code></pre></div>
+<p>As a functional language, Sheaf typically uses <em>functions</em> over imperative loops to achieve this. Such iterations are generally handled by higher-order abstractions like <code>reduce</code>:</p>
+<div class="language-clojure highlight"><pre><span></span><code><span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="nb">reduce + </span><span class="mi">0</span><span class="w"> </span><span class="p">(</span><span class="nb">range </span><span class="mi">10</span><span class="p">))</span>
+<span class="err">⇒</span><span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[]</span><span class="w"> </span><span class="nb">= </span><span class="mi">45</span>
+</code></pre></div>
+<p><code>reduce</code> takes a function (here, <code>+</code>), a starting number (<code>0</code>), and a sequence on which to apply the function. For instance, <code>(reduce + 0 [1 2 3 4])</code> will result in adding <code>0 + 1 + 2 + 3 + 4</code>.</p>
+<p>Other popular higher order functions are <code>map</code>, <code>vmap</code> and <code>scan</code>.</p>
+<p>Unlike <code>reduce</code> which returns a single combined value, <code>map</code> applies a transformation to every element of an array and returns another array.</p>
+<p>For instance, let's square all values from an array of integers ranging from 1 to 10. We will generate a sequence using <code>range(1 11)</code>, then use <code>map</code> with a lambda function to square the results.</p>
+<div class="language-clojure highlight"><pre><span></span><code><span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="nb">range </span><span class="mi">1</span><span class="w"> </span><span class="mi">11</span><span class="p">)</span>
+<span class="err">⇒</span><span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span><span class="w"> </span><span class="nb">= </span><span class="p">[</span><span class="w"> </span><span class="mi">1</span><span class="w">  </span><span class="mi">2</span><span class="w">  </span><span class="mi">3</span><span class="w">  </span><span class="mi">4</span><span class="w">  </span><span class="mi">5</span><span class="w">  </span><span class="mi">6</span><span class="w">  </span><span class="mi">7</span><span class="w">  </span><span class="mi">8</span><span class="w">  </span><span class="mi">9</span><span class="w"> </span><span class="mi">10</span><span class="p">]</span>
+<span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="nb">map </span><span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">i</span><span class="p">]</span><span class="w"> </span><span class="p">(</span><span class="nb">* </span><span class="nv">i</span><span class="w"> </span><span class="nv">i</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nb">range </span><span class="mi">1</span><span class="w"> </span><span class="mi">11</span><span class="p">))</span>
+<span class="err">⇒</span><span class="w"> </span><span class="o">&#39;</span><span class="p">[</span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[]</span><span class="w"> </span><span class="nb">= </span><span class="mi">1</span>,<span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[]</span><span class="w"> </span><span class="nb">= </span><span class="mi">4</span>,<span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[]</span><span class="w"> </span><span class="nb">= </span><span class="mi">9</span>,<span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[]</span><span class="w"> </span><span class="nb">= </span><span class="mi">16</span>,<span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[]</span><span class="w"> </span><span class="nb">= </span><span class="mi">25</span>,<span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[]</span><span class="w"> </span><span class="nb">= </span><span class="mi">36</span>,<span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[]</span><span class="w"> </span><span class="nb">= </span><span class="mi">49</span>,<span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[]</span><span class="w"> </span><span class="nb">= </span><span class="mi">64</span>,<span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[]</span><span class="w"> </span><span class="nb">= </span><span class="mi">81</span>,<span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[]</span><span class="w"> </span><span class="nb">= </span><span class="mi">100</span><span class="p">]</span>
+</code></pre></div>
+<p><em>Note: Sheaf is "tensor-first" by design and only returns arrays, even for scalar values. This ensures any operation is compilable into an XLA kernel running on a GPU or TPU.</em></p>
+<p><code>vmap</code> is very similar to <code>map</code>, but will vectorize the operation over the entire array:</p>
+<div class="language-clojure highlight"><pre><span></span><code><span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">((</span><span class="nf">vmap</span><span class="w"> </span><span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">i</span><span class="p">]</span><span class="w"> </span><span class="p">(</span><span class="nb">* </span><span class="nv">i</span><span class="w"> </span><span class="nv">i</span><span class="p">))</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">range </span><span class="mi">1</span><span class="w"> </span><span class="mi">11</span><span class="p">))</span>
+<span class="err">⇒</span><span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span><span class="w"> </span><span class="nb">= </span><span class="p">[</span><span class="w">  </span><span class="mi">1</span><span class="w">   </span><span class="mi">4</span><span class="w">   </span><span class="mi">9</span><span class="w">  </span><span class="mi">16</span><span class="w">  </span><span class="mi">25</span><span class="w">  </span><span class="mi">36</span><span class="w">  </span><span class="mi">49</span><span class="w">  </span><span class="mi">64</span><span class="w">  </span><span class="mi">81</span><span class="w"> </span><span class="mi">100</span><span class="p">]</span>
+</code></pre></div>
+<p>Finally, <code>scan</code> is a specialized iteration primitive that carries a state across a sequence (like <code>reduce</code>) but also returns all intermediate results.
+In differentiable programming, <code>scan</code> is the preferred way to implement recurrent structures or deep loops, as it allows the XLA compiler to optimize the backpropagation through time more efficiently than raw recursion.</p>
+<h3 id="working-with-parameters">Working with Parameters</h3>
+<p>In neural networks, parameters (weights and biases) are typically stored in nested dictionaries. Sheaf provides several tools to work with these structures elegantly.</p>
+<p>The <code>get</code> function retrieves a value from a dictionary by key:</p>
+<div class="language-clojure highlight"><pre><span></span><code><span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="nb">get </span><span class="p">{</span><span class="ss">:learning-rate</span><span class="w"> </span><span class="mf">0.001</span><span class="w"> </span><span class="ss">:epochs</span><span class="w"> </span><span class="mi">10</span><span class="p">}</span><span class="w"> </span><span class="ss">:learning-rate</span><span class="p">)</span>
+<span class="err">⇒</span><span class="w"> </span><span class="mf">0.001</span>
+</code></pre></div>
+<p>For deeply nested structures, <code>get-in</code> navigates through multiple levels using a path vector:</p>
+<div class="language-clojure highlight"><pre><span></span><code><span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="nf">get-in</span><span class="w"> </span><span class="p">{</span><span class="ss">:model</span><span class="w"> </span><span class="p">{</span><span class="ss">:layer1</span><span class="w"> </span><span class="p">{</span><span class="ss">:W</span><span class="w"> </span><span class="p">[[</span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="p">[</span><span class="mi">3</span><span class="w"> </span><span class="mi">4</span><span class="p">]]</span><span class="w"> </span><span class="ss">:b</span><span class="w"> </span><span class="p">[</span><span class="mf">0.1</span><span class="w"> </span><span class="mf">0.2</span><span class="p">]}}}</span><span class="w"> </span><span class="p">[</span><span class="ss">:model</span><span class="w"> </span><span class="ss">:layer1</span><span class="w"> </span><span class="ss">:b</span><span class="p">])</span>
+<span class="err">⇒</span><span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">f32</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="nb">= </span><span class="p">[</span><span class="mf">0.1</span><span class="w"> </span><span class="mf">0.2</span><span class="p">]</span>
+</code></pre></div>
+<p>A default value can be provided if the path does not exist:</p>
+<div class="language-clojure highlight"><pre><span></span><code><span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="nf">get-in</span><span class="w"> </span><span class="p">{</span><span class="ss">:a</span><span class="w"> </span><span class="mi">1</span><span class="p">}</span><span class="w"> </span><span class="p">[</span><span class="ss">:missing</span><span class="w"> </span><span class="ss">:path</span><span class="p">]</span><span class="w"> </span><span class="mi">42</span><span class="p">)</span>
+<span class="err">⇒</span><span class="w"> </span><span class="mi">42</span>
+</code></pre></div>
+<p>When writing neural network layers, repeatedly calling <code>get</code> becomes tedious. The <code>with-params</code> form unpacks dictionary keys directly into the local scope. This is called <em>parameters destructuring</em>:</p>
+<div class="language-clojure highlight"><pre><span></span><code><span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">params</span><span class="w"> </span><span class="p">{</span><span class="ss">:W</span><span class="w"> </span><span class="p">[[</span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="p">[</span><span class="mi">3</span><span class="w"> </span><span class="mi">4</span><span class="p">]]</span><span class="w"> </span><span class="ss">:b</span><span class="w"> </span><span class="p">[</span><span class="mf">0.5</span><span class="w"> </span><span class="mf">0.5</span><span class="p">]}</span>
+<span class="nv">...</span><span class="w">          </span><span class="nv">x</span><span class="w"> </span><span class="p">[</span><span class="mf">1.0</span><span class="w"> </span><span class="mf">1.0</span><span class="p">]]</span>
+<span class="nv">...</span><span class="w">      </span><span class="p">(</span><span class="nf">with-params</span><span class="w"> </span><span class="p">[</span><span class="nv">params</span><span class="p">]</span>
+<span class="nv">...</span><span class="w">        </span><span class="p">(</span><span class="nb">+ </span><span class="p">(</span><span class="o">@</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">W</span><span class="p">)</span><span class="w"> </span><span class="nv">b</span><span class="p">)))</span>
+<span class="err">⇒</span><span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">f32</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="nb">= </span><span class="p">[</span><span class="mf">4.5</span><span class="w"> </span><span class="mf">6.5</span><span class="p">]</span>
+</code></pre></div>
+<p>Without <code>with-params</code>, the equivalent code would require explicit <code>get</code> calls:</p>
+<div class="language-clojure highlight"><pre><span></span><code><span class="c1">;; More verbose alternative</span>
+<span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">params</span><span class="w"> </span><span class="p">{</span><span class="ss">:W</span><span class="w"> </span><span class="p">[[</span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="p">[</span><span class="mi">3</span><span class="w"> </span><span class="mi">4</span><span class="p">]]</span><span class="w"> </span><span class="ss">:b</span><span class="w"> </span><span class="p">[</span><span class="mf">0.5</span><span class="w"> </span><span class="mf">0.5</span><span class="p">]}</span>
+<span class="w">      </span><span class="nv">x</span><span class="w"> </span><span class="p">[</span><span class="mf">1.0</span><span class="w"> </span><span class="mf">1.0</span><span class="p">]]</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">+ </span><span class="p">(</span><span class="o">@</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="p">(</span><span class="nb">get </span><span class="nv">params</span><span class="w"> </span><span class="ss">:W</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nb">get </span><span class="nv">params</span><span class="w"> </span><span class="ss">:b</span><span class="p">)))</span>
+</code></pre></div>
+<p>For nested parameter structures, a key can be specified to destructure a sub-dictionary:</p>
+<div class="language-clojure highlight"><pre><span></span><code><span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">model</span><span class="w"> </span><span class="p">{</span><span class="ss">:layer1</span><span class="w"> </span><span class="p">{</span><span class="ss">:W</span><span class="w"> </span><span class="p">[[</span><span class="mi">1</span><span class="w"> </span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="p">[</span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="p">]]</span><span class="w"> </span><span class="ss">:b</span><span class="w"> </span><span class="p">[</span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="p">]}</span>
+<span class="nv">...</span><span class="w">                 </span><span class="ss">:layer2</span><span class="w"> </span><span class="p">{</span><span class="ss">:W</span><span class="w"> </span><span class="p">[[</span><span class="mi">2</span><span class="w"> </span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="p">[</span><span class="mi">2</span><span class="w"> </span><span class="mi">2</span><span class="p">]]</span><span class="w"> </span><span class="ss">:b</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="w"> </span><span class="mi">1</span><span class="p">]}}</span>
+<span class="nv">...</span><span class="w">          </span><span class="nv">x</span><span class="w"> </span><span class="p">[</span><span class="mf">1.0</span><span class="w"> </span><span class="mf">2.0</span><span class="p">]]</span>
+<span class="nv">...</span><span class="w">      </span><span class="p">(</span><span class="nf">with-params</span><span class="w"> </span><span class="p">[</span><span class="nv">model</span><span class="w"> </span><span class="ss">:layer1</span><span class="p">]</span>
+<span class="nv">...</span><span class="w">        </span><span class="p">(</span><span class="nb">+ </span><span class="p">(</span><span class="o">@</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">W</span><span class="p">)</span><span class="w"> </span><span class="nv">b</span><span class="p">)))</span>
+<span class="err">⇒</span><span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">f32</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="nb">= </span><span class="p">[</span><span class="mi">1</span><span class="k">. </span><span class="mi">2</span><span class="nv">.</span><span class="p">]</span>
+</code></pre></div>
+<p>Since all values are immutable, dictionaries are updated by creating new ones. The <code>assoc</code> form adds or updates keys:</p>
+<div class="language-clojure highlight"><pre><span></span><code><span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="nb">assoc </span><span class="p">{</span><span class="ss">:a</span><span class="w"> </span><span class="mi">1</span><span class="p">}</span><span class="w"> </span><span class="ss">:b</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="ss">:c</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span>
+<span class="err">⇒</span><span class="w"> </span><span class="p">{</span><span class="ss">:a</span><span class="w"> </span><span class="mi">1</span>,<span class="w"> </span><span class="ss">:b</span><span class="w"> </span><span class="mi">2</span>,<span class="w"> </span><span class="ss">:c</span><span class="w"> </span><span class="mi">3</span><span class="p">}</span>
+</code></pre></div>
+<p>The <code>merge</code> function combines multiple dictionaries (later values override earlier ones):</p>
+<div class="language-clojure highlight"><pre><span></span><code><span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="nb">merge </span><span class="p">{</span><span class="ss">:lr</span><span class="w"> </span><span class="mf">0.001</span><span class="w"> </span><span class="ss">:epochs</span><span class="w"> </span><span class="mi">10</span><span class="p">}</span><span class="w"> </span><span class="p">{</span><span class="ss">:lr</span><span class="w"> </span><span class="mf">0.0001</span><span class="p">})</span>
+<span class="err">⇒</span><span class="w"> </span><span class="p">{</span><span class="ss">:lr</span><span class="w"> </span><span class="mf">0.0001</span>,<span class="w"> </span><span class="ss">:epochs</span><span class="w"> </span><span class="mi">10</span><span class="p">}</span>
+</code></pre></div>
+<p>And <code>dissoc</code> removes keys:</p>
+<div class="language-clojure highlight"><pre><span></span><code><span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="nb">dissoc </span><span class="p">{</span><span class="ss">:a</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="ss">:b</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="ss">:c</span><span class="w"> </span><span class="mi">3</span><span class="p">}</span><span class="w"> </span><span class="p">[</span><span class="ss">:a</span><span class="w"> </span><span class="ss">:c</span><span class="p">])</span>
+<span class="err">⇒</span><span class="w"> </span><span class="p">{</span><span class="ss">:b</span><span class="w"> </span><span class="mi">2</span><span class="p">}</span>
+</code></pre></div>
+<p>These operations are essential for managing optimizer state, where parameters, momentum, and velocity are all stored in nested dictionaries that must be updated at each training step.</p>
+<h3 id="the-threading-operators">The threading operators</h3>
+<p>In older Lisps such as Scheme, Common Lisp, or Emacs Lisp, nesting functions can sometimes become a "parentheses nightmare." One of the great innovations of Clojure is the threading operators <code>-&gt;</code> and <code>as-&gt;</code>.</p>
+<p>These operators "thread" a value through a sequence of functions, making the code read like a pipeline from top to bottom.</p>
+<p><code>-&gt;</code> (<em>Thread-first</em>) automatically injects the result of the previous expression as the first argument of the next function call. It is ideal for linear transformations.</p>
+<p><code>as-&gt;</code> (<em>Thread-as</em>) binds the result to a specific symbol (a variable, in imperative talk), allowing us to place it anywhere in the next expressions. This is more typically used for operations where the input must be reused.</p>
+<p>Let's compare them to the traditional nesting:</p>
+<div class="language-clojure highlight"><pre><span></span><code><span class="nv">sheaf&gt;</span><span class="w"> </span><span class="c1">;; Traditionnal nesting - dense, but hard to read</span>
+<span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">((</span><span class="k">fn </span><span class="p">[</span><span class="nv">x</span><span class="p">]</span><span class="w"> </span><span class="p">(</span><span class="nb">* </span><span class="nv">x</span><span class="w"> </span><span class="nv">x</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nb">* </span><span class="p">(</span><span class="nb">+ </span><span class="mi">10</span><span class="w"> </span><span class="mi">5</span><span class="p">)</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span>
+<span class="err">⇒</span><span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[]</span><span class="w"> </span><span class="nb">= </span><span class="mi">900</span>
+<span class="nv">sheaf&gt;</span><span class="w"> </span><span class="c1">;; Threaded nesting</span>
+<span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="nf">as-&gt;</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="nv">x</span><span class="w">                </span><span class="c1">;; Send 10 to x</span>
+<span class="nv">...</span><span class="w">      </span><span class="p">(</span><span class="nb">+ </span><span class="nv">x</span><span class="w"> </span><span class="mi">5</span><span class="p">)</span><span class="w">                 </span><span class="c1">;; Add 5 to it</span>
+<span class="nv">...</span><span class="w">      </span><span class="p">(</span><span class="nb">* </span><span class="nv">x</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w">                 </span><span class="c1">;; Multiply it by two</span>
+<span class="nv">...</span><span class="w">      </span><span class="p">((</span><span class="k">fn </span><span class="p">[</span><span class="nv">n</span><span class="p">]</span><span class="w"> </span><span class="p">(</span><span class="nb">* </span><span class="nv">n</span><span class="w"> </span><span class="nv">n</span><span class="p">))</span><span class="w"> </span><span class="nv">x</span><span class="p">))</span><span class="w">   </span><span class="c1">;; Square it with a lambda</span>
+<span class="err">⇒</span><span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[]</span><span class="w"> </span><span class="nb">= </span><span class="mi">900</span>
+</code></pre></div>
+<p>In neural networks such as BareGPT in the examples folder, both threading operators are used to describe the flow of a tensor through layers. It makes the forward function look like an actual architecture diagram rather than a "soup" of parentheses:</p>
+<div class="language-clojure highlight"><pre><span></span><code><span class="p">(</span><span class="kd">defn </span><span class="nv">transformer-block</span><span class="w"> </span><span class="p">(</span><span class="nf">x</span><span class="w"> </span><span class="nv">layer-p</span><span class="w"> </span><span class="nv">config</span><span class="p">)</span>
+<span class="w">  </span><span class="c1">;; as-&gt; binds the initial &#39;x&#39; to the name &#39;h&#39;</span>
+<span class="w">  </span><span class="c1">;; This allows us to reuse &#39;h&#39; multiple times within the block,</span>
+<span class="w">  </span><span class="c1">;; specifically for the residual connection at the end</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">as-&gt;</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">h</span>
+
+<span class="w">    </span><span class="c1">;; We now switch to &#39;-&gt;&#39; because each function takes the output of the</span>
+<span class="w">    </span><span class="c1">;; previous one as its first argument, somewhat like with a shell pipe</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">-&gt; </span><span class="nv">h</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">local-layer-norm</span><span class="w"> </span><span class="p">(</span><span class="nb">get </span><span class="nv">layer-p</span><span class="w"> </span><span class="ss">:ln1</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">multi-head-attention</span><span class="w"> </span><span class="nv">layer-p</span><span class="w"> </span><span class="nv">config</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">first</span><span class="p">)</span><span class="w"> </span><span class="c1">;; Get the attention output, ignore weights</span>
+<span class="w">        </span><span class="p">(</span><span class="nb">+ </span><span class="nv">h</span><span class="p">))</span><span class="w">  </span><span class="c1">;; Residual 1: we explicitly reference &#39;h&#39; named above</span>
+
+<span class="w">    </span><span class="c1">;; We re-bind the result of the previous block to &#39;h&#39;</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">as-&gt;</span><span class="w"> </span><span class="nv">h</span>
+<span class="w">        </span><span class="p">(</span><span class="nb">-&gt; </span><span class="nv">h</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">local-layer-norm</span><span class="w"> </span><span class="p">(</span><span class="nb">get </span><span class="nv">layer-p</span><span class="w"> </span><span class="ss">:ln2</span><span class="p">))</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">mlp</span><span class="w"> </span><span class="p">(</span><span class="nb">get </span><span class="nv">layer-p</span><span class="w"> </span><span class="ss">:mlp</span><span class="p">))</span>
+<span class="w">            </span><span class="p">(</span><span class="nb">+ </span><span class="nv">h</span><span class="p">)))))</span><span class="w"> </span><span class="c1">;; Residual 2</span>
+</code></pre></div>
+<h3 id="some-quick-exercices">Some quick exercices</h3>
+<p>Let's try some quick exercises to become more familiar with Sheaf.</p>
+<p><strong>Exercise 1</strong>:</p>
+<ul>
+<li>What is the result of <code>(1 + 2) * 3</code> ?</li>
+<li>Create an array of integers ranging from 1 to 5</li>
+<li>Get its mean value</li>
+<li>Get its shape</li>
+</ul>
+<p><em>Hint: The Sheaf REPL has autocompletion. Press [Tab] twice to see all the commands.</em></p>
+<p><strong>Exercise 2</strong>:</p>
+<ul>
+<li>Write a <code>square</code> function using the form <code>defn</code>, and call it with various numbers</li>
+<li>Write a lambda that returns its argument cubed (^3), using <code>fn</code></li>
+<li>How could we make this work on an array instead of a scalar?</li>
+</ul>
+<p><strong>Exercise 3</strong>:</p>
+<ul>
+<li>We need to perform the following operations on input <code>x</code>: add 5, multiply by 2, square</li>
+<li>Implement it with a function that uses the threading operator <code>as-&gt;</code> to lower the amount of nested parentheses</li>
+<li>Write a function that sums all elements of an array, without using <code>sum</code>.</li>
+</ul>
+<p><em>Hint: To see the documentation and signature of a form, use <code>:help &lt;form&gt;</code>.</em></p>
+<h3 id="glossary">Glossary</h3>
+<p>Sheaf, like Clojure and other Lisp dialects, use its own terminology.
+This list summarizes the "technical jargon" for developers used to imperative languages like Python.</p>
+<ul>
+<li><strong>Application</strong>: A function call (applying arguments to a function).</li>
+<li><strong>Binding</strong>: The association of a value to a symbol within a specific scope (<em>assigning a variable</em> in imperative talk).</li>
+<li><strong>Expression</strong>: Any piece of code that, when evaluated, produces a value.</li>
+<li><strong>Form</strong>: Any syntactically valid piece of code (a symbol, a literal, or a list).</li>
+<li><strong>Lambda</strong> (<code>fn</code>): An anonymous function.</li>
+<li><strong>S-Expression</strong>: The core of Lisp: a symbolic expression inside parentheses, and also the tree structure that represents both code and data.</li>
+<li><strong>Symbol</strong>: A name (like <code>x</code> or <code>my-func</code>) that refers to a value or a function.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+<footer class="md-footer">
+    <div class="md-footer__inner md-grid" style="display: flex; justify-content: center; align-items: center; gap: 10px;">
+      <img src="../../images/sheaf-light.png" alt="Logo" style="height: 24px;"/>
+      <span>| © 2025-2026 Damien Boureille</span>
+    </div>
+</footer>
+
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
