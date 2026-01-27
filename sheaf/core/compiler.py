@@ -442,11 +442,15 @@ class Sheaf:
             is_jit_func = getattr(func, "_sheaf_is_jit", False)
 
             if (
-                getattr(self, "trace", False) or shf_tracer.monitoring
+                getattr(self, "trace", False)
+                or shf_tracer.enabled
+                or shf_tracer.monitoring
             ) and not is_jit_func:
                 shf_tracer.log_call(op, [], {})
             elif is_jit_func and (
-                getattr(self, "trace", False) or shf_tracer.monitoring
+                getattr(self, "trace", False)
+                or shf_tracer.enabled
+                or shf_tracer.monitoring
             ):
                 shf_tracer.log_jit_call(op)
 
@@ -460,7 +464,9 @@ class Sheaf:
 
             # --- Trace End ---
             if (
-                getattr(self, "trace", False) or shf_tracer.monitoring
+                getattr(self, "trace", False)
+                or shf_tracer.enabled
+                or shf_tracer.monitoring
             ) and not is_jit_func:
                 shf_tracer.log_return(op, res)
 
@@ -511,7 +517,11 @@ class Sheaf:
 
                     # Log simple values (nested calls log themselves)
                     if (
-                        (getattr(self, "trace", False) or shf_tracer.monitoring)
+                        (
+                            getattr(self, "trace", False)
+                            or shf_tracer.enabled
+                            or shf_tracer.monitoring
+                        )
                         and not is_nested_call
                         and not is_jit_func
                     ):
@@ -527,7 +537,11 @@ class Sheaf:
 
                 # Log simple values
                 if (
-                    (getattr(self, "trace", False) or shf_tracer.monitoring)
+                    (
+                        getattr(self, "trace", False)
+                        or shf_tracer.enabled
+                        or shf_tracer.monitoring
+                    )
                     and not is_nested_call
                     and not is_jit_func
                 ):
