@@ -1283,7 +1283,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 <h2 id="models-as-data"><strong>Models as Data</strong></h2>
 <div class="flex-section">
 <div>
-<p>In PyTorch or JAX, mutating a model during training typically requires breaking out of compiled code or using slower eager execution.</p>
+<p>In PyTorch or JAX, changing a model's structure requires careful orchestration of recompilation and parameter trees.</p>
 <p>In Sheaf, model transformations like pruning, expansion or specialization are expressed as regular data operations. The model rebuilds itself through JIT-compiled functions that manipulate the parameter tree directly.</p>
 </div>
 <div>
