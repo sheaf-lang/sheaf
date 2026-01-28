@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://sheaf-lang.org/reference/">
+        <link rel="canonical" href="https://sheaf.dev/reference/">
       
       
         <link rel="prev" href="../roadmap/">
@@ -618,7 +618,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../quickstart/" class="md-tabs__link">
+        <a href="../rationale/" class="md-tabs__link">
           
   
   
@@ -754,14 +754,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../quickstart/" class="md-nav__link">
+      <a href="../rationale/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Quick Start
+    Rationale
   
 
     
@@ -782,14 +782,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../rationale/" class="md-nav__link">
+      <a href="../quickstart/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Rationale
+    Quick Start
   
 
     
@@ -1718,6 +1718,17 @@
     <span class="md-ellipsis">
       
         one-hot
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tensor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tensor
       
     </span>
   </a>
@@ -3551,6 +3562,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#tensor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tensor
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5161,6 +5183,20 @@ nil                  ; Null/None value
 ; =&gt; [[1. 0. 0.]
 ; [0. 0. 1.]
 ; [0. 1. 0.]]
+</code></pre></div>
+<hr />
+<h3 id="tensor">tensor</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(tensor data)</code></p>
+<p>Converts a literal list or a dynamically-generated list into a JAX tensor. This function is required when a sequence is built at runtime (via <code>cons</code>, <code>append</code>, etc.) and needs to enter the computational pipeline. It ensures that host-side structures are explicitly moved to the device for JIT execution.</p>
+<div class="language-text highlight"><pre><span></span><code>;; Conversion from a literal list
+(tensor &#39;[1 2 3])             ; =&gt; Tensor i32[3] = [1 2 3]
+(tensor &#39;[1. 2. 3.])          ; =&gt; Tensor f32[3] = [1. 2. 3.]
+
+;; Conversion from a dynamic list
+(let [lst (cons 1 &#39;[2 3])]    ; &#39;cons&#39; returns a list structure
+  (tensor lst))               ; Explicitly lift to tensor context
+; =&gt; Tensor i32[3] = [1 2 3]
 </code></pre></div>
 <hr />
 <h2 id="initializers">Initializers</h2>

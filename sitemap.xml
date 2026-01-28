@@ -1,43 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-         <loc>https://sheaf-lang.org/</loc>
+         <loc>https://sheaf.dev/</loc>
          <lastmod>2026-01-28</lastmod>
     </url>
     <url>
-         <loc>https://sheaf-lang.org/changelog/</loc>
+         <loc>https://sheaf.dev/changelog/</loc>
          <lastmod>2026-01-28</lastmod>
     </url>
     <url>
-         <loc>https://sheaf-lang.org/python/</loc>
+         <loc>https://sheaf.dev/python/</loc>
          <lastmod>2026-01-28</lastmod>
     </url>
     <url>
-         <loc>https://sheaf-lang.org/quickstart/</loc>
+         <loc>https://sheaf.dev/quickstart/</loc>
          <lastmod>2026-01-28</lastmod>
     </url>
     <url>
-         <loc>https://sheaf-lang.org/rationale/</loc>
+         <loc>https://sheaf.dev/rationale/</loc>
          <lastmod>2026-01-28</lastmod>
     </url>
     <url>
-         <loc>https://sheaf-lang.org/reference/</loc>
+         <loc>https://sheaf.dev/reference/</loc>
          <lastmod>2026-01-28</lastmod>
     </url>
     <url>
-         <loc>https://sheaf-lang.org/roadmap/</loc>
+         <loc>https://sheaf.dev/roadmap/</loc>
          <lastmod>2026-01-28</lastmod>
     </url>
     <url>
-         <loc>https://sheaf-lang.org/starting/</loc>
+         <loc>https://sheaf.dev/starting/</loc>
          <lastmod>2026-01-28</lastmod>
     </url>
     <url>
-         <loc>https://sheaf-lang.org/types/</loc>
-         <lastmod>2026-01-28</lastmod>
-    </url>
-    <url>
-         <loc>https://sheaf-lang.org/observability/tracing/</loc>
+         <loc>https://sheaf.dev/types/</loc>
          <lastmod>2026-01-28</lastmod>
     </url>
 </urlset>
