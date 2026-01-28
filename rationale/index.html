@@ -143,9 +143,17 @@
     width: 10rem;
   }
 
-  /* Code block styling */
+  /* Code styling */
   code, pre, .highlight {
     font-family: "Ubuntu Mono", monospace !important;
+    text-shadow: 0.1px 0 0 currentColor;
+  }
+
+  /* Inline code only (not in code blocks) */
+  .md-typeset p code,
+  .md-typeset li code,
+  .md-typeset table code {
+    font-size: 0.9rem !important;
   }
 
   .highlight {
