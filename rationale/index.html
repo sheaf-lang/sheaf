@@ -1083,13 +1083,13 @@
 
   <h1>Rationale</h1>
 
-<p>Sheaf started in 2025 from an observation: <em>modern machine learning did not emerge from a language designed for it.</em></p>
+<p>Sheaf started in 2025 from a frustration with modern machine learning frameworks, and the desire for a modern Lisp for differentiable programming.</p>
 <p>Python became dominant because it was accessible. Over time, layers of frameworks accumulated to express what the language itself could not: computation graphs, differentiation, vectorization, and compilation. The result works, but much of the mathematical structure of models is now expressed indirectly, through imperative control flow and auxiliary plumbing.</p>
 <p>This contrasts with Lisp, which served as an environment for both symbolic and connectionist artificial intelligence research, from early systems on DEC PDP-10 machines to neural network frameworks such as LeCun’s Lush.</p>
 <p>Lisp represents computation explicitly. Programs are data structures that a system can inspect, transform, and compose, a concept known as homoiconicity. This allows building systems that operate on their own representations.</p>
 <p>Sheaf aims to bring homoiconicity to modern machine learning, and with that, the ability for a model to remain mere data that can observe and modify itself using the same tools it uses to manipulate tensors.</p>
-<p>The technical inspiration for Sheaf came from Clojure. Clojure demonstrated that a modern Lisp can coexist with a dominant ecosystem without replacing it, actually leveraging its runtime. Similarly, Sheaf was envisioned as a functional layer for model description, delegating the numerical execution to JAX. Its syntax is also inspired by Clojure, adapted for tensor operations.</p>
-<p>The goal of Sheaf is not to replace existing AI tooling, and is not intended to. The goal is to provide a space where a model's high-level representation and its machine-manipulable data structures remain the same.</p>
+<p>The technical inspiration to get there came from Clojure. Clojure demonstrated that a modern Lisp can coexist with a dominant ecosystem without replacing it, but by building on top of its runtime instead. Sheaf follows the same approach: a functional layer for model description, delegating the numerical execution to JAX. Its syntax is also inspired by Clojure, adapted for tensor operations.</p>
+<p>Sheaf does not aim to replace existing AI tooling. It provides a space where a model's high-level representation and its machine-manipulable data structures remain the same.</p>
 
 
 
