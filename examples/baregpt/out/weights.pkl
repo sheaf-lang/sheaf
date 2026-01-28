@@ -1,1 +1,0 @@
-pretrained_weights_shakespeare.pkl
