@@ -30,7 +30,7 @@
       
     
 <link rel="icon" type="image/png" href="../images/favicon.png">
-<link href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   /* Replace mkdocs logo with custom logo - header */
   .md-header__button.md-logo {
@@ -83,8 +83,8 @@
     --md-primary-fg-color: #421168;
     --md-primary-fg-color--light: #5a1a8c;
     --md-primary-fg-color--dark: #2d0b4a;
-    --md-code-font: "Ubuntu Mono";
-    --md-code-font-family: "Ubuntu Mono", monospace;
+    --md-code-font: "Fira Code";
+    --md-code-font-family: "Fira Code", monospace;
   }
 
   /* Override primary color from Material theme */
@@ -147,20 +147,20 @@
 
   /* Code styling */
   code, pre, .highlight {
-    font-family: "Ubuntu Mono", monospace !important;
-    text-shadow: 0.1px 0 0 currentColor;
+    font-family: "Fira Code", monospace !important;
+    text-shadow: 0.25px 0 0 currentColor;
   }
 
   /* Inline code only (not in code blocks) */
   .md-typeset p code,
   .md-typeset li code,
   .md-typeset table code {
-    font-size: 0.9rem !important;
+    font-size: 0.7rem !important;
   }
 
   .highlight {
     color : black;
-    font-size: 1.05rem;
+    font-size: 0.9rem;
     font-weight: 400;
     line-height: 1.4;
     text-shadow: 0.1px 0 0 currentColor;
@@ -1477,85 +1477,85 @@
 </ul>
 </div>
 <h3 id="basic-tensors">Basic Tensors</h3>
-<div class="language-text highlight"><pre><span></span><code>42                    ; Scalar tensor (f32)
-3.14                  ; Scalar tensor (f32)
-[1 2 3]               ; 1D tensor, shape (3,)
-[[1 2] [3 4]]         ; 2D tensor, shape (2, 2)
+<div class="language-clojure highlight"><pre><span></span><code><span class="mi">42</span><span class="w">                    </span><span class="c1">; Scalar tensor (f32)</span>
+<span class="mf">3.14</span><span class="w">                  </span><span class="c1">; Scalar tensor (f32)</span>
+<span class="p">[</span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="p">]</span><span class="w">               </span><span class="c1">; 1D tensor, shape (3,)</span>
+<span class="p">[[</span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="p">[</span><span class="mi">3</span><span class="w"> </span><span class="mi">4</span><span class="p">]]</span><span class="w">         </span><span class="c1">; 2D tensor, shape (2, 2)</span>
 </code></pre></div>
 <h3 id="dtype-specification">Dtype Specification</h3>
 <p>A dtype keyword may follow a vector literal to specify its precision:</p>
-<div class="language-text highlight"><pre><span></span><code>[1 2 3]               ; Default f32
-[1 2 3] :f32          ; Explicit f32
-[1 2 3] :bf16         ; BFloat16
-[1 2 3] :f16          ; Float16
-[1 2 3] :i32          ; 32-bit integer
-[1 2 3] :u32          ; 32-bit unsigned integer
-[1 2 3] :bool         ; Boolean
+<div class="language-clojure highlight"><pre><span></span><code><span class="p">[</span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="p">]</span><span class="w">               </span><span class="c1">; Default f32</span>
+<span class="p">[</span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="p">]</span><span class="w"> </span><span class="ss">:f32</span><span class="w">          </span><span class="c1">; Explicit f32</span>
+<span class="p">[</span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="p">]</span><span class="w"> </span><span class="ss">:bf16</span><span class="w">         </span><span class="c1">; BFloat16</span>
+<span class="p">[</span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="p">]</span><span class="w"> </span><span class="ss">:f16</span><span class="w">          </span><span class="c1">; Float16</span>
+<span class="p">[</span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="p">]</span><span class="w"> </span><span class="ss">:i32</span><span class="w">          </span><span class="c1">; 32-bit integer</span>
+<span class="p">[</span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="p">]</span><span class="w"> </span><span class="ss">:u32</span><span class="w">          </span><span class="c1">; 32-bit unsigned integer</span>
+<span class="p">[</span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="p">]</span><span class="w"> </span><span class="ss">:bool</span><span class="w">         </span><span class="c1">; Boolean</span>
 </code></pre></div>
 <h3 id="literal-lists">Literal Lists</h3>
 <p>The quote <code>'</code> prevents evaluation, treating the following form as literal data rather than code or a numerical tensor. It is typically used to pass structural metadata, such as shapes for tensor creation functions:</p>
-<div class="language-text highlight"><pre><span></span><code>;; Without the quote, [2 3] is evaluated as a tensor
-(nth [2 3] 0)  ; =&gt; Tensor f32[] = 2.0
+<div class="language-clojure highlight"><pre><span></span><code><span class="c1">;; Without the quote, [2 3] is evaluated as a tensor</span>
+<span class="p">(</span><span class="nb">nth </span><span class="p">[</span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="p">]</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w">  </span><span class="c1">; =&gt; Tensor f32[] = 2.0</span>
 
-;; With the quote, &#39;[2 3] is passed as a literal list
-(nth &#39;[2 3] 0) ; =&gt; 2
+<span class="c1">;; With the quote, &#39;[2 3] is passed as a literal list</span>
+<span class="p">(</span><span class="nb">nth </span><span class="o">&#39;</span><span class="p">[</span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="p">]</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="c1">; =&gt; 2</span>
 
-;; Passing shapes is a typical use for quoted vectors
-(random-normal (random-key 0) &#39;[3 4])   ; 3x4 random matrix from N(0,1)
-(zeros &#39;[2 3])                          ; 2x3 tensor of zeros
-(ones &#39;[10])                            ; 1D tensor of ones, length 10
-(reshape (arange 6) &#39;[2 3])             ; Reshape to 2x3
+<span class="c1">;; Passing shapes is a typical use for quoted vectors</span>
+<span class="p">(</span><span class="nf">random-normal</span><span class="w"> </span><span class="p">(</span><span class="nf">random-key</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&#39;</span><span class="p">[</span><span class="mi">3</span><span class="w"> </span><span class="mi">4</span><span class="p">])</span><span class="w">   </span><span class="c1">; 3x4 random matrix from N(0,1)</span>
+<span class="p">(</span><span class="nf">zeros</span><span class="w"> </span><span class="o">&#39;</span><span class="p">[</span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="p">])</span><span class="w">                          </span><span class="c1">; 2x3 tensor of zeros</span>
+<span class="p">(</span><span class="nf">ones</span><span class="w"> </span><span class="o">&#39;</span><span class="p">[</span><span class="mi">10</span><span class="p">])</span><span class="w">                            </span><span class="c1">; 1D tensor of ones, length 10</span>
+<span class="p">(</span><span class="nf">reshape</span><span class="w"> </span><span class="p">(</span><span class="nf">arange</span><span class="w"> </span><span class="mi">6</span><span class="p">)</span><span class="w"> </span><span class="o">&#39;</span><span class="p">[</span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="p">])</span><span class="w">             </span><span class="c1">; Reshape to 2x3</span>
 </code></pre></div>
 <hr />
 <h2 id="dictionaries">Dictionaries</h2>
 <p>Key-value structures using curly braces. Keys are typically keywords.</p>
-<div class="language-text highlight"><pre><span></span><code>{}                    ; Empty dictionary
-{:x 1 :y 2}           ; Simple dictionary
-{:layer1 {:W [[1 2] [3 4]] :b [0.1 0.2]}}  ; Nested (pytree)
+<div class="language-clojure highlight"><pre><span></span><code><span class="p">{}</span><span class="w">                    </span><span class="c1">; Empty dictionary</span>
+<span class="p">{</span><span class="ss">:x</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="ss">:y</span><span class="w"> </span><span class="mi">2</span><span class="p">}</span><span class="w">           </span><span class="c1">; Simple dictionary</span>
+<span class="p">{</span><span class="ss">:layer1</span><span class="w"> </span><span class="p">{</span><span class="ss">:W</span><span class="w"> </span><span class="p">[[</span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="p">[</span><span class="mi">3</span><span class="w"> </span><span class="mi">4</span><span class="p">]]</span><span class="w"> </span><span class="ss">:b</span><span class="w"> </span><span class="p">[</span><span class="mf">0.1</span><span class="w"> </span><span class="mf">0.2</span><span class="p">]}}</span><span class="w">  </span><span class="c1">; Nested (pytree)</span>
 </code></pre></div>
 <h3 id="dictionary-operations">Dictionary Operations</h3>
-<div class="language-text highlight"><pre><span></span><code>(get {:x 1 :y 2} :x)              ; =&gt; 1
-(assoc {:x 1} :y 2)               ; =&gt; {:x 1 :y 2}
-(dissoc {:x 1 :y 2} [:x])         ; =&gt; {:y 2} (pass keys as a list)
-(dissoc {:x 1 :y 2} [:x :y])      ; =&gt; {} (remove multiple keys)
-(keys {:x 1 :y 2})                ; =&gt; &#39;[:x :y] (literal list)
-(vals {:x 1 :y 2})                ; =&gt; &#39;[1 2] (literal list)
-(merge {:x 1} {:y 2})             ; =&gt; {:x 1 :y 2}
+<div class="language-clojure highlight"><pre><span></span><code><span class="p">(</span><span class="nb">get </span><span class="p">{</span><span class="ss">:x</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="ss">:y</span><span class="w"> </span><span class="mi">2</span><span class="p">}</span><span class="w"> </span><span class="ss">:x</span><span class="p">)</span><span class="w">              </span><span class="c1">; =&gt; 1</span>
+<span class="p">(</span><span class="nb">assoc </span><span class="p">{</span><span class="ss">:x</span><span class="w"> </span><span class="mi">1</span><span class="p">}</span><span class="w"> </span><span class="ss">:y</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w">               </span><span class="c1">; =&gt; {:x 1 :y 2}</span>
+<span class="p">(</span><span class="nb">dissoc </span><span class="p">{</span><span class="ss">:x</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="ss">:y</span><span class="w"> </span><span class="mi">2</span><span class="p">}</span><span class="w"> </span><span class="p">[</span><span class="ss">:x</span><span class="p">])</span><span class="w">         </span><span class="c1">; =&gt; {:y 2} (pass keys as a list)</span>
+<span class="p">(</span><span class="nb">dissoc </span><span class="p">{</span><span class="ss">:x</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="ss">:y</span><span class="w"> </span><span class="mi">2</span><span class="p">}</span><span class="w"> </span><span class="p">[</span><span class="ss">:x</span><span class="w"> </span><span class="ss">:y</span><span class="p">])</span><span class="w">      </span><span class="c1">; =&gt; {} (remove multiple keys)</span>
+<span class="p">(</span><span class="nb">keys </span><span class="p">{</span><span class="ss">:x</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="ss">:y</span><span class="w"> </span><span class="mi">2</span><span class="p">})</span><span class="w">                </span><span class="c1">; =&gt; &#39;[:x :y] (literal list)</span>
+<span class="p">(</span><span class="nb">vals </span><span class="p">{</span><span class="ss">:x</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="ss">:y</span><span class="w"> </span><span class="mi">2</span><span class="p">})</span><span class="w">                </span><span class="c1">; =&gt; &#39;[1 2] (literal list)</span>
+<span class="p">(</span><span class="nb">merge </span><span class="p">{</span><span class="ss">:x</span><span class="w"> </span><span class="mi">1</span><span class="p">}</span><span class="w"> </span><span class="p">{</span><span class="ss">:y</span><span class="w"> </span><span class="mi">2</span><span class="p">})</span><span class="w">             </span><span class="c1">; =&gt; {:x 1 :y 2}</span>
 </code></pre></div>
 <p>Dictionaries are <strong>pytree nodes</strong>: JAX can differentiate through them and apply transformations like <code>vmap</code> to their contents.</p>
 <hr />
 <h2 id="keywords">Keywords</h2>
 <p>Identifiers prefixed with <code>:</code>. Self-evaluating and used as dictionary keys.</p>
-<div class="language-text highlight"><pre><span></span><code>:x                    ; Keyword
-:learning-rate        ; Keyword with hyphen
-(get params :layer1)  ; Access dictionary value
+<div class="language-clojure highlight"><pre><span></span><code><span class="ss">:x</span><span class="w">                    </span><span class="c1">; Keyword</span>
+<span class="ss">:learning-rate</span><span class="w">        </span><span class="c1">; Keyword with hyphen</span>
+<span class="p">(</span><span class="nb">get </span><span class="nv">params</span><span class="w"> </span><span class="ss">:layer1</span><span class="p">)</span><span class="w">  </span><span class="c1">; Access dictionary value</span>
 </code></pre></div>
 <hr />
 <h2 id="booleans">Booleans</h2>
-<div class="language-text highlight"><pre><span></span><code>true                  ; Boolean true
-false                 ; Boolean false
+<div class="language-clojure highlight"><pre><span></span><code><span class="nv">true</span><span class="w">                  </span><span class="c1">; Boolean true</span>
+<span class="nv">false</span><span class="w">                 </span><span class="c1">; Boolean false</span>
 </code></pre></div>
 <p>Comparison operations return boolean tensors:</p>
-<div class="language-text highlight"><pre><span></span><code>(&gt; [1 2 3] 2)         ; =&gt; [false false true]
-(= [1 2 1] 1)         ; =&gt; [true false true]
+<div class="language-clojure highlight"><pre><span></span><code><span class="p">(</span><span class="nb">&gt; </span><span class="p">[</span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="p">]</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w">         </span><span class="c1">; =&gt; [false false true]</span>
+<span class="p">(</span><span class="nb">= </span><span class="p">[</span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w">         </span><span class="c1">; =&gt; [true false true]</span>
 </code></pre></div>
 <hr />
 <h2 id="strings">Strings</h2>
-<div class="language-text highlight"><pre><span></span><code>&quot;hello&quot;               ; String literal
+<div class="language-clojure highlight"><pre><span></span><code><span class="s">&quot;hello&quot;</span><span class="w">               </span><span class="c1">; String literal</span>
 </code></pre></div>
 <p>String operations use <code>str-call</code> which dispatches to Python string methods.
 Methods called through <code>str-call</code> return strings, literal lists, or booleans—never tensors.</p>
-<div class="language-text highlight"><pre><span></span><code>(str-call &quot;upper&quot; &quot;hello&quot;)           ; =&gt; &quot;HELLO&quot; (string)
-(str-call &quot;split&quot; &quot;a,b,c&quot; &quot;,&quot;)       ; =&gt; &#39;[&quot;a&quot; &quot;b&quot; &quot;c&quot;] (literal list)
-(str-call &quot;replace&quot; &quot;foo&quot; &quot;o&quot; &quot;a&quot;)   ; =&gt; &quot;faa&quot; (string)
-(str-call &quot;startswith&quot; &quot;hello&quot; &quot;he&quot;) ; =&gt; true (boolean)
+<div class="language-clojure highlight"><pre><span></span><code><span class="p">(</span><span class="nf">str-call</span><span class="w"> </span><span class="s">&quot;upper&quot;</span><span class="w"> </span><span class="s">&quot;hello&quot;</span><span class="p">)</span><span class="w">           </span><span class="c1">; =&gt; &quot;HELLO&quot; (string)</span>
+<span class="p">(</span><span class="nf">str-call</span><span class="w"> </span><span class="s">&quot;split&quot;</span><span class="w"> </span><span class="s">&quot;a,b,c&quot;</span><span class="w"> </span><span class="s">&quot;,&quot;</span><span class="p">)</span><span class="w">       </span><span class="c1">; =&gt; &#39;[&quot;a&quot; &quot;b&quot; &quot;c&quot;] (literal list)</span>
+<span class="p">(</span><span class="nf">str-call</span><span class="w"> </span><span class="s">&quot;replace&quot;</span><span class="w"> </span><span class="s">&quot;foo&quot;</span><span class="w"> </span><span class="s">&quot;o&quot;</span><span class="w"> </span><span class="s">&quot;a&quot;</span><span class="p">)</span><span class="w">   </span><span class="c1">; =&gt; &quot;faa&quot; (string)</span>
+<span class="p">(</span><span class="nf">str-call</span><span class="w"> </span><span class="s">&quot;startswith&quot;</span><span class="w"> </span><span class="s">&quot;hello&quot;</span><span class="w"> </span><span class="s">&quot;he&quot;</span><span class="p">)</span><span class="w"> </span><span class="c1">; =&gt; true (boolean)</span>
 </code></pre></div>
 <p>Note: <code>str-call</code> is evaluated at compile time before JIT compilation. The result is then embedded in the compiled function, so string operations don't impact runtime performance.</p>
 <hr />
 <h2 id="pytrees">PyTrees</h2>
 <p>Nested structures of dictionaries and tensors that JAX understands natively. Used for neural network parameters:</p>
-<div class="language-text highlight"><pre><span></span><code>{:layer1 {:W (random-normal (random-key 0) &#39;[4 8]) :b (zeros &#39;[8])}
- :layer2 {:W (random-normal (random-key 1) &#39;[8 1]) :b (zeros &#39;[1])}}
+<div class="language-clojure highlight"><pre><span></span><code><span class="p">{</span><span class="ss">:layer1</span><span class="w"> </span><span class="p">{</span><span class="ss">:W</span><span class="w"> </span><span class="p">(</span><span class="nf">random-normal</span><span class="w"> </span><span class="p">(</span><span class="nf">random-key</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&#39;</span><span class="p">[</span><span class="mi">4</span><span class="w"> </span><span class="mi">8</span><span class="p">])</span><span class="w"> </span><span class="ss">:b</span><span class="w"> </span><span class="p">(</span><span class="nf">zeros</span><span class="w"> </span><span class="o">&#39;</span><span class="p">[</span><span class="mi">8</span><span class="p">])}</span>
+<span class="w"> </span><span class="ss">:layer2</span><span class="w"> </span><span class="p">{</span><span class="ss">:W</span><span class="w"> </span><span class="p">(</span><span class="nf">random-normal</span><span class="w"> </span><span class="p">(</span><span class="nf">random-key</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">&#39;</span><span class="p">[</span><span class="mi">8</span><span class="w"> </span><span class="mi">1</span><span class="p">])</span><span class="w"> </span><span class="ss">:b</span><span class="w"> </span><span class="p">(</span><span class="nf">zeros</span><span class="w"> </span><span class="o">&#39;</span><span class="p">[</span><span class="mi">1</span><span class="p">])}}</span>
 </code></pre></div>
 <p>PyTrees enable:</p>
 <ul>
@@ -1563,8 +1563,8 @@ Methods called through <code>str-call</code> return strings, literal lists, or b
 <li>Batch operations via <code>vmap</code></li>
 <li>Efficient iteration via <code>scan</code></li>
 </ul>
-<div class="language-text highlight"><pre><span></span><code>(flatten params)           ; Get all tensor leaves
-(tree-reduce + params 0.0) ; Sum all values in pytree
+<div class="language-clojure highlight"><pre><span></span><code><span class="p">(</span><span class="nf">flatten</span><span class="w"> </span><span class="nv">params</span><span class="p">)</span><span class="w">           </span><span class="c1">; Get all tensor leaves</span>
+<span class="p">(</span><span class="nf">tree-reduce</span><span class="w"> </span><span class="nb">+ </span><span class="nv">params</span><span class="w"> </span><span class="mf">0.0</span><span class="p">)</span><span class="w"> </span><span class="c1">; Sum all values in pytree</span>
 </code></pre></div>
 <hr />
 <p>For function signatures and detailed examples, see the <a href="../reference/">Function Reference</a>.</p>
