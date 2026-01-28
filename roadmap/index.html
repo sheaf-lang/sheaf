@@ -1211,7 +1211,7 @@
 <h3 id="parallelism-and-distribution">Parallelism and distribution</h3>
 <p>Sheaf does not currently allow for explicit workload distribution. Instead, it relies on JAX to handle how tensors are partitioned across hardware, and does not expose its low-level sharding primitives such as <code>pmap</code>.</p>
 <p>This works well for single-machine training, but limits multi-node scaling.
-A promising approach would be to leverage the "macros as architecture" to rewrite functions during compilation, potentially using Equinox as a backend. This could give us parallelization while keeping the high-level mathematical definitions clean from hardware concerns.</p>
+A promising approach would be to rely on the "macros as architecture" to rewrite functions during compilation, potentially using Equinox as a backend. This could give us parallelization while keeping the high-level mathematical definitions clean from hardware concerns.</p>
 <h3 id="language-modularity-and-namespaces">Language modularity and Namespaces</h3>
 <p>Keeping Sheaf as a "pure", mathematical language has created a paradox: it relies on imperative Python code for even the most basic stateful tasks. The mid-term goal is to restrict Python's role to non-trivial plumbing and orchestration. However, reducing this dependency would require adding stateful functions that would bloat the core language.</p>
 <p>To solve this, future versions will introduce namespaces, which will allow the standard library to grow without cluttering the core language. Tools like file I/O or SafeTensors support could then be added without polluting the global symbol table.</p>
