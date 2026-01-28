@@ -3,14 +3,14 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "sheaf"
-version = "0.1.0"
-description = "A Lisp DSL for JAX - Differentiable computing with symbolic reasoning"
+name = "sheaf-lang"
+version = "1.1.0"
+description = "A functional language for differentiable programming"
 readme = "README.md"
 requires-python = ">=3.9"
 license = {text = "MIT"}
 authors = [
-    {name = "Damien", email = "damien@example.com"}
+    {name = "Damien Boureille"}
 ]
 keywords = ["lisp", "jax", "neural-networks", "symbolic-ai", "deep-learning", "dsl"]
 classifiers = [
@@ -50,10 +50,10 @@ examples = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/sheaf"
-Documentation = "https://sheaf.readthedocs.io"
-Repository = "https://github.com/yourusername/sheaf"
-Issues = "https://github.com/yourusername/sheaf/issues"
+Homepage = "https://sheaf-lang.org"
+Documentation = "https://sheaf-lang.org"
+Repository = "https://github.com/sheaf-lang/sheaf"
+Issues = "https://github.com/sheaf-lang/sheaf/issues"
 
 [tool.setuptools.packages.find]
 include = ["sheaf*"]
