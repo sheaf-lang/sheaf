@@ -20,6 +20,17 @@
     (+ (* (/ (- x m) (sqrt (+ v eps))) gamma) beta)))
 
 
+(defn rms-norm [x p axis]
+  (let [eps 1e-6
+        ;; RMS normalization: (x / RMS(x)) * gamma + beta
+        ;; RMS = sqrt(mean(x^2) + eps)
+        mean-sq (mean (** x 2) :axis axis :keepdims)
+        rms (sqrt (+ mean-sq eps))
+        gamma (get p :gamma)
+        beta (get p :beta)]
+    (+ (* (/ x rms) gamma) beta)))
+
+
 (defn linear [x w b]
   (+ (@ x w) b))
 
