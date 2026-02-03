@@ -9,7 +9,7 @@ import builtins
 import os
 import types
 
-from ..runtime import core_ops, jax_ops, math_ops, nn_ops, string_ops
+from ..runtime import core_ops, io_ops, jax_ops, math_ops, nn_ops, string_ops
 from .error_handler import format_error, set_source
 from .forms import special_forms
 from .macro_engine import create_macro_engine
@@ -49,6 +49,7 @@ class Sheaf:
         """Initialize the global environment with runtime operations."""
         env = {}
         env.update(core_ops.get_core_env())
+        env.update(io_ops.get_io_env())
         env.update(jax_ops.get_jax_env())
         env.update(math_ops.get_math_env())
         env.update(nn_ops.get_nn_env())
@@ -210,9 +211,31 @@ class Sheaf:
 
     def _resolve_symbol(self, symbol, local_vars):
         # Resolve a symbol to its value
-        # String literal
+        # String literal — process escape sequences char by char
+        # (replace-chain would mis-handle \\n → backslash+n)
         if symbol.startswith('"') and symbol.endswith('"'):
-            return symbol.strip('"')
+            raw = symbol[1:-1]
+            result = []
+            i = 0
+            while i < len(raw):
+                if raw[i] == "\\" and i + 1 < len(raw):
+                    c = raw[i + 1]
+                    if c == "n":
+                        result.append("\n")
+                    elif c == "t":
+                        result.append("\t")
+                    elif c == '"':
+                        result.append('"')
+                    elif c == "\\":
+                        result.append("\\")
+                    else:
+                        result.append("\\")
+                        result.append(c)
+                    i += 2
+                else:
+                    result.append(raw[i])
+                    i += 1
+            return "".join(result)
 
         # Local variable
         if symbol in local_vars:

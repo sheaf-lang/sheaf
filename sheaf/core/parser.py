@@ -76,12 +76,17 @@ def tokenize(chars):
     i = 0
     while i < len(chars):
         if chars[i] == '"':
-            # Found start of string, find the end
+            # Found start of string, find the end (handles \" escapes)
             result.append(chars[i])  # Add opening quote
             i += 1
             while i < len(chars) and chars[i] != '"':
-                result.append(chars[i])
-                i += 1
+                if chars[i] == "\\" and i + 1 < len(chars):
+                    result.append(chars[i])  # keep the backslash
+                    result.append(chars[i + 1])  # keep the escaped char
+                    i += 2
+                else:
+                    result.append(chars[i])
+                    i += 1
             if i < len(chars):
                 result.append(chars[i])  # Add closing quote
                 i += 1
@@ -99,7 +104,7 @@ def tokenize(chars):
     # Updated pattern to capture backtick (`), tilde (~), and quote (') as separate tokens
     # ~@ must be captured as a single token
     # {} added for dict literals
-    token_pattern = r'"[^"]*"|~@|[()\[\]{}`~\']|[^\s()\[\]{}`~\']+'
+    token_pattern = r'"([^"\\]|\\.)*"|~@|[()\[\]{}`~\']|[^\s()\[\]{}`~\']+'
     lines = chars.splitlines()
     tokens_with_meta = []
     for line_num, line in enumerate(lines, 1):
