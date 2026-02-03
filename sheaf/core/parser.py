@@ -21,6 +21,8 @@ class SheafSyntaxError(SheafRuntimeError):
     """Syntax error in Sheaf code"""
 
     def __init__(self, message, line_num=None):
+        if line_num is not None:
+            message = f"line {line_num}: {message}"
         super().__init__(message)
         self.line_num = line_num
         self.is_sheaf_error = True
@@ -67,7 +69,7 @@ class SheafVector(list):
 def tokenize(chars):
     # Remove comments: both ;; and single ; until end of line
     chars = re.sub(r";.*", "", chars)
-    
+
     # Treat commas as whitespace (like Clojure), but preserve commas inside strings
     # We'll use a more sophisticated approach to only replace commas outside of strings
     result = []
@@ -83,17 +85,17 @@ def tokenize(chars):
             if i < len(chars):
                 result.append(chars[i])  # Add closing quote
                 i += 1
-        elif chars[i] == ',':
+        elif chars[i] == ",":
             # Replace comma with space (outside of strings)
-            result.append(' ')
+            result.append(" ")
             i += 1
         else:
             # Keep other characters as-is
             result.append(chars[i])
             i += 1
-    
-    chars = ''.join(result)
-    
+
+    chars = "".join(result)
+
     # Updated pattern to capture backtick (`), tilde (~), and quote (') as separate tokens
     # ~@ must be captured as a single token
     # {} added for dict literals
