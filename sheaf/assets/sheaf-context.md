@@ -1733,6 +1733,7 @@ JAX uses explicit PRNG keys (not global state). Always create a key first, then 
 
 ```sheaf
 (layer-norm x p axis)                         ; Layer normalization
+(rms-norm x p axis)                           ; RMS normalization
 (linear x w b)                                ; Dense layer: x @ w + b
 (cross-entropy-loss logits targets)           ; Cross-entropy (logits vs one-hot targets)
 (sparse-cross-entropy logits targets :i32)    ; Cross-entropy (logits vs integer class indices)
