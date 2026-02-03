@@ -231,6 +231,55 @@ def rest(lst):
     return list(lst[1:]) if len(lst) > 0 else []
 
 
+def sheaf_sort(seq, **kwargs):
+    """
+    Sort a list or tensor. Polymorphic: behavior and valid options depend on type.
+
+    Options:
+        | Option     | List | Tensor |
+        |------------|------|--------|
+        | :reverse   | yes  | yes    |
+        | :axis      | no   | yes    |
+        | :key       | yes  | no     |
+
+    Examples:
+        (sort '("c" "a" "b"))                    -> ("a" "b" "c")
+        (sort '("c" "a" "b") :reverse)           -> ("c" "b" "a")
+        (sort '("cat" "ant" "bee") :key len)     -> ("ant" "bee" "cat")
+        (sort [3.0 1.0 2.0])                     -> [1. 2. 3.]
+        (sort [3.0 1.0 2.0] :reverse)            -> [3. 2. 1.]
+        (sort [[3 1] [2 4]] :axis 1)             -> [[1 3] [2 4]]
+    """
+    reverse = kwargs.get("reverse", False)
+    axis = kwargs.get("axis", None)
+    key = kwargs.get("key", None)
+
+    is_tensor = hasattr(seq, "shape")
+
+    # --- Validate option/type combinations ---
+    if is_tensor:
+        if key is not None:
+            raise TypeError("sort: :key is not supported on tensors (only on lists)")
+    else:
+        if axis is not None:
+            raise TypeError("sort: :axis is not supported on lists (only on tensors)")
+
+    # --- Tensor path ---
+    if is_tensor:
+        import jax.numpy as jnp
+
+        ax = axis if axis is not None else -1
+        result = jnp.sort(seq, axis=ax)
+        if reverse:
+            # Flip along the sort axis
+            result = jnp.flip(result, axis=ax)
+        return result
+
+    # --- List path ---
+    result = sorted(seq, key=key, reverse=reverse)
+    return result
+
+
 def symbol_q(obj):
     """
     Check if object is a symbol.
@@ -366,6 +415,7 @@ def get_core_env():
     return {
         "apply": generic_apply,
         "assoc": sheaf_assoc,
+        "chars": lambda s: list(str(s)),
         "cons": cons,
         "count": count,
         # "dict": create_dict,
@@ -385,6 +435,7 @@ def get_core_env():
         "reduce": lambda f, acc, lst: reduce(f, lst, acc),
         "rest": rest,
         "slice": generic_slice,
+        "sort": sheaf_sort,
         "symbol?": symbol_q,
         "vals": sheaf_vals,
     }
