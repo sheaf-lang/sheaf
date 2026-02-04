@@ -200,6 +200,8 @@ def get_jax_env():
         "append": sheaf_append,
         "append-and-roll": sheaf_append_and_roll,
         "arange": jnp.arange,
+        "argmax": jnp.argmax,
+        "argmin": jnp.argmin,
         "choice": jax.random.choice,
         "tensor": sheaf_tensor,
         "einsum": jnp.einsum,
