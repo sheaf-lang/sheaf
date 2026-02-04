@@ -190,6 +190,11 @@ def sheaf_tree_reduce(f, tree, init=None):
     return jax.tree_util.tree_reduce(f, tree, init)
 
 
+def sheaf_index_update(array, idx, value):
+    """Functional array update: returns a copy of array with array[idx] = value."""
+    return array.at[idx].set(value)
+
+
 def get_jax_env():
     return {
         "append": sheaf_append,
@@ -216,6 +221,10 @@ def get_jax_env():
         "roll": jnp.roll,
         "shape": sheaf_shape,
         "dynamic-slice": sheaf_dynamic_slice,
+        "eye": jnp.eye,
+        "index-update": sheaf_index_update,
+        "int": lambda x: jnp.int32(x),
+        "float": lambda x: jnp.float32(x),
         "swapaxes": jnp.swapaxes,
         "tanh": jnp.tanh,
         "tensor-split": jnp.split,
