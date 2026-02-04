@@ -175,6 +175,15 @@ class Sheaf:
                         for item in v:
                             if isinstance(item, SheafVector):
                                 result.append(vec_to_tuple(item))
+                            elif (
+                                isinstance(item, SheafSymbol)
+                                and len(item) >= 2
+                                and item[0] == '"'
+                                and item[-1] == '"'
+                            ):
+                                # String literal inside a quoted vector: strip the quotes
+                                # so that '["hi" "hello"] becomes ("hi", "hello")
+                                result.append(item[1:-1])
                             else:
                                 result.append(item)
                         return tuple(result)
