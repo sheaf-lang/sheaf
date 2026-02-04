@@ -171,6 +171,8 @@ class DefnForm(SpecialForm):
 
             # Create a wrapper to ensure dictionaries are hashable for JAX
             base_func = generated_func
+            # Create the jit object once — reused across all calls
+            jitted_fn = jax.jit(base_func, static_argnums=tuple(static_argnums))
 
             def jitted_wrapper(*args, **kwargs):
                 # Extract trace/log/scope kwargs BEFORE passing to jax.jit
@@ -189,10 +191,7 @@ class DefnForm(SpecialForm):
                     if isinstance(new_args[idx], dict):
                         new_args[idx] = HashableDict(new_args[idx])
 
-                # Call JIT function WITHOUT trace kwargs
-                return jax.jit(base_func, static_argnums=tuple(static_argnums))(
-                    *new_args, **kwargs
-                )
+                return jitted_fn(*new_args, **kwargs)
 
             generated_func = jitted_wrapper
             generated_func._sheaf_is_jit = True
