@@ -153,7 +153,7 @@ class SheafErrorFormatter:
         parts.append("    |")
 
         # Suggestions if we have some...
-        suggestion = self.get_suggestion(error, expression)
+        suggestion = self.get_suggestion(error, expression, filename)
         if suggestion:
             parts.append(f"  = note: {suggestion}")
 
@@ -204,7 +204,9 @@ class SheafErrorFormatter:
         "require": ("use", "Sheaf uses 'use' to load modules: (use nn), (use optim)"),
     }
 
-    def get_suggestion(self, error: Exception, expression) -> Optional[str]:
+    def get_suggestion(
+        self, error: Exception, expression, filename: str = None
+    ) -> Optional[str]:
         error_type = type(error).__name__
         error_msg = str(error).lower()
 
@@ -272,7 +274,113 @@ class SheafErrorFormatter:
         elif error_type == "KeyError":
             return "Verify that the key exists in the dictionary."
 
+        # --- Extra closing paren: find the line where ')' first exceeds opens ---
+        if "unexpected closing character" in error_msg:
+            source = self.sources.get(filename or self.current_filename, "")
+            if source:
+                info = _find_unmatched_paren(source)
+                if info["excess_line"] is not None:
+                    return f"Extra closing paren on line {info['excess_line']}. Check that line for a stray ')'."
+
+        # --- Missing closing paren: locate the unmatched '(' and warn on deep nesting ---
+        if (
+            "unclosed parenthesis" in error_msg
+            or "unclosed bracket" in error_msg
+            or "unexpected end of file" in error_msg
+        ):
+            source = self.sources.get(filename or self.current_filename, "")
+            if source:
+                info = _find_unmatched_paren(source)
+                parts = []
+                if info["culprit_line"] is not None:
+                    ctx = (
+                        f" (`{info['culprit_context']}`)"
+                        if info["culprit_context"]
+                        else ""
+                    )
+                    parts.append(
+                        f"Probable culprit: opening paren at line {info['culprit_line']}{ctx}"
+                    )
+                if info["max_depth"] > 4:
+                    parts.append(
+                        f"Max nesting depth: {info['max_depth']}. "
+                        "Consider extracting sub-expressions into named functions."
+                    )
+                if parts:
+                    return "\n  = hint: ".join(parts)
+
         return None
+
+
+def _find_unmatched_paren(source: str) -> dict:
+    """Scan source to find unmatched parens in both directions.
+
+    Returns:
+        culprit_line: 1-based line of the oldest unmatched '(' (missing closing paren)
+        culprit_context: symbol after that '(' (e.g. 'defn', 'let')
+        excess_line: 1-based line where ')' first exceeds opens (extra closing paren)
+        max_depth: maximum nesting depth reached during the scan
+    """
+    stack = []  # each entry: (line_number, context_symbol)
+    max_depth = 0
+    excess_line = None
+    lines = source.split("\n")
+
+    for line_idx, line in enumerate(lines):
+        line_num = line_idx + 1
+        i = 0
+        while i < len(line):
+            ch = line[i]
+
+            # Skip comments
+            if ch == ";":
+                break
+
+            # Skip string literals
+            if ch == '"':
+                i += 1
+                while i < len(line) and line[i] != '"':
+                    if line[i] == "\\":
+                        i += 1  # skip escaped char
+                    i += 1
+                i += 1  # skip closing quote
+                continue
+
+            if ch == "(":
+                # Extract context: first non-whitespace token after '('
+                context = None
+                rest = line[i + 1 :].lstrip()
+                if rest:
+                    token = ""
+                    for c in rest:
+                        if c in " \t\n()[]{}":
+                            break
+                        token += c
+                    if token:
+                        context = token
+                stack.append((line_num, context))
+                if len(stack) > max_depth:
+                    max_depth = len(stack)
+
+            elif ch == ")":
+                if stack:
+                    stack.pop()
+                elif excess_line is None:
+                    # First ')' with no matching '(' — this line has the extra paren
+                    excess_line = line_num
+
+            i += 1
+
+    # Oldest unmatched '(' (bottom of remaining stack)
+    culprit_line = stack[0][0] if stack else None
+    culprit_context = stack[0][1] if stack else None
+
+    return {
+        "culprit_line": culprit_line,
+        "culprit_context": culprit_context,
+        "excess_line": excess_line,
+        "max_depth": max_depth,
+    }
 
 
 # Global formatter instance
