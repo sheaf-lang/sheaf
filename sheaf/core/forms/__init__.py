@@ -6,7 +6,7 @@ Special forms registry for Sheaf compiler.
 
 Organized into modules:
 - base: Base SpecialForm class and utilities
-- control: if, case, guard, repeat
+- control: if, case, guard, do, while, repeat
 - binding: defn, lambda, let, defmacro
 - flow: ->, as->
 - ml: vmap, scan, with-params, static
@@ -14,7 +14,7 @@ Organized into modules:
 """
 
 from .binding import DefmacroForm, DefnForm, LambdaForm, LetForm
-from .control import CaseForm, DoForm, GuardForm, IfForm, RepeatForm
+from .control import CaseForm, DoForm, GuardForm, IfForm, RepeatForm, WhileForm
 from .flow import ThreadAsForm, ThreadFirstForm
 from .ml import ScanForm, StaticForm, VmapForm, WithParamsForm
 from .utils import AssocForm, DictForm, GetForm, GetInForm, LastForm, QuoteForm, UseForm
@@ -41,6 +41,7 @@ special_forms = {
     "static": StaticForm(),
     "use": UseForm(),
     "vmap": VmapForm(),
+    "while": WhileForm(),
     "with-params": WithParamsForm(),
 }
 
@@ -66,6 +67,7 @@ __all__ = [
     "StaticForm",
     "UseForm",
     "VmapForm",
+    "WhileForm",
     "WithParamsForm",
     "QuoteForm",
 ]

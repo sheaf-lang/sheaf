@@ -98,6 +98,35 @@ class DoForm(SpecialForm):
         return res
 
 
+class WhileForm(SpecialForm):
+    """while loop: (while cond [acc init] body)"""
+
+    def __init__(self):
+        super().__init__("while")
+
+    def compile(self, compiler, args, local_vars):
+        # Syntax: (while cond [acc init] body)
+        cond_expr = args[0]
+        binding_acc = args[1]  # [acc_name, init_expr]
+        body = args[2]
+
+        _warn_parens_in_binding("while accumulator binding", binding_acc)
+
+        acc_name, init_expr = binding_acc[0], binding_acc[1]
+        current_val = compiler.compile(init_expr, local_vars)
+
+        while True:
+            loop_ctx = dict(local_vars)
+            loop_ctx[acc_name] = current_val
+
+            if not compiler.compile(cond_expr, loop_ctx):
+                break
+
+            current_val = compiler.compile(body, loop_ctx)
+
+        return current_val
+
+
 class RepeatForm(SpecialForm):
     """repeat loop: (repeat [i n] [acc init] body)"""
 
