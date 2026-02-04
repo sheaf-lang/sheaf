@@ -16,8 +16,12 @@ def _sheaf_get_in(obj, path):
 
     res = obj
     for key in path:
-        # Auto-clean Lisp keywords: ':token' -> 'token'
-        k = key[1:] if isinstance(key, str) and key.startswith(":") else key
+        # Auto-clean Lisp keywords: ':token' -> 'token' (but not bare ":")
+        k = (
+            key[1:]
+            if isinstance(key, str) and key.startswith(":") and len(key) > 1
+            else key
+        )
         res = res[k]
     return res
 
@@ -28,7 +32,7 @@ def create_dict(*args):
     d = {}
     for i in range(0, len(args), 2):
         key = args[i]
-        if isinstance(key, str) and key.startswith(":"):
+        if isinstance(key, str) and key.startswith(":") and len(key) > 1:
             key = key[1:]
         d[key] = args[i + 1]
     return d
@@ -331,8 +335,12 @@ def sheaf_assoc(dict_obj, *key_val_pairs):
     for i in range(0, len(key_val_pairs), 2):
         key = key_val_pairs[i]
         val = key_val_pairs[i + 1]
-        # Auto-clean Lisp keywords: ':token' -> 'token'
-        clean_key = key[1:] if isinstance(key, str) and key.startswith(":") else key
+        # Auto-clean Lisp keywords: ':token' -> 'token' (but not bare ":")
+        clean_key = (
+            key[1:]
+            if isinstance(key, str) and key.startswith(":") and len(key) > 1
+            else key
+        )
         result[clean_key] = val
     return result
 
@@ -355,14 +363,20 @@ def sheaf_dissoc(dict_obj, keys_to_remove):
     # Handle both list and tuple for keys_to_remove
     if isinstance(keys_to_remove, (list, tuple)):
         for key in keys_to_remove:
-            # Auto-clean Lisp keywords: ':token' -> 'token'
-            clean_key = key[1:] if isinstance(key, str) and key.startswith(":") else key
+            # Auto-clean Lisp keywords: ':token' -> 'token' (but not bare ":")
+            clean_key = (
+                key[1:]
+                if isinstance(key, str) and key.startswith(":") and len(key) > 1
+                else key
+            )
             result.pop(clean_key, None)  # Remove key if it exists
     else:
         # Single key case
         clean_key = (
             keys_to_remove[1:]
-            if isinstance(keys_to_remove, str) and keys_to_remove.startswith(":")
+            if isinstance(keys_to_remove, str)
+            and keys_to_remove.startswith(":")
+            and len(keys_to_remove) > 1
             else keys_to_remove
         )
         result.pop(clean_key, None)

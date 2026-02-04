@@ -29,7 +29,9 @@ class GetForm(SpecialForm):
             raw_key = compiler.compile(args[1], local_vars)
             clean_key = (
                 raw_key[1:]
-                if isinstance(raw_key, str) and raw_key.startswith(":")
+                if isinstance(raw_key, str)
+                and raw_key.startswith(":")
+                and len(raw_key) > 1
                 else raw_key
             )
 
@@ -40,7 +42,11 @@ class GetForm(SpecialForm):
                     # Might be nested access like (get {:attn {...}} :attn :Wq)
                     # Check if 3rd arg is a key-like thing (string starting with :)
                     raw_third = compiler.compile(args[2], local_vars)
-                    if isinstance(raw_third, str) and raw_third.startswith(":"):
+                    if (
+                        isinstance(raw_third, str)
+                        and raw_third.startswith(":")
+                        and len(raw_third) > 1
+                    ):
                         # It's a nested key access
                         clean_third = raw_third[1:]
                         if clean_third in val:
@@ -55,9 +61,10 @@ class GetForm(SpecialForm):
         # Standard multi-key access (arrays or nested dicts)
         raw_keys = [compiler.compile(k, local_vars) for k in args[1:]]
 
-        # Strip ':' prefix from keyword symbols
+        # Strip ':' prefix from keyword symbols (but not bare ":")
         clean_keys = [
-            k[1:] if isinstance(k, str) and k.startswith(":") else k for k in raw_keys
+            k[1:] if isinstance(k, str) and k.startswith(":") and len(k) > 1 else k
+            for k in raw_keys
         ]
 
         # Multi-dimensional access: arr[k1, k2] or dict[k1][k2]
@@ -106,7 +113,9 @@ class AssocForm(SpecialForm):
             raw_key = compiler.compile(args[i], local_vars)
             clean_key = (
                 raw_key[1:]
-                if isinstance(raw_key, str) and raw_key.startswith(":")
+                if isinstance(raw_key, str)
+                and raw_key.startswith(":")
+                and len(raw_key) > 1
                 else raw_key
             )
 
@@ -142,8 +151,12 @@ class GetInForm(SpecialForm):
         # Navigate through the path
         current = obj
         for i, key in enumerate(path):
-            # Auto-clean Lisp keywords: ':token' -> 'token'
-            clean_key = key[1:] if isinstance(key, str) and key.startswith(":") else key
+            # Auto-clean Lisp keywords: ':token' -> 'token' (but not bare ":")
+            clean_key = (
+                key[1:]
+                if isinstance(key, str) and key.startswith(":") and len(key) > 1
+                else key
+            )
 
             try:
                 if isinstance(current, dict):
