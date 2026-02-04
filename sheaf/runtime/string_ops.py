@@ -8,6 +8,8 @@ Provides a generic dispatch mechanism for string methods.
 Only imported when needed to avoid runtime bloat.
 """
 
+import re
+
 
 def str_call(method_name, s, *args):
     """
@@ -42,8 +44,32 @@ def str_call(method_name, s, *args):
     return method(*args)
 
 
+_FORMAT_PLACEHOLDER = re.compile(r"\{[^}]*\}")
+
+
+def sheaf_print(*args, **kwargs):
+    """
+    print with auto-format: if the first arg is a string containing format
+    placeholders ({}, {:>3}, {:.4f}, etc.) and there are extra positional
+    args, format it before printing.
+
+        (print "Loss: {:.4f}" loss)        -> print(f"Loss: {loss:.4f}")
+        (print "hello")                    -> print("hello")
+        (print "x" :end "")               -> print("x", end="")
+    """
+    if (
+        len(args) >= 2
+        and isinstance(args[0], str)
+        and _FORMAT_PLACEHOLDER.search(args[0])
+    ):
+        formatted = args[0].format(*args[1:])
+        print(formatted, **kwargs)
+    else:
+        print(*args, **kwargs)
+
+
 def get_string_env():
     return {
-        "print": print,
+        "print": sheaf_print,
         "str-call": str_call,
     }
