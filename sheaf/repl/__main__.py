@@ -204,7 +204,7 @@ def format_result(value):
 
             # Format value
             if isinstance(val, jnp.ndarray):
-                # JAX tensor: show dtype and shape
+                # JAX tensor: show value if small, else dtype and shape
                 shape_str = "x".join(str(d) for d in val.shape)
                 dtype_str = (
                     str(val.dtype)
@@ -212,7 +212,10 @@ def format_result(value):
                     .replace("float32", "f32")
                     .replace("int32", "i32")
                 )
-                val_str = f"{dtype_str}[{shape_str}]"
+                if val.size <= 10:
+                    val_str = f"{dtype_str}[{shape_str}] = {val}"
+                else:
+                    val_str = f"{dtype_str}[{shape_str}]"
             elif isinstance(val, dict):
                 # Nested dict: format recursively with actual values
                 if not val:
