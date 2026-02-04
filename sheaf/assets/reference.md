@@ -985,6 +985,20 @@ Returns a new sequence containing all elements of the input except for the first
 
 ---
 
+### chars
+
+**Type:** function  
+**Signature:** `(chars s)`
+
+Splits a string into a list of its individual characters. This is the standard way to iterate over a string character by character, e.g. to build a vocabulary or encode text.
+
+```sheaf
+(chars "hello")      ; => ["h" "e" "l" "l" "o"]
+(count (chars "abc")) ; => 3
+```
+
+---
+
 ### nth
 
 **Type:** function  
@@ -1038,6 +1052,36 @@ Returns `true` if the provided sequence (list or tensor) contains no elements. F
 (empty? '[])         ; => true
 (empty? '[1])        ; => false
 (empty? [1 2 3])     ; => false (tensor)
+```
+
+---
+
+### sort
+
+**Type:** function  
+**Signature:** `(sort seq [:reverse] [:key f] [:axis n])`
+
+Sorts a list or tensor. Polymorphic: available options depend on the input type.
+
+| Option     | List | Tensor | Description                                                                  |
+| ---------- | ---- | ------ | ---------------------------------------------------------------------------- |
+| `:reverse` | yes  | yes    | Sort in descending order instead of ascending.                               |
+| `:key`     | yes  | no     | A function applied to each element; elements are sorted by the return value. |
+| `:axis`    | no   | yes    | The tensor axis along which to sort (default: last axis).                    |
+
+```sheaf
+;; Lists — alphabetical
+(sort '("c" "a" "b"))                                  ; => ["a" "b" "c"]
+(sort '("c" "a" "b") :reverse)                         ; => ["c" "b" "a"]
+
+;; Lists — sort by key function (here: string length)
+(sort '("hello" "hi" "hey" "a") :key count)            ; => ["a" "hi" "hey" "hello"]
+(sort '("hello" "hi" "hey" "a") :key count :reverse)   ; => ["hello" "hey" "hi" "a"]
+
+;; Tensors — sort along last axis (default)
+(sort [3.0 1.0 2.0])                                   ; => [1. 2. 3.]
+(sort [3.0 1.0 2.0] :reverse)                          ; => [3. 2. 1.]
+(sort [[3 1] [2 4]] :axis 1)                           ; => [[1. 3.] [2. 4.]]
 ```
 
 ---
@@ -1830,6 +1874,123 @@ Scales the elements of a tensor so they sum to 1.0. This is a common utility for
 
 ---
 
+## Strings
+
+### Escape sequences
+
+Sheaf strings support Python-style escape sequences. The backslash `\` triggers interpretation of the following character:
+
+| Sequence | Meaning              |
+| -------- | -------------------- |
+| `\n`     | Newline              |
+| `\t`     | Tab                  |
+| `\"`     | Literal double-quote |
+| `\\`     | Literal backslash    |
+
+Any other character after `\` is kept as-is (backslash + character).
+
+The tricky case is `\\n`: the first `\\` resolves to a literal backslash, then `n` is just `n` — the result is the two characters `\n`, not a newline.
+
+```sheaf
+(print "hello\nworld")   ; prints hello and world on separate lines
+(print "col1\tcol2")     ; prints with a tab between
+(print "say \"hi\"")     ; prints: say "hi"
+(print "path\\name")     ; prints: path\name
+(print "literal\\n")     ; prints: literal\n  (backslash + n, not newline)
+```
+
+---
+
+### str-call
+
+**Type:** function  
+**Signature:** `(str-call method target [args ...])`
+
+Calls a Python string method on `target`. This is the primary way to manipulate strings in Sheaf. The method name is passed as a string; subsequent arguments are forwarded directly.
+
+```sheaf
+(str-call "replace" "hello world" "world" "sheaf")   ; => "hello sheaf"
+(str-call "splitlines" "a\nb\nc")                    ; => ["a" "b" "c"]
+(str-call "join" ", " '("a" "b" "c"))                ; => "a, b, c"
+(str-call "format" "x={} y={}" 1 2)                  ; => "x=1 y=2"
+```
+
+---
+
+## I/O
+
+### io
+
+**Type:** function  
+**Signature:** `(io verb [path] [data] [format-hint])`
+
+Single entry point for all file and system I/O. The verb selects the operation; format is inferred from the file extension unless overridden with a keyword hint.
+
+#### Verbs
+
+**load** — deserialize a file into a value (pytree, string, dict).
+
+```sheaf
+(io "load" "weights.pkl")                  ; pickle
+(io "load" "model.safetensors")            ; lazy tensor handle
+(io "load" "config.json")                  ; dict
+(io "load" "weights.dat" :safetensors)     ; explicit format hint
+```
+
+**save** — serialize a value to a file. Directories are created automatically.
+
+```sheaf
+(io "save" "out/weights.pkl" params)
+(io "save" "out/model.safetensors" params)
+```
+
+**read** — read a file as a raw string.
+
+```sheaf
+(io "read" "data/shakespeare.txt")         ; => full text as string
+```
+
+**lines** — return a lazy line iterator (streaming, no full file in memory).
+
+```sheaf
+(io "lines" "data/large.txt")              ; => LazyLines iterator
+```
+
+**exists** — check whether a file exists.
+
+```sheaf
+(io "exists" "out/weights.pkl")            ; => true / false
+```
+
+**entropy** — read bytes from the OS entropy source (`/dev/urandom`). Returns an integer. Default is 4 bytes (fits `int32`, suitable for `random-key`). Pass an optional byte count for larger values.
+
+```sheaf
+(io "entropy")                             ; => random int32 (4 bytes)
+(io "entropy" 16)                          ; => random int (16 bytes, UUID-scale)
+
+;; Typical usage: non-deterministic seed
+(random-key (io "entropy"))                ; => fresh PRNG key each run
+```
+
+#### Supported formats
+
+| Extension          | Format      | Notes                             |
+| ------------------ | ----------- | --------------------------------- |
+| `.safetensors`     | safetensors | Lazy loading via mmap, dtype kept |
+| `.pkl` / `.pickle` | pickle      | Legacy, discouraged               |
+| `.txt`             | text        | Plain text                        |
+| `.json`            | JSON        | Eager load as dict                |
+| `.jsonl`           | JSONL       | Streaming via `lines`             |
+
+Sharded models: pass a glob pattern or a HuggingFace index file.
+
+```sheaf
+(io "load" "shards/model-*.safetensors")             ; glob
+(io "load" "model.safetensors.index.json")           ; HF shard index
+```
+
+---
+
 ## Module System
 
 ### use
@@ -2043,7 +2204,7 @@ Default epsilon is `1e-6`.
       p {:gamma (ones '[4]) :beta (zeros '[4])}]
   (rms-norm x p -1))
 
-; => [0.6324554  1.2649108  1.8973665  2.5298223]
+; => [0.36514837 0.73029673 1.095445   1.4605935 ]
 ```
 
 #### xavier-init
