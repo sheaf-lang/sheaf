@@ -85,6 +85,19 @@ class GuardForm(SpecialForm):
         raise SheafRuntimeError(f"Unknown guard type: {guard_type}", args)
 
 
+class DoForm(SpecialForm):
+    """sequential evaluation: (do expr1 expr2 ... exprN) → retourne exprN"""
+
+    def __init__(self):
+        super().__init__("do")
+
+    def compile(self, compiler, args, local_vars):
+        res = None
+        for expr in args:
+            res = compiler.compile(expr, local_vars)
+        return res
+
+
 class RepeatForm(SpecialForm):
     """repeat loop: (repeat [i n] [acc init] body)"""
 

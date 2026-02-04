@@ -14,7 +14,7 @@ Organized into modules:
 """
 
 from .binding import DefmacroForm, DefnForm, LambdaForm, LetForm
-from .control import CaseForm, GuardForm, IfForm, RepeatForm
+from .control import CaseForm, DoForm, GuardForm, IfForm, RepeatForm
 from .flow import ThreadAsForm, ThreadFirstForm
 from .ml import ScanForm, StaticForm, VmapForm, WithParamsForm
 from .utils import AssocForm, DictForm, GetForm, GetInForm, LastForm, QuoteForm, UseForm
@@ -28,6 +28,7 @@ special_forms = {
     "defmacro": DefmacroForm(),
     "defn": DefnForm(),
     "dict": DictForm(),
+    "do": DoForm(),
     "fn": LambdaForm(),
     "get": GetForm(),
     "get-in": GetInForm(),
@@ -52,6 +53,7 @@ __all__ = [
     "DefmacroForm",
     "DefnForm",
     "DictForm",
+    "DoForm",
     "LambdaForm",
     "GetForm",
     "GetInForm",
