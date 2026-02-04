@@ -435,11 +435,16 @@ def get_core_env():
         # "dict": create_dict,
         "dissoc": sheaf_dissoc,
         "empty?": empty_q,
+        "filter": lambda pred, lst: tuple(x for x in lst if pred(x)),
+        "find": lambda pred, lst: next((x for x in lst if pred(x)), None),
         "first": lambda x: x[0] if x else None,
         "gensym": gensym,
         # "get" is now a special form in compiler.py to avoid keyword argument issues
         # "get": lambda obj, *keys: obj[...],
         "get-in": _sheaf_get_in,
+        "index-of": lambda lst, val: next(
+            (i for i, x in enumerate(lst) if x == val), -1
+        ),
         "keys": sheaf_keys,
         "last": lambda x: x[-1] if x else None,
         # "list": lambda *args: list(args),
