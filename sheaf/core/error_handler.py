@@ -161,6 +161,49 @@ class SheafErrorFormatter:
 
         return "\n".join(parts)
 
+    # Common misspellings / hallucinations mapped to the correct Sheaf form.
+    # Keys are the wrong symbol; values are (correct_symbol, hint_text).
+    _KNOWN_MISTAKES = {
+        "def": (
+            "defn",
+            "Sheaf has no 'def'. Use 'defn' to define named functions: (defn name [args] body)",
+        ),
+        "define": (
+            "defn",
+            "Sheaf has no 'define'. Use 'defn' to define named functions: (defn name [args] body)",
+        ),
+        "lambda": (
+            "fn",
+            "Sheaf has no 'lambda'. Use anonymous functions with 'fn': (fn [args] body)",
+        ),
+        "set!": (
+            None,
+            "Sheaf is purely functional — there is no mutation. Use 'let' for new bindings or 'assoc' to update dicts.",
+        ),
+        "print!": (
+            "print",
+            "The print function has no '!' suffix in Sheaf. Use: (print ...)",
+        ),
+        "println": (
+            "print",
+            "Sheaf uses 'print', not 'println'. Newline is appended automatically.",
+        ),
+        "var": (
+            "let",
+            "Sheaf has no 'var'. Use 'let' for local bindings: (let [x 1] ...)",
+        ),
+        "const": (
+            "defn",
+            "Sheaf has no 'const'. Export a constant as a zero-arg function: (defn my-const [] value)",
+        ),
+        "return": (
+            None,
+            "Sheaf is expression-based — the last expression in a body is its return value. No explicit 'return' needed.",
+        ),
+        "import": ("use", "Sheaf uses 'use' to load modules: (use nn), (use optim)"),
+        "require": ("use", "Sheaf uses 'use' to load modules: (use nn), (use optim)"),
+    }
+
     def get_suggestion(self, error: Exception, expression) -> Optional[str]:
         error_type = type(error).__name__
         error_msg = str(error).lower()
@@ -177,23 +220,57 @@ class SheafErrorFormatter:
                 "         With:    (where condition then-expr else-expr)"
             )
 
+        # --- Symbol not found: check known mistakes first, then generic advice ---
+        if error_type == "NameError" or "symbol not found" in error_msg:
+            # Extract the symbol name from "Symbol not found: 'xxx'" or "Symbol not found (line N): 'xxx'"
+            symbol = None
+            raw = str(error)
+            if "'" in raw:
+                symbol = raw.split("'")[-2]  # last pair of single quotes
+
+            if symbol and symbol in self._KNOWN_MISTAKES:
+                correct, hint = self._KNOWN_MISTAKES[symbol]
+                return hint
+
+            return "Check for typos in function or variable names."
+
+        # --- JAX type errors on non-numeric data (strings passed where tensors expected) ---
+        if "not a valid jax array type" in error_msg:
+            return (
+                "A non-numeric value (e.g. a string) was passed to a JAX operation.\n"
+                '  = hint: String lists should be created with a quoted vector: \'["a" "b" "c"]\n'
+                "         or returned from a function, not passed to tensor operations."
+            )
+
+        # --- Integer indexer required (common when using a scalar tensor as an index) ---
+        if (
+            "indexer must have integer" in error_msg
+            or "integer or boolean type" in error_msg
+        ):
+            return (
+                "Tensor indices must be plain integers, not scalar tensors.\n"
+                "  = hint: Wrap with (int ...): e.g. (index-update t (int idx) value)"
+            )
+
+        # --- Message-based checks (independent of error type) ---
+        if "shapes must be" in error_msg:
+            return (
+                "Shape arguments must be static tuples, not tensors.\n"
+                "  = hint: Quote your shape: (zeros '[3 4]) not (zeros [3 4])"
+            )
+
+        if "broadcasting" in error_msg:
+            return "Arrays have incompatible shapes for broadcasting."
+
+        # --- Type-based checks ---
         if error_type == "TypeError":
             if "not callable" in error_msg:
                 return "Make sure you're calling a function, not a value."
             if "argument" in error_msg:
                 return "Check the number of arguments you're passing to the function."
 
-        elif error_type == "NameError" or "not found" in error_msg:
-            return "Check for typos in function or variable names."
-
         elif error_type == "KeyError":
             return "Verify that the key exists in the dictionary."
-
-        elif "Shapes must be" in error_msg:
-            return "Tensor shape mismatch. Check your array dimensions."
-
-        elif "broadcasting" in error_msg:
-            return "Arrays have incompatible shapes for broadcasting."
 
         return None
 
