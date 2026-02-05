@@ -512,6 +512,24 @@ Perform element-wise comparison between two tensors and return a new tensor cont
 
 ---
 
+### argmax, argmin
+
+**Type:** function  
+**Signature:** `(argmax x [:axis axis])`, `(argmin x [:axis axis])`
+
+Return the index of the largest or smallest element in a tensor. Without `:axis`, the result is a single scalar index into the flattened array. With `:axis`, the reduction is performed along that axis, returning a tensor of indices one rank lower than the input.
+
+```sheaf
+(argmax [3 1 4 1 5])                ; => 4
+(argmin [3 1 4 1 5])                ; => 1
+
+;; Along a specific axis
+(argmax [[1 5] [3 2]] :axis 1)      ; => [1 0]
+(argmin [[1 5] [3 2]] :axis 0)      ; => [0 1]
+```
+
+---
+
 ## Tensor Shape & Structure
 
 ### shape
@@ -728,6 +746,24 @@ Fill tensor with 1.0 or 0.0. Shape must be a tuple/list (use quote for vector li
 
 ---
 
+### eye
+
+**Type:** function  
+**Signature:** `(eye n [m])`
+
+Creates a 2D identity matrix of shape `(n, n)`. When a second argument `m` is provided, the output shape is `(n, m)` — a rectangular matrix with ones on the main diagonal and zeros elsewhere.
+
+```sheaf
+(eye 3)                ; => [[1. 0. 0.]
+                        ;     [0. 1. 0.]
+                        ;     [0. 0. 1.]]
+
+(eye 2 4)              ; => [[1. 0. 0. 0.]
+                        ;     [0. 1. 0. 0.]]
+```
+
+---
+
 ### arange
 
 **Type:** function  
@@ -761,6 +797,24 @@ Converts integer indices into a one-hot representation. For an input of shape `(
 
 ---
 
+### index-update
+
+**Type:** function  
+**Signature:** `(index-update tensor idx value)`
+
+Returns a new tensor identical to `tensor` except that the slice at position `idx` is replaced by `value`. The index must be a scalar integer — not a single-element vector. This is the standard way to perform functional (out-of-place) updates on tensors, compatible with JAX JIT.
+
+```sheaf
+;; Replace one element in a 1D vector
+(index-update [1 2 3 4 5] 2 99)     ; => [ 1.  2. 99.  4.  5.]
+
+;; Replace one row in a 2D matrix
+(index-update [[1 2] [3 4]] 0 [10 20])  ; => [[10. 20.]
+                                         ;     [ 3.  4.]]
+```
+
+---
+
 ### tensor
 
 **Type:** function  
@@ -777,6 +831,23 @@ Converts a literal list or a dynamically-generated list into a JAX tensor. This 
 (let [lst (cons 1 '[2 3])]    ; 'cons' returns a list structure
   (tensor lst))               ; Explicitly lift to tensor context
 ; => Tensor i32[3] = [1 2 3]
+```
+
+---
+
+### int, float
+
+**Type:** function  
+**Signature:** `(int x)`, `(float x)`
+
+Cast a scalar tensor or a Python number to a 32-bit integer or 32-bit float, respectively. The result is a scalar JAX array. These are the primary way to extract a concrete numeric value from a tensor for use in indexing or list operations.
+
+```sheaf
+(int 3.7)                ; => 3
+(int [1. 2. 3.] :f32)    ; => i32[3] = [1 2 3]
+
+(float 42)               ; => 42.0
+(float [1 2 3] :i32)     ; => f32[3] = [1. 2. 3.]
 ```
 
 ---
@@ -1082,6 +1153,54 @@ Sorts a list or tensor. Polymorphic: available options depend on the input type.
 (sort [3.0 1.0 2.0])                                   ; => [1. 2. 3.]
 (sort [3.0 1.0 2.0] :reverse)                          ; => [3. 2. 1.]
 (sort [[3 1] [2 4]] :axis 1)                           ; => [[1. 3.] [2. 4.]]
+```
+
+---
+
+### filter
+
+**Type:** function  
+**Signature:** `(filter pred seq)`
+
+Returns a new list containing only the elements of `seq` for which the predicate `pred` returns a truthy value. The result is always a tuple (static list). Works on both quoted lists and lists of strings built at runtime.
+
+```sheaf
+(filter (fn [x] (> x 2)) '[1 2 3 4 5])                ; => '[3, 4, 5]
+(filter (fn [x] (> x 10)) '[1 2 3])                   ; => '[]
+
+;; Filter a list of strings by length
+(filter (fn [s] (> (count s) 3)) ["hi" "hello" "hey" "world"])  ; => ('hello', 'world')
+```
+
+---
+
+### find
+
+**Type:** function  
+**Signature:** `(find pred seq)`
+
+Returns the first element of `seq` for which `pred` returns a truthy value, or `nil` if no element matches. Traversal is left-to-right and stops at the first match.
+
+```sheaf
+(find (fn [x] (> x 3)) '[1 2 3 4 5])                  ; => 4
+(find (fn [x] (> x 10)) '[1 2 3])                     ; => nil
+```
+
+---
+
+### index-of
+
+**Type:** function  
+**Signature:** `(index-of seq val)`
+
+Returns the zero-based index of the first occurrence of `val` in `seq`, or `-1` if `val` is not present. Uses Python equality semantics, so it works on both numbers and strings.
+
+```sheaf
+(index-of '[10 20 30 40] 30)                           ; => 2
+(index-of '[10 20 30] 99)                              ; => -1
+
+;; Strings — typical use: map a label to its one-hot index
+(index-of ["apple" "banana" "cherry"] "banana")         ; => 1
 ```
 
 ---
@@ -1454,6 +1573,99 @@ Provides efficient multi-branch dispatch. It evaluates `x` and compares it again
   3 :high
   :unknown)           ; => :mid
 ```
+
+---
+
+### do
+
+**Type:** special-form  
+**Signature:** `(do expr1 expr2 ... exprN)`
+
+Evaluates a sequence of expressions in order and returns the value of the last one. The preceding expressions are evaluated for their side effects only (e.g. `print`, `io "save"`). This is the idiomatic way to sequence imperative actions inside an otherwise functional context.
+
+```sheaf
+(do
+  (print "loading...")
+  (print "done.")
+  42)                  ; => 42  (prints both messages, returns 42)
+
+;; Typical use: side effect before a value
+(let [params (do
+               (print "Training...")
+               (train data config epochs))]
+  params)
+
+;; Inside a reduce body: log then return new state
+(reduce (fn [state step]
+          (do
+            (if (== (mod step 10) 0)
+              (print (str-call "format" "Step {}" step))
+              nil)
+            (train-step state data)))
+        init-state
+        (range 500))
+```
+
+---
+
+### repeat
+
+**Type:** special-form  
+**Signature:** `(repeat [i n] [acc init] body)`
+
+Loops exactly `n` times. `i` is the iteration index (0-based), `acc` is the accumulator that carries state across iterations. The body must return the new value of `acc`. Returns the final accumulator value.
+
+```sheaf
+;; Sum 0..9
+(repeat [i 10] [sum 0]
+  (+ sum i))            ; => 45
+
+;; Build a list
+(repeat [i 5] [lst '()]
+  (append lst (* i i))) ; => [0 1 4 9 16]
+
+;; Accumulator is a dict — typical for training loops
+(repeat [step 100] [state {:params p :loss 0.0}]
+  (let [result (train-step (get state :params) x y lr)]
+    {:params (get result :p)
+     :loss   (get result :loss)}))
+;; => {:params <trained> :loss <final-loss>}
+```
+
+Use `repeat` when the iteration count is known at compile time. For loops that depend on a runtime condition, see `while`.
+
+---
+
+### while
+
+**Type:** special-form  
+**Signature:** `(while cond [acc init] body)`
+
+Loops as long as `cond` is true. `acc` is the accumulator, visible both in `cond` and in `body`. The body must return the new value of `acc`. Returns the accumulator value at the point where `cond` becomes false.
+
+```sheaf
+;; Count up to 5
+(while (< n 5) [n 0]
+  (+ n 1))              ; => 5
+
+;; Accumulate until sum exceeds 100
+(while (< (get s :sum) 100)
+  [s {:sum 0 :n 1}]
+  {:sum (+ (get s :sum) (get s :n))
+   :n   (+ (get s :n) 1)})
+;; => {:sum 105 :n 15}  (1+2+...+14 = 105)
+
+;; Training loop that stops on convergence
+(while (> (get state :loss) 0.01)
+  [state {:params init-params :loss 999.0 :key key}]
+  (let [result (train-step (get state :params) x y lr)
+        [k1 k2] (random-split (get state :key))]
+    {:params (get result :p)
+     :loss   (get result :loss)
+     :key    k1}))
+```
+
+Use `while` when the stopping condition depends on runtime values (e.g. loss convergence). For a fixed number of iterations, prefer `repeat`.
 
 ---
 
@@ -1917,6 +2129,24 @@ Calls a Python string method on `target`. This is the primary way to manipulate 
 
 ---
 
+### print
+
+**Type:** function  
+**Signature:** `(print msg)`, `(print fmt arg1 arg2 ...)`
+
+Prints a value to stdout. When the first argument is a string containing `{}` placeholders and additional arguments are provided, `print` performs automatic format-string interpolation — equivalent to Python's `str.format()`. This is the idiomatic way to display computed values without an explicit `str-call`.
+
+```sheaf
+(print "hello")                        ; prints: hello
+(print 42)                             ; prints: 42
+
+;; F-string style: placeholders filled by subsequent arguments
+(print "x={} y={}" 10 20)             ; prints: x=10 y=20
+(print "loss={:.4f} step={}" 0.0532 100)  ; prints: loss=0.0532 step=100
+```
+
+---
+
 ## I/O
 
 ### io
@@ -1928,13 +2158,15 @@ Single entry point for all file and system I/O. The verb selects the operation; 
 
 #### Verbs
 
-**load** — deserialize a file into a value (pytree, string, dict).
+**load** — deserialize a file into a value (pytree, string, dict, or mmap'd handle).
 
 ```sheaf
 (io "load" "weights.pkl")                  ; pickle
 (io "load" "model.safetensors")            ; lazy tensor handle
 (io "load" "config.json")                  ; dict
 (io "load" "weights.dat" :safetensors)     ; explicit format hint
+(io "load" "train.npy")                    ; NpyHandle — mmap'd, zero-copy
+(io "load" "tokens/shard-*.bin" :i32)      ; ShardedHandle — virtual concat over glob
 ```
 
 **save** — serialize a value to a file. Directories are created automatically.
@@ -1974,20 +2206,57 @@ Single entry point for all file and system I/O. The verb selects the operation; 
 
 #### Supported formats
 
-| Extension          | Format      | Notes                             |
-| ------------------ | ----------- | --------------------------------- |
-| `.safetensors`     | safetensors | Lazy loading via mmap, dtype kept |
-| `.pkl` / `.pickle` | pickle      | Legacy, discouraged               |
-| `.txt`             | text        | Plain text                        |
-| `.json`            | JSON        | Eager load as dict                |
-| `.jsonl`           | JSONL       | Streaming via `lines`             |
+| Extension          | Format      | Notes                                                       |
+| ------------------ | ----------- | ----------------------------------------------------------- |
+| `.safetensors`     | safetensors | Lazy loading via mmap, dtype kept                           |
+| `.npy`             | npy         | NumPy array, mmap'd → `NpyHandle`                           |
+| `.bin`             | raw         | Raw binary, mmap'd. Dtype flag required (`:i32`, `:f32`, …) |
+| `.pkl` / `.pickle` | pickle      | Legacy, discouraged                                         |
+| `.txt`             | text        | Plain text                                                  |
+| `.json`            | JSON        | Eager load as dict                                          |
+| `.jsonl`           | JSONL       | Streaming via `lines`                                       |
 
 Sharded models: pass a glob pattern or a HuggingFace index file.
 
 ```sheaf
-(io "load" "shards/model-*.safetensors")             ; glob
+(io "load" "shards/model-*.safetensors")             ; glob → merged safetensors
 (io "load" "model.safetensors.index.json")           ; HF shard index
 ```
+
+#### NpyHandle — single `.npy` file
+
+`(io "load" "file.npy")` returns a **NpyHandle**: a lazy, mmap'd view over the array. No data is read until you slice.
+
+```sheaf
+(let [dataset (io "load" "train.npy")]       ; NpyHandle, shape [50000 784]
+  (dataset 0)                                ; => first row  f32[784]   (zero-copy)
+  (dataset 100:200))                         ; => rows 100–199  f32[100 784]
+```
+
+Slicing is along axis 0 only. The handle stays open for the lifetime of the binding — no explicit `close` needed.
+
+#### ShardedHandle — virtual concat over glob
+
+When training data is split across many files, use a glob pattern. The result is a **ShardedHandle**: a single virtual tensor that spans all shards, backed by independent mmaps.
+
+```sheaf
+;; .npy shards — dtype is read from each header automatically
+(let [data (io "load" "data/train-*.npy")]
+  (len data)                                 ; => total rows across all shards
+  (data 0)                                   ; => first row of first shard
+  (data 9999:10002))                         ; => cross-shard slice, transparent
+
+;; .bin shards — dtype must be explicit
+(let [tokens (io "load" "tokens/shard-*.bin" :i32)]
+  (len tokens)                               ; => total token count
+  (tokens 0:4096))                           ; => first 4096 tokens
+```
+
+Shards are sorted lexicographically. Use zero-padded names (`shard-001.bin`, not `shard-1.bin`) to keep the order correct.
+
+Available dtype flags: `:f32`, `:f16`, `:bf16`, `:i32`, `:i16`, `:u32`, `:bool`.
+
+Binary lookup across shards is O(log N) — reading a single element from shard 10 000 costs the same as from shard 1.
 
 ---
 

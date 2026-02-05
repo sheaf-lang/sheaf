@@ -764,6 +764,119 @@ Multi-epoch training with progress reporting:
 
 ---
 
+## I/O: Loading, Saving, Reading
+
+All file operations go through the single `(io verb ...)` form. There is no `open`, no file handles — every call is a one-liner.
+
+### Verb table
+
+| Verb      | Signature                 | Returns         | Notes                                              |
+| --------- | ------------------------- | --------------- | -------------------------------------------------- |
+| `load`    | `(io "load" path)`        | pytree / handle | `.pkl`, `.safetensors`, `.npy`, `.bin` (see below) |
+| `save`    | `(io "save" path params)` | nil             | Format inferred from extension                     |
+| `read`    | `(io "read" path)`        | string          | Whole file into memory                             |
+| `lines`   | `(io "lines" path)`       | list of strings | One element per line                               |
+| `exists`  | `(io "exists" path)`      | bool            | Check before load                                  |
+| `entropy` | `(io "entropy")`          | int             | 4 random bytes from OS. Use as seed                |
+
+### Loading weights — the common pattern
+
+```sheaf
+;; Check first, then load. No try/catch in Sheaf.
+(let [path "weights.pkl"
+      params (if (io "exists" path)
+               (io "load" path)
+               (init-params key))]
+  params)
+```
+
+If you skip the `exists` check and the file is missing, you get a hard crash. Always guard with `exists`.
+
+### Saving after training
+
+```sheaf
+(io "save" "weights.pkl" params)
+```
+
+Extension matters: `.pkl` → pickle, `.safetensors` → safetensors. If you use `.safetensors`, all leaves must be arrays (no scalars like optimizer step count `t`). Either wrap `t` in a tensor or save as `.pkl`.
+
+### Reading text data
+
+```sheaf
+;; Whole file at once — fine for datasets that fit in memory
+(let [text (io "read" "data/shakespeare.txt")]
+  text)
+
+;; Line by line — useful when you need to process per-line
+(let [lines (io "lines" "data/shakespeare.txt")]
+  (len lines))
+```
+
+Both return plain strings. No streaming, no lazy evaluation — everything is eager. For large datasets, use `.npy` or `.bin` with mmap (see below).
+
+### Loading training data — NpyHandle & ShardedHandle
+
+Large datasets should live in `.npy` or `.bin` files, not in memory. `load` returns a **lazy handle** backed by mmap — nothing is read until you slice.
+
+```sheaf
+;; Single .npy file → NpyHandle
+(let [dataset (io "load" "data/train.npy")]   ; shape [50000 784], on disk
+  (dataset 0)                                 ; first row  → f32[784]
+  (dataset 0:32))                             ; mini-batch → f32[32 784]
+```
+
+```sheaf
+;; Many .npy or .bin shards → ShardedHandle (virtual concat, single interface)
+(let [tokens (io "load" "tokens/shard-*.bin" :i32)]
+  (len tokens)                                ; total token count across all shards
+  (tokens 0:4096))                            ; first 4096 tokens (may span shards)
+```
+
+Key rules to remember:
+
+- `.npy`: dtype comes from the file header. No flag needed.
+- `.bin`: dtype flag is **mandatory** (`:i32`, `:f32`, `:f16`, `:bf16`, `:i16`, `:u32`, `:bool`). Omitting it is a hard error.
+- Glob patterns are expanded and sorted lexicographically. Zero-pad shard names: `shard-001.bin`, not `shard-1.bin`.
+- Single file → `NpyHandle`. Glob matching ≥ 2 files → `ShardedHandle`. Both support `(handle idx)` and `(handle start:stop)`.
+- Cross-shard slicing is transparent — the handle finds the right shard(s) automatically.
+
+### Entropy for non-deterministic seeds
+
+JAX PRNG requires an integer seed. If you want different output each run:
+
+```sheaf
+;; This gives a different seed every time — reads 4 bytes from /dev/urandom
+(let [key (random-key (io "entropy"))]
+  (random-normal key '[10]))
+
+;; Fixed seed — same output every run. Useful for debugging.
+(let [key (random-key 42)]
+  (random-normal key '[10]))
+```
+
+`(io "entropy")` with no argument returns 4 bytes (32 bits) — exactly what `random-key` expects. Do not pass a size argument unless you have a specific reason.
+
+### Full load-or-train pattern
+
+This is the canonical pattern for a script that trains if no checkpoint exists, otherwise loads and runs inference:
+
+```sheaf
+(let [weights-path "weights.pkl"
+      params (if (io "exists" weights-path)
+               (do
+                 (print "Loading weights...")
+                 (io "load" weights-path))
+               (do
+                 (print "Training...")
+                 (let [trained (train data config epochs)]
+                   (io "save" weights-path trained)
+                   trained)))]
+  ;; params is ready — either loaded or freshly trained
+  (generate params config))
+```
+
+---
+
 ## Gotchas & Common Mistakes
 
 ### ⚠️ Scalars vs Arrays
@@ -787,6 +900,12 @@ Sheaf uses JAX arrays as the fundamental data type. Python scalars (int, float) 
 
 - Most operations auto-convert Python scalars
 - If a function requires a tensor but you have a scalar, wrap it: `(reshape value)` or add 0: `(+ 0 value)`
+- To extract a scalar from a tensor (e.g. for indexing into a list): use `(int x)` or `(float x)`
+
+```sheaf
+(int (argmax [3 1 4]))       ; => 2  (scalar, usable as list index)
+(float (sum [1 2 3]))        ; => 6.0
+```
 
 ### ⚠️ Unary Negation
 
@@ -1063,15 +1182,42 @@ In the REPL, use `:env` to list all compiled functions and variables:
 ;   - ... (100+ more)
 ```
 
-**Finding functions programmatically:**
+**Finding function documentation quickly:**
 
-For a programmatic way to check available functions, see `reference.md` in the project. All functions listed there are available in Sheaf code.
+All functions are documented in `sheaf/assets/reference.md` with complete signatures and examples. To locate a function's documentation section:
+
+```bash
+# Step 1: Find the line number of the function heading
+grep -n "^### repeat" sheaf/assets/reference.md
+# Returns: "1611:### repeat" (line 1611)
+
+# Step 2: Read the complete section from that line until the next "###"
+# Use the Read tool starting at line 1611, read ~30-50 lines
+```
+
+**Workflow for LLMs (tested pattern):**
+
+When you need docs for a function like `scan`, `repeat`, or `vmap`:
+
+```python
+# Step 1: Find the line number
+Grep(pattern="^### repeat", path="sheaf/assets/reference.md",
+     output_mode="content", -n=True)
+# → Returns: "1611:### repeat"
+
+# Step 2: Read section from that line (ends at next ###)
+Read(file_path="sheaf/assets/reference.md", offset=1611, limit=40)
+# → Returns: signature + description + examples
+```
+
+**What you get:** For `repeat`, this gives you `(repeat [i n] [acc init] body)` with 3 concrete examples (sum, list, training loop). Works for any function.
 
 **Common discovery tasks:**
 
-- Need to round a number? Search reference.md for "round"
-- Need to clip values? Search for "clip"
-- Need to normalize? Search for "normalize"
+- Need to round a number? `grep "round" reference.md`
+- Need to clip values? `grep "clip" reference.md`
+- Need to normalize? `grep "normalize" reference.md`
+- Forgot `scan` signature? `grep "^### scan" reference.md`
 
 ### Enable Tracing (`:trace`)
 
@@ -1474,6 +1620,8 @@ RNNs are very sensitive to initialization. Test with different scales:
 | `(minimum a b)`                   | Element-wise minimum                       | `(minimum x y)`                                                |
 | `(maximum a b)`                   | Element-wise maximum                       | `(maximum x y)`                                                |
 | `(abs x)`                         | Absolute value                             | `(abs x)`                                                      |
+| `(argmax x [:axis i])`            | Index of max element                       | `(argmax [3 1 4])` → `2`                                       |
+| `(argmin x [:axis i])`            | Index of min element                       | `(argmin [3 1 4])` → `1`                                       |
 | `(exp x)`                         | Exponential                                | `(exp x)`                                                      |
 | `(log x)`                         | Natural logarithm                          | `(log x)`                                                      |
 | `(sqrt x)`                        | Square root                                | `(sqrt x)`                                                     |
@@ -1508,6 +1656,7 @@ RNNs are very sensitive to initialization. Test with different scales:
 | `(arange n)`                 | 0 to n-1               | `(arange 5)` → `[0 1 2 3 4]`      |
 | `(range n)`                  | Alias for arange       | `(range 5)` → `[0 1 2 3 4]`       |
 | `(one-hot idx n)`            | One-hot encoding       | `(one-hot 2 5)` → `[0 0 1 0 0]`   |
+| `(eye n [m])`                | Identity matrix        | `(eye 3)` → 3×3 identity          |
 | `(normalize x :axis i)`      | L2 normalization       | `(normalize x :axis -1)`          |
 
 **Shape syntax:**
@@ -1544,20 +1693,24 @@ RNNs are very sensitive to initialization. Test with different scales:
 
 ### List/Vector Operations
 
-| Function                   | Description                      | Example                               |
-| -------------------------- | -------------------------------- | ------------------------------------- |
-| `[1 2 3]`                  | Vector literal                   | `[1 2 3]` → JAX array or tuple        |
-| `(cons head tail)`         | Prepend element to list          | `(cons 1 [2 3])` → `[1 2 3]`          |
-| `(append coll x)`          | Append element to list           | `(append [1 2] 3)` → `[1 2 3]`        |
-| `(append-and-roll coll x)` | Append and remove first (FIFO)   | `(append-and-roll [1 2] 3)` → `[2 3]` |
-| `(first coll)`             | Get first element (nil if empty) | `(first [1 2])` → `1`                 |
-| `(second coll)`            | Get second element               | `(second [1 2 3])` → `2`              |
-| `(last coll)`              | Get last element                 | `(last [1 2 3])` → `3`                |
-| `(nth coll n)`             | Get nth element (0-indexed)      | `(nth [1 2 3] 1)` → `2`               |
-| `(rest coll)`              | All except first ([] if empty)   | `(rest [1 2])` → `[2]`                |
-| `(len coll)`               | Number of elements               | `(len [1 2])` → `2`                   |
-| `(count coll)`             | Alias for len                    | `(count [1 2])` → `2`                 |
-| `(empty? coll)`            | Check if empty                   | `(empty? [])` → `true`                |
+| Function                          | Description                      | Example                                           |
+| --------------------------------- | -------------------------------- | ------------------------------------------------- |
+| `[1 2 3]`                         | Vector literal                   | `[1 2 3]` → JAX array or tuple                    |
+| `(cons head tail)`                | Prepend element to list          | `(cons 1 [2 3])` → `[1 2 3]`                      |
+| `(append coll x)`                 | Append element to list           | `(append [1 2] 3)` → `[1 2 3]`                    |
+| `(append-and-roll coll x)`        | Append and remove first (FIFO)   | `(append-and-roll [1 2] 3)` → `[2 3]`             |
+| `(first coll)`                    | Get first element (nil if empty) | `(first [1 2])` → `1`                             |
+| `(second coll)`                   | Get second element               | `(second [1 2 3])` → `2`                          |
+| `(last coll)`                     | Get last element                 | `(last [1 2 3])` → `3`                            |
+| `(nth coll n)`                    | Get nth element (0-indexed)      | `(nth [1 2 3] 1)` → `2`                           |
+| `(rest coll)`                     | All except first ([] if empty)   | `(rest [1 2])` → `[2]`                            |
+| `(len coll)`                      | Number of elements               | `(len [1 2])` → `2`                               |
+| `(count coll)`                    | Alias for len                    | `(count [1 2])` → `2`                             |
+| `(empty? coll)`                   | Check if empty                   | `(empty? [])` → `true`                            |
+| `(filter pred coll)`              | Keep elements matching pred      | `(filter (fn [x] (> x 2)) '[1 2 3 4])` → `(3, 4)` |
+| `(find pred coll)`                | First element matching pred      | `(find (fn [x] (> x 2)) '[1 2 3])` → `3`          |
+| `(index-of coll val)`             | Index of val, or -1              | `(index-of '[10 20 30] 20)` → `1`                 |
+| `(sort coll [:key f] [:reverse])` | Sort list or tensor              | `(sort '[3 1 2])` → `[1 2 3]`                     |
 
 ### Symbol Manipulation
 
@@ -1793,17 +1946,50 @@ sheaf> (reshape (arange 100) 10 10)
 
 ### Tracing
 
-Configure via `Sheaf` instance:
+Enable runtime tracing via CLI flags when executing Sheaf files:
 
-```python
-shf = Sheaf(trace='normal', scope='forward', log='console')
+```bash
+# Trace all functions
+sheaf run.shf --trace
+
+# Trace specific functions only
+sheaf run.shf --trace forward,train-step
+
+# Configure output format and detail level
+sheaf run.shf --trace forward --trace-out json --trace-level verbose
 ```
+
+**CLI Flags:**
+
+- `--trace [FUNCTIONS]`: Enable tracing (optionally scope to comma-separated function names)
+- `--trace-out {console,json}`: Output format (default: console)
+- `--trace-level {fast,normal,verbose}`: Detail level (default: normal)
 
 **Trace Levels:**
 
 - `fast`: Function names, shapes, memory, time
 - `normal`: + min/max ranges, NaN detection
-- `verbose`: + mean values
+- `verbose`: + mean (μ) values
+
+**Output Formats:**
+
+- `console`: Human-readable tree view with indentation
+- `json`: Machine-readable JSONL format (written to `sheaf_trace.jsonl`)
+
+**Examples:**
+
+```bash
+# Debug a specific function with maximum detail
+sheaf model.shf --trace forward --trace-level verbose
+
+# Trace multiple functions, output to JSON for analysis
+sheaf train.shf --trace forward,loss,train-step --trace-out json
+
+# Quick trace of all functions (minimal overhead)
+sheaf run.shf --trace --trace-level fast
+```
+
+**In REPL:** Use `:trace verbose` and `:scope function-name` commands (see Interactive REPL section above)
 
 ### Guards (Runtime Assertions)
 
