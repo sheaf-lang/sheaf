@@ -18,7 +18,7 @@ STDOUT=$(mktemp)
 STDERR=$(mktemp)
 trap "rm -f $STDOUT $STDERR" EXIT
 
-JAX_LOG_COMPILES=1 python -m sheaf "$SCRIPT_DIR/run.shf" >"$STDOUT" 2>"$STDERR"
+JAX_LOG_COMPILES=1 python3 -m sheaf "$SCRIPT_DIR/run.shf" >"$STDOUT" 2>"$STDERR"
 
 # Print the training output
 cat "$STDOUT"
@@ -41,7 +41,7 @@ else
     # merged stream and count.
     MERGED=$(mktemp)
     trap "rm -f $STDOUT $STDERR $MERGED" EXIT
-    JAX_LOG_COMPILES=1 python -m sheaf "$SCRIPT_DIR/run.shf" >"$MERGED" 2>&1
+    JAX_LOG_COMPILES=1 python3 -m sheaf "$SCRIPT_DIR/run.shf" >"$MERGED" 2>&1
 
     BEFORE=$(awk '/\[Evolution\]/{exit} /Compiling/{n++} END{print n+0}' "$MERGED")
     AFTER=$(awk 'found && /Compiling/{n++} /\[Evolution\]/{found=1} END{print n+0}' "$MERGED")
