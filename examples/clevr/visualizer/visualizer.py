@@ -21,9 +21,13 @@ sys.path.insert(0, parent_dir)
 sheaf_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "/../.."))
 sys.path.insert(0, sheaf_root)
 
-import data
-
 from sheaf import Sheaf
+
+# Load data module from data.shf
+data = Sheaf()
+data_path = os.path.join(parent_dir, "data.shf")
+with open(data_path, "r") as f:
+    data.load(f.read())
 
 # Pre-configured queries
 
@@ -179,7 +183,7 @@ def decode_answer(prediction, query_type):
 
     if query_type == "color":
         probs = jax.nn.softmax(pred)
-        colors = data.COLORS
+        colors = list(data.colors())
         answer_idx = int(jnp.argmax(probs))
         answer = colors[answer_idx]
         prob_dict = {colors[i]: float(probs[i]) for i in range(len(colors))}
@@ -187,7 +191,7 @@ def decode_answer(prediction, query_type):
 
     elif query_type == "shape":
         probs = jax.nn.softmax(pred)
-        shapes = data.SHAPES
+        shapes = list(data.shapes())
         answer_idx = int(jnp.argmax(probs))
         answer = shapes[answer_idx]
         prob_dict = {shapes[i]: float(probs[i]) for i in range(len(shapes))}
@@ -218,8 +222,8 @@ def generate_fixed_scene():
     ]
 
     # Ensure we have all colors and shapes represented
-    colors = data.COLORS  # [red, green, blue, yellow]
-    shapes = data.SHAPES  # [circle, square, triangle]
+    colors = list(data.colors())  # [red, green, blue, yellow]
+    shapes = list(data.shapes())  # [circle, square, triangle]
 
     # Shuffle colors and shapes to create different combinations
     seed = int(time.time() * 1000) % 100000
