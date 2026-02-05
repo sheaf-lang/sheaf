@@ -1,0 +1,65 @@
+;; -*- mode: clojure -*-
+;; train.shf: Training loop for BareGPT
+;; Exports: train
+
+(use model)
+(use optim)
+
+;; train-step: one gradient update via Adam
+
+(defn train-step [params m v t inputs targets config]
+  (let [lr (get config :lr)
+        loss-fn (fn [p] (cross-entropy-loss (gpt-model inputs p config) targets))
+        [loss grads] ((value-and-grad loss-fn) params)
+        [new-params new-m new-v new-t] (adam-step params grads m v t lr 0.9 0.999 1e-8)]
+    {:loss loss :params new-params :m new-m :v new-v :t new-t}))
+
+
+;; get-batch — sample a random (X, Y) batch from flat encoded data
+
+(defn get-batch [data key block-size batch-size]
+  (let [data-len (shape data 0)
+        max-idx  (- data-len block-size 1)
+        starts   (random-randint key [batch-size] 0 max-idx)
+        ;; Build X and Y by stacking slices via vmap-style indexing
+        ;; indices[i] = starts[i] .. starts[i]+block_size-1
+        offsets  (arange block-size)
+        ;; [batch_size, block_size] index grids
+        x-idx    (+ (reshape starts [batch-size 1]) (reshape offsets [1 block-size]))
+        y-idx    (+ x-idx 1)
+        x        (get data x-idx)
+        y        (get data y-idx)]
+    [x y]))
+
+
+;; train: full training loop, returns trained params
+
+(defn train [encoded-data config n-steps]
+  (let [key    (random-key 42)
+        params (init-gpt-params key config)
+        m      (tree-map (fn [x] (zeros (shape x))) params)
+        v      (tree-map (fn [x] (zeros (shape x))) params)
+        block-size  (get config :block_size)
+        batch-size  (get config :batch_size)
+
+        result (reduce (fn [state step]
+                         (let [k       (get state :key)
+                               [k1 k2] (random-split k)
+                               [x y]   (get-batch encoded-data k1 block-size batch-size)
+                               res     (train-step (get state :params)
+                                                   (get state :m)
+                                                   (get state :v)
+                                                   (get state :t)
+                                                   x y config)
+                               _       (if (== (mod (+ step 1) 10) 0)
+                                         (print "Step {} | Loss: {:.4f}" (+ step 1) (get res :loss))
+                                         nil)]
+                           {:params (get res :params)
+                            :m      (get res :m)
+                            :v      (get res :v)
+                            :t      (get res :t)
+                            :key    k2}))
+                       {:params params :m m :v v :t 0 :key (random-key 0)}
+                       (range n-steps))]
+
+    (get result :params)))

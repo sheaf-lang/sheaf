@@ -3,7 +3,6 @@
 ;; A reference implementation of a generative Transformer in Sheaf.
 ;; Ported from BareGPT (https://github.com/dbrll/BareGPT)
 
-(use optim)
 (use nn)
 
 
@@ -146,19 +145,6 @@
         (mlp (get layer-p :mlp))
         (+ h)))) ;; Residual 2
 
-
-(defn train-step [params m v t inputs targets config]
-  (let [lr (get config :lr)
-        loss-fn (fn [p] (cross-entropy-loss (gpt-model inputs p config) targets))
-        [loss grads] ((value-and-grad loss-fn) params)
-
-        [new-params new-m new-v new-t] (adam-step params grads m v t lr 0.9 0.999 1e-8)]
-    ;; Return
-    {:loss loss
-     :params new-params
-     :m new-m
-     :v new-v
-     :t new-t}))
 
 
 (defn generate-token [ids params config key k temp]

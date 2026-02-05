@@ -1,0 +1,97 @@
+;; -*- mode: clojure -*-
+;; BareGPT Generative Transformer
+;; Run with: sheaf run.shf
+
+(use train)
+
+
+(defn encode [s char->id]
+  (map (fn [c] (get char->id c)) (chars s)))
+
+
+;; Build sorted vocab + char->id index from raw text
+(defn build-vocab [text]
+  (let [;; build the vocabulary dict for each {char: true}, then extract keys
+        vocab (sort (keys (reduce (fn [acc c] (assoc acc c true))
+                                  {}
+                                  (chars text))))
+        ;; invert: {vocab[i] → i}
+        char->id (reduce (fn [acc i] (assoc acc (nth vocab i) i))
+                         {}
+                         (range (count vocab)))]
+    {:vocab vocab :char->id char->id}))
+
+
+;; Encode prompt and roll tokens into a zero-padded block_size context
+(defn encode-prompt [prompt char->id block-size]
+  (let [prompt-ids (encode prompt char->id)
+        zeros (- (arange block-size) (arange block-size))]
+    (reduce (fn [ctx id] (append-and-roll ctx id)) zeros prompt-ids)))
+
+
+;; Autoregressive generation
+(defn generate [context params config key gen-length vocab]
+  ;; state = {ids, key}: threaded through each iteration via reduce
+  (reduce
+    (fn [state i]
+      (let [;; sample one token (top-k=10, temperature=0.8)
+            res     (generate-token (get state :ids) params config (get state :key) 10 0.8)
+            next-id (get res :next_id)]
+        (do
+          ;; stream one character at a time, no newline
+          (print (nth vocab next-id) :end "")
+          ;; slide the context window left, append new token
+          {:ids (append-and-roll (get state :ids) next-id)
+           :key (get res :key)})))
+    {:ids context :key key}
+    (range gen-length)))
+
+
+;; Main
+(let [config      {;; HYPER-PARAMETERS
+                   :d_model 256
+                   :n_layers 4
+                   :n_heads 4
+                   :batch_size 32
+                   :block_size 128
+                   :lr 1e-3
+                   }
+
+      prompt      "ROMEO:"
+      gen-length  1000
+      epochs      500
+
+      ;; load data + vocab
+      text        (do (print "Reading text...") (io "read" "data/shakespeare.txt"))
+      _           (print "Text loaded: {} chars" (len text))
+      v           (do (print "Building vocab...") (build-vocab text))
+      vocab       (get v :vocab)
+      char->id    (get v :char->id)
+      config      (assoc config :vocab_size (count vocab))
+      _           (print "Vocab: {} unique chars" (count vocab))
+
+      ;; load or train
+      weights-path "out/weights.pkl"
+      params      (if (io "exists" weights-path)
+                    (do
+                      (print "Loading weights from {}..." weights-path)
+                      (io "load" weights-path))
+                    (let [encoded (do (print "Weights not found. Training...")
+                                     (tensor (map (fn [c] (get char->id c)) (chars text))))
+                          p       (train encoded config epochs)]
+                      (do
+                        (print "Saving weights to {}..." weights-path)
+                        (io "save" weights-path p)
+                        p)))
+
+      ;; prepare context
+      block-size  (get config :block_size)
+      context     (encode-prompt prompt char->id block-size)
+      key         (random-key (io "entropy"))]
+
+  (do
+    (print "")
+    (print "Generating {} tokens | prompt: '{}'" gen-length prompt)
+    (print "---")
+    (print prompt :end "")
+    (generate context params config key gen-length vocab)))
