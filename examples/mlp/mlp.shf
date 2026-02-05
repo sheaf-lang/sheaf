@@ -1,9 +1,14 @@
 ;; -*- mode: clojure -*-
-;;
-;; The "Hello World" of Sheaf: XOR with a 2-layer MLP.
+;; XOR MLP, the "Hello World" of Sheaf
 
 (use nn)
 (use optim)
+
+(defn xor-data []
+  ;; Returns [X Y] tuple for XOR problem
+  (let [X [[0.0 0.0] [0.0 1.0] [1.0 0.0] [1.0 1.0]]
+        Y [[0.0] [1.0] [1.0] [0.0]]]
+    [X Y]))
 
 
 (defn init-params [key]
@@ -20,17 +25,7 @@
     (with-params [p :l2] (sigmoid (+ (@ h W) b)))))
 
 
-(defn loss [p x y]
-  (mean (** (- (forward x p) y) 2)))
-
-
 (defn train-step [p x y lr]
-  (let [[l g] ((value-and-grad (fn [p] (loss p x y))) p)]
+  (let [loss-fn (fn [p] (mean (** (- (forward x p) y) 2)))
+        [l g] ((value-and-grad loss-fn) p)]
     {:p (sgd-step p g lr) :loss l}))
-
-
-;; Batch n steps of SGD training
-(defn train [p x y lr n]
-  (reduce (fn [s _] (train-step (get s :p) x y lr))
-          {:p p :loss 0.0}
-          (range n)))

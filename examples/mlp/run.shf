@@ -1,0 +1,30 @@
+;; -*- mode: clojure -*-
+;; XOR MLP, the "Hello World" of Sheaf
+;; Run with: sheaf run.shf
+
+(use mlp)
+
+(let [[X Y] (xor-data)
+      lr     0.7
+      epochs 500
+      params (init-params (random-key (io "entropy")))
+
+      ;; Training loop: repeat for fixed epochs
+      final
+        (repeat [epoch epochs]
+          [p params]
+          (let [res (train-step p X Y lr)]
+            ;; Log every 50 epochs
+            (do
+              (if (== (mod (+ epoch 1) 50) 0)
+                (print "Epoch {} | loss: {:.6f}" (+ epoch 1) (get res :loss))
+                nil)
+              (get res :p))))]
+
+  ;; Predictions on all XOR inputs
+  (do
+    (print "")
+    (print "Predictions:")
+    (map (fn [x]
+           (print "  {} -> {:.3f}" x (first (forward x final))))
+         X)))
