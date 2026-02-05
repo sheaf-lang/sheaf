@@ -653,3 +653,27 @@
 - name: index-of
   test: (index-of '[10 20 30] 99)
   expected: "-1"
+# --- quoted vectors with string literals (regression test: b8f5383) ---
+- name: quoted vector strings
+  test: (do '["hi" "hello" "world"])
+  expected: "('hi', 'hello', 'world')"
+- name: quoted vector mixed
+  test: (do '[1 "two" 3])
+  expected: "(1, 'two', 3)"
+# --- io entropy (non-deterministic: test properties, not values) ---
+- name: io entropy
+  test: (>= (io "entropy") 0)
+  expected: "True"
+- name: io entropy
+  test: (and (>= (io "entropy" 1) 0) (< (io "entropy" 1) 256))
+  expected: "True"
+- name: io entropy
+  test: (not (= (io "entropy" 1) (io "entropy" 1)))
+  expected: "True"
+# --- f-string formatting (via str-call "format" — same engine as print) ---
+- name: f-string format
+  test: (str-call "format" "loss={:.4f} step={}" 0.0532 100)
+  expected: "loss=0.0532 step=100"
+- name: f-string padding
+  test: (str-call "format" "[{:>3}] {:.2f}" 7 3.14159)
+  expected: "[  7] 3.14"
