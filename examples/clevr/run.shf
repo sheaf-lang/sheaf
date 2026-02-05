@@ -103,7 +103,8 @@
          (get demo-scene :objects))
     (print ""))
 
-  ;; --- Run 10 random tests ---
+  (print "Running 10 random tests:")
+  (print "----------------------------------------------------------")
   (let [result
           (while (< (get state :i) 10)
             [state {:key (random-key 42) :i 0 :passed 0}]
@@ -138,7 +139,7 @@
 
       (do
         (print "\n----------------------------------------------------------")
-        (print "\nDetailed operations for query: 'color of rightmost square'\n")
+        (print "Detailed operations for query 'color of rightmost square'\n")
         (print "Symbolic attention shaping:\n")
         (print "Query: {}" custom-query)
         (print "Input: Scene [batch=1, n_objects=5, features=9]")
@@ -160,4 +161,4 @@
                    (print "    ↓"))))
              (range n-steps))
 
-        (print "[Decision] argmax(logits): {}" (str-call "upper" predicted))))))
+        (print "[Decision] argmax(logits): {}\n" (str-call "upper" predicted))))))
