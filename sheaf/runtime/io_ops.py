@@ -4,7 +4,7 @@
 """
 I/O operations for Sheaf.
 
-Single entry point: (io verb path [format])
+Single entry point: (io verb path [format] [dtype])
 Verbs: load, save, read, lines
 
 Format is inferred from file extension.
@@ -12,20 +12,377 @@ Override with a keyword arg: (io "load" "weights.dat" :safetensors)
 
 Supported formats:
   .safetensors  — lazy tensor loading via mmap (dtype preserved)
+  .npy          — numpy arrays, mmap'd (dtype from header)
+  .bin          — raw binary, mmap'd (dtype must be explicit: :i32, :i16, etc.)
   .pkl          — pickle (legacy, discouraged)
   .txt          — plain text
   .json         — JSON object
   .jsonl        — newline-delimited JSON (streaming via "lines")
+
+Glob patterns are supported for .npy and .bin: returns a ShardedHandle
+(virtual concatenated view, zero-copy via mmap).
+
+  (io "load" "tokens/shard-*.bin" :i32)  → ShardedHandle over sorted shards
+  (io "load" "train.npy")                → NpyHandle (single file)
 """
 
 import glob as glob_module
 import json
+import mmap
 import os
 import pickle
+import struct
+
+# Dtype flags → numpy dtype strings.
+# Matches the dtype keywords in types.md: :f32, :f16, :bf16, :i32, :i16, :u32, :bool
+DTYPE_FLAGS = {"f32", "f16", "bf16", "i32", "i16", "u32", "bool"}
+
+# numpy dtype string ↔ (struct format char, byte width)
+_NPY_DTYPE_META = {
+    "float32": ("f", 4),
+    "float16": ("e", 2),
+    "bfloat16": (None, 2),  # no struct char — handled via raw bytes
+    "int32": ("i", 4),
+    "int16": ("h", 2),
+    "uint32": ("I", 4),
+    "bool": ("?", 1),
+}
+
+# Sheaf flag → numpy dtype string
+_FLAG_TO_NPY_DTYPE = {
+    "f32": "float32",
+    "f16": "float16",
+    "bf16": "bfloat16",
+    "i32": "int32",
+    "i16": "int16",
+    "u32": "uint32",
+    "bool": "bool",
+}
+
+
+def _parse_npy_header(fd):
+    """
+    Parse a .npy file header. Returns (dtype_str, shape, data_offset).
+    Supports NPY format v1.0 and v2.0.
+    Spec: https://numpy.org/doc/stable/reference/generated/numpy.lib.format.html
+    """
+    magic = fd.read(6)
+    if magic != b"\x93NUMPY":
+        raise ValueError("Not a valid .npy file (bad magic bytes)")
+    major, minor = struct.unpack("BB", fd.read(2))
+    if major == 1:
+        header_len = struct.unpack("<H", fd.read(2))[0]
+    elif major == 2:
+        header_len = struct.unpack("<I", fd.read(4))[0]
+    else:
+        raise ValueError(f"Unsupported .npy format version: {major}.{minor}")
+    header_str = fd.read(header_len).decode("latin1").strip()
+    # Header is a Python literal dict: "{'descr': '<f4', 'fortran_order': False, 'shape': (1024,), }"
+    header = eval(header_str)  # noqa: S307 — controlled input, .npy files only
+    descr = header["descr"]
+    shape = header["shape"]
+    # descr like '<f4', '|i2', '<i4' — strip endian char, map to dtype name
+    _descr_to_dtype = {
+        "<f4": "float32",
+        ">f4": "float32",
+        "=f4": "float32",
+        "<f2": "float16",
+        ">f2": "float16",
+        "=f2": "float16",
+        "<i4": "int32",
+        ">i4": "int32",
+        "=i4": "int32",
+        "<i2": "int16",
+        ">i2": "int16",
+        "=i2": "int16",
+        "<u4": "uint32",
+        ">u4": "uint32",
+        "=u4": "uint32",
+        "|b1": "bool",
+        "|?1": "bool",
+    }
+    dtype_str = _descr_to_dtype.get(descr)
+    if dtype_str is None:
+        raise ValueError(f"Unsupported .npy dtype descriptor: {descr}")
+    data_offset = fd.tell()
+    return dtype_str, shape, data_offset
+
+
+class NpyHandle:
+    """
+    Memory-mapped handle over a single .npy file.
+    Dtype and shape are read from the header — no data is loaded into RAM.
+    Supports slicing via __getitem__; returns JAX arrays on demand.
+
+    Examples:
+        (io "load" "train.npy")             → NpyHandle
+        (dynamic-slice dataset 0 1024)      → f32[1024] (reads 4KB from disk)
+    """
+
+    def __init__(self, path):
+        self._path = path
+        with open(path, "rb") as f:
+            self._dtype, self._shape, self._data_offset = _parse_npy_header(f)
+        _, self._byte_width = _NPY_DTYPE_META[self._dtype]
+        # Total number of elements along axis 0
+        self._len = self._shape[0] if self._shape else 1
+        # Element stride in bytes (all elements after axis 0)
+        self._stride = self._byte_width
+        for dim in self._shape[1:]:
+            self._stride *= dim
+        # Open mmap (read-only, shared)
+        self._fd = open(path, "rb")
+        self._mmap = mmap.mmap(self._fd.fileno(), 0, access=mmap.ACCESS_READ)
+
+    @property
+    def shape(self):
+        return self._shape
+
+    @property
+    def dtype(self):
+        return self._dtype
+
+    def __len__(self):
+        return self._len
+
+    def __getitem__(self, idx):
+        """Slice along axis 0. idx can be int, slice, or range."""
+        import jax.numpy as jnp
+        import numpy as np
+
+        scalar_idx = isinstance(idx, int)
+        if scalar_idx:
+            if idx < 0:
+                idx += self._len
+            start, count = idx, 1
+        elif isinstance(idx, slice):
+            start, stop, step = idx.indices(self._len)
+            if step != 1:
+                raise ValueError("NpyHandle does not support step != 1")
+            count = stop - start
+        elif hasattr(idx, "__iter__"):
+            # range or list of indices — convert to contiguous slice if possible
+            indices = list(idx)
+            if indices == list(range(indices[0], indices[-1] + 1)):
+                start, count = indices[0], len(indices)
+            else:
+                # Non-contiguous: read each element individually
+                return jnp.stack([self[i] for i in indices])
+        else:
+            raise TypeError(
+                f"NpyHandle index must be int, slice, or range, got {type(idx)}"
+            )
+
+        byte_start = self._data_offset + start * self._stride
+        byte_end = byte_start + count * self._stride
+        raw = self._mmap[byte_start:byte_end]
+
+        _np_dtype_map = {
+            "float32": np.float32,
+            "float16": np.float16,
+            "int32": np.int32,
+            "int16": np.int16,
+            "uint32": np.uint32,
+            "bool": np.bool_,
+        }
+        arr = np.frombuffer(raw, dtype=_np_dtype_map[self._dtype])
+        if len(self._shape) > 1:
+            arr = arr.reshape((count,) + self._shape[1:])
+        result = jnp.array(arr)
+        if scalar_idx and result.ndim > 0:
+            result = result[0]  # squeeze leading dim: (1, ...) → (...)
+        return result
+
+    def close(self):
+        self._mmap.close()
+        self._fd.close()
+
+    def __del__(self):
+        try:
+            self.close()
+        except Exception:
+            pass
+
+    def __repr__(self):
+        return (
+            f"NpyHandle(path={self._path!r}, shape={self._shape}, dtype={self._dtype})"
+        )
+
+
+class ShardedHandle:
+    """
+    Virtual concatenated view over multiple files (glob pattern).
+    Each shard is mmap'd independently — no data copied to RAM.
+    Slicing computes which shard(s) contain the requested range
+    and reads only from those.
+
+    Works with .npy (dtype from header) and .bin (dtype explicit).
+    Shards are sorted lexicographically — naming convention matters:
+        shard-001.bin, shard-002.bin, ...  ✓
+        shard-1.bin, shard-10.bin, ...     ✗ (10 sorts before 2)
+
+    Examples:
+        (io "load" "tokens/shard-*.bin" :i32)  → ShardedHandle, 10 shards
+        (dynamic-slice dataset 0 4096)         → reads from shard-001 only
+    """
+
+    def __init__(self, paths, dtype=None):
+        self._shards = []  # list of (cumulative_offset, length, handle_or_path)
+        cumulative = 0
+        for p in sorted(paths):
+            if p.endswith(".npy"):
+                handle = NpyHandle(p)
+                if dtype is None:
+                    dtype = handle.dtype  # infer from first .npy header
+                length = len(handle)
+                self._shards.append((cumulative, length, handle))
+            else:
+                # Raw binary: dtype must be provided
+                if dtype is None:
+                    raise ValueError(
+                        f"dtype is required for raw binary shard '{p}'. "
+                        f"Supported flags: {sorted(DTYPE_FLAGS)}"
+                    )
+                file_size = os.path.getsize(p)
+                _, byte_width = _NPY_DTYPE_META[dtype]
+                length = file_size // byte_width
+                self._shards.append((cumulative, length, p))  # path, opened lazily
+            cumulative += length
+        if dtype is None:
+            raise ValueError(
+                "ShardedHandle requires at least one shard or an explicit dtype"
+            )
+        self._dtype = dtype
+        _, self._byte_width = _NPY_DTYPE_META[dtype]
+        self._total_len = cumulative
+        # Cache of open mmap handles for .bin files
+        self._bin_mmaps = {}
+
+    @property
+    def shape(self):
+        return (self._total_len,)
+
+    @property
+    def dtype(self):
+        return self._dtype
+
+    def __len__(self):
+        return self._total_len
+
+    def _find_shard(self, global_idx):
+        """Binary search: find which shard contains global_idx. Returns (shard_index, local_idx)."""
+        lo, hi = 0, len(self._shards) - 1
+        while lo <= hi:
+            mid = (lo + hi) // 2
+            offset, length, _ = self._shards[mid]
+            if global_idx < offset:
+                hi = mid - 1
+            elif global_idx >= offset + length:
+                lo = mid + 1
+            else:
+                return mid, global_idx - offset
+        raise IndexError(
+            f"Index {global_idx} out of range (total length: {self._total_len})"
+        )
+
+    def _read_bin(self, shard_idx, local_start, count):
+        """Read count elements from a .bin shard at local_start."""
+        import jax.numpy as jnp
+        import numpy as np
+
+        _, _, path = self._shards[shard_idx]
+        if shard_idx not in self._bin_mmaps:
+            fd = open(path, "rb")
+            self._bin_mmaps[shard_idx] = (
+                fd,
+                mmap.mmap(fd.fileno(), 0, access=mmap.ACCESS_READ),
+            )
+        _, mm = self._bin_mmaps[shard_idx]
+
+        byte_start = local_start * self._byte_width
+        byte_end = byte_start + count * self._byte_width
+        raw = mm[byte_start:byte_end]
+
+        _np_dtype_map = {
+            "float32": np.float32,
+            "float16": np.float16,
+            "int32": np.int32,
+            "int16": np.int16,
+            "uint32": np.uint32,
+            "bool": np.bool_,
+        }
+        return jnp.array(np.frombuffer(raw, dtype=_np_dtype_map[self._dtype]))
+
+    def __getitem__(self, idx):
+        """Slice along the virtual concatenated axis."""
+        import jax.numpy as jnp
+
+        if isinstance(idx, int):
+            shard_idx, local_idx = self._find_shard(idx)
+            _, _, handle_or_path = self._shards[shard_idx]
+            if isinstance(handle_or_path, NpyHandle):
+                return handle_or_path[local_idx]
+            return self._read_bin(shard_idx, local_idx, 1)[0]
+
+        if isinstance(idx, slice):
+            start, stop, step = idx.indices(self._total_len)
+            if step != 1:
+                raise ValueError("ShardedHandle does not support step != 1")
+        elif hasattr(idx, "__iter__"):
+            indices = list(idx)
+            if indices == list(range(indices[0], indices[-1] + 1)):
+                start, stop = indices[0], indices[-1] + 1
+            else:
+                return jnp.stack([self[i] for i in indices])
+        else:
+            raise TypeError(
+                f"ShardedHandle index must be int, slice, or range, got {type(idx)}"
+            )
+
+        # Collect chunks across shard boundaries
+        chunks = []
+        pos = start
+        while pos < stop:
+            shard_idx, local_start = self._find_shard(pos)
+            _, shard_len, handle_or_path = self._shards[shard_idx]
+            # How many elements we can read from this shard
+            available = shard_len - local_start
+            needed = stop - pos
+            count = min(available, needed)
+
+            if isinstance(handle_or_path, NpyHandle):
+                chunks.append(handle_or_path[local_start : local_start + count])
+            else:
+                chunks.append(self._read_bin(shard_idx, local_start, count))
+
+            pos += count
+
+        return jnp.concatenate(chunks) if len(chunks) > 1 else chunks[0]
+
+    def close(self):
+        for _, _, handle_or_path in self._shards:
+            if isinstance(handle_or_path, NpyHandle):
+                handle_or_path.close()
+        for fd, mm in self._bin_mmaps.values():
+            mm.close()
+            fd.close()
+        self._bin_mmaps.clear()
+
+    def __del__(self):
+        try:
+            self.close()
+        except Exception:
+            pass
+
+    def __repr__(self):
+        return f"ShardedHandle(shards={len(self._shards)}, total_len={self._total_len}, dtype={self._dtype})"
+
 
 # Format registry
 EXTENSION_TO_FORMAT = {
     ".safetensors": "safetensors",
+    ".npy": "npy",
+    ".bin": "raw",
     ".pkl": "pkl",
     ".pickle": "pkl",
     ".txt": "txt",
@@ -207,7 +564,7 @@ class LazyLines:
 
 
 # Main dispatch: io
-KNOWN_FORMATS = {"safetensors", "pkl", "pickle", "txt", "json", "jsonl"}
+KNOWN_FORMATS = {"safetensors", "npy", "raw", "pkl", "pickle", "txt", "json", "jsonl"}
 
 
 def io_call(verb, path=None, *args, **kwargs):
@@ -240,6 +597,13 @@ def io_call(verb, path=None, *args, **kwargs):
             hint = k
             break
 
+    # Extract dtype flag from kwargs: (io "load" "tokens.bin" :i32)
+    dtype = None
+    for k in kwargs:
+        if k in DTYPE_FLAGS:
+            dtype = _FLAG_TO_NPY_DTYPE[k]
+            break
+
     # Remaining positional args: data payload for "save"
     data = args[0] if args else None
 
@@ -265,6 +629,29 @@ def io_call(verb, path=None, *args, **kwargs):
             return _load_json(path)  # eager load of jsonl as list
         if fmt == "txt":
             return _load_txt(path)
+        if fmt == "npy":
+            paths = sorted(glob_module.glob(path))
+            if not paths:
+                if os.path.exists(path):
+                    paths = [path]
+                else:
+                    raise FileNotFoundError(f"No .npy files match '{path}'")
+            if len(paths) == 1:
+                return NpyHandle(paths[0])
+            return ShardedHandle(paths)
+        if fmt == "raw":
+            if dtype is None:
+                raise ValueError(
+                    '(io "load" "file.bin" :i32) — dtype flag is required for raw binary. '
+                    f"Supported: {sorted(DTYPE_FLAGS)}"
+                )
+            paths = sorted(glob_module.glob(path))
+            if not paths:
+                if os.path.exists(path):
+                    paths = [path]
+                else:
+                    raise FileNotFoundError(f"No .bin files match '{path}'")
+            return ShardedHandle(paths, dtype=dtype)
         raise ValueError(f"No loader for format '{fmt}'")
 
     # ---- save ----
