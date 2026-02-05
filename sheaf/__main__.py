@@ -92,8 +92,18 @@ def main():
     parser.add_argument(
         "-h", "--help", action="store_true", help="Show this help message"
     )
+    parser.add_argument(
+        "--version", action="store_true", help="Show version information"
+    )
 
     args = parser.parse_args()
+
+    # Version
+    if args.version:
+        from sheaf import __version__
+
+        print(f"Sheaf version {__version__}")
+        return
 
     # Help
     if args.help:
@@ -105,6 +115,7 @@ Usage:
     sheaf FILE                         Execute a Sheaf file
     sheaf init-ai                      Initialize AI context file in current directory
     sheaf --help                       Show this help message
+    sheaf --version                    Show version information
 
 Trace options:
     --trace [FUNCTIONS]                Enable tracing (optionally scope to functions)
