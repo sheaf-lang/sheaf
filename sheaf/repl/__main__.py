@@ -9,8 +9,11 @@ Usage:
     python -m sheaf.repl
     or
     sheaf console
+    or
+    sheaf console --trace [fast|normal|verbose]
 """
 
+import argparse
 import os
 import sys
 
@@ -301,13 +304,24 @@ Press Ctrl+C or Ctrl+D to exit.
 """)
 
 
-def run_repl():
-    """Run the main REPL loop."""
+def run_repl(trace_mode=None):
+    """Run the main REPL loop.
+
+    Args:
+        trace_mode: Optional trace mode ("fast", "normal", "verbose"). If provided,
+                    enables tracing on startup.
+    """
     # NOTE: We don't install the exception handler here because we handle
     # exceptions manually in the REPL loop for better control
 
     # Create compiler instance
     compiler = Sheaf()
+
+    # Enable tracing if requested via CLI
+    if trace_mode:
+        shf_tracer.enabled = True
+        shf_tracer.monitoring = True
+        shf_tracer.mode = trace_mode
 
     # Setup readline history and completion if available
     history_file = os.path.expanduser("~/.sheaf_history")
@@ -550,8 +564,22 @@ def run_repl():
 
 def main():
     """Entry point for the REPL."""
+    parser = argparse.ArgumentParser(
+        description="Sheaf Console - Interactive REPL for the Sheaf language",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    parser.add_argument(
+        "--trace",
+        nargs="?",
+        const="normal",
+        choices=["fast", "normal", "verbose"],
+        metavar="MODE",
+        help="Enable tracing on startup (fast|normal|verbose, default: normal)",
+    )
+    args = parser.parse_args()
+
     try:
-        run_repl()
+        run_repl(trace_mode=args.trace)
     except KeyboardInterrupt:
         print("\nBye!")
         sys.exit(0)

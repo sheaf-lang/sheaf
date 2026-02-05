@@ -6,35 +6,72 @@
 Sheaf Console - Command-line interface for the Sheaf language.
 """
 
+import argparse
 import os
 import sys
 
 
 def main():
-    args = sys.argv[1:]
+    # Custom argument parser that allows positional file argument
+    parser = argparse.ArgumentParser(
+        description="Sheaf - A Functional Language for Differentiable Computation",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        usage="sheaf [file.shf] [--trace [MODE]]",
+        add_help=False,
+    )
+    parser.add_argument("file", nargs="?", help="Sheaf file to execute")
+    parser.add_argument(
+        "--trace",
+        nargs="?",
+        const=True,
+        metavar="FUNCTIONS",
+        help="Enable tracing (optionally scope to functions: forward,train-step)",
+    )
+    parser.add_argument(
+        "--trace-out",
+        choices=["console", "json"],
+        default="console",
+        help="Trace output format (default: console)",
+    )
+    parser.add_argument(
+        "--trace-level",
+        choices=["fast", "normal", "verbose"],
+        default="normal",
+        help="Trace detail level (default: normal)",
+    )
+    parser.add_argument(
+        "-h", "--help", action="store_true", help="Show this help message"
+    )
 
-    # No arguments -> launch REPL
-    if len(args) == 0:
+    args = parser.parse_args()
+
+    # Help
+    if args.help:
+        print("""
+Sheaf - A Functional Language for Differentiable Computation
+
+Usage:
+    sheaf                              Launch interactive console (REPL)
+    sheaf <file.shf>                   Execute a Sheaf file
+    sheaf init-ai                      Initialize AI context file in current directory
+    sheaf --help                       Show this help message
+
+Trace options:
+    --trace [FUNCTIONS]                Enable tracing (optionally scope to functions)
+    --trace-out {console,json}         Output format (default: console)
+    --trace-level {fast,normal,verbose} Detail level (default: normal)
+""")
+        return
+
+    # No file argument -> check for special commands or launch REPL
+    if not args.file:
         from sheaf.repl.__main__ import main as repl_main
 
         repl_main()
         return
 
-    # Help
-    if args[0] in ("-h", "--help", "help"):
-        print("""
-Sheaf - A Functional Language for Differentiable Computation
-
-Usage:
-    sheaf                 Launch interactive console (REPL)
-    sheaf <file.shf>      Execute a Sheaf file
-    sheaf init-ai         Initialize AI context file in current directory
-    sheaf --help          Show this help message
-""")
-        return
-
     # Initialize AI context
-    if args[0] == "init-ai":
+    if args.file == "init-ai":
         import shutil
 
         dest = "sheaf-context.md"
@@ -106,7 +143,7 @@ Usage:
         return
 
     # Execute file
-    filename = args[0]
+    filename = args.file
 
     if not os.path.exists(filename):
         print(f"Error: File not found: {filename}", file=sys.stderr)
@@ -117,6 +154,23 @@ Usage:
         print(f"Warning: {filename} doesn't have .shf extension", file=sys.stderr)
 
     from sheaf import Sheaf
+    from sheaf.core.tracer import shf_tracer
+
+    # Enable tracing if requested
+    if args.trace:
+        shf_tracer.enabled = True
+        shf_tracer.monitoring = True
+        shf_tracer.mode = args.trace_level
+
+        # Configure scope filter (comma-separated function names)
+        # args.trace is either True (trace all) or a string (scope to functions)
+        if isinstance(args.trace, str):
+            shf_tracer.scope_filter = set(args.trace.split(","))
+        else:
+            shf_tracer.scope_filter = None
+
+        # Configure output format
+        shf_tracer.log_format = args.trace_out
 
     compiler = Sheaf()
 

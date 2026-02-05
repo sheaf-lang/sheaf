@@ -41,8 +41,12 @@ class Tracer:
         # Should this operation be traced?
         if not self.enabled:
             return False
-        if self.scope_filter and self.scope_filter not in op_name:
-            return False
+
+        # If scope_filter is set, only trace functions in the filter
+        if self.scope_filter:
+            # scope_filter is now a set of function names
+            return op_name in self.scope_filter
+
         return True
 
     def _format_value(self, val, mode=None):
