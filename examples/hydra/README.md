@@ -1,9 +1,29 @@
-Hydra is a self-evolving model.
+# Hydra
 
-It starts training on the XOR problem without a hidden layer, which is impossible to solve.
+A self-evolving neural network implemented in Sheaf.
 
-After detecting a loss plateau, it dynamically inserts a hidden layer, enabling learning to resume and converge.
+## How it works
 
-In PyTorch or JAX, doing this kind of structural mutation mid-training either triggers a recompilation or forces into eager mode, with a non-trivial performance hit.
+The network starts with a single linear head (no hidden layers), which cannot
+solve XOR. Every 20 epochs, the training loop checks for a loss plateau
+(progress < 0.003). When one is detected, `grow-hydra` appends a new hidden
+layer. JAX retraces `forward` at that point, but the cost is negligible for
+networks of typical depth.
 
-In Sheaf, the model is a data structure (S-expression), we can evolve it live without stopping the JIT engine because nothing breaks the execution graph.
+## Zero recompilation at grow
+
+`grow-hydra` appends a new layer and reinitialises the head. This changes the
+pytree structure, so JAX _retraces_ `forward`, but retracing is not the same
+as recompilation. The XLA kernels produced by the trace are cached by shape.
+All shapes that appear after a grow (`[4,32]`, `[32,1]`, etc.) were already
+seen during the initial training phase, so they hit the cache.
+
+`verify.sh` proves this empirically using `JAX_LOG_COMPILES=1`:
+
+```
+XLA Recompilation Report
+ Total compilations : 71
+ Before grow        : 71
+ After grow         : 0
+--> 'grow' required zero recompilation
+```

@@ -5,19 +5,14 @@
 ;; Recursivity by design: "forward" can accept any number of layers
 (defn forward [x params] :jit
   (let [layers (get params :layers)
-        head   (get params :head)
-        n      (count layers)]
+        head   (get params :head)]
     (as-> x h
-      ;; Use scan for dynamic computation - avoids recompilation when layer count changes
-      ;; Handle empty layers case
-      (if (> n 0)
-        (first (scan (fn [h_in layer_p]
-                       (let [h_out (with-params layer_p
-                                     (relu (linear h_in W b)))]
-                         h_out)) ;; scan expects same-shaped carry, return h_out as both carry and output
-                     h
-                     layers))
-        h)
+      ;; The reduction acts as a dynamic sequence of layers
+      (reduce (fn [h_in layer_p]
+                (with-params layer_p
+                  (relu (linear h_in W b)))) ;; W and b are auto-bound
+              h
+              layers)
       ;; Final projection using the same pattern
       (with-params head
         (linear h W b)))))

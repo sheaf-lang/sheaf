@@ -1,0 +1,81 @@
+;; -*- mode: clojure -*-
+;; Hydra: self-evolving neural network.
+;;
+;; Uses hydra.shf for forward, grow-hydra, train-step.
+;; Starts with a linear head only (no hidden layers).
+;; Detects loss plateaus every 20 epochs and grows the network.
+
+(use hydra)
+
+;; Helper
+(defn print-struct [params]
+  (let [layers (get params "layers")
+        n      (len layers)
+        hidden (reduce (fn [s _] (str-call "format" "{}ReLU(32) -> " s)) "" (range n))]
+    (print "[Model Map]: Input(2) -> {}Linear(1) -> Output\n" hidden)))
+
+
+;; Main
+(let [;; Data: XOR
+      x      [[0 0] [0 1] [1 0] [1 1]]
+      y      [[0.0] [1.0] [1.0] [0.0]]
+
+      ;; Config
+      lr      0.01
+      d-model 32
+      config  {"d_model" d-model}
+
+      ;; Init: empty layers, head projects 2 -> 1 directly
+      key    (random-key 42)
+      params {"head"   {"W" (random-normal key '[2 1])
+                        "b" (zeros '[1])}
+              "layers" '[]}
+
+      ;; Training loop
+      final
+        (do
+          (print "--- Starting Training ---")
+          (print-struct params)
+          (while (> (get state :loss) 0.0075)
+            [state {:params params
+                    :loss   999.0
+                    :epoch  0
+                    :prev-loss 999.0
+                    :key    key}]
+            (let [result     (train-step (get state :params) x y lr)
+                  new-params (get result "p")
+                  new-loss   (get result "loss")
+                  new-epoch  (+ (get state :epoch) 1)
+                  prev-loss  (get state :prev-loss)
+                  cur-key    (get state :key)
+
+                  ;; Base state: common fields across all branches
+                  base-state {:params new-params
+                              :loss new-loss
+                              :epoch new-epoch
+                              :prev-loss new-loss  ;; Default: track latest loss
+                              :key cur-key}]
+
+              (if (== (mod new-epoch 20) 0)
+                ;; Logging epoch: print and check for plateau
+                (do
+                  (print "Epoch {:>3} | Loss: {:.6f}" new-epoch new-loss)
+                  (let [diff (- prev-loss new-loss)]
+                    (if (and (>= diff 0) (< diff 0.003))
+                      ;; Plateau detected (loss change < 0.003): grow network
+                      (do
+                        (print "\n[Evolution] Hit loss plateau. Adding a new dense layer...")
+                        (let [[k1 k2] (random-split cur-key)
+                              grown   (grow-hydra new-params k2 config)]
+                          (print-struct grown)
+                          ;; Return updated state with grown network
+                          (assoc base-state
+                                 :params grown
+                                 :prev-loss prev-loss  ;; Keep old prev-loss for next comparison
+                                 :key k1)))
+                      ;; No plateau: prev-loss already updated in base-state
+                      base-state)))
+                ;; Non-logging epoch: preserve prev-loss for comparison
+                (assoc base-state :prev-loss prev-loss)))))]
+
+  (print "--- Training Successful ---"))
