@@ -11,6 +11,50 @@ import os
 import sys
 
 
+def parse_guards(guard_specs):
+    """Parse --guard specifications into (scope, variable, check_type, args) tuples.
+
+    Examples:
+      "loss:no-nan" → (None, "loss", ":no-nan", None)
+      "forward:loss:no-nan" → (["forward"], "loss", ":no-nan", None)
+      "forward,train-step:grads:range[-10,10]" → (["forward","train-step"], "grads", ":range", [-10, 10])
+    """
+    guards = []
+    for spec in guard_specs:
+        parts = spec.split(":")
+
+        # Detect scope (if first part contains no brackets and we have 3+ parts, first is scope)
+        if len(parts) >= 3 and "[" not in parts[0]:
+            # Has scope: "forward:loss:no-nan" or "forward,train:loss:no-nan"
+            scope_str, var, check = parts[0], parts[1], ":".join(parts[2:])
+            scopes = [s.strip() for s in scope_str.split(",")]
+        else:
+            # No scope: "loss:no-nan"
+            scopes = None
+            var, check = parts[0], ":".join(parts[1:])
+
+        # Parse check args
+        if "[" in check:
+            check_type, args_str = check.split("[", 1)
+            args_str = args_str.rstrip("]")
+            # Parse args as list: "0,10" → [0, 10], "64,128" → [64, 128]
+            try:
+                args = eval(f"[{args_str}]")
+            except:
+                print(
+                    f"Warning: Invalid guard args in '{spec}', skipping",
+                    file=sys.stderr,
+                )
+                continue
+            guards.append((scopes, var.strip(), f":{check_type}", args))
+        else:
+            # Add ':' prefix if not present
+            check_with_colon = check if check.startswith(":") else f":{check}"
+            guards.append((scopes, var.strip(), check_with_colon, None))
+
+    return guards
+
+
 def main():
     # Custom argument parser that allows positional file argument
     parser = argparse.ArgumentParser(
@@ -40,6 +84,12 @@ def main():
         help="Trace detail level (default: normal)",
     )
     parser.add_argument(
+        "--guard",
+        action="append",
+        metavar="SPEC",
+        help="Inject runtime guards ([scope:]variable:check, e.g., 'forward:h:range[-1,1]')",
+    )
+    parser.add_argument(
         "-h", "--help", action="store_true", help="Show this help message"
     )
 
@@ -52,7 +102,7 @@ Sheaf - A Functional Language for Differentiable Computation
 
 Usage:
     sheaf                              Launch interactive console (REPL)
-    sheaf <file.shf>                   Execute a Sheaf file
+    sheaf FILE                         Execute a Sheaf file
     sheaf init-ai                      Initialize AI context file in current directory
     sheaf --help                       Show this help message
 
@@ -60,6 +110,19 @@ Trace options:
     --trace [FUNCTIONS]                Enable tracing (optionally scope to functions)
     --trace-out {console,json}         Output format (default: console)
     --trace-level {fast,normal,verbose} Detail level (default: normal)
+
+Guard options:
+    --guard [SCOPE:]VAR:CHECK[ARGS]    Inject runtime guards (can be repeated)
+      SCOPE: function(s) where guard applies (optional, comma-separated)
+      VAR: variable name to monitor
+      CHECK: :no-nan | :range | :shape
+      ARGS: arguments for check (e.g., [0,10] for range)
+
+Examples:
+    sheaf run.shf --trace forward                  Trace forward function
+    sheaf run.shf --guard "loss:no-nan"            Guard loss for NaN globally
+    sheaf run.shf --guard "forward:h:range[-1,1]"  Guard h in forward only
+    sheaf run.shf --trace train-step --guard "forward,train-step:grads:no-nan"
 """)
         return
 
@@ -171,6 +234,11 @@ Trace options:
 
         # Configure output format
         shf_tracer.log_format = args.trace_out
+
+    # Enable guards if requested
+    if args.guard:
+        shf_tracer.cli_guards = parse_guards(args.guard)
+        shf_tracer.monitoring = True  # Enable monitoring for guards
 
     compiler = Sheaf()
 

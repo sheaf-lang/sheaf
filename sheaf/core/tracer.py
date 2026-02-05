@@ -24,11 +24,15 @@ class Tracer:
         self.log_format = "console"  # console or json
         self.json_path = "sheaf_trace.jsonl"
         self.scope_filter = None
+        self.cli_guards = []  # List of (scopes, variable, check_type, args) tuples
 
         # Ring buffer for backtracking the last 100 operations
         self.ring_buffer = []
         self.ring_buffer_max = 100
         self.silent_monitoring = False  # True when monitoring but not displaying
+
+        # Current function context for scoped guards
+        self.current_function = None
 
         # Colors
         self.RED = "\033[91m"
@@ -273,6 +277,9 @@ class Tracer:
         # Don't use callbacks to avoid timing issues with JIT
         _print_return(result)
 
+        # Check CLI guards on return value
+        self.check_cli_guards(op_name, result)
+
     def trigger_guard(self, guard_type, val, expected=None):
         # Check guard conditions and raise exception if violated
         if not self.monitoring:
@@ -342,6 +349,90 @@ class Tracer:
             _check(val)
 
         return val
+
+    def _should_guard(self, op_name, guard_var):
+        """Check if we should apply guard based on variable name and current context
+
+        Args:
+            op_name: Current function being executed
+            guard_var: Variable name from guard spec
+
+        Returns:
+            bool: True if guard should be applied
+        """
+        # Simple heuristic: check if guard_var appears in op_name
+        # This catches cases like "loss" in "compute-loss" or exact matches
+        return guard_var in str(op_name) or guard_var == str(op_name)
+
+    def _apply_guard(self, value, guard_type, guard_args, context):
+        """Apply guard check to a value
+
+        Args:
+            value: The value to check
+            guard_type: Type of guard (":no-nan", ":range", ":shape")
+            guard_args: Arguments for the guard (e.g., [0, 10] for range)
+            context: String describing where the guard was triggered (for error messages)
+        """
+        # For CLI guards, check immediately without JAX callback
+        # (callback may not execute in eager mode after function returns)
+        if self.already_traced:
+            return
+
+        # Convert to JAX array if needed
+        v = value if isinstance(value, jnp.ndarray) else jnp.asarray(value)
+
+        failed = False
+
+        if guard_type == ":range":
+            v_min = float(v.min())
+            v_max = float(v.max())
+            if v_min < guard_args[0] or v_max > guard_args[1]:
+                failed = True
+        elif guard_type == ":no-nan":
+            if not jnp.all(jnp.isfinite(v)):
+                failed = True
+        elif guard_type == ":shape":
+            actual_shape = list(v.shape)
+            expected_shape = [int(d) for d in guard_args]
+            if actual_shape != expected_shape:
+                failed = True
+
+        if failed:
+            self.emergency_mode = True
+            print(f"{self.RED}/!\\ Guard Breached: {guard_type}{self.RESET}")
+            print(f"Context: {context}")
+            print(f"Value stats: {self._format_value(v, mode='verbose')}")
+
+            # Display ring buffer backtrace
+            if self.ring_buffer:
+                print(
+                    f"\nBacktrace (last {len(self.ring_buffer)} operations):{self.RESET}\n"
+                )
+                for entry in self.ring_buffer:
+                    print(entry)
+                print("\n--- End of Backtrace ---\n")
+
+            import os
+
+            os._exit(1)
+
+    def check_cli_guards(self, op_name, result):
+        """Check CLI guards against function return value
+
+        Called from log_return to check if any --guard conditions are met.
+        """
+        if not self.cli_guards:
+            return
+
+        for guard_scopes, guard_var, guard_type, guard_args in self.cli_guards:
+            # Check scope match
+            if guard_scopes and op_name not in guard_scopes:
+                continue  # Skip if not in scope
+
+            # Check if we should guard this variable
+            if self._should_guard(op_name, guard_var):
+                context = f"{op_name}:{guard_var}"
+                self._apply_guard(result, guard_type, guard_args, context)
 
 
 shf_tracer = Tracer()
