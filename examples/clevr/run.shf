@@ -1,0 +1,163 @@
+;; -*- mode: clojure -*-
+;; CLEVR Neuro-Symbolic Reasoning
+;; Run with: cd examples/clevr && python -m sheaf run.shf
+
+(use ./model.shf)
+(use ./data.shf)
+
+
+;; --- Helpers ---
+
+;; Decode model output into predicted label + success flag.
+(defn score-prediction [prediction query answer]
+  (let [op (first query)]
+    (if (== op "query-color")
+      (let [pred (nth (colors) (int (argmax (get prediction 0))))]
+        {:predicted pred :success (== pred answer)})
+      (if (== op "query-shape")
+        (let [pred (nth (shapes) (int (argmax (get prediction 0))))]
+          {:predicted pred :success (== pred answer)})
+        ;; exists?
+        (let [pred (> (float (get prediction 0)) 0.5)]
+          {:predicted pred :success (== pred answer)})))))
+
+
+;; Extract op names from a query tree in depth-first order (leaves first).
+;; Matches the order that execute-query-with-steps returns attention tensors.
+(defn is-subquery [arg]
+  (and (> (count arg) 1)
+       (!= (slice (str (first arg)) 0 1) ":")))
+
+(defn extract-op-names [q]
+  (let [op   (first q)
+        subs (reduce (fn [acc arg]
+                       (if (is-subquery arg)
+                         (concat acc (extract-op-names arg))
+                         acc))
+                     '[]
+                     (rest q))]
+    (concat subs (cons op '[]))))
+
+
+;; Format attention weights as "label: val, ..." string.
+(defn format-attention [att-flat objects]
+  (concat
+    (reduce (fn [acc j]
+              (let [obj   (nth objects j)
+                    label (concat (get obj :color) "_" (get obj :shape))]
+                (concat acc
+                        (if (> j 0) ", " "")
+                        label ": "
+                        (str-call "format" "{:.2f}" (float (get att-flat j))))))
+            "["
+            (range (count objects)))
+    "]"))
+
+
+;; Format logits as "name: val, ..." string.
+(defn format-logits [att-flat attr-names]
+  (concat
+    (reduce (fn [acc j]
+              (concat acc
+                      (if (> j 0) ", " "")
+                      (nth attr-names j) ": "
+                      (str-call "format" "{:.2f}" (float (get att-flat j)))))
+            "["
+            (range (len att-flat)))
+    "]"))
+
+
+;; --- Main ---
+
+(let [params (init-clevr-params (random-key 0))
+
+      ;; Demo scene: retry until we get at least one square (we need one for the demo)
+      demo-seed (io "entropy")
+      demo
+        (while (== (get state :found) false)
+          [state {:key (random-key demo-seed) :scene nil :found false}]
+          (let [s  (generate-scene (get state :key) 5)
+                ok (> (count (filter (fn [o] (== (get o :shape) "square"))
+                                     (get s :objects)))
+                      0)
+                [k1 k2] (random-split (get state :key))]
+            {:key k2 :scene s :found ok}))
+      demo-scene   (get demo :scene)
+      demo-tensor  (scene-to-tensor demo-scene)
+      demo-batch   (reshape demo-tensor '[1 5 9])]
+
+  ;; --- Display scene ---
+  (do
+    (print "CLEVR Neuro-Symbolic Reasoning\n")
+    (print "Input tensor:")
+    (print "  Shape: [5, 9]  (5 objects x 9 features)")
+    (print "  Features: [red, green, blue, yellow, circle, square, triangle, x, y]\n")
+    (print "  Raw tensor values:")
+    (map (fn [i]
+           (print "    Object {}: {}" (+ i 1) (get demo-tensor i)))
+         (range 5))
+    (print "\nDecoded input:")
+    (map (fn [o]
+           (print "  - {:7} {:8}   x={:.2f}    y={:.2f}"
+                 (get o :color) (get o :shape) (get o :x) (get o :y)))
+         (get demo-scene :objects))
+    (print ""))
+
+  ;; --- Run 10 random tests ---
+  (let [result
+          (while (< (get state :i) 10)
+            [state {:key (random-key 42) :i 0 :passed 0}]
+            (let [[k1 k2 k3] (random-split (get state :key) 3)
+                  scene      (generate-scene k2 4)
+                  qr         (generate-query scene k3)
+                  query      (get qr :query)
+                  answer     (get qr :answer)
+                  scene-b    (reshape (scene-to-tensor scene) '[1 5 9])
+                  prediction (execute-query scene-b query params)
+                  scored     (score-prediction prediction query answer)
+                  status     (if (get scored :success) "PASS" "FAIL")]
+
+              (do
+                (print "[{}] {} -> {} (expected: {})"
+                      status query (get scored :predicted) answer)
+                {:key    k1
+                 :i      (+ (get state :i) 1)
+                 :passed (+ (get state :passed) (if (get scored :success) 1 0))})))
+
+        passed (get result :passed)]
+
+    (print "\nAccuracy: {}/10 ({:.1f}%)" passed (* 10.0 passed))
+
+    ;; --- Detailed pipeline for "color of rightmost square" ---
+    (let [custom-query ["query-color" ["rightmost" ["filter-shape" ":square"]]]
+          qr           (execute-query-with-steps demo-batch custom-query params)
+          steps        (get qr 1)
+          predicted    (nth (colors) (int (argmax (get (get qr 0) 0))))
+          op-names     (extract-op-names custom-query)
+          n-steps      (len steps)]
+
+      (do
+        (print "\n----------------------------------------------------------")
+        (print "\nDetailed operations for query: 'color of rightmost square'\n")
+        (print "Symbolic attention shaping:\n")
+        (print "Query: {}" custom-query)
+        (print "Input: Scene [batch=1, n_objects=5, features=9]")
+        (print "    ↓")
+
+        (map (fn [i]
+               (let [op-name  (nth op-names i)
+                     att-flat (let [att (get steps i)]
+                                (if (== (ndim att) 2) (get att 0) att))
+                     is-last  (== i (- n-steps 1))]
+                 (do
+                   (print "[{}] {}" op-name op-name)
+                   (if is-last
+                     ;; last step = logits
+                     (let [attr-names (if (== op-name "query-color") (colors) (shapes))]
+                       (print "  Logits: {}" (format-logits att-flat attr-names)))
+                     ;; other steps = attention per object
+                     (print "  Attention: {}" (format-attention att-flat (get demo-scene :objects))))
+                   (print "    ↓"))))
+             (range n-steps))
+
+        (print "[Decision] argmax(logits): {}" (str-call "upper" predicted))))))

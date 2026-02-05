@@ -1,0 +1,110 @@
+;; CLEVR scene generation & query synthesis
+;;
+;; Scenes: colored shapes at 2D positions.
+;; Tensors: [MAX_OBJECTS, 9] = [color_onehot(4), shape_onehot(3), x, y]
+
+(defn colors [] ["red" "green" "blue" "yellow"])
+(defn shapes [] ["circle" "square" "triangle"])
+
+
+;; Generate a random scene with n objects.
+;; Returns {:objects [...] :n_objects n}
+
+(defn generate-scene [key n]
+  (let [keys (random-split key (* n 4))]
+    {:objects (map (fn [i]
+                     (let [shape  (nth (shapes) (int (random-randint (nth keys (+ (* i 4) 0)) '[] 0 3)))
+                           color  (nth (colors) (int (random-randint (nth keys (+ (* i 4) 1)) '[] 0 4)))
+                           x      (float (random-uniform (nth keys (+ (* i 4) 2)) '[] :minval 0.1 :maxval 0.9))
+                           y      (float (random-uniform (nth keys (+ (* i 4) 3)) '[] :minval 0.1 :maxval 0.9))]
+                       {:shape shape :color color :x x :y y}))
+                   (range n))
+     :n_objects n}))
+
+
+;; Convert scene dict -> tensor [MAX_OBJECTS, 9].
+;; Each object: [color_onehot(4), shape_onehot(3), x, y]. Unused slots zero-padded.
+
+(defn scene-to-tensor [scene]
+  (let [objs (get scene :objects)
+        result (reduce
+                 (fn [acc obj]
+                   (let [i        (get acc :i)
+                         color-idx (index-of (colors) (get obj :color))
+                         shape-idx (index-of (shapes) (get obj :shape))
+                         vec       (concat (one-hot color-idx 4)
+                                           (one-hot shape-idx 3)
+                                           (tensor [(get obj :x) (get obj :y)]))]
+                     {:features (index-update (get acc :features) i vec)
+                      :i        (+ i 1)}))
+                 {:features (zeros '[5 9]) :i 0}
+                 objs)]
+    (get result :features)))
+
+
+;; Fallback query when the intended query can't be formed (no matching objects).
+
+(defn fallback-exists [objects]
+  (let [exists (> (count (filter (fn [o] (== (get o :color) "red")) objects)) 0)]
+    {:query  ["exists?" ["filter-color" ":red"]]
+     :answer exists}))
+
+
+;; Type 0: "What color is the leftmost [shape]?"
+
+(defn query-leftmost-color [objects key]
+  (let [shape      (nth (shapes) (int (random-randint key '[] 0 3)))
+        candidates (filter (fn [o] (== (get o :shape) shape)) objects)]
+    (if (> (count candidates) 0)
+      (let [leftmost (reduce (fn [best o] (if (< (get o :x) (get best :x)) o best))
+                             (first candidates)
+                             (rest candidates))]
+        {:query  ["query-color" ["leftmost" ["filter-shape" (concat ":" shape)]]]
+         :answer (get leftmost :color)})
+      (fallback-exists objects))))
+
+
+;; Type 1: "Is there a [color] [shape]?"
+
+(defn query-exists [objects key]
+  (let [color  (nth (colors) (int (random-randint key '[] 0 4)))
+        shape  (nth (shapes) (int (random-randint key '[] 0 3)))
+        exists (> (count (filter (fn [o]
+                                   (and (== (get o :color) color)
+                                        (== (get o :shape) shape)))
+                                 objects))
+                  0)]
+    {:query  ["exists?" ["intersect" ["filter-color" (concat ":" color)]
+                                     ["filter-shape" (concat ":" shape)]]]
+     :answer exists}))
+
+
+;; Type 2: "What shape is left of the [color] object?"
+
+(defn query-spatial [objects key]
+  (let [color      (nth (colors) (int (random-randint key '[] 0 4)))
+        candidates (filter (fn [o] (== (get o :color) color)) objects)]
+    (if (> (count candidates) 0)
+      (let [ref     (first candidates)
+            left-of (filter (fn [o] (< (get o :x) (- (get ref :x) 0.1))) objects)]
+        (if (> (count left-of) 0)
+          ;; nearest to the left = max x among left-of
+          (let [nearest (reduce (fn [best o] (if (> (get o :x) (get best :x)) o best))
+                                (first left-of)
+                                (rest left-of))]
+            {:query  ["query-shape" ["unique" ["left-of" ["unique" ["filter-color" (concat ":" color)]]]]]
+             :answer (get nearest :shape)})
+          (fallback-exists objects)))
+      (fallback-exists objects))))
+
+
+;; Dispatcher — picks a query type at random, delegates to the corresponding generator.
+
+(defn generate-query [scene key]
+  (let [objects    (get scene :objects)
+        query-type (int (random-randint key '[] 0 3))]
+    (if (== query-type 0)
+      (query-leftmost-color objects key)
+      (if (== query-type 1)
+        (query-exists objects key)
+        (query-spatial objects key)))))
