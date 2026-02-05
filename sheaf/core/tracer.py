@@ -45,7 +45,9 @@ class Tracer:
         # If scope_filter is set, only trace functions in the filter
         if self.scope_filter:
             # scope_filter is now a set of function names
-            return op_name in self.scope_filter
+            # Convert op_name to string to handle SheafList or other non-hashable types
+            op_str = str(op_name) if not isinstance(op_name, str) else op_name
+            return op_str in self.scope_filter
 
         return True
 
