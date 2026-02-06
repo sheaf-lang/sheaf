@@ -28,6 +28,7 @@
       
     
 <link rel="icon" type="image/png" href="../images/favicon.png">
+<meta name="robots" content="index, follow">
 <meta property="og:image" content="../images/sheaf-dark.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta property="og:title" content="Sheaf - A Functional Language for Differentiable Programs">
@@ -1541,6 +1542,17 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#argmax-argmin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        argmax, argmin
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1708,6 +1720,17 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
         
           <li class="md-nav__item">
+  <a href="#eye" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        eye
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#arange" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1730,10 +1753,32 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
         
           <li class="md-nav__item">
+  <a href="#index-update" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        index-update
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#tensor" class="md-nav__link">
     <span class="md-ellipsis">
       
         tensor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#int-float" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        int, float
       
     </span>
   </a>
@@ -1935,6 +1980,17 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
         
           <li class="md-nav__item">
+  <a href="#chars" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        chars
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#nth" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1972,6 +2028,50 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     <span class="md-ellipsis">
       
         empty?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sort" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sort
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        filter
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#find" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        find
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#index-of" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        index-of
       
     </span>
   </a>
@@ -2177,6 +2277,39 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     <span class="md-ellipsis">
       
         case
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#do" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        do
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#repeat" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        repeat
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#while" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        while
       
     </span>
   </a>
@@ -2512,6 +2645,134 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
       
         <li class="md-nav__item">
+  <a href="#strings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strings
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Strings">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#escape-sequences" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Escape sequences
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#str-call" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        str-call
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#print" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        print
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#io" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        I/O
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="I/O">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#io_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        io
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="io">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#verbs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verbs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#supported-formats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Supported formats
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#npyhandle-single-npy-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NpyHandle — single .npy file
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#shardedhandle-virtual-concat-over-glob" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ShardedHandle — virtual concat over glob
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#module-system" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2712,6 +2973,17 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     <span class="md-ellipsis">
       
         layer-norm
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rms-norm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        rms-norm
       
     </span>
   </a>
@@ -3379,6 +3651,17 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#argmax-argmin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        argmax, argmin
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3546,6 +3829,17 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
         
           <li class="md-nav__item">
+  <a href="#eye" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        eye
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#arange" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3568,10 +3862,32 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
         
           <li class="md-nav__item">
+  <a href="#index-update" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        index-update
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#tensor" class="md-nav__link">
     <span class="md-ellipsis">
       
         tensor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#int-float" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        int, float
       
     </span>
   </a>
@@ -3773,6 +4089,17 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
         
           <li class="md-nav__item">
+  <a href="#chars" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        chars
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#nth" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3810,6 +4137,50 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     <span class="md-ellipsis">
       
         empty?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sort" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sort
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        filter
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#find" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        find
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#index-of" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        index-of
       
     </span>
   </a>
@@ -4015,6 +4386,39 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     <span class="md-ellipsis">
       
         case
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#do" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        do
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#repeat" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        repeat
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#while" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        while
       
     </span>
   </a>
@@ -4350,6 +4754,134 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
       
         <li class="md-nav__item">
+  <a href="#strings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strings
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Strings">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#escape-sequences" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Escape sequences
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#str-call" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        str-call
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#print" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        print
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#io" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        I/O
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="I/O">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#io_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        io
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="io">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#verbs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verbs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#supported-formats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Supported formats
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#npyhandle-single-npy-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NpyHandle — single .npy file
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#shardedhandle-virtual-concat-over-glob" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ShardedHandle — virtual concat over glob
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#module-system" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4550,6 +5082,17 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     <span class="md-ellipsis">
       
         layer-norm
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rms-norm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        rms-norm
       
     </span>
   </a>
@@ -5027,6 +5570,18 @@ nil                  ; Null/None value
 (maximum [1 10] [5 2]) ; =&gt; [ 5. 10.]
 </code></pre></div>
 <hr />
+<h3 id="argmax-argmin">argmax, argmin</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(argmax x [:axis axis])</code>, <code>(argmin x [:axis axis])</code></p>
+<p>Return the index of the largest or smallest element in a tensor. Without <code>:axis</code>, the result is a single scalar index into the flattened array. With <code>:axis</code>, the reduction is performed along that axis, returning a tensor of indices one rank lower than the input.</p>
+<div class="language-text highlight"><pre><span></span><code>(argmax [3 1 4 1 5])                ; =&gt; 4
+(argmin [3 1 4 1 5])                ; =&gt; 1
+
+;; Along a specific axis
+(argmax [[1 5] [3 2]] :axis 1)      ; =&gt; [1 0]
+(argmin [[1 5] [3 2]] :axis 0)      ; =&gt; [0 1]
+</code></pre></div>
+<hr />
 <h2 id="tensor-shape-structure">Tensor Shape &amp; Structure</h2>
 <h3 id="shape">shape</h3>
 <p><strong>Type:</strong> function<br />
@@ -5169,6 +5724,18 @@ nil                  ; Null/None value
 (zeros &#39;[3])         ; =&gt; [0. 0. 0.]
 </code></pre></div>
 <hr />
+<h3 id="eye">eye</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(eye n [m])</code></p>
+<p>Creates a 2D identity matrix of shape <code>(n, n)</code>. When a second argument <code>m</code> is provided, the output shape is <code>(n, m)</code> — a rectangular matrix with ones on the main diagonal and zeros elsewhere.</p>
+<div class="language-text highlight"><pre><span></span><code>(eye 3)                ; =&gt; [[1. 0. 0.]
+                        ;     [0. 1. 0.]
+                        ;     [0. 0. 1.]]
+
+(eye 2 4)              ; =&gt; [[1. 0. 0. 0.]
+                        ;     [0. 1. 0. 0.]]
+</code></pre></div>
+<hr />
 <h3 id="arange">arange</h3>
 <p><strong>Type:</strong> function<br />
 <strong>Signature:</strong> <code>(arange [start] stop [step])</code></p>
@@ -5190,6 +5757,18 @@ nil                  ; Null/None value
 ; [0. 1. 0.]]
 </code></pre></div>
 <hr />
+<h3 id="index-update">index-update</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(index-update tensor idx value)</code></p>
+<p>Returns a new tensor identical to <code>tensor</code> except that the slice at position <code>idx</code> is replaced by <code>value</code>. The index must be a scalar integer — not a single-element vector. This is the standard way to perform functional (out-of-place) updates on tensors, compatible with JAX JIT.</p>
+<div class="language-text highlight"><pre><span></span><code>;; Replace one element in a 1D vector
+(index-update [1 2 3 4 5] 2 99)     ; =&gt; [ 1.  2. 99.  4.  5.]
+
+;; Replace one row in a 2D matrix
+(index-update [[1 2] [3 4]] 0 [10 20])  ; =&gt; [[10. 20.]
+                                         ;     [ 3.  4.]]
+</code></pre></div>
+<hr />
 <h3 id="tensor">tensor</h3>
 <p><strong>Type:</strong> function<br />
 <strong>Signature:</strong> <code>(tensor data)</code></p>
@@ -5202,6 +5781,17 @@ nil                  ; Null/None value
 (let [lst (cons 1 &#39;[2 3])]    ; &#39;cons&#39; returns a list structure
   (tensor lst))               ; Explicitly lift to tensor context
 ; =&gt; Tensor i32[3] = [1 2 3]
+</code></pre></div>
+<hr />
+<h3 id="int-float">int, float</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(int x)</code>, <code>(float x)</code></p>
+<p>Cast a scalar tensor or a Python number to a 32-bit integer or 32-bit float, respectively. The result is a scalar JAX array. These are the primary way to extract a concrete numeric value from a tensor for use in indexing or list operations.</p>
+<div class="language-text highlight"><pre><span></span><code>(int 3.7)                ; =&gt; 3
+(int [1. 2. 3.] :f32)    ; =&gt; i32[3] = [1 2 3]
+
+(float 42)               ; =&gt; 42.0
+(float [1 2 3] :i32)     ; =&gt; f32[3] = [1. 2. 3.]
 </code></pre></div>
 <hr />
 <h2 id="initializers">Initializers</h2>
@@ -5331,6 +5921,14 @@ To access elements in a tensor, use <code>nth</code> or <code>slice</code>.</p>
 <div class="language-text highlight"><pre><span></span><code>(rest &#39;[1 2 3])      ; =&gt; [2, 3]
 </code></pre></div>
 <hr />
+<h3 id="chars">chars</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(chars s)</code></p>
+<p>Splits a string into a list of its individual characters. This is the standard way to iterate over a string character by character, e.g. to build a vocabulary or encode text.</p>
+<div class="language-text highlight"><pre><span></span><code>(chars &quot;hello&quot;)      ; =&gt; [&quot;h&quot; &quot;e&quot; &quot;l&quot; &quot;l&quot; &quot;o&quot;]
+(count (chars &quot;abc&quot;)) ; =&gt; 3
+</code></pre></div>
+<hr />
 <h3 id="nth">nth</h3>
 <p><strong>Type:</strong> function<br />
 <strong>Signature:</strong> <code>(nth seq index)</code></p>
@@ -5362,6 +5960,84 @@ To access elements in a tensor, use <code>nth</code> or <code>slice</code>.</p>
 <div class="language-text highlight"><pre><span></span><code>(empty? &#39;[])         ; =&gt; true
 (empty? &#39;[1])        ; =&gt; false
 (empty? [1 2 3])     ; =&gt; false (tensor)
+</code></pre></div>
+<hr />
+<h3 id="sort">sort</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(sort seq [:reverse] [:key f] [:axis n])</code></p>
+<p>Sorts a list or tensor. Polymorphic: available options depend on the input type.</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>List</th>
+<th>Tensor</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>:reverse</code></td>
+<td>yes</td>
+<td>yes</td>
+<td>Sort in descending order instead of ascending.</td>
+</tr>
+<tr>
+<td><code>:key</code></td>
+<td>yes</td>
+<td>no</td>
+<td>A function applied to each element; elements are sorted by the return value.</td>
+</tr>
+<tr>
+<td><code>:axis</code></td>
+<td>no</td>
+<td>yes</td>
+<td>The tensor axis along which to sort (default: last axis).</td>
+</tr>
+</tbody>
+</table>
+<div class="language-text highlight"><pre><span></span><code>;; Lists — alphabetical
+(sort &#39;(&quot;c&quot; &quot;a&quot; &quot;b&quot;))                                  ; =&gt; [&quot;a&quot; &quot;b&quot; &quot;c&quot;]
+(sort &#39;(&quot;c&quot; &quot;a&quot; &quot;b&quot;) :reverse)                         ; =&gt; [&quot;c&quot; &quot;b&quot; &quot;a&quot;]
+
+;; Lists — sort by key function (here: string length)
+(sort &#39;(&quot;hello&quot; &quot;hi&quot; &quot;hey&quot; &quot;a&quot;) :key count)            ; =&gt; [&quot;a&quot; &quot;hi&quot; &quot;hey&quot; &quot;hello&quot;]
+(sort &#39;(&quot;hello&quot; &quot;hi&quot; &quot;hey&quot; &quot;a&quot;) :key count :reverse)   ; =&gt; [&quot;hello&quot; &quot;hey&quot; &quot;hi&quot; &quot;a&quot;]
+
+;; Tensors — sort along last axis (default)
+(sort [3.0 1.0 2.0])                                   ; =&gt; [1. 2. 3.]
+(sort [3.0 1.0 2.0] :reverse)                          ; =&gt; [3. 2. 1.]
+(sort [[3 1] [2 4]] :axis 1)                           ; =&gt; [[1. 3.] [2. 4.]]
+</code></pre></div>
+<hr />
+<h3 id="filter">filter</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(filter pred seq)</code></p>
+<p>Returns a new list containing only the elements of <code>seq</code> for which the predicate <code>pred</code> returns a truthy value. The result is always a tuple (static list). Works on both quoted lists and lists of strings built at runtime.</p>
+<div class="language-text highlight"><pre><span></span><code>(filter (fn [x] (&gt; x 2)) &#39;[1 2 3 4 5])                ; =&gt; &#39;[3, 4, 5]
+(filter (fn [x] (&gt; x 10)) &#39;[1 2 3])                   ; =&gt; &#39;[]
+
+;; Filter a list of strings by length
+(filter (fn [s] (&gt; (count s) 3)) [&quot;hi&quot; &quot;hello&quot; &quot;hey&quot; &quot;world&quot;])  ; =&gt; (&#39;hello&#39;, &#39;world&#39;)
+</code></pre></div>
+<hr />
+<h3 id="find">find</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(find pred seq)</code></p>
+<p>Returns the first element of <code>seq</code> for which <code>pred</code> returns a truthy value, or <code>nil</code> if no element matches. Traversal is left-to-right and stops at the first match.</p>
+<div class="language-text highlight"><pre><span></span><code>(find (fn [x] (&gt; x 3)) &#39;[1 2 3 4 5])                  ; =&gt; 4
+(find (fn [x] (&gt; x 10)) &#39;[1 2 3])                     ; =&gt; nil
+</code></pre></div>
+<hr />
+<h3 id="index-of">index-of</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(index-of seq val)</code></p>
+<p>Returns the zero-based index of the first occurrence of <code>val</code> in <code>seq</code>, or <code>-1</code> if <code>val</code> is not present. Uses Python equality semantics, so it works on both numbers and strings.</p>
+<div class="language-text highlight"><pre><span></span><code>(index-of &#39;[10 20 30 40] 30)                           ; =&gt; 2
+(index-of &#39;[10 20 30] 99)                              ; =&gt; -1
+
+;; Strings — typical use: map a label to its one-hot index
+(index-of [&quot;apple&quot; &quot;banana&quot; &quot;cherry&quot;] &quot;banana&quot;)         ; =&gt; 1
 </code></pre></div>
 <hr />
 <h2 id="higher-order-functions">Higher-Order Functions</h2>
@@ -5640,6 +6316,79 @@ If it does not exist:</p>
   3 :high
   :unknown)           ; =&gt; :mid
 </code></pre></div>
+<hr />
+<h3 id="do">do</h3>
+<p><strong>Type:</strong> special-form<br />
+<strong>Signature:</strong> <code>(do expr1 expr2 ... exprN)</code></p>
+<p>Evaluates a sequence of expressions in order and returns the value of the last one. The preceding expressions are evaluated for their side effects only (e.g. <code>print</code>, <code>io "save"</code>). This is the idiomatic way to sequence imperative actions inside an otherwise functional context.</p>
+<div class="language-text highlight"><pre><span></span><code>(do
+  (print &quot;loading...&quot;)
+  (print &quot;done.&quot;)
+  42)                  ; =&gt; 42  (prints both messages, returns 42)
+
+;; Typical use: side effect before a value
+(let [params (do
+               (print &quot;Training...&quot;)
+               (train data config epochs))]
+  params)
+
+;; Inside a reduce body: log then return new state
+(reduce (fn [state step]
+          (do
+            (if (== (mod step 10) 0)
+              (print (str-call &quot;format&quot; &quot;Step {}&quot; step))
+              nil)
+            (train-step state data)))
+        init-state
+        (range 500))
+</code></pre></div>
+<hr />
+<h3 id="repeat">repeat</h3>
+<p><strong>Type:</strong> special-form<br />
+<strong>Signature:</strong> <code>(repeat [i n] [acc init] body)</code></p>
+<p>Loops exactly <code>n</code> times. <code>i</code> is the iteration index (0-based), <code>acc</code> is the accumulator that carries state across iterations. The body must return the new value of <code>acc</code>. Returns the final accumulator value.</p>
+<div class="language-text highlight"><pre><span></span><code>;; Sum 0..9
+(repeat [i 10] [sum 0]
+  (+ sum i))            ; =&gt; 45
+
+;; Build a list
+(repeat [i 5] [lst &#39;()]
+  (append lst (* i i))) ; =&gt; [0 1 4 9 16]
+
+;; Accumulator is a dict — typical for training loops
+(repeat [step 100] [state {:params p :loss 0.0}]
+  (let [result (train-step (get state :params) x y lr)]
+    {:params (get result :p)
+     :loss   (get result :loss)}))
+;; =&gt; {:params &lt;trained&gt; :loss &lt;final-loss&gt;}
+</code></pre></div>
+<p>Use <code>repeat</code> when the iteration count is known at compile time. For loops that depend on a runtime condition, see <code>while</code>.</p>
+<hr />
+<h3 id="while">while</h3>
+<p><strong>Type:</strong> special-form<br />
+<strong>Signature:</strong> <code>(while cond [acc init] body)</code></p>
+<p>Loops as long as <code>cond</code> is true. <code>acc</code> is the accumulator, visible both in <code>cond</code> and in <code>body</code>. The body must return the new value of <code>acc</code>. Returns the accumulator value at the point where <code>cond</code> becomes false.</p>
+<div class="language-text highlight"><pre><span></span><code>;; Count up to 5
+(while (&lt; n 5) [n 0]
+  (+ n 1))              ; =&gt; 5
+
+;; Accumulate until sum exceeds 100
+(while (&lt; (get s :sum) 100)
+  [s {:sum 0 :n 1}]
+  {:sum (+ (get s :sum) (get s :n))
+   :n   (+ (get s :n) 1)})
+;; =&gt; {:sum 105 :n 15}  (1+2+...+14 = 105)
+
+;; Training loop that stops on convergence
+(while (&gt; (get state :loss) 0.01)
+  [state {:params init-params :loss 999.0 :key key}]
+  (let [result (train-step (get state :params) x y lr)
+        [k1 k2] (random-split (get state :key))]
+    {:params (get result :p)
+     :loss   (get result :loss)
+     :key    k1}))
+</code></pre></div>
+<p>Use <code>while</code> when the stopping condition depends on runtime values (e.g. loss convergence). For a fixed number of iterations, prefer <code>repeat</code>.</p>
 <hr />
 <h3 id="let">let</h3>
 <p><strong>Type:</strong> special-form<br />
@@ -5934,6 +6683,175 @@ If it does not exist:</p>
 (symbol? &#39;W)            ; =&gt; true
 </code></pre></div>
 <hr />
+<h2 id="strings">Strings</h2>
+<h3 id="escape-sequences">Escape sequences</h3>
+<p>Sheaf strings support Python-style escape sequences. The backslash <code>\</code> triggers interpretation of the following character:</p>
+<table>
+<thead>
+<tr>
+<th>Sequence</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>\n</code></td>
+<td>Newline</td>
+</tr>
+<tr>
+<td><code>\t</code></td>
+<td>Tab</td>
+</tr>
+<tr>
+<td><code>\"</code></td>
+<td>Literal double-quote</td>
+</tr>
+<tr>
+<td><code>\\</code></td>
+<td>Literal backslash</td>
+</tr>
+</tbody>
+</table>
+<p>Any other character after <code>\</code> is kept as-is (backslash + character).</p>
+<p>The tricky case is <code>\\n</code>: the first <code>\\</code> resolves to a literal backslash, then <code>n</code> is just <code>n</code> — the result is the two characters <code>\n</code>, not a newline.</p>
+<div class="language-text highlight"><pre><span></span><code>(print &quot;hello\nworld&quot;)   ; prints hello and world on separate lines
+(print &quot;col1\tcol2&quot;)     ; prints with a tab between
+(print &quot;say \&quot;hi\&quot;&quot;)     ; prints: say &quot;hi&quot;
+(print &quot;path\\name&quot;)     ; prints: path\name
+(print &quot;literal\\n&quot;)     ; prints: literal\n  (backslash + n, not newline)
+</code></pre></div>
+<hr />
+<h3 id="str-call">str-call</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(str-call method target [args ...])</code></p>
+<p>Calls a Python string method on <code>target</code>. This is the primary way to manipulate strings in Sheaf. The method name is passed as a string; subsequent arguments are forwarded directly.</p>
+<div class="language-text highlight"><pre><span></span><code>(str-call &quot;replace&quot; &quot;hello world&quot; &quot;world&quot; &quot;sheaf&quot;)   ; =&gt; &quot;hello sheaf&quot;
+(str-call &quot;splitlines&quot; &quot;a\nb\nc&quot;)                    ; =&gt; [&quot;a&quot; &quot;b&quot; &quot;c&quot;]
+(str-call &quot;join&quot; &quot;, &quot; &#39;(&quot;a&quot; &quot;b&quot; &quot;c&quot;))                ; =&gt; &quot;a, b, c&quot;
+(str-call &quot;format&quot; &quot;x={} y={}&quot; 1 2)                  ; =&gt; &quot;x=1 y=2&quot;
+</code></pre></div>
+<hr />
+<h3 id="print">print</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(print msg)</code>, <code>(print fmt arg1 arg2 ...)</code></p>
+<p>Prints a value to stdout. When the first argument is a string containing <code>{}</code> placeholders and additional arguments are provided, <code>print</code> performs automatic format-string interpolation — equivalent to Python's <code>str.format()</code>. This is the idiomatic way to display computed values without an explicit <code>str-call</code>.</p>
+<div class="language-text highlight"><pre><span></span><code>(print &quot;hello&quot;)                        ; prints: hello
+(print 42)                             ; prints: 42
+
+;; F-string style: placeholders filled by subsequent arguments
+(print &quot;x={} y={}&quot; 10 20)             ; prints: x=10 y=20
+(print &quot;loss={:.4f} step={}&quot; 0.0532 100)  ; prints: loss=0.0532 step=100
+</code></pre></div>
+<hr />
+<h2 id="io">I/O</h2>
+<h3 id="io_1">io</h3>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(io verb [path] [data] [format-hint])</code></p>
+<p>Single entry point for all file and system I/O. The verb selects the operation; format is inferred from the file extension unless overridden with a keyword hint.</p>
+<h4 id="verbs">Verbs</h4>
+<p><strong>load</strong> — deserialize a file into a value (pytree, string, dict, or mmap'd handle).</p>
+<div class="language-text highlight"><pre><span></span><code>(io &quot;load&quot; &quot;weights.pkl&quot;)                  ; pickle
+(io &quot;load&quot; &quot;model.safetensors&quot;)            ; lazy tensor handle
+(io &quot;load&quot; &quot;config.json&quot;)                  ; dict
+(io &quot;load&quot; &quot;weights.dat&quot; :safetensors)     ; explicit format hint
+(io &quot;load&quot; &quot;train.npy&quot;)                    ; NpyHandle — mmap&#39;d, zero-copy
+(io &quot;load&quot; &quot;tokens/shard-*.bin&quot; :i32)      ; ShardedHandle — virtual concat over glob
+</code></pre></div>
+<p><strong>save</strong> — serialize a value to a file. Directories are created automatically.</p>
+<div class="language-text highlight"><pre><span></span><code>(io &quot;save&quot; &quot;out/weights.pkl&quot; params)
+(io &quot;save&quot; &quot;out/model.safetensors&quot; params)
+</code></pre></div>
+<p><strong>read</strong> — read a file as a raw string.</p>
+<div class="language-text highlight"><pre><span></span><code>(io &quot;read&quot; &quot;data/shakespeare.txt&quot;)         ; =&gt; full text as string
+</code></pre></div>
+<p><strong>lines</strong> — return a lazy line iterator (streaming, no full file in memory).</p>
+<div class="language-text highlight"><pre><span></span><code>(io &quot;lines&quot; &quot;data/large.txt&quot;)              ; =&gt; LazyLines iterator
+</code></pre></div>
+<p><strong>exists</strong> — check whether a file exists.</p>
+<div class="language-text highlight"><pre><span></span><code>(io &quot;exists&quot; &quot;out/weights.pkl&quot;)            ; =&gt; true / false
+</code></pre></div>
+<p><strong>entropy</strong> — read bytes from the OS entropy source (<code>/dev/urandom</code>). Returns an integer. Default is 4 bytes (fits <code>int32</code>, suitable for <code>random-key</code>). Pass an optional byte count for larger values.</p>
+<div class="language-text highlight"><pre><span></span><code>(io &quot;entropy&quot;)                             ; =&gt; random int32 (4 bytes)
+(io &quot;entropy&quot; 16)                          ; =&gt; random int (16 bytes, UUID-scale)
+
+;; Typical usage: non-deterministic seed
+(random-key (io &quot;entropy&quot;))                ; =&gt; fresh PRNG key each run
+</code></pre></div>
+<h4 id="supported-formats">Supported formats</h4>
+<table>
+<thead>
+<tr>
+<th>Extension</th>
+<th>Format</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>.safetensors</code></td>
+<td>safetensors</td>
+<td>Lazy loading via mmap, dtype kept</td>
+</tr>
+<tr>
+<td><code>.npy</code></td>
+<td>npy</td>
+<td>NumPy array, mmap'd → <code>NpyHandle</code></td>
+</tr>
+<tr>
+<td><code>.bin</code></td>
+<td>raw</td>
+<td>Raw binary, mmap'd. Dtype flag required (<code>:i32</code>, <code>:f32</code>, …)</td>
+</tr>
+<tr>
+<td><code>.pkl</code> / <code>.pickle</code></td>
+<td>pickle</td>
+<td>Legacy, discouraged</td>
+</tr>
+<tr>
+<td><code>.txt</code></td>
+<td>text</td>
+<td>Plain text</td>
+</tr>
+<tr>
+<td><code>.json</code></td>
+<td>JSON</td>
+<td>Eager load as dict</td>
+</tr>
+<tr>
+<td><code>.jsonl</code></td>
+<td>JSONL</td>
+<td>Streaming via <code>lines</code></td>
+</tr>
+</tbody>
+</table>
+<p>Sharded models: pass a glob pattern or a HuggingFace index file.</p>
+<div class="language-text highlight"><pre><span></span><code>(io &quot;load&quot; &quot;shards/model-*.safetensors&quot;)             ; glob → merged safetensors
+(io &quot;load&quot; &quot;model.safetensors.index.json&quot;)           ; HF shard index
+</code></pre></div>
+<h4 id="npyhandle-single-npy-file">NpyHandle — single <code>.npy</code> file</h4>
+<p><code>(io "load" "file.npy")</code> returns a <strong>NpyHandle</strong>: a lazy, mmap'd view over the array. No data is read until you slice.</p>
+<div class="language-text highlight"><pre><span></span><code>(let [dataset (io &quot;load&quot; &quot;train.npy&quot;)]       ; NpyHandle, shape [50000 784]
+  (dataset 0)                                ; =&gt; first row  f32[784]   (zero-copy)
+  (dataset 100:200))                         ; =&gt; rows 100–199  f32[100 784]
+</code></pre></div>
+<p>Slicing is along axis 0 only. The handle stays open for the lifetime of the binding — no explicit <code>close</code> needed.</p>
+<h4 id="shardedhandle-virtual-concat-over-glob">ShardedHandle — virtual concat over glob</h4>
+<p>When training data is split across many files, use a glob pattern. The result is a <strong>ShardedHandle</strong>: a single virtual tensor that spans all shards, backed by independent mmaps.</p>
+<div class="language-text highlight"><pre><span></span><code>;; .npy shards — dtype is read from each header automatically
+(let [data (io &quot;load&quot; &quot;data/train-*.npy&quot;)]
+  (len data)                                 ; =&gt; total rows across all shards
+  (data 0)                                   ; =&gt; first row of first shard
+  (data 9999:10002))                         ; =&gt; cross-shard slice, transparent
+
+;; .bin shards — dtype must be explicit
+(let [tokens (io &quot;load&quot; &quot;tokens/shard-*.bin&quot; :i32)]
+  (len tokens)                               ; =&gt; total token count
+  (tokens 0:4096))                           ; =&gt; first 4096 tokens
+</code></pre></div>
+<p>Shards are sorted lexicographically. Use zero-padded names (<code>shard-001.bin</code>, not <code>shard-1.bin</code>) to keep the order correct.</p>
+<p>Available dtype flags: <code>:f32</code>, <code>:f16</code>, <code>:bf16</code>, <code>:i32</code>, <code>:i16</code>, <code>:u32</code>, <code>:bool</code>.</p>
+<p>Binary lookup across shards is O(log N) — reading a single element from shard 10 000 costs the same as from shard 1.</p>
+<hr />
 <h2 id="module-system">Module System</h2>
 <h3 id="use">use</h3>
 <p><strong>Type:</strong> special-form<br />
@@ -6058,6 +6976,17 @@ If it does not exist:</p>
   (layer-norm x p 0))
 
 ; =&gt; [-1.2247356  0.         1.2247356]
+</code></pre></div>
+<h4 id="rms-norm">rms-norm</h4>
+<p><strong>Type:</strong> function<br />
+<strong>Signature:</strong> <code>(rms-norm x p axis)</code></p>
+<p>Applies RMS Normalization (Root Mean Square Layer Normalization). Normalizes by the RMS of the input values without centering and uses the parameters in <code>p</code> (expected keys: <code>:gamma</code> and <code>:beta</code>).</p>
+<p>Default epsilon is <code>1e-6</code>.</p>
+<div class="language-text highlight"><pre><span></span><code>(let [x [1.0 2.0 3.0 4.0]
+      p {:gamma (ones &#39;[4]) :beta (zeros &#39;[4])}]
+  (rms-norm x p -1))
+
+; =&gt; [0.36514837 0.73029673 1.095445   1.4605935 ]
 </code></pre></div>
 <h4 id="xavier-init">xavier-init</h4>
 <p><strong>Type:</strong> function<br />

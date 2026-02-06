@@ -30,6 +30,7 @@
       
     
 <link rel="icon" type="image/png" href="../images/favicon.png">
+<meta name="robots" content="index, follow">
 <meta property="og:image" content="../images/sheaf-dark.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta property="og:title" content="Sheaf - A Functional Language for Differentiable Programs">
@@ -1159,6 +1160,18 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   <h1>Version history</h1>
 
 <h2 id="version-history">Version history</h2>
+<p>v1.2.0 — 2026-02-06</p>
+<ul>
+<li>Sheaf programs are now mostly independent from Python, most missing primitives for imperative control have been added.</li>
+<li>I/O module: <code>(io "load" ...)</code> / <code>(io "save" ...)</code> with safetensors and JSON. Entropy source <code>(io "entropy")</code></li>
+<li>Support f-strings: <code>(print "loss={:.4f}" loss)</code></li>
+<li>Support string escape sequences: <code>\n</code>, <code>\t</code>, <code>\"</code>, <code>\\</code></li>
+<li>New primitives: <code>filter</code>, <code>find</code>, <code>index-of</code>, <code>argmax</code>, <code>argmin</code>, <code>arange</code>, <code>eye</code>, <code>index-update</code>, <code>int</code>, <code>float</code>, <code>sort</code>, <code>chars</code>, <code>rms-norm</code>, <code>do</code>, <code>while</code></li>
+<li>Error messages: suggestions for common mistakes (<code>def</code> -&gt; <code>defn</code>, <code>lambda</code> -&gt; <code>fn</code>, <code>import</code> -&gt; <code>use</code>), paren balancer with culprit detection</li>
+<li>More bugfixes</li>
+<li>REPL has <code>--trace</code> and <code>--guard</code> modes for standalone tracing and debugging</li>
+<li>All examples are now standalone and do not require Python</li>
+</ul>
 <p>v1.1.0 — 2026-01-24 (Current)</p>
 <ul>
 <li>Syntax cleanup: quoted arrays (<code>'[]</code>) are now the canonical way to distinguish lists from tensors. Legacy <code>list</code> form is deprecated.</li>

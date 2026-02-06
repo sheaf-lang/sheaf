@@ -30,6 +30,7 @@
       
     
 <link rel="icon" type="image/png" href="../images/favicon.png">
+<meta name="robots" content="index, follow">
 <meta property="og:image" content="../images/sheaf-dark.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta property="og:title" content="Sheaf - A Functional Language for Differentiable Programs">
@@ -1006,28 +1007,6 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#language-modularity-and-namespaces" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Language modularity and Namespaces
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#long-term-reflections" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Long term reflections
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -1168,28 +1147,6 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#language-modularity-and-namespaces" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Language modularity and Namespaces
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#long-term-reflections" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Long term reflections
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -1213,19 +1170,31 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 
 
 <h1 id="planned-evolutions-for-sheaf">Planned evolutions for Sheaf</h1>
+<p>Sheaf currently compiles through JAX to XLA, inheriting Python's runtime overhead. The next major version will target StableHLO directly, eliminating the Python dependency for compiled programs.</p>
+<p><strong>Upcoming architecture</strong>:</p>
+<ul>
+<li>Sheaf compiler rewritten in Rust</li>
+<li>Direct StableHLO emission (bypassing JAX)</li>
+<li>AOT compilation via <a href="https://github.com/iree-org/iree">IREE</a></li>
+<li>Autodiff via <a href="https://enzyme.mit.edu/">Enzyme</a> or IREE's gradient primitives</li>
+</ul>
+<p><strong>Benefits</strong>:</p>
+<ul>
+<li>Runtime footprint: 1-2MB (vs 500-700MB with Python+JAX or PyTorch)</li>
+<li>Compile-time footprint: 30-50MB</li>
+<li>No Python runtime required for inference or training</li>
+<li>Standalone executables for deployment</li>
+</ul>
+<p>This will align the technical stack with the language: elegance and concision from syntax to runtime. The transition will also preserve Sheaf's homoiconic nature and functional purity yet eliminate accidental complexity inherited from Python.</p>
 <h3 id="parallelism-and-distribution">Parallelism and distribution</h3>
-<p>Sheaf does not currently allow for explicit workload distribution. Instead, it relies on JAX to handle how tensors are partitioned across hardware, and does not expose its low-level sharding primitives such as <code>pmap</code>.</p>
-<p>This works well for single-machine training, but limits multi-node scaling.
-A promising approach would be to rely on the "macros as architecture" to rewrite functions during compilation, potentially using Equinox as a backend. This could give us parallelization while keeping the high-level mathematical definitions clean from hardware concerns.</p>
-<h3 id="language-modularity-and-namespaces">Language modularity and Namespaces</h3>
-<p>Keeping Sheaf as a "pure", mathematical language has created a paradox: it relies on imperative Python code for even the most basic stateful tasks. The mid-term goal is to restrict Python's role to non-trivial plumbing and orchestration. However, reducing this dependency would require adding stateful functions that would bloat the core language.</p>
-<p>To solve this, upcoming versions will introduce namespaces, which will allow the standard library to grow without cluttering the core language. Tools like file I/O or SafeTensors support could then be added without polluting the global symbol table.</p>
-<h3 id="long-term-reflections">Long term reflections</h3>
-<p>Whether Sheaf should remain interoperable with Python (like Clojure with Java), or do a paradigm break in the long term is still uncertain.</p>
-<p>Keeping Sheaf interoperable avoids reinventing the wheel, but a "sovereign" version of Sheaf could eliminate a lot of runtime overhead and compile directly to XLA's StableHLO (dealing with the full MLIR would be a nightmare...), without the need for Python. This would turn it into a standalone, high-performance, and homoiconic differentiable framework.</p>
-<p>This would be a lot of work however, as it would require implementing an auto-differentiation engine, something I'd much rather leave to someone else for now.</p>
-<p>However, targeting XLA directly while breaking free from Python and JAX could open new opportunities. With a Sheaf compiler in Rust with AOT compilation on <a href="https://github.com/iree-org/iree">IREE</a>, Sheaf could run on 5-50MB footprint at runtime and 50-100MB at compile-time, versus 500-600MB with Python+JAX. This would align the entire stack with Sheaf's philosophy of elegance and concision from the language down to the runtime.</p>
-<p>For now, Sheaf remains within the Python ecosystem, the benefits of reusing existing tooling far outweigh the overhead.</p>
+<p>Sheaf does not currently expose low-level sharding primitives like <code>pmap</code>. Instead, it relies on JAX's automatic partitioning, which works well for single-machine training but limits multi-node scaling.</p>
+<p>In V2, distribution could be expressed through:</p>
+<ul>
+<li>StableHLO's native sharding annotations</li>
+<li>Macro-based rewrites during compilation</li>
+<li>IREE's multi-device runtime capabilities</li>
+</ul>
+<p>This would give explicit control over parallelization while keeping mathematical definitions clean from hardware concerns.</p>
 
 
 

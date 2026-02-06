@@ -30,6 +30,7 @@
       
     
 <link rel="icon" type="image/png" href="../images/favicon.png">
+<meta name="robots" content="index, follow">
 <meta property="og:image" content="../images/sheaf-dark.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta property="og:title" content="Sheaf - A Functional Language for Differentiable Programs">
@@ -981,6 +982,17 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
       
         <li class="md-nav__item">
+  <a href="#reading-and-writing-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reading and writing files
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#some-quick-exercices" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1341,6 +1353,17 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
       
         <li class="md-nav__item">
+  <a href="#reading-and-writing-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reading and writing files
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#some-quick-exercices" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1629,6 +1652,61 @@ In differentiable programming, <code>scan</code> is the preferred way to impleme
 <span class="w">            </span><span class="p">(</span><span class="nf">mlp</span><span class="w"> </span><span class="p">(</span><span class="nb">get </span><span class="nv">layer-p</span><span class="w"> </span><span class="ss">:mlp</span><span class="p">))</span>
 <span class="w">            </span><span class="p">(</span><span class="nb">+ </span><span class="nv">h</span><span class="p">)))))</span><span class="w"> </span><span class="c1">;; Residual 2</span>
 </code></pre></div>
+<h3 id="reading-and-writing-files">Reading and writing files</h3>
+<p>In a functional language, file I/O cannot be treated as an ordinary function call. Reading from or writing to disk depends on external state, and therefore breaks determinism.</p>
+<p>In Sheaf, all interactions with the file system are explicitly routed through a single form: <code>io</code>. This makes side effects visible in the code and prevents them from leaking into otherwise pure transformations.</p>
+<p><strong>The io Form</strong></p>
+<p>The <code>io</code> form takes a verb as its first argument, followed by verb-specific parameters. Each verb describes a concrete operation on external data, such as loading a file, saving a value, or streaming content.</p>
+<p>This approach keeps the language core small while avoiding a proliferation of specialized I/O primitives.</p>
+<p>Here is a simple example:</p>
+<div class="language-clojure highlight"><pre><span></span><code><span class="c1">;; Loading a configuration file into a dictionary</span>
+<span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">config</span><span class="w"> </span><span class="p">(</span><span class="nf">io</span><span class="w"> </span><span class="s">&quot;load&quot;</span><span class="w"> </span><span class="s">&quot;model_config.json&quot;</span><span class="p">)]</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">print </span><span class="p">(</span><span class="nb">get </span><span class="nv">config</span><span class="w"> </span><span class="ss">:layers</span><span class="p">)))</span>
+
+<span class="c1">;; Reading a dataset as a raw string</span>
+<span class="p">(</span><span class="k">def </span><span class="nv">corpus</span><span class="w"> </span><span class="p">(</span><span class="nf">io</span><span class="w"> </span><span class="s">&quot;read&quot;</span><span class="w"> </span><span class="s">&quot;data/shakespeare.txt&quot;</span><span class="p">))</span>
+</code></pre></div>
+<p>Depending on the verb and the file format, <code>io</code> may return an in-memory value or a lazy view over the underlying data.</p>
+<p><strong>Large Files and Handles</strong></p>
+<p>For large datasets, eagerly loading files into memory is often impractical. Instead, Sheaf uses <em>Handles</em>: lazy, memory-mapped views over file-backed data.</p>
+<p>A Handle behaves like a regular collection, but data is only read from disk when it is accessed. This allows programs to work with datasets that are much larger than available RAM.</p>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Form</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Import</td>
+<td>(io "load" path)</td>
+<td>A value, dictionary, or a lazy Handle</td>
+</tr>
+<tr>
+<td>Export</td>
+<td>(io "save" path data)</td>
+<td>Serializes data to disk</td>
+</tr>
+<tr>
+<td>Stream</td>
+<td>(io "lines" path)</td>
+<td>A lazy iterator over lines</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Working with Sharded Data</strong></p>
+<p>Datasets are often split across multiple files for storage or distribution. In Sheaf, a <em>ShardedHandle</em> presents multiple files as a single logical sequence.</p>
+<p>Whether data is stored in one file or thousands, the access pattern remains the same.</p>
+<div class="language-clojure highlight"><pre><span></span><code><span class="c1">;; Treating multiple binary shards as a single sequence of tokens</span>
+<span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">dataset</span><span class="w"> </span><span class="p">(</span><span class="nf">io</span><span class="w"> </span><span class="s">&quot;load&quot;</span><span class="w"> </span><span class="s">&quot;tokens/shard-*.bin&quot;</span><span class="w"> </span><span class="ss">:i32</span><span class="p">)]</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">print </span><span class="s">&quot;Total tokens:&quot;</span><span class="w"> </span><span class="p">(</span><span class="nf">len</span><span class="w"> </span><span class="nv">dataset</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">get </span><span class="nv">dataset</span><span class="w"> </span><span class="p">(</span><span class="nb">range </span><span class="mi">0</span><span class="w"> </span><span class="mi">1024</span><span class="p">)))</span><span class="w"> </span><span class="c1">; Reads only the required slices</span>
+</code></pre></div>
+<p>Sharding, file boundaries, and memory mapping are handled by the runtime. From the program’s point of view, the dataset is just another collection.</p>
+<p><strong>Summary</strong></p>
+<p>The <code>io</code> form isolates side effects while still allowing efficient access to large, persistent datasets. This keeps most Sheaf code focused on data transformation, while I/O remains explicit and localized.</p>
 <h3 id="some-quick-exercices">Some quick exercices</h3>
 <p>Let's try some quick exercises to become more familiar with Sheaf.</p>
 <p><strong>Exercise 1</strong>:</p>
