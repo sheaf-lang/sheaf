@@ -1162,14 +1162,14 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 <h2 id="version-history">Version history</h2>
 <p>v1.2.0 — 2026-02-06</p>
 <ul>
-<li>Sheaf programs are now mostly independent from Python, most missing primitives for imperative control have been added.</li>
-<li>I/O module: <code>(io "load" ...)</code> / <code>(io "save" ...)</code> with safetensors and JSON. Entropy source <code>(io "entropy")</code></li>
-<li>Support f-strings: <code>(print "loss={:.4f}" loss)</code></li>
-<li>Support string escape sequences: <code>\n</code>, <code>\t</code>, <code>\"</code>, <code>\\</code></li>
+<li>Sheaf programs are now mostly independent from Python and most missing primitives for imperative control have been added.</li>
+<li>I/O module: support for <code>(io "load" ...)</code> / <code>(io "save" ...)</code> with safetensors and JSON. Entropy source <code>(io "entropy")</code></li>
+<li>Support for f-strings: <code>(print "loss={:.4f}" loss)</code></li>
+<li>Support for string escape sequences: <code>\n</code>, <code>\t</code>, <code>\"</code>, <code>\\</code></li>
 <li>New primitives: <code>filter</code>, <code>find</code>, <code>index-of</code>, <code>argmax</code>, <code>argmin</code>, <code>arange</code>, <code>eye</code>, <code>index-update</code>, <code>int</code>, <code>float</code>, <code>sort</code>, <code>chars</code>, <code>rms-norm</code>, <code>do</code>, <code>while</code></li>
 <li>Error messages: suggestions for common mistakes (<code>def</code> -&gt; <code>defn</code>, <code>lambda</code> -&gt; <code>fn</code>, <code>import</code> -&gt; <code>use</code>), paren balancer with culprit detection</li>
-<li>More bugfixes</li>
-<li>REPL has <code>--trace</code> and <code>--guard</code> modes for standalone tracing and debugging</li>
+<li>Many bugfixes</li>
+<li>New <code>--trace</code> and <code>--guard</code> modes for standalone tracing and debugging</li>
 <li>All examples are now standalone and do not require Python</li>
 </ul>
 <p>v1.1.0 — 2026-01-24 (Current)</p>
