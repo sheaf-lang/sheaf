@@ -1,0 +1,27 @@
+[package]
+name = "sheaf-compiler"
+version = "0.1.0"
+edition = "2024"
+authors = ["Damien Boureille"]
+license = "MIT"
+description = "A functional language for differentiable programming"
+
+# Binary CLI
+[[bin]]
+name = "sheaf"
+path = "src/bin/sheaf.rs"
+
+# Library - sheaf-compiler.so
+[lib]
+name = "sheaf_compiler"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+clap = { version = "4.5", features = ["derive"] }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
