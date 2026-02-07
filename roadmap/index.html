@@ -1181,9 +1181,9 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 <p><strong>Benefits</strong>:</p>
 <ul>
 <li>Runtime footprint: 1-2MB (vs 500-700MB with Python+JAX or PyTorch)</li>
-<li>Compile-time footprint: 30-50MB</li>
-<li>No Python runtime required for inference or training</li>
-<li>Standalone executables for deployment</li>
+<li>No Python runtime required at any point</li>
+<li>Standalone executables (VMFB) with training loops (autodiff, optimizers, checkpointing)</li>
+<li>On-device training (for robotics, space or edge deployment)</li>
 </ul>
 <p>This will align the technical stack with the language: elegance and concision from syntax to runtime. The transition will also preserve Sheaf's homoiconic nature and functional purity yet eliminate accidental complexity inherited from Python.</p>
 <h3 id="parallelism-and-distribution">Parallelism and distribution</h3>
