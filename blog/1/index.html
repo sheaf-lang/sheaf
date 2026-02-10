@@ -8,28 +8,28 @@
       
       
       
-        <link rel="canonical" href="https://sheaf-lang.org/blog/">
+        <link rel="canonical" href="https://sheaf-lang.org/blog/1/">
       
       
-        <link rel="prev" href="../reference/">
+        <link rel="prev" href="../2/">
       
       
       
         
       
       
-      <link rel="icon" href="../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
     
 
       
-        <title>Blog - Sheaf</title>
+        <title>On the future of Sheaf - Sheaf</title>
       
     
-<link rel="icon" type="image/png" href="../images/favicon.png">
+<link rel="icon" type="image/png" href="../../images/favicon.png">
 <meta name="robots" content="index, follow">
-<meta property="og:image" content="../images/sheaf-dark.png">
+<meta property="og:image" content="../../images/sheaf-dark.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta property="og:title" content="Sheaf - A Functional Language for Differentiable Programs">
 <meta property="og:description" content="Sheaf is a functional language for describing differentiable computation as topology rather than execution.
@@ -38,7 +38,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 <style>
   /* Replace mkdocs logo with custom logo - header */
   .md-header__button.md-logo {
-    background-image: url('../images/sheaf-light.png');
+    background-image: url('../../images/sheaf-light.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
@@ -52,7 +52,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 
   /* Replace mkdocs logo with custom logo - sidebar (responsive menu) */
   .md-nav__title {
-    background-image: url('../images/sheaf-light.png');
+    background-image: url('../../images/sheaf-light.png');
     background-size: 64px 64px;
     background-repeat: no-repeat;
     background-position: center;
@@ -69,10 +69,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 
     
 
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -478,7 +478,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
       
     
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -501,7 +501,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     <div data-md-component="skip">
       
         
-        <a href="#rust-vs-c-vs-go-for-sheafs-compiler-picking-the-least-bad-option" class="md-skip">
+        <a href="#a-systems-perspective" class="md-skip">
           Skip to content
         </a>
       
@@ -516,7 +516,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="Sheaf" class="md-header__button md-logo" aria-label="Sheaf" data-md-component="logo">
+    <a href="../.." title="Sheaf" class="md-header__button md-logo" aria-label="Sheaf" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -536,7 +536,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Blog
+              On the future of Sheaf
             
           </span>
         </div>
@@ -624,7 +624,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     
     
       <li class="md-tabs__item">
-        <a href="../quickstart/" class="md-tabs__link">
+        <a href="../../quickstart/" class="md-tabs__link">
           
   
   
@@ -644,7 +644,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     
     
       <li class="md-tabs__item">
-        <a href="../reference/" class="md-tabs__link">
+        <a href="../../reference/" class="md-tabs__link">
           
   
   
@@ -663,17 +663,18 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     
   
   
-    <li class="md-tabs__item md-tabs__item--active">
-      <a href="./" class="md-tabs__link">
-        
-  
-  
     
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../2/" class="md-tabs__link">
+          
+  
   
   Blog
 
-      </a>
-    </li>
+        </a>
+      </li>
+    
   
 
       
@@ -701,7 +702,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="Sheaf" class="md-nav__button md-logo" aria-label="Sheaf" data-md-component="logo">
+    <a href="../.." title="Sheaf" class="md-nav__button md-logo" aria-label="Sheaf" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -781,7 +782,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../quickstart/" class="md-nav__link">
+      <a href="../../quickstart/" class="md-nav__link">
         
   
   
@@ -809,7 +810,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../rationale/" class="md-nav__link">
+      <a href="../../rationale/" class="md-nav__link">
         
   
   
@@ -837,7 +838,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../starting/" class="md-nav__link">
+      <a href="../../starting/" class="md-nav__link">
         
   
   
@@ -865,7 +866,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../types/" class="md-nav__link">
+      <a href="../../types/" class="md-nav__link">
         
   
   
@@ -893,7 +894,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../python/" class="md-nav__link">
+      <a href="../../python/" class="md-nav__link">
         
   
   
@@ -921,7 +922,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../changelog/" class="md-nav__link">
+      <a href="../../changelog/" class="md-nav__link">
         
   
   
@@ -949,7 +950,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../roadmap/" class="md-nav__link">
+      <a href="../../roadmap/" class="md-nav__link">
         
   
   
@@ -1034,7 +1035,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../reference/" class="md-nav__link">
+      <a href="../../reference/" class="md-nav__link">
         
   
   
@@ -1070,12 +1071,93 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
   
+    
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blog
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Blog
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rust vs C++ vs Go for Sheaf's Compiler
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
     <li class="md-nav__item md-nav__item--active">
       
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
-      
-        
       
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
@@ -1085,7 +1167,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   <span class="md-ellipsis">
     
   
-    Blog
+    On the future of Sheaf
   
 
     
@@ -1103,7 +1185,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   <span class="md-ellipsis">
     
   
-    Blog
+    On the future of Sheaf
   
 
     
@@ -1119,8 +1201,6 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
   
-    
-  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -1129,10 +1209,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#the-c-i-know" class="md-nav__link">
+  <a href="#a-systems-perspective" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The C++ I Know
+        A systems perspective
       
     </span>
   </a>
@@ -1140,10 +1220,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
       
         <li class="md-nav__item">
-  <a href="#what-rust-actually-offers" class="md-nav__link">
+  <a href="#sheaf-v1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What Rust Actually Offers
+        Sheaf v1
       
     </span>
   </a>
@@ -1151,43 +1231,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
       
         <li class="md-nav__item">
-  <a href="#the-real-cost" class="md-nav__link">
+  <a href="#envisioning-sheaf-v2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The Real Cost
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#the-entropy-principle" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        The Entropy Principle
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#a-word-about-go" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        A Word About Go
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#what-exists-so-far" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        What Exists So Far
+        Envisioning Sheaf v2
       
     </span>
   </a>
@@ -1198,7 +1245,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   <a href="#whats-next" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What's Next
+        What's next
       
     </span>
   </a>
@@ -1208,6 +1255,14 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     </ul>
   
 </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
       
     </li>
   
@@ -1232,8 +1287,6 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
   
-    
-  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -1242,10 +1295,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#the-c-i-know" class="md-nav__link">
+  <a href="#a-systems-perspective" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The C++ I Know
+        A systems perspective
       
     </span>
   </a>
@@ -1253,10 +1306,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
       
         <li class="md-nav__item">
-  <a href="#what-rust-actually-offers" class="md-nav__link">
+  <a href="#sheaf-v1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What Rust Actually Offers
+        Sheaf v1
       
     </span>
   </a>
@@ -1264,43 +1317,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
       
         <li class="md-nav__item">
-  <a href="#the-real-cost" class="md-nav__link">
+  <a href="#envisioning-sheaf-v2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The Real Cost
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#the-entropy-principle" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        The Entropy Principle
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#a-word-about-go" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        A Word About Go
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#what-exists-so-far" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        What Exists So Far
+        Envisioning Sheaf v2
       
     </span>
   </a>
@@ -1311,7 +1331,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   <a href="#whats-next" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What's Next
+        What's next
       
     </span>
   </a>
@@ -1340,97 +1360,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
 
 
-<h1 id="rust-vs-c-vs-go-for-sheafs-compiler-picking-the-least-bad-option">Rust vs C++ vs Go for Sheaf's Compiler: Picking the Least Bad Option</h1>
-<p><em>Feb 10th 2026</em></p>
-<p>Last week I outlined the vision for Sheaf V2. The next question was immediate: what do I write the compiler in?</p>
-<p>I come from systems engineering. I know C fairly well and enjoy it: it's clean, small and dependable. I've also been working through CUDA recently, which means a lot of "modern" C++. Templates break in cryptic ways. There are three different smart pointer types. Error handling are either exceptions (which I don't trust in systems code) or manual <code>std::optional</code> checks everywhere.</p>
-<p>But C++ is the <strong>lingua franca</strong> of ML systems. MLIR is C++. IREE is C++. XLA is C++. If I want to call MLIR APIs directly, manipulate IR programmatically, or debug the compilation pipeline, C++ is the obvious choice.</p>
-<p>Rust, on the other hand, I don't really know. I've read about it and played with the rustlings exercises. I somewhat understand the borrow checker... in theory. But I've never shipped any Rust code. Choosing Rust means learning as I build, or relying on an AI agent to produce code I cannot understand well.</p>
-<p>So why did I choose Rust anyway?</p>
-<h3 id="the-c-i-know"><strong>The C++ I Know</strong></h3>
-<p>I like the functional approach that modern C++ offers, reminiscent of Lisp. <code>map</code>, <code>reduce</code>, <code>transform</code>, <code>tabulate</code> are nice.
-But C++ still fights you on the fundamentals. Memory management isn't just about <code>new</code> and <code>delete</code> anymore. It's <code>unique_ptr</code> vs <code>shared_ptr</code> vs <code>weak_ptr</code>, move semantics, and trying to remember if this API takes ownership or just borrows. The type system doesn't help: it compiles, runs, and then segfaults three weeks later because some object got freed and you didn't notice.</p>
-<p>Build systems are a nightmare of complexity. CMake is its own language. CMakeFiles can be buggy and let you down 90% down the build process (just submitted a PR for IREE). You vendor LLVM? Great, now your build takes 40 minutes. You link dynamically? Good luck with RPATH on macOS.</p>
-<p>I can work in C++, although reluctantly. But maintaining a compiler in C++ over years is something different. Every contributor has to navigate the same landmines. Every refactor triggers a fear that it will break something subtle.</p>
-<p>This is not a general argument against C++, but a local optimum for Sheaf’s constraints.</p>
-<h3 id="what-rust-actually-offers"><strong>What Rust Actually Offers</strong></h3>
-<p>I ended up choosing Rust. I know it's trendy, but I chose it for the elegance I felt when I started building the parser.</p>
-<p>For instance, algebraic data types match how compilers think. An AST node in Sheaf is:</p>
-<div class="language-rust highlight"><pre><span></span><code><span class="k">enum</span><span class="w"> </span><span class="nc">SheafValue</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n">Integer</span><span class="p">(</span><span class="kt">i64</span><span class="p">),</span>
-<span class="w">    </span><span class="n">Float</span><span class="p">(</span><span class="kt">f64</span><span class="p">),</span>
-<span class="w">    </span><span class="n">Symbol</span><span class="p">(</span><span class="nb">String</span><span class="p">),</span>
-<span class="w">    </span><span class="n">List</span><span class="p">(</span><span class="nb">Vec</span><span class="o">&lt;</span><span class="n">SheafValue</span><span class="o">&gt;</span><span class="p">),</span>
-<span class="w">    </span><span class="n">Vector</span><span class="p">(</span><span class="nb">Vec</span><span class="o">&lt;</span><span class="n">SheafValue</span><span class="o">&gt;</span><span class="p">),</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>When I write <code>match expr</code>, the compiler forces to handle every case. It will not allow to forget <code>Vector</code> and have it crash at runtime. The structure is <em>explicit</em> in the type system.</p>
-<p>Of course, C++ has ways to perform the same, using <code>variant</code> or inheritance with <code>dynamic_cast</code>, but it's clunkier.</p>
-<p>Rust checks ownership at compile time. This isn't just "no segfaults" (though that's nice), it's that it removes the fear during refactor. If the borrow checker accepts it, the data flow is correct. There's no need for <code>valgrind</code>. No need to trace through pointer lifetimes in my head.</p>
-<p>Cargo and its dependencies management just work. No <code>CMakeLists.txt</code> that breaks on a different version of LLVM. No hunting for where <code>libmlir.so</code> got installed.</p>
-<h3 id="the-real-cost"><strong>The Real Cost</strong></h3>
-<p>Choosing Rust also has real costs, which I am paying for right now.</p>
-<p>The main one, obviously: <strong>I don't know Rust.</strong> I tried asking an LLM to write me some Rust code, and it could have embedded an entire rootkit inside without me noticing. I'm picking up steam, slowly. The main grief is ironically the borrow checker I was praising: it likes to reject things that feel like they should work. I hit lifetime errors I don't fully understand. Claude helps, but I refuse to merge code I don't understand.</p>
-<p><strong>MLIR interop</strong> could be a problem later. Right now, Sheaf emits text MLIR, so there's no FFI. But if I ever need to manipulate MLIR IR programmatically, I'd need Rust bindings to MLIR's C++ APIs. That's manual work. <code>bindgen</code> would help, but MLIR's template-heavy headers seem like a nightmare to wrap.</p>
-<p><strong>The ML systems community speaks C++.</strong> Should I need contributors from IREE, XLA, or TensorFlow teams, they know C++, not Rust. Asking them to learn Rust is friction.</p>
-<p>But here's the thing: these costs are upfront. I pay them now, during initial development. The entropy cost of C++, the "wait, why did this segfault?" and "why doesn't this build on Linux?" compounds over time. With every platform and every refactor...</p>
-<h3 id="the-entropy-principle"><strong>The Entropy Principle</strong></h3>
-<p>One of the goal of Sheaf is to reduce entropy in ML code. That's part the design filters: does this choice add noise or remove it?</p>
-<p>Using C++ would add entropy:</p>
-<ul>
-<li>Build complexity (CMake, dependencies, platform quirks)</li>
-<li>Memory management (manual reasoning about ownership)</li>
-<li>Language cruft (40 years of legacy, multiple ways to do everything)</li>
-</ul>
-<p>Using Rust removes entropy:</p>
-<ul>
-<li>One build tool (Cargo)</li>
-<li>Ownership checked by compiler</li>
-<li>ADTs that match AST structure</li>
-<li>Exhaustive pattern matching</li>
-</ul>
-<p>If I'm building a language about clarity, the compiler should embody that. Not "do as I say, not as I do."</p>
-<h3 id="a-word-about-go"><strong>A Word About Go</strong></h3>
-<p>I actually like Go a lot. It's simple, fast to compile, it's designed by people I highly respect, and the tooling is excellent. <code>go build</code> just works. No lifetime annotations, no borrow checker fights...</p>
-<p>For many compilers, Go would be a great choice, and I'm saturated with Go binaries in my work that also "just work". But Sheaf's compiler has a specific constraint: exhaustive pattern matching matters more than simplicity.</p>
-<p>A compiler is a series of transformations on an AST. At each step, every possible node type must be handled properly. Forget one case, and get a subtle bug that only surfaces when someone writes <code>[1 2 3]</code> instead of <code>'[1 2 3]</code>.</p>
-<p>In Rust, the compiler enforces this:</p>
-<div class="language-rust highlight"><pre><span></span><code><span class="k">match</span><span class="w"> </span><span class="n">expr</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n">SheafValue</span><span class="p">::</span><span class="n">Integer</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="o">..</span><span class="p">.,</span>
-<span class="w">    </span><span class="n">SheafValue</span><span class="p">::</span><span class="n">Symbol</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="o">..</span><span class="p">.,</span>
-<span class="w">    </span><span class="c1">// Forget something -&gt; compilation error</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>In Go, type switches are not exhaustive:</p>
-<div class="language-go highlight"><pre><span></span><code><span class="k">switch</span><span class="w"> </span><span class="nx">v</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">expr</span><span class="p">.(</span><span class="kd">type</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="k">case</span><span class="w"> </span><span class="nx">Integer</span><span class="p">:</span><span class="w"> </span><span class="o">...</span>
-<span class="k">case</span><span class="w"> </span><span class="nx">Symbol</span><span class="p">:</span><span class="w"> </span><span class="o">...</span>
-<span class="c1">// Forget something -&gt; compiles, crashes at runtime</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>For a project that will evolve over years, with contributions from both humans and LLMs, I need the compiler to catch these errors. That's the trade-off: Go's simplicity vs Rust's safety guarantees. For Sheaf, safety won, even Go would be easier. So, Rust it is.</p>
-<h3 id="what-exists-so-far"><strong>What Exists So Far</strong></h3>
-<p>Over the past week, I built a small proof-of-concept to generate MLIR from S-expressions. What I have so far:</p>
-<ul>
-<li>A parser that handles S-expressions, vectors, symbols, literals</li>
-<li>A compiler stub that tracks function definitions and resolves symbols</li>
-<li>A code generator that emits StableHLO text for <code>(+ 1 2)</code> and <code>(* x y)</code></li>
-<li>Error handling with source locations and meaningful messages</li>
-</ul>
-<p>I didn't build the C++ version to completion, but I know what it would look like: more lines, more boilerplate, more wondering about subtle edge cases.</p>
-<h3 id="whats-next"><strong>What's Next</strong></h3>
-<p>The parser works. The compiler handles literals, symbols, and basic arithmetic. Next steps are:</p>
-<ul>
-<li>Function calls with inlining</li>
-<li><code>let</code> bindings with lexical scope</li>
-<li>Control flow (<code>if</code>, <code>do</code>, <code>while</code>)</li>
-<li>Tensor operations (dot, matmul, reshape)</li>
-</ul>
-<p>More soon.</p>
-<hr />
-<h1 id="on-the-future-of-sheaf">On the future of Sheaf</h1>
+  <h1>On the future of Sheaf</h1>
+
 <p><em>Feb 2nd 2026</em></p>
-<p>When I started Sheaf in 2025, it came from a frustration with how we express machine learning. I summarized it in the <a href="../rationale/">rationale</a> but will extend here.</p>
+<p>When I started Sheaf in 2025, it came from a frustration with how we express machine learning. I summarized it in the <a href="rationale.md">rationale</a> but will extend here.</p>
 <p>PyTorch has become the default way to write machine learning code, but over time has also become a dense stack of abstractions, conventions, and implicit machinery. To me, JAX is a clear improvement. It makes the mathematical structure more explicit and pushes important concepts such as pure functions and transformations closer to the surface. Still, at the end of the day, the center of gravity remained the same: Python as the control plane, requiring a growing amount of machinery to compensate for what the language itself does not express.</p>
 <p>The issue is not performance per se, but semantic weight. Too much of what matters in a model ends up encoded indirectly, through imperative control flow, decorators, and framework-specific plumbing.</p>
 <h3 id="a-systems-perspective"><strong>A systems perspective</strong></h3>
@@ -1457,9 +1390,9 @@ But C++ still fights you on the fundamentals. Memory management isn't just about
 <p>The main goal for the next major release is to break free from Python. To achieve this, the plan is to emit StableHLO and let IREE lower it to Linalg, where Enzyme-MLIR can apply compile-time differentiation. This avoids reinventing autodiff: existing MLIR infrastructure handles it.</p>
 <hr />
 <p><strong>Current architecture</strong>:
-<img alt="Sheaf V1 architecture" src="../images/v1-architecture.png" /></p>
+<img alt="Sheaf V1 architecture" src="../../images/v1-architecture.png" /></p>
 <p><strong>Planned architecture for Sheaf v2</strong>:
-<img alt="Sheaf V2 architecture" src="../images/v2-architecture.png" /></p>
+<img alt="Sheaf V2 architecture" src="../../images/v2-architecture.png" /></p>
 <hr />
 <p>Why IREE and not XLA? XLA is too embedded in JAX's ecosystem.
 IREE is more modular, and while it depends on LLVM for compilation, LLVM isn't required at runtime for inference or training. I am fine with having LLVM part of the SDK, as long as it's not part of the runtime.</p>
@@ -1468,7 +1401,7 @@ IREE is more modular, and while it depends on LLVM for compilation, LLVM isn't r
 In both cases, the only dependency will be <code>iree-runtime</code> (or <code>sheaf-rt.so</code> linked against the IREE runtime, if we want to add tooling and observability). The entire runtime should be approximately 2MB.
 Unlike PyTorch Mobile, which only supports inference, Sheaf V2 compiles the entire training loop (autodiff, optimizers, checkpointing) into a standalone VMFB executable. A robot, satellite, or edge device can then train locally without Python, TorchInductor or XLA.</p>
 <p>Sheaf v2 isn't an entire rewrite but more a completion of vision. The syntax stays, existing Sheaf code works the same, but the Python runtime goes.</p>
-<h3 id="whats-next_1"><strong>What's next</strong></h3>
+<h3 id="whats-next"><strong>What's next</strong></h3>
 <p>Sheaf 1.2 is coming this week, but I am already thinking heavily about Sheaf v2, notably about how to implement the parser and compiler. Should I write them in C++ or Rust? We want to stay interoperable with Python for data preprocessing: how will we design the Python FFI?</p>
 <p>Should Sheaf emit pure StableHLO, or inject higher-level structured ops for better optimization? How deeply should the compiler integrate with IREE's lowering pipeline?</p>
 <p>More on this in the coming weeks.</p>
@@ -1501,7 +1434,7 @@ Unlike PyTorch Mobile, which only supports inference, Sheaf V2 compiles the enti
       
 <footer class="md-footer">
     <div class="md-footer__inner md-grid" style="display: flex; justify-content: center; align-items: center; gap: 10px;">
-      <img src="../images/sheaf-light.png" alt="Logo" style="height: 24px;"/>
+      <img src="../../images/sheaf-light.png" alt="Logo" style="height: 24px;"/>
       <span>| © 2025-2026 Damien Boureille</span>
     </div>
 </footer>
@@ -1515,10 +1448,10 @@ Unlike PyTorch Mobile, which only supports inference, Sheaf V2 compiles the enti
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>
