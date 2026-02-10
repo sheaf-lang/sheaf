@@ -1410,13 +1410,15 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 
 <p><em>Feb 10th 2026</em></p>
 <p>Last week I outlined the vision for Sheaf V2. The next question was immediate: what do I write the compiler in?</p>
-<p>I come from systems engineering. I know C fairly well and enjoy it: it's clean, small and dependable despite its notorious undefined behaviors. I've also been working through CUDA recently, which means a lot of "modern" C++.</p>
+<p>I come from systems engineering. I know C fairly well and enjoy it: it's clean, small and dependable despite its notorious undefined behaviors. But Sheaf's compiler needs to work with modern ML infrastructure, which means C++.</p>
 <p>C++ is the lingua franca of ML systems. MLIR is C++. IREE is C++. XLA is C++. If I want to call MLIR APIs directly, manipulate IR programmatically, or debug the compilation pipeline, C++ is the obvious choice.</p>
 <p>Rust, on the other hand, I don't really know. I've read about it and played with the rustlings exercises. I somewhat understand the borrow checker... in theory. But I've never shipped any Rust code. Choosing Rust means learning as I build, or relying on an AI agent to produce code I cannot understand well.</p>
 <h3 id="the-c-i-know"><strong>The C++ I Know</strong></h3>
+<p>I am currently working on CUDA courseworks and diving deeper into IREE, which means a lot of exposure to modern C++.</p>
 <p>I like the functional approach that modern C++ offers, reminiscent of Lisp. <code>map</code>, <code>reduce</code>, <code>transform</code>, or <code>tabulate</code> are nice.
 But C++ still fights you on the fundamentals. Memory management isn't just about <code>new</code> and <code>delete</code> anymore. It's <code>unique_ptr</code> vs <code>shared_ptr</code> vs <code>weak_ptr</code>, move semantics, and trying to remember if this API takes ownership or just borrows. The type system doesn't help: it compiles, runs, and then segfaults three weeks later because some object got freed and you didn't notice.</p>
-<p>Build systems are a nightmare of complexity. CMake is its own language. CMakeFiles can be buggy and let you down 90% down the build process (just submitted a PR for IREE). You vendor LLVM? Great, now your build takes 40 minutes. You link dynamically? Good luck with RPATH on macOS.</p>
+<p>Build systems are a nightmare of complexity. CMake is its own language. CMakeFiles can be buggy and let you down 90% dow
+n the build process (just submitted a PR for IREE). You vendor LLVM? Great, now your build takes 40 minutes. You link dynamically? Good luck with RPATH on macOS.</p>
 <p>I can work in C++, although reluctantly. But maintaining a compiler in C++ over years is something different. Every contributor has to navigate the same landmines. Every refactor triggers a fear that it will break something subtle.</p>
 <p>This is not a general argument against C++, but a local optimum for Sheaf’s constraints.</p>
 <h3 id="what-rust-actually-offers"><strong>What Rust Actually Offers</strong></h3>
