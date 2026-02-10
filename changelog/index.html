@@ -990,6 +990,45 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Version history">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#v120-2026-02-06-current" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v1.2.0 — 2026-02-06 (Current)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v110-2026-01-24" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v1.1.0 — 2026-01-24
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v100-2026-01-13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v1.0.0 — 2026-01-13
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -1181,6 +1220,45 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Version history">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#v120-2026-02-06-current" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v1.2.0 — 2026-02-06 (Current)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v110-2026-01-24" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v1.1.0 — 2026-01-24
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v100-2026-01-13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v1.0.0 — 2026-01-13
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -1206,7 +1284,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   <h1>Version history</h1>
 
 <h2 id="version-history">Version history</h2>
-<p>v1.2.0 — 2026-02-06</p>
+<h3 id="v120-2026-02-06-current">v1.2.0 — 2026-02-06 (Current)</h3>
 <ul>
 <li>Sheaf programs are now mostly independent from Python and most missing primitives for imperative control have been added.</li>
 <li>I/O module: support for <code>(io "load" ...)</code> / <code>(io "save" ...)</code> with safetensors and JSON. Entropy source <code>(io "entropy")</code></li>
@@ -1218,14 +1296,14 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 <li>New <code>--trace</code> and <code>--guard</code> modes for standalone tracing and debugging</li>
 <li>All examples are now standalone and do not require Python</li>
 </ul>
-<p>v1.1.0 — 2026-01-24 (Current)</p>
+<h3 id="v110-2026-01-24">v1.1.0 — 2026-01-24</h3>
 <ul>
 <li>Syntax cleanup: quoted arrays (<code>'[]</code>) are now the canonical way to distinguish lists from tensors. Legacy <code>list</code> form is deprecated.</li>
 <li>More syntax purity: also deprecate <code>lambda</code> (alias for <code>fn</code>) and <code>dict</code></li>
 <li>Protection for special forms (<code>fn</code>, <code>let</code>, <code>get</code>...)</li>
 <li>Many bugfixes in the compiler</li>
 </ul>
-<p>v1.0.0 — 2026-01-13</p>
+<h3 id="v100-2026-01-13">v1.0.0 — 2026-01-13</h3>
 <ul>
 <li>First stable release</li>
 </ul>
