@@ -1410,7 +1410,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 
 <p><em>Feb 10th 2026</em></p>
 <p>Last week I outlined the vision for Sheaf V2. The next question was immediate: what do I write the compiler in?</p>
-<p>I come from systems engineering. I know C fairly well and enjoy it: it's clean, small and dependable. I've also been working through CUDA recently, which means a lot of "modern" C++.</p>
+<p>I come from systems engineering. I know C fairly well and enjoy it: it's clean, small and dependable despite its notorious undefined behaviors. I've also been working through CUDA recently, which means a lot of "modern" C++.</p>
 <p>C++ is the lingua franca of ML systems. MLIR is C++. IREE is C++. XLA is C++. If I want to call MLIR APIs directly, manipulate IR programmatically, or debug the compilation pipeline, C++ is the obvious choice.</p>
 <p>Rust, on the other hand, I don't really know. I've read about it and played with the rustlings exercises. I somewhat understand the borrow checker... in theory. But I've never shipped any Rust code. Choosing Rust means learning as I build, or relying on an AI agent to produce code I cannot understand well.</p>
 <h3 id="the-c-i-know"><strong>The C++ I Know</strong></h3>
