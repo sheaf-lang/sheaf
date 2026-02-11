@@ -1382,8 +1382,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </ul>
 <p>These are real advantages, but they are also narrow. Much of Sheaf v1’s value proposition is framed around Python interoperability: low boilerplate, easy integration, seamless use alongside existing JAX code.</p>
 <p>But under closer examination, this is also its main limitation...</p>
-<p>If Python is still responsible for initialization, data loading, training loops, checkpointing, and orchestration, then Sheaf is not really a language. It is a DSL with an elegant Lisp syntax, embedded in a much larger system that ultimately controls execution.</p>
-<p>Compared to JAX, the reduction in boilerplate exists, but it is marginal for a human developer. The deeper structure of the program remains fragmented across layers.</p>
+<p>If Python is still responsible for initialization, data loading, training loops, checkpointing, and orchestration, then Sheaf is just "yet another layer" to hide the underlying noise instead of removing it. It adds to the problem instead of addressing it at the root.</p>
 <h3 id="envisioning-sheaf-v2"><strong>Envisioning Sheaf v2</strong></h3>
 <p>The real value of Sheaf lies in what happens when Python is removed from the loop. Sheaf 1.2, releasing this week, is a step forward in this direction. A lot of boilerplate, imperative code has been added, even "functionally impure" forms I was initially reluctant to implement such as a <code>do</code> and <code>while</code>. All examples are now standalone and can do weight loading, checkpointing and training.</p>
 <p><em>But Sheaf remains a DSL on top of Python.</em></p>
