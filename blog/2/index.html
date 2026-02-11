@@ -11,7 +11,7 @@
         <link rel="canonical" href="https://sheaf-lang.org/blog/2/">
       
       
-        <link rel="prev" href="../3/">
+        <link rel="prev" href="../../reference/">
       
       
         <link rel="next" href="../1/">
@@ -668,7 +668,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     
     
       <li class="md-tabs__item md-tabs__item--active">
-        <a href="../3/" class="md-tabs__link">
+        <a href="./" class="md-tabs__link">
           
   
   
@@ -1124,34 +1124,6 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
                 
   
   
-  
-  
-    <li class="md-nav__item">
-      <a href="../3/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Building Autodiff for Sheaf V2
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
     
   
   
@@ -1445,8 +1417,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 <p>I am currently working on CUDA courseworks and diving deeper into IREE, which means a lot of exposure to modern C++.</p>
 <p>I like the functional approach that modern C++ offers, reminiscent of Lisp. <code>map</code>, <code>reduce</code>, <code>transform</code>, or <code>tabulate</code> are nice.
 But C++ still fights you on the fundamentals. Memory management isn't just about <code>new</code> and <code>delete</code> anymore. It's <code>unique_ptr</code> vs <code>shared_ptr</code> vs <code>weak_ptr</code>, move semantics, and trying to remember if this API takes ownership or just borrows. The type system doesn't help: it compiles, runs, and then segfaults three weeks later because some object got freed and you didn't notice.</p>
-<p>Build systems are a nightmare of complexity. CMake is its own language. CMakeFiles can be buggy and let you down 90% dow
-n the build process (just submitted a PR for IREE). You vendor LLVM? Great, now your build takes 40 minutes. You link dynamically? Good luck with RPATH on macOS.</p>
+<p>Build systems are a nightmare of complexity. CMake is its own language. CMakeFiles can be buggy and let you down 90% down the build process (just submitted a PR for IREE). You vendor LLVM? Great, now your build takes 40 minutes. You link dynamically? Good luck with RPATH on macOS.</p>
 <p>I can work in C++, although reluctantly. But maintaining a compiler in C++ over years is something different. Every contributor has to navigate the same landmines. Every refactor triggers a fear that it will break something subtle.</p>
 <p>This is not a general argument against C++, but a local optimum for Sheaf’s constraints.</p>
 <h3 id="what-rust-actually-offers"><strong>What Rust Actually Offers</strong></h3>
@@ -1488,7 +1459,7 @@ n the build process (just submitted a PR for IREE). You vendor LLVM? Great, now 
 <p>If I'm building a language about clarity, the compiler should embody that. Not "do as I say, not as I do."</p>
 <h3 id="a-word-about-go"><strong>A Word About Go</strong></h3>
 <p>I actually like Go a lot. It's simple, fast to compile, it's designed by people I highly respect, and the tooling is excellent. <code>go build</code> just works. No lifetime annotations, no borrow checker fights...</p>
-<p>For many compilers, Go would be a great choice, and I'm saturated with Go binaries in my work that also "just work". But Sheaf's compiler has a specific constraint: exhaustive pattern matching matters more than simplicity.</p>
+<p>For many compilers, Go would be a great choice, but Sheaf's compiler has a specific constraint: exhaustive pattern matching matters more than simplicity.</p>
 <p>A compiler is a series of transformations on an AST. At each step, every possible node type must be handled properly. Forget one case, and get a subtle bug that only surfaces when someone writes <code>[1 2 3]</code> instead of <code>'[1 2 3]</code>.</p>
 <p>In Rust, the compiler enforces this:</p>
 <div class="language-rust highlight"><pre><span></span><code><span class="k">match</span><span class="w"> </span><span class="n">expr</span><span class="w"> </span><span class="p">{</span>
