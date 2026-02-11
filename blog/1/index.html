@@ -1406,7 +1406,7 @@ This means zero configuration, zero decorator, and a single command for both dev
 <ul>
 <li><code>sheaf-parser.so</code>: parser (~2MB)</li>
 <li><code>sheaf-interpreter.so</code>: orchestration (NCCL/Gloo for distributed training, I/O for datasets/checkpoints, debug &amp; trace)</li>
-<li><code>iree-runtime.a</code>: VMFB execution (~3MB)</li>
+<li><code>iree-runtime.a</code>: VMFB execution (~1MB)</li>
 </ul>
 <p>Unlike PyTorch Mobile, which only supports inference, the VMFB also supports training. A robot, satellite, or edge device can then train locally without Python, TorchInductor or XLA.
 The same architecture also scales industrially via SLURM or Kubernetes: the interpreter handles gradient communication (NCCL all-reduce or Gloo, I will POC that later) while the scheduler orchestrates worker processes.</p>
