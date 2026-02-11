@@ -666,7 +666,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     
     
       <li class="md-tabs__item md-tabs__item--active">
-        <a href="../2/" class="md-tabs__link">
+        <a href="../3/" class="md-tabs__link">
           
   
   
@@ -1125,6 +1125,34 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
+      <a href="../3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Building Autodiff for Sheaf V2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../2/" class="md-nav__link">
         
   
@@ -1397,9 +1425,19 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 <p>Why IREE and not XLA? XLA is too embedded in JAX's ecosystem.
 IREE is more modular, and while it depends on LLVM for compilation, LLVM isn't required at runtime for inference or training. I am fine with having LLVM part of the SDK, as long as it's not part of the runtime.</p>
 <p>Moving to StableHLO and IREE will not be just an optimization but potentially the game changing aspect of Sheaf v2: on-device training.</p>
-<p>With v2, a Sheaf model can be shipped either as a Sheaf file, or readily compiled into an intermediate MLIR or a standalone (but device-dependent) VMFB file - IREE's compiled bytecode format.
-In both cases, the only dependency will be <code>iree-runtime</code> (or <code>sheaf-rt.so</code> linked against the IREE runtime, if we want to add tooling and observability). The entire runtime should be approximately 2MB.
-Unlike PyTorch Mobile, which only supports inference, Sheaf V2 compiles the entire training loop (autodiff, optimizers, checkpointing) into a standalone VMFB executable. A robot, satellite, or edge device can then train locally without Python, TorchInductor or XLA.</p>
+<p>With v2, a Sheaf model is always shipped as <strong>both</strong> .shf files and optional .vmfb files.
+Sheaf files contains orchestration code (dataset paths, checkpointing configuration, I/O, logging) and is the source of truth.
+The optional .vmfb files contain compiled training computation (forward pass, backward pass, optimizer updates).</p>
+<p>The <code>(use  )</code> directive becomes intelligent: if a compiled file exists, it runs it on the IREE runtime. Otherwise, it runs the interprated Sheaf file.
+This means zero configuration, zero decorator, and a single command for both development and production.</p>
+<p>The runtime contains:</p>
+<ul>
+<li><code>sheaf-parser.so</code>: parser (~2MB)</li>
+<li><code>sheaf-interpreter.so</code>: orchestration (NCCL/Gloo for distributed training, I/O for datasets/checkpoints, debug &amp; trace)</li>
+<li><code>iree-runtime.a</code>: VMFB execution (~3MB)</li>
+</ul>
+<p>Unlike PyTorch Mobile, which only supports inference, the VMFB also supports training. A robot, satellite, or edge device can then train locally without Python, TorchInductor or XLA.
+The same architecture also scales industrially via SLURM or Kubernetes: the interpreter handles gradient communication (NCCL all-reduce or Gloo, I will POC that later) while the scheduler orchestrates worker processes.</p>
 <p>Sheaf v2 isn't an entire rewrite but more a completion of vision. The syntax stays, existing Sheaf code works the same, but the Python runtime goes.</p>
 <h3 id="whats-next"><strong>What's next</strong></h3>
 <p>Sheaf 1.2 is coming this week, but I am already thinking heavily about Sheaf v2, notably about how to implement the parser and compiler. Should I write them in C++ or Rust? We want to stay interoperable with Python for data preprocessing: how will we design the Python FFI?</p>
