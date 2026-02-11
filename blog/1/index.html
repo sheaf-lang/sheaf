@@ -1399,7 +1399,7 @@ IREE is more modular, and while it depends on LLVM for compilation, LLVM isn't r
 <p>With v2, a Sheaf model is shipped as both .shf files and optional .vmfb files.
 Sheaf files contains orchestration code (dataset paths, checkpointing configuration, I/O, logging) and is the source of truth.
 The optional .vmfb files contain compiled training computation (forward pass, backward pass, optimizer updates).</p>
-<p>The <code>(use  )</code> directive becomes intelligent: if a compiled file exists, it runs it on the IREE runtime. Otherwise, it runs the interprated Sheaf file.
+<p>The <code>(use  )</code> directive becomes intelligent: if a compiled file exists for the import, it runs it on the IREE runtime. Otherwise, it runs the interprated Sheaf file.
 This means zero configuration, zero decorator, and a single command for both development and production.</p>
 <p>The runtime contains:</p>
 <ul>
@@ -1408,11 +1408,11 @@ This means zero configuration, zero decorator, and a single command for both dev
 <li><code>iree-runtime.a</code>: VMFB execution (~1MB)</li>
 </ul>
 <p>Unlike PyTorch Mobile, which only supports inference, the VMFB also supports training. A robot, satellite, or edge device can then train locally without Python, TorchInductor or XLA.
-The same architecture also scales industrially via SLURM or Kubernetes: the interpreter handles gradient communication (NCCL all-reduce or Gloo, I will POC that later) while the scheduler orchestrates worker processes.</p>
+The same architecture also scales industrially via SLURM or Kubernetes: the interpreter handles gradient communication (NCCL all-reduce or Gloo, I will PoC that later) while the scheduler orchestrates worker processes.</p>
 <p>Sheaf v2 isn't an entire rewrite but more a completion of vision. The syntax stays, existing Sheaf code works the same, but the Python runtime goes.</p>
 <h3 id="whats-next"><strong>What's next</strong></h3>
 <p>Sheaf 1.2 is coming this week, but I am already thinking heavily about Sheaf v2, notably about how to implement the parser and compiler. Should I write them in C++ or Rust? We want to stay interoperable with Python for data preprocessing: how will we design the Python FFI?</p>
-<p>Should Sheaf emit pure StableHLO, or inject higher-level structured ops for better optimization? How deeply should the compiler integrate with IREE's lowering pipeline?</p>
+<p>Should Sheaf emit pure StableHLO, or inject higher-level structured ops for better optimization? How will I handle differentiation for the interpreter? How deeply should the compiler integrate with IREE's lowering pipeline?</p>
 <p>More on this in the coming weeks.</p>
 
 
