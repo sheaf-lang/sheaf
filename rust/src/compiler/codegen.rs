@@ -37,16 +37,138 @@ impl CodeGenerator {
                 Ok((reg, StableHLOType::scalar_f32()))
             }
 
-            CompiledExpr::FunctionCall { name, args } => {
-                self.generate_function_call(name, args)
+            CompiledExpr::Vector(elements) => {
+                // Check if this is a nested vector representing a 2D tensor
+                if let Some(CompiledExpr::Vector(_)) = elements.first() {
+                    // This is a 2D tensor like [[1.0, 2.0], [3.0, 4.0]]
+                    let mut rows: Vec<Vec<f64>> = Vec::new();
+
+                    for elem in elements {
+                        if let CompiledExpr::Vector(row_elems) = elem {
+                            let mut row: Vec<f64> = Vec::new();
+                            for val in row_elems {
+                                match val {
+                                    CompiledExpr::Float(x) => row.push(*x),
+                                    CompiledExpr::Integer(n) => row.push(*n as f64),
+                                    _ => {
+                                        return Err(SheafError::Compile {
+                                            message: "Tensor elements must be numbers".to_string(),
+                                            location: crate::core::error::SourceLocation::unknown(),
+                                        });
+                                    }
+                                }
+                            }
+                            rows.push(row);
+                        } else {
+                            return Err(SheafError::Compile {
+                                message: "Invalid tensor structure".to_string(),
+                                location: crate::core::error::SourceLocation::unknown(),
+                            });
+                        }
+                    }
+
+                    let (reg, ty) = self.emitter.emit_tensor_constant(&rows);
+                    Ok((reg, ty))
+                } else {
+                    // 1D vector - treat as a row vector (1xN tensor)
+                    let mut values: Vec<f64> = Vec::new();
+                    for elem in elements {
+                        match elem {
+                            CompiledExpr::Float(x) => values.push(*x),
+                            CompiledExpr::Integer(n) => values.push(*n as f64),
+                            _ => {
+                                return Err(SheafError::Compile {
+                                    message:
+                                        "Vector elements must be numbers for tensor conversion"
+                                            .to_string(),
+                                    location: crate::core::error::SourceLocation::unknown(),
+                                });
+                            }
+                        }
+                    }
+                    let (reg, ty) = self.emitter.emit_tensor_constant(&vec![values]);
+                    Ok((reg, ty))
+                }
             }
 
-            CompiledExpr::FunctionRef(name) => {
-                Err(SheafError::Compile {
-                    message: format!("Cannot generate code for bare function reference: {}", name),
+            CompiledExpr::Symbol(name) => {
+                // Look up symbol in bindings
+                if let Some(reg) = self.bindings.get(name) {
+                    // TODO: Need to track types in bindings
+                    Ok((reg.clone(), StableHLOType::scalar_f32()))
+                } else {
+                    Err(SheafError::Compile {
+                        message: format!("Undefined symbol in codegen: {}", name),
+                        location: crate::core::error::SourceLocation::unknown(),
+                    })
+                }
+            }
+
+            CompiledExpr::FunctionCall { name, args } => self.generate_function_call(name, args),
+
+            CompiledExpr::Let { bindings, body } => {
+                // Evaluate bindings and store in bindings map
+                for (name, value_expr) in bindings {
+                    let (reg, _ty) = self.generate(value_expr)?;
+                    self.bindings.insert(name.clone(), reg);
+                }
+                // Evaluate body with bindings in scope
+                let result = self.generate(body)?;
+                // Clean up bindings (for proper scoping)
+                for (name, _) in bindings {
+                    self.bindings.remove(name);
+                }
+                Ok(result)
+            }
+
+            CompiledExpr::If {
+                condition,
+                then_branch,
+                else_branch,
+            } => {
+                // For now, compile as a simple select operation
+                // TODO: Proper control flow with stablehlo.if
+                let (cond_reg, _cond_ty) = self.generate(condition)?;
+                let (then_reg, then_ty) = self.generate(then_branch)?;
+
+                if let Some(else_expr) = else_branch {
+                    let (else_reg, _else_ty) = self.generate(else_expr)?;
+                    // Use stablehlo.select: select(cond, then, else)
+                    let result_reg = self.emitter.fresh_register();
+                    self.emitter.emit_instruction(format!(
+                        "    {} = \"stablehlo.select\"({}, {}, {}) : (tensor<i1>, {}, {}) -> {}",
+                        result_reg.to_mlir(),
+                        cond_reg.to_mlir(),
+                        then_reg.to_mlir(),
+                        else_reg.to_mlir(),
+                        then_ty.to_mlir(),
+                        then_ty.to_mlir(),
+                        then_ty.to_mlir()
+                    ));
+                    Ok((result_reg, then_ty))
+                } else {
+                    // If without else: just return then_branch
+                    // (assumes condition is always true for now)
+                    Ok((then_reg, then_ty))
+                }
+            }
+
+            CompiledExpr::Do(exprs) => {
+                // Evaluate all expressions, return the last one
+                let mut last_result = None;
+                for expr in exprs {
+                    last_result = Some(self.generate(expr)?);
+                }
+                last_result.ok_or_else(|| SheafError::Compile {
+                    message: "do requires at least one expression".to_string(),
                     location: crate::core::error::SourceLocation::unknown(),
                 })
             }
+
+            CompiledExpr::FunctionRef(name) => Err(SheafError::Compile {
+                message: format!("Cannot generate code for bare function reference: {}", name),
+                location: crate::core::error::SourceLocation::unknown(),
+            }),
 
             _ => Err(SheafError::Compile {
                 message: format!("Code generation not yet implemented for: {:?}", expr),
@@ -61,12 +183,21 @@ impl CodeGenerator {
         name: &str,
         args: &[CompiledExpr],
     ) -> SheafResult<(Register, StableHLOType)> {
-        // For now, only support binary arithmetic operations
+        // Binary arithmetic operations
         if matches!(name, "+" | "-" | "*" | "/") && args.len() == 2 {
             let (lhs_reg, lhs_ty) = self.generate(&args[0])?;
             let (rhs_reg, _rhs_ty) = self.generate(&args[1])?;
             let result_reg = self.emitter.emit_binop(name, &lhs_reg, &rhs_reg, &lhs_ty);
             Ok((result_reg, lhs_ty))
+        }
+        // Matrix multiply
+        else if name == "@" && args.len() == 2 {
+            let (lhs_reg, lhs_ty) = self.generate(&args[0])?;
+            let (rhs_reg, rhs_ty) = self.generate(&args[1])?;
+            let (result_reg, result_ty) = self
+                .emitter
+                .emit_matmul(&lhs_reg, &rhs_reg, &lhs_ty, &rhs_ty);
+            Ok((result_reg, result_ty))
         } else {
             Err(SheafError::Compile {
                 message: format!("Function call not yet supported: {}", name),

@@ -24,6 +24,42 @@ impl StableHLOType {
         Self::ScalarF32
     }
 
+    pub fn scalar_i64() -> Self {
+        Self::ScalarI64
+    }
+
+    pub fn f32_tensor(shape: Vec<i64>) -> Self {
+        Self::Tensor {
+            shape,
+            dtype: "f32".to_string(),
+        }
+    }
+
+    pub fn i64_tensor(shape: Vec<i64>) -> Self {
+        Self::Tensor {
+            shape,
+            dtype: "i64".to_string(),
+        }
+    }
+
+    /// Get the shape of this type, or empty vec for scalars
+    pub fn shape(&self) -> Vec<i64> {
+        match self {
+            Self::ScalarF32 | Self::ScalarF64 | Self::ScalarI64 => vec![],
+            Self::Tensor { shape, .. } => shape.clone(),
+        }
+    }
+
+    /// Get the dtype string
+    pub fn dtype(&self) -> &str {
+        match self {
+            Self::ScalarF32 => "f32",
+            Self::ScalarF64 => "f64",
+            Self::ScalarI64 => "i64",
+            Self::Tensor { dtype, .. } => dtype,
+        }
+    }
+
     pub fn to_mlir(&self) -> String {
         match self {
             Self::ScalarF32 => "tensor<f32>".to_string(),
@@ -70,10 +106,15 @@ impl StableHLOEmitter {
     }
 
     /// Generate a fresh register name
-    fn fresh_register(&mut self) -> Register {
+    pub fn fresh_register(&mut self) -> Register {
         let reg = Register::new(self.counter);
         self.counter += 1;
         reg
+    }
+
+    /// Add an instruction to the body
+    pub fn emit_instruction(&mut self, instruction: String) {
+        self.body.push(instruction);
     }
 
     /// Emit a constant scalar
@@ -110,6 +151,48 @@ impl StableHLOEmitter {
         reg
     }
 
+    /// Emit a tensor constant from a nested vector
+    /// For example: [[1.0, 2.0], [3.0, 4.0]] -> tensor<2x2xf32>
+    pub fn emit_tensor_constant(&mut self, values: &[Vec<f64>]) -> (Register, StableHLOType) {
+        let reg = self.fresh_register();
+
+        // Infer shape from nested structure
+        let rows = values.len();
+        let cols = if rows > 0 { values[0].len() } else { 0 };
+        let shape = vec![rows as i64, cols as i64];
+        let ty = StableHLOType::f32_tensor(shape);
+
+        // Build nested structure for dense representation
+        let rows_str: Vec<String> = values
+            .iter()
+            .map(|row| {
+                let row_values: Vec<String> = row
+                    .iter()
+                    .map(|&v| {
+                        if v.fract() == 0.0 && v.is_finite() {
+                            format!("{:.1}", v)
+                        } else {
+                            format!("{}", v)
+                        }
+                    })
+                    .collect();
+                format!("[{}]", row_values.join(", "))
+            })
+            .collect();
+
+        let values_str = rows_str.join(", ");
+
+        self.body.push(format!(
+            "    {} = \"stablehlo.constant\"() {{value = dense<[{}]> : {}}} : () -> {}",
+            reg.to_mlir(),
+            values_str,
+            ty.to_mlir(),
+            ty.to_mlir()
+        ));
+
+        (reg, ty)
+    }
+
     /// Emit a binary operation
     pub fn emit_binop(
         &mut self,
@@ -138,6 +221,50 @@ impl StableHLOEmitter {
             ty.to_mlir()
         ));
         reg
+    }
+
+    /// Emit a matrix multiply (dot_general)
+    /// For simple 2D matrix multiply: [M, K] @ [K, N] -> [M, N]
+    pub fn emit_matmul(
+        &mut self,
+        lhs: &Register,
+        rhs: &Register,
+        lhs_ty: &StableHLOType,
+        rhs_ty: &StableHLOType,
+    ) -> (Register, StableHLOType) {
+        // Shape inference for matmul
+        let lhs_shape = lhs_ty.shape();
+        let rhs_shape = rhs_ty.shape();
+
+        // Simple 2D matmul for now: [M, K] @ [K, N] -> [M, N]
+        let result_shape = if lhs_shape.len() == 2 && rhs_shape.len() == 2 {
+            vec![lhs_shape[0], rhs_shape[1]]
+        } else {
+            // Fallback: assume result is same as lhs
+            lhs_shape.clone()
+        };
+
+        let result_ty = StableHLOType::f32_tensor(result_shape);
+        let reg = self.fresh_register();
+
+        // dot_general with contracting dimensions
+        // For [M,K] @ [K,N]: contract on dimension 1 of lhs and 0 of rhs
+        self.body.push(format!(
+            "    {} = \"stablehlo.dot_general\"({}, {}) {{
+      dot_dimension_numbers = #stablehlo.dot<
+        lhs_contracting_dimensions = [1],
+        rhs_contracting_dimensions = [0]
+      >
+    }} : ({}, {}) -> {}",
+            reg.to_mlir(),
+            lhs.to_mlir(),
+            rhs.to_mlir(),
+            lhs_ty.to_mlir(),
+            rhs_ty.to_mlir(),
+            result_ty.to_mlir()
+        ));
+
+        (reg, result_ty)
     }
 
     /// Emit a return statement

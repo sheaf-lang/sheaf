@@ -130,9 +130,9 @@ impl CompilerContext {
         name: &str,
         loc: &crate::core::error::SourceLocation,
     ) -> SheafResult<CompiledExpr> {
-        // Check local variables first
-        if let Some(value) = self.local_vars.get(name).cloned() {
-            return self.compile(&value);
+        // Check local variables first - return as Symbol for let bindings
+        if self.local_vars.contains_key(name) {
+            return Ok(CompiledExpr::Symbol(name.to_string()));
         }
 
         // Check environment
@@ -206,13 +206,60 @@ impl CompilerContext {
     /// Compile (let [bindings] body)
     fn compile_let(
         &mut self,
-        _elements: &[SheafValue],
+        elements: &[SheafValue],
         loc: &crate::core::error::SourceLocation,
     ) -> SheafResult<CompiledExpr> {
-        // TODO: Implement let bindings
-        Err(SheafError::Compile {
-            message: "let not yet implemented".to_string(),
+        if elements.len() < 3 {
+            return Err(SheafError::Compile {
+                message: "let requires: (let [bindings] body)".to_string(),
+                location: loc.clone(),
+            });
+        }
+
+        let bindings_vec = elements[1].as_vector().ok_or_else(|| SheafError::Compile {
+            message: "let bindings must be a vector".to_string(),
             location: loc.clone(),
+        })?;
+
+        if bindings_vec.len() % 2 != 0 {
+            return Err(SheafError::Compile {
+                message: "let bindings must have even number of elements (name value pairs)"
+                    .to_string(),
+                location: loc.clone(),
+            });
+        }
+
+        // Save current local_vars state
+        let saved_locals = self.local_vars.clone();
+
+        // Process bindings in pairs
+        let mut compiled_bindings = Vec::new();
+        for i in (0..bindings_vec.len()).step_by(2) {
+            let name = bindings_vec[i]
+                .as_symbol()
+                .ok_or_else(|| SheafError::Compile {
+                    message: "let binding name must be a symbol".to_string(),
+                    location: loc.clone(),
+                })?;
+
+            let value = &bindings_vec[i + 1];
+            let compiled_value = self.compile(value)?;
+
+            // Add to local scope
+            self.local_vars.insert(name.to_string(), value.clone());
+            compiled_bindings.push((name.to_string(), compiled_value));
+        }
+
+        // Compile body with bindings in scope
+        let body = &elements[2];
+        let compiled_body = self.compile(body)?;
+
+        // Restore local_vars
+        self.local_vars = saved_locals;
+
+        Ok(CompiledExpr::Let {
+            bindings: compiled_bindings,
+            body: Box::new(compiled_body),
         })
     }
 
@@ -232,27 +279,48 @@ impl CompilerContext {
     /// Compile (if condition then else)
     fn compile_if(
         &mut self,
-        _elements: &[SheafValue],
+        elements: &[SheafValue],
         loc: &crate::core::error::SourceLocation,
     ) -> SheafResult<CompiledExpr> {
-        // TODO: Implement if
-        Err(SheafError::Compile {
-            message: "if not yet implemented".to_string(),
-            location: loc.clone(),
+        if elements.len() < 3 || elements.len() > 4 {
+            return Err(SheafError::Compile {
+                message: "if requires: (if condition then) or (if condition then else)".to_string(),
+                location: loc.clone(),
+            });
+        }
+
+        let condition = self.compile(&elements[1])?;
+        let then_branch = self.compile(&elements[2])?;
+        let else_branch = if elements.len() == 4 {
+            Some(Box::new(self.compile(&elements[3])?))
+        } else {
+            None
+        };
+
+        Ok(CompiledExpr::If {
+            condition: Box::new(condition),
+            then_branch: Box::new(then_branch),
+            else_branch,
         })
     }
 
     /// Compile (do expr1 expr2 ...)
     fn compile_do(
         &mut self,
-        _elements: &[SheafValue],
+        elements: &[SheafValue],
         loc: &crate::core::error::SourceLocation,
     ) -> SheafResult<CompiledExpr> {
-        // TODO: Implement do
-        Err(SheafError::Compile {
-            message: "do not yet implemented".to_string(),
-            location: loc.clone(),
-        })
+        if elements.len() < 2 {
+            return Err(SheafError::Compile {
+                message: "do requires at least one expression".to_string(),
+                location: loc.clone(),
+            });
+        }
+
+        let exprs: SheafResult<Vec<CompiledExpr>> =
+            elements[1..].iter().map(|e| self.compile(e)).collect();
+
+        Ok(CompiledExpr::Do(exprs?))
     }
 
     /// Compile (quote expr)
@@ -314,6 +382,17 @@ pub enum CompiledExpr {
         name: String,
         args: Vec<CompiledExpr>,
     },
+    Let {
+        bindings: Vec<(String, CompiledExpr)>,
+        body: Box<CompiledExpr>,
+    },
+    If {
+        condition: Box<CompiledExpr>,
+        then_branch: Box<CompiledExpr>,
+        else_branch: Option<Box<CompiledExpr>>,
+    },
+    Do(Vec<CompiledExpr>),
+    Symbol(String),
 }
 
 impl Default for CompilerContext {
@@ -360,6 +439,34 @@ mod tests {
                 assert_eq!(args.len(), 2);
             }
             _ => panic!("Expected function call"),
+        }
+    }
+
+    #[test]
+    fn test_compile_let() {
+        let mut ctx = CompilerContext::new();
+        // (let [x 1 y 2] (+ x y))
+        let expr = make_list(vec![
+            make_symbol("let"),
+            SheafValue::Vector(
+                vec![make_symbol("x"), make_int(1), make_symbol("y"), make_int(2)],
+                SourceLocation::unknown(),
+            ),
+            make_list(vec![make_symbol("+"), make_symbol("x"), make_symbol("y")]),
+        ]);
+
+        let result = ctx.compile(&expr).unwrap();
+
+        match result {
+            CompiledExpr::Let { bindings, body } => {
+                assert_eq!(bindings.len(), 2);
+                assert_eq!(bindings[0].0, "x");
+                assert_eq!(bindings[1].0, "y");
+                assert!(matches!(bindings[0].1, CompiledExpr::Integer(1)));
+                assert!(matches!(bindings[1].1, CompiledExpr::Integer(2)));
+                assert!(matches!(*body, CompiledExpr::FunctionCall { .. }));
+            }
+            _ => panic!("Expected let expression"),
         }
     }
 
