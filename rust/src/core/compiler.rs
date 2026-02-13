@@ -6,7 +6,6 @@
 //! Corresponds to Python sheaf/core/compiler.py
 
 use crate::ast::SheafValue;
-use crate::compiler::StableHLOEmitter;
 use crate::core::error::{SheafError, SheafResult};
 use std::collections::HashMap;
 
@@ -41,7 +40,7 @@ impl CompilerContext {
 
     /// Initialize global environment with built-in operations
     fn init_env() -> HashMap<String, SheafValue> {
-        let mut env = HashMap::new();
+        let env = HashMap::new();
 
         // Built-in constants
         // env.insert("true".to_string(), SheafValue::Boolean(true, SourceLocation::unknown()));

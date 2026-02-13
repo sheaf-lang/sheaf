@@ -128,10 +128,9 @@ impl StableHLOEmitter {
             format!("{}", value)
         };
         self.body.push(format!(
-            "    {} = \"stablehlo.constant\"() {{value = dense<{}> : {}}} : () -> {}",
+            "    {} = stablehlo.constant dense<{}> : {}",
             reg.to_mlir(),
             value_str,
-            ty.to_mlir(),
             ty.to_mlir()
         ));
         reg
@@ -142,10 +141,9 @@ impl StableHLOEmitter {
         let reg = self.fresh_register();
         let ty = StableHLOType::ScalarI64;
         self.body.push(format!(
-            "    {} = \"stablehlo.constant\"() {{value = dense<{}> : {}}} : () -> {}",
+            "    {} = stablehlo.constant dense<{}> : {}",
             reg.to_mlir(),
             value,
-            ty.to_mlir(),
             ty.to_mlir()
         ));
         reg
@@ -183,24 +181,24 @@ impl StableHLOEmitter {
         let values_str = rows_str.join(", ");
 
         self.body.push(format!(
-            "    {} = \"stablehlo.constant\"() {{value = dense<[{}]> : {}}} : () -> {}",
+            "    {} = stablehlo.constant dense<[{}]> : {}",
             reg.to_mlir(),
             values_str,
-            ty.to_mlir(),
             ty.to_mlir()
         ));
 
         (reg, ty)
     }
 
-    /// Emit a binary operation
+    /// Emit a binary operation with broadcasting support
     pub fn emit_binop(
         &mut self,
         op: &str,
         lhs: &Register,
         rhs: &Register,
-        ty: &StableHLOType,
-    ) -> Register {
+        lhs_ty: &StableHLOType,
+        rhs_ty: &StableHLOType,
+    ) -> (Register, StableHLOType) {
         let stablehlo_op = match op {
             "+" => "stablehlo.add",
             "-" => "stablehlo.subtract",
@@ -209,18 +207,131 @@ impl StableHLOEmitter {
             _ => panic!("Unsupported binop: {}", op),
         };
 
+        // Determine result type (broadcast if needed)
+        let result_ty = self.broadcast_types(lhs_ty, rhs_ty);
+
+        // Check if we need to broadcast operands
+        let (actual_lhs, actual_rhs) =
+            self.maybe_broadcast_operands(lhs, rhs, lhs_ty, rhs_ty, &result_ty);
+
         let reg = self.fresh_register();
         self.body.push(format!(
-            "    {} = \"{}\"({}, {}) : ({}, {}) -> {}",
+            "    {} = {} {}, {} : {}",
             reg.to_mlir(),
             stablehlo_op,
-            lhs.to_mlir(),
-            rhs.to_mlir(),
-            ty.to_mlir(),
-            ty.to_mlir(),
-            ty.to_mlir()
+            actual_lhs.to_mlir(),
+            actual_rhs.to_mlir(),
+            result_ty.to_mlir()
         ));
+        (reg, result_ty)
+    }
+
+    /// Maybe broadcast operands to match result shape
+    /// Returns (lhs_reg, rhs_reg) which may be the originals or broadcasted versions
+    fn maybe_broadcast_operands(
+        &mut self,
+        lhs: &Register,
+        rhs: &Register,
+        lhs_ty: &StableHLOType,
+        rhs_ty: &StableHLOType,
+        result_ty: &StableHLOType,
+    ) -> (Register, Register) {
+        let lhs_shape = lhs_ty.shape();
+        let rhs_shape = rhs_ty.shape();
+        let result_shape = result_ty.shape();
+
+        // Broadcast lhs if needed
+        let actual_lhs = if lhs_shape != result_shape && !result_shape.is_empty() {
+            self.emit_broadcast(lhs, lhs_ty, result_ty)
+        } else {
+            lhs.clone()
+        };
+
+        // Broadcast rhs if needed
+        let actual_rhs = if rhs_shape != result_shape && !result_shape.is_empty() {
+            self.emit_broadcast(rhs, rhs_ty, result_ty)
+        } else {
+            rhs.clone()
+        };
+
+        (actual_lhs, actual_rhs)
+    }
+
+    /// Emit broadcast_in_dim to convert from_ty to to_ty
+    fn emit_broadcast(
+        &mut self,
+        operand: &Register,
+        from_ty: &StableHLOType,
+        to_ty: &StableHLOType,
+    ) -> Register {
+        let from_shape = from_ty.shape();
+        let to_shape = to_ty.shape();
+
+        // Determine broadcast dimensions
+        // For [8] -> [4, 8], broadcast on dimension 1
+        // For [] -> [4, 8], broadcast scalar (no dims needed)
+        let dims = if from_shape.is_empty() {
+            // Scalar broadcast
+            vec![]
+        } else if from_shape.len() == 1 && to_shape.len() == 2 {
+            // Vector to matrix: broadcast on last dimension
+            vec![1]
+        } else {
+            // Default: assume trailing dimensions match
+            let offset = to_shape.len() - from_shape.len();
+            (offset..to_shape.len()).collect()
+        };
+
+        let reg = self.fresh_register();
+        if dims.is_empty() {
+            // Scalar broadcast
+            self.body.push(format!(
+                "    {} = stablehlo.broadcast_in_dim {}, dims = [] : ({}) -> {}",
+                reg.to_mlir(),
+                operand.to_mlir(),
+                from_ty.to_mlir(),
+                to_ty.to_mlir()
+            ));
+        } else {
+            let dims_str = dims
+                .iter()
+                .map(|d| d.to_string())
+                .collect::<Vec<_>>()
+                .join(", ");
+            self.body.push(format!(
+                "    {} = stablehlo.broadcast_in_dim {}, dims = [{}] : ({}) -> {}",
+                reg.to_mlir(),
+                operand.to_mlir(),
+                dims_str,
+                from_ty.to_mlir(),
+                to_ty.to_mlir()
+            ));
+        }
+
         reg
+    }
+
+    /// Broadcast types: choose result type for binary op
+    /// For now, simple heuristic: larger shape wins, scalars broadcast
+    fn broadcast_types(&self, lhs: &StableHLOType, rhs: &StableHLOType) -> StableHLOType {
+        let lhs_shape = lhs.shape();
+        let rhs_shape = rhs.shape();
+
+        // If both are scalars, return scalar
+        if lhs_shape.is_empty() && rhs_shape.is_empty() {
+            return lhs.clone();
+        }
+
+        // If one is scalar, return the other (scalar broadcasts)
+        if lhs_shape.is_empty() {
+            return rhs.clone();
+        }
+        if rhs_shape.is_empty() {
+            return lhs.clone();
+        }
+
+        // Otherwise, prefer lhs shape (TODO: proper numpy-style broadcasting)
+        lhs.clone()
     }
 
     /// Emit a matrix multiply (dot_general)
@@ -250,12 +361,7 @@ impl StableHLOEmitter {
         // dot_general with contracting dimensions
         // For [M,K] @ [K,N]: contract on dimension 1 of lhs and 0 of rhs
         self.body.push(format!(
-            "    {} = \"stablehlo.dot_general\"({}, {}) {{
-      dot_dimension_numbers = #stablehlo.dot<
-        lhs_contracting_dimensions = [1],
-        rhs_contracting_dimensions = [0]
-      >
-    }} : ({}, {}) -> {}",
+            "    {} = stablehlo.dot_general {}, {}, contracting_dims = [1] x [0] : ({}, {}) -> {}",
             reg.to_mlir(),
             lhs.to_mlir(),
             rhs.to_mlir(),
@@ -265,6 +371,147 @@ impl StableHLOEmitter {
         ));
 
         (reg, result_ty)
+    }
+
+    /// Emit unary operation (relu, sigmoid, tanh, etc.)
+    pub fn emit_unary(&mut self, op: &str, operand: &Register, ty: &StableHLOType) -> Register {
+        let reg = self.fresh_register();
+
+        match op {
+            "relu" => {
+                // ReLU = max(x, 0)
+                let zero_reg = self.emit_constant_f32(0.0);
+                let zero_ty = StableHLOType::scalar_f32();
+
+                // Broadcast zero to match operand shape if needed
+                let broadcasted_zero = if ty.shape() != zero_ty.shape() && !ty.shape().is_empty() {
+                    self.emit_broadcast(&zero_reg, &zero_ty, ty)
+                } else {
+                    zero_reg
+                };
+
+                self.body.push(format!(
+                    "    {} = stablehlo.maximum {}, {} : {}",
+                    reg.to_mlir(),
+                    operand.to_mlir(),
+                    broadcasted_zero.to_mlir(),
+                    ty.to_mlir()
+                ));
+            }
+            "sigmoid" => {
+                // sigmoid(x) = 1 / (1 + exp(-x))
+                // Step 1: negate x
+                let neg_reg = self.fresh_register();
+                self.body.push(format!(
+                    "    {} = stablehlo.negate {} : {}",
+                    neg_reg.to_mlir(),
+                    operand.to_mlir(),
+                    ty.to_mlir()
+                ));
+
+                // Step 2: exp(-x)
+                let exp_reg = self.fresh_register();
+                self.body.push(format!(
+                    "    {} = stablehlo.exponential {} : {}",
+                    exp_reg.to_mlir(),
+                    neg_reg.to_mlir(),
+                    ty.to_mlir()
+                ));
+
+                // Step 3: 1 + exp(-x)
+                let one_reg = self.emit_constant_f32(1.0);
+                let one_ty = StableHLOType::scalar_f32();
+                let broadcasted_one = if ty.shape() != one_ty.shape() && !ty.shape().is_empty() {
+                    self.emit_broadcast(&one_reg, &one_ty, ty)
+                } else {
+                    one_reg.clone()
+                };
+
+                let one_plus_exp = self.fresh_register();
+                self.body.push(format!(
+                    "    {} = stablehlo.add {}, {} : {}",
+                    one_plus_exp.to_mlir(),
+                    broadcasted_one.to_mlir(),
+                    exp_reg.to_mlir(),
+                    ty.to_mlir()
+                ));
+
+                // Step 4: 1 / (1 + exp(-x))
+                self.body.push(format!(
+                    "    {} = stablehlo.divide {}, {} : {}",
+                    reg.to_mlir(),
+                    broadcasted_one.to_mlir(),
+                    one_plus_exp.to_mlir(),
+                    ty.to_mlir()
+                ));
+            }
+            "tanh" => {
+                self.body.push(format!(
+                    "    {} = stablehlo.tanh {} : {}",
+                    reg.to_mlir(),
+                    operand.to_mlir(),
+                    ty.to_mlir()
+                ));
+            }
+            "sqrt" => {
+                self.body.push(format!(
+                    "    {} = stablehlo.sqrt {} : {}",
+                    reg.to_mlir(),
+                    operand.to_mlir(),
+                    ty.to_mlir()
+                ));
+            }
+            "exp" => {
+                self.body.push(format!(
+                    "    {} = stablehlo.exponential {} : {}",
+                    reg.to_mlir(),
+                    operand.to_mlir(),
+                    ty.to_mlir()
+                ));
+            }
+            "log" => {
+                self.body.push(format!(
+                    "    {} = stablehlo.log {} : {}",
+                    reg.to_mlir(),
+                    operand.to_mlir(),
+                    ty.to_mlir()
+                ));
+            }
+            _ => panic!("Unsupported unary op: {}", op),
+        }
+
+        reg
+    }
+
+    /// Emit zeros tensor: (zeros [M N]) -> tensor<MxNxf32>
+    pub fn emit_zeros(&mut self, shape: &[i64]) -> (Register, StableHLOType) {
+        let reg = self.fresh_register();
+        let ty = StableHLOType::f32_tensor(shape.to_vec());
+
+        self.body.push(format!(
+            "    {} = stablehlo.constant dense<0.0> : {}",
+            reg.to_mlir(),
+            ty.to_mlir()
+        ));
+
+        (reg, ty)
+    }
+
+    /// Emit random-normal tensor: (random-normal key [M N])
+    /// For now, we emit a constant with small values (placeholder)
+    /// TODO: Proper RNG with seed/key
+    pub fn emit_random_normal(&mut self, shape: &[i64]) -> (Register, StableHLOType) {
+        let reg = self.fresh_register();
+        let ty = StableHLOType::f32_tensor(shape.to_vec());
+
+        // Placeholder: emit constant with 0.01 (will need proper RNG later)
+        self.body.push(format!(
+            "    {} = stablehlo.constant dense<0.01> : {}",
+            reg.to_mlir(),
+            ty.to_mlir()
+        ));
+
+        (reg, ty)
     }
 
     /// Emit a return statement
@@ -287,25 +534,117 @@ impl StableHLOEmitter {
                 (reg, StableHLOType::scalar_f32())
             }
 
-            // Binary operations: (+ a b), (- a b), (* a b), (/ a b)
-            SheafValue::List(elems, _) if elems.len() == 3 => {
-                if let Some(op) = elems[0].as_symbol() {
-                    if matches!(op, "+" | "-" | "*" | "/") {
-                        let (lhs_reg, lhs_ty) = self.compile_expr(&elems[1]);
-                        let (rhs_reg, _rhs_ty) = self.compile_expr(&elems[2]);
-                        let result_reg = self.emit_binop(op, &lhs_reg, &rhs_reg, &lhs_ty);
-                        return (result_reg, lhs_ty);
-                    }
+            // Vectors as tensor literals: [1.0 2.0] or [[1.0 2.0] [3.0 4.0]]
+            SheafValue::Vector(elems, _) => {
+                // Check if nested vector (matrix)
+                if !elems.is_empty() && matches!(elems[0], SheafValue::Vector(_, _)) {
+                    // Matrix literal: [[row1] [row2] ...]
+                    let rows: Vec<Vec<f64>> = elems
+                        .iter()
+                        .map(|row| {
+                            if let SheafValue::Vector(row_elems, _) = row {
+                                row_elems
+                                    .iter()
+                                    .map(|e| match e {
+                                        SheafValue::Float(x, _) => *x,
+                                        SheafValue::Integer(n, _) => *n as f64,
+                                        _ => panic!("Matrix element must be number"),
+                                    })
+                                    .collect()
+                            } else {
+                                panic!("Matrix rows must be vectors")
+                            }
+                        })
+                        .collect();
+                    self.emit_tensor_constant(&rows)
+                } else {
+                    // 1D vector - treat as 1xN tensor
+                    let values: Vec<f64> = elems
+                        .iter()
+                        .map(|e| match e {
+                            SheafValue::Float(x, _) => *x,
+                            SheafValue::Integer(n, _) => *n as f64,
+                            _ => panic!("Vector element must be number"),
+                        })
+                        .collect();
+                    self.emit_tensor_constant(&vec![values])
                 }
-                panic!("Unsupported list form: {}", expr)
+            }
+
+            // List forms: function calls, special ops
+            SheafValue::List(elems, _) if !elems.is_empty() => {
+                if let Some(op) = elems[0].as_symbol() {
+                    match op {
+                        // Binary operations: (+ a b), (- a b), (* a b), (/ a b)
+                        "+" | "-" | "*" | "/" if elems.len() == 3 => {
+                            let (lhs_reg, lhs_ty) = self.compile_expr(&elems[1]);
+                            let (rhs_reg, rhs_ty) = self.compile_expr(&elems[2]);
+                            self.emit_binop(op, &lhs_reg, &rhs_reg, &lhs_ty, &rhs_ty)
+                        }
+
+                        // Matmul: (@ A B)
+                        "@" if elems.len() == 3 => {
+                            let (lhs_reg, lhs_ty) = self.compile_expr(&elems[1]);
+                            let (rhs_reg, rhs_ty) = self.compile_expr(&elems[2]);
+                            self.emit_matmul(&lhs_reg, &rhs_reg, &lhs_ty, &rhs_ty)
+                        }
+
+                        // Unary operations: (relu x), (sigmoid x), (tanh x), etc.
+                        "relu" | "sigmoid" | "tanh" | "sqrt" | "exp" | "log"
+                            if elems.len() == 2 =>
+                        {
+                            let (operand_reg, operand_ty) = self.compile_expr(&elems[1]);
+                            let result_reg = self.emit_unary(op, &operand_reg, &operand_ty);
+                            (result_reg, operand_ty)
+                        }
+
+                        // zeros: (zeros [M N])
+                        "zeros" if elems.len() == 2 => {
+                            let shape = self.parse_shape_vector(&elems[1]);
+                            self.emit_zeros(&shape)
+                        }
+
+                        // random-normal: (random-normal key [M N])
+                        "random-normal" if elems.len() == 3 => {
+                            // Ignore key for now (placeholder implementation)
+                            let shape = self.parse_shape_vector(&elems[2]);
+                            self.emit_random_normal(&shape)
+                        }
+
+                        _ => panic!("Unsupported operation: {}", op),
+                    }
+                } else {
+                    panic!("First element of list must be a symbol: {}", expr)
+                }
             }
 
             _ => panic!("Unsupported expression: {}", expr),
         }
     }
 
+    /// Parse a shape vector like [2 8] into vec![2, 8]
+    fn parse_shape_vector(&self, expr: &SheafValue) -> Vec<i64> {
+        if let SheafValue::Vector(elems, _) = expr {
+            elems
+                .iter()
+                .map(|e| match e {
+                    SheafValue::Integer(n, _) => *n,
+                    _ => panic!("Shape element must be integer"),
+                })
+                .collect()
+        } else {
+            panic!("Shape must be a vector")
+        }
+    }
+
+    /// Sanitize function name for MLIR (replace dashes with underscores)
+    fn sanitize_func_name(name: &str) -> String {
+        name.replace('-', "_")
+    }
+
     /// Generate a complete MLIR module with a function body already emitted
     pub fn emit_function_body(&self, name: &str, result_ty: &StableHLOType) -> String {
+        let sanitized_name = Self::sanitize_func_name(name);
         let mut output = String::new();
         writeln!(output, "// Generated by Sheaf Rust compiler").unwrap();
         writeln!(output, "//").unwrap();
@@ -314,7 +653,7 @@ impl StableHLOEmitter {
         writeln!(
             output,
             "  func.func @{}() -> {} {{",
-            name,
+            sanitized_name,
             result_ty.to_mlir()
         )
         .unwrap();
@@ -334,6 +673,7 @@ impl StableHLOEmitter {
         let (result_reg, result_ty) = self.compile_expr(expr);
         self.emit_return(&result_reg, &result_ty);
 
+        let sanitized_name = Self::sanitize_func_name(name);
         let mut output = String::new();
         writeln!(output, "// Generated by Sheaf Rust compiler").unwrap();
         writeln!(output, "//").unwrap();
@@ -343,7 +683,7 @@ impl StableHLOEmitter {
         writeln!(
             output,
             "  func.func @{}() -> {} {{",
-            name,
+            sanitized_name,
             result_ty.to_mlir()
         )
         .unwrap();

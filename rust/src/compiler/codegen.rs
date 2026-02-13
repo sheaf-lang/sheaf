@@ -4,15 +4,15 @@
 //! Code generation - translate CompiledExpr to StableHLO MLIR
 
 use crate::compiler::stablehlo::{Register, StableHLOEmitter, StableHLOType};
-use crate::core::compiler::{CompiledExpr, CompilerContext};
+use crate::core::compiler::CompiledExpr;
 use crate::core::error::{SheafError, SheafResult};
 use std::collections::HashMap;
 
 /// Code generator - converts CompiledExpr to StableHLO
 pub struct CodeGenerator {
     emitter: StableHLOEmitter,
-    /// Map from variable names to registers
-    bindings: HashMap<String, Register>,
+    /// Map from variable names to registers and their types
+    bindings: HashMap<String, (Register, StableHLOType)>,
 }
 
 impl CodeGenerator {
@@ -93,9 +93,8 @@ impl CodeGenerator {
 
             CompiledExpr::Symbol(name) => {
                 // Look up symbol in bindings
-                if let Some(reg) = self.bindings.get(name) {
-                    // TODO: Need to track types in bindings
-                    Ok((reg.clone(), StableHLOType::scalar_f32()))
+                if let Some((reg, ty)) = self.bindings.get(name) {
+                    Ok((reg.clone(), ty.clone()))
                 } else {
                     Err(SheafError::Compile {
                         message: format!("Undefined symbol in codegen: {}", name),
@@ -109,8 +108,8 @@ impl CodeGenerator {
             CompiledExpr::Let { bindings, body } => {
                 // Evaluate bindings and store in bindings map
                 for (name, value_expr) in bindings {
-                    let (reg, _ty) = self.generate(value_expr)?;
-                    self.bindings.insert(name.clone(), reg);
+                    let (reg, ty) = self.generate(value_expr)?;
+                    self.bindings.insert(name.clone(), (reg, ty));
                 }
                 // Evaluate body with bindings in scope
                 let result = self.generate(body)?;
@@ -186,9 +185,11 @@ impl CodeGenerator {
         // Binary arithmetic operations
         if matches!(name, "+" | "-" | "*" | "/") && args.len() == 2 {
             let (lhs_reg, lhs_ty) = self.generate(&args[0])?;
-            let (rhs_reg, _rhs_ty) = self.generate(&args[1])?;
-            let result_reg = self.emitter.emit_binop(name, &lhs_reg, &rhs_reg, &lhs_ty);
-            Ok((result_reg, lhs_ty))
+            let (rhs_reg, rhs_ty) = self.generate(&args[1])?;
+            let (result_reg, result_ty) = self
+                .emitter
+                .emit_binop(name, &lhs_reg, &rhs_reg, &lhs_ty, &rhs_ty);
+            Ok((result_reg, result_ty))
         }
         // Matrix multiply
         else if name == "@" && args.len() == 2 {
@@ -198,6 +199,54 @@ impl CodeGenerator {
                 .emitter
                 .emit_matmul(&lhs_reg, &rhs_reg, &lhs_ty, &rhs_ty);
             Ok((result_reg, result_ty))
+        }
+        // Unary operations: relu, sigmoid, tanh, sqrt, exp, log
+        else if matches!(name, "relu" | "sigmoid" | "tanh" | "sqrt" | "exp" | "log")
+            && args.len() == 1
+        {
+            let (operand_reg, operand_ty) = self.generate(&args[0])?;
+            let result_reg = self.emitter.emit_unary(name, &operand_reg, &operand_ty);
+            Ok((result_reg, operand_ty))
+        }
+        // zeros: (zeros [M N])
+        else if name == "zeros" && args.len() == 1 {
+            // Extract shape from vector
+            if let CompiledExpr::Vector(shape_elems) = &args[0] {
+                let shape: Vec<i64> = shape_elems
+                    .iter()
+                    .map(|e| match e {
+                        CompiledExpr::Integer(n) => *n,
+                        _ => panic!("Shape element must be integer"),
+                    })
+                    .collect();
+                let (reg, ty) = self.emitter.emit_zeros(&shape);
+                Ok((reg, ty))
+            } else {
+                Err(SheafError::Compile {
+                    message: "zeros expects a vector shape argument".to_string(),
+                    location: crate::core::error::SourceLocation::unknown(),
+                })
+            }
+        }
+        // random-normal: (random-normal key [M N])
+        else if name == "random-normal" && args.len() == 2 {
+            // Ignore key for now, extract shape
+            if let CompiledExpr::Vector(shape_elems) = &args[1] {
+                let shape: Vec<i64> = shape_elems
+                    .iter()
+                    .map(|e| match e {
+                        CompiledExpr::Integer(n) => *n,
+                        _ => panic!("Shape element must be integer"),
+                    })
+                    .collect();
+                let (reg, ty) = self.emitter.emit_random_normal(&shape);
+                Ok((reg, ty))
+            } else {
+                Err(SheafError::Compile {
+                    message: "random-normal expects a vector shape argument".to_string(),
+                    location: crate::core::error::SourceLocation::unknown(),
+                })
+            }
         } else {
             Err(SheafError::Compile {
                 message: format!("Function call not yet supported: {}", name),
