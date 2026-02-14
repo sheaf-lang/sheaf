@@ -280,7 +280,26 @@ class SheafErrorFormatter:
             if source:
                 info = _find_unmatched_paren(source)
                 if info["excess_line"] is not None:
-                    return f"Extra closing paren on line {info['excess_line']}. Check that line for a stray ')'."
+                    # Check if we have suspect lines (many close parens, no opens)
+                    if info["suspect_lines"]:
+                        # Find the line with the MOST closing parens (most likely culprit)
+                        suspect = max(info["suspect_lines"], key=lambda x: x[2])
+                        line_num = suspect[0]
+                        close_count = suspect[2]
+                        lines = source.split("\n")
+                        if line_num <= len(lines):
+                            line_text = lines[line_num - 1]
+                            return f"Suspicious line with {close_count} closing parens:\n  {line_num:4d} | {line_text}"
+
+                    # Fallback: show where imbalance was detected
+                    line_num = info["excess_line"]
+                    col_num = info["excess_col"]
+                    lines = source.split("\n")
+                    if line_num <= len(lines):
+                        line_text = lines[line_num - 1]
+                        pointer = " " * col_num + "^"
+                        return f"Extra closing ')' found here:\n  {line_num:4d} | {line_text}\n       | {pointer}"
+                    return f"Extra closing paren on line {line_num}."
 
         # --- Missing closing paren: locate the unmatched '(' and warn on deep nesting ---
         if (
@@ -319,15 +338,21 @@ def _find_unmatched_paren(source: str) -> dict:
         culprit_line: 1-based line of the oldest unmatched '(' (missing closing paren)
         culprit_context: symbol after that '(' (e.g. 'defn', 'let')
         excess_line: 1-based line where ')' first exceeds opens (extra closing paren)
+        excess_col: 0-based column of the excess ')'
+        suspect_lines: list of (line_num, open_count, close_count) for lines with suspicious paren counts
         max_depth: maximum nesting depth reached during the scan
     """
     stack = []  # each entry: (line_number, context_symbol)
     max_depth = 0
     excess_line = None
+    excess_col = None
+    suspect_lines = []
     lines = source.split("\n")
 
     for line_idx, line in enumerate(lines):
         line_num = line_idx + 1
+        line_open = 0
+        line_close = 0
         i = 0
         while i < len(line):
             ch = line[i]
@@ -347,6 +372,7 @@ def _find_unmatched_paren(source: str) -> dict:
                 continue
 
             if ch == "(":
+                line_open += 1
                 # Extract context: first non-whitespace token after '('
                 context = None
                 rest = line[i + 1 :].lstrip()
@@ -363,13 +389,19 @@ def _find_unmatched_paren(source: str) -> dict:
                     max_depth = len(stack)
 
             elif ch == ")":
+                line_close += 1
                 if stack:
                     stack.pop()
                 elif excess_line is None:
-                    # First ')' with no matching '(' — this line has the extra paren
+                    # First ')' with no matching '(' — this char is the extra paren
                     excess_line = line_num
+                    excess_col = i
 
             i += 1
+
+        # Track lines with many more closing parens than opening ones (suspect for extra paren)
+        if line_close >= 4 and line_close > line_open:
+            suspect_lines.append((line_num, line_open, line_close))
 
     # Oldest unmatched '(' (bottom of remaining stack)
     culprit_line = stack[0][0] if stack else None
@@ -379,6 +411,8 @@ def _find_unmatched_paren(source: str) -> dict:
         "culprit_line": culprit_line,
         "culprit_context": culprit_context,
         "excess_line": excess_line,
+        "excess_col": excess_col,
+        "suspect_lines": suspect_lines,
         "max_depth": max_depth,
     }
 

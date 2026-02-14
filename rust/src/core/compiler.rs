@@ -79,14 +79,10 @@ impl CompilerContext {
 
                 // Check for special forms
                 if let Some(op) = elements[0].as_symbol() {
-                    match op {
-                        "defn" => self.compile_defn(elements, loc),
-                        "let" => self.compile_let(elements, loc),
-                        "fn" => self.compile_fn(elements, loc),
-                        "if" => self.compile_if(elements, loc),
-                        "do" => self.compile_do(elements, loc),
-                        "quote" => self.compile_quote(elements, loc),
-                        _ => self.compile_function_call(elements, loc),
+                    // Try to compile as special form, fall back to function call
+                    match self.try_compile_special_form(op, &elements[1..], loc) {
+                        Some(result) => result,
+                        None => self.compile_function_call(elements, loc),
                     }
                 } else {
                     self.compile_function_call(elements, loc)
@@ -150,191 +146,42 @@ impl CompilerContext {
         })
     }
 
-    /// Compile (defn name [params] body)
-    fn compile_defn(
+    // Special form compilation methods have been moved to src/forms/
+    // See: binding.rs (defn, let, fn), control.rs (if, do), utils.rs (quote)
+
+    /// Try to compile as a special form, return None if not a special form
+    fn try_compile_special_form(
         &mut self,
-        elements: &[SheafValue],
+        op: &str,
+        args: &[SheafValue],
         loc: &crate::core::error::SourceLocation,
-    ) -> SheafResult<CompiledExpr> {
-        if elements.len() < 4 {
-            return Err(SheafError::Compile {
-                message: "defn requires: (defn name [params] body)".to_string(),
-                location: loc.clone(),
-            });
-        }
+    ) -> Option<SheafResult<CompiledExpr>> {
+        // Static dispatch to special forms
+        use crate::forms::*;
 
-        let name = elements[1].as_symbol().ok_or_else(|| SheafError::Compile {
-            message: "defn name must be a symbol".to_string(),
-            location: loc.clone(),
-        })?;
-
-        let params_vec = elements[2].as_vector().ok_or_else(|| SheafError::Compile {
-            message: "defn params must be a vector".to_string(),
-            location: loc.clone(),
-        })?;
-
-        let params: Result<Vec<String>, SheafError> = params_vec
-            .iter()
-            .map(|p| {
-                p.as_symbol()
-                    .map(|s| s.to_string())
-                    .ok_or_else(|| SheafError::Compile {
-                        message: "Parameter must be a symbol".to_string(),
-                        location: loc.clone(),
-                    })
-            })
-            .collect();
-
-        let params = params?;
-        let body = elements[3].clone();
-
-        // Register the function
-        self.registry.insert(
-            name.to_string(),
-            FunctionDef {
-                name: name.to_string(),
-                params,
-                body,
-            },
-        );
-
-        // defn returns nil
-        Ok(CompiledExpr::Nil)
-    }
-
-    /// Compile (let [bindings] body)
-    fn compile_let(
-        &mut self,
-        elements: &[SheafValue],
-        loc: &crate::core::error::SourceLocation,
-    ) -> SheafResult<CompiledExpr> {
-        if elements.len() < 3 {
-            return Err(SheafError::Compile {
-                message: "let requires: (let [bindings] body)".to_string(),
-                location: loc.clone(),
-            });
-        }
-
-        let bindings_vec = elements[1].as_vector().ok_or_else(|| SheafError::Compile {
-            message: "let bindings must be a vector".to_string(),
-            location: loc.clone(),
-        })?;
-
-        if bindings_vec.len() % 2 != 0 {
-            return Err(SheafError::Compile {
-                message: "let bindings must have even number of elements (name value pairs)"
-                    .to_string(),
-                location: loc.clone(),
-            });
-        }
-
-        // Save current local_vars state
-        let saved_locals = self.local_vars.clone();
-
-        // Process bindings in pairs
-        let mut compiled_bindings = Vec::new();
-        for i in (0..bindings_vec.len()).step_by(2) {
-            let name = bindings_vec[i]
-                .as_symbol()
-                .ok_or_else(|| SheafError::Compile {
-                    message: "let binding name must be a symbol".to_string(),
-                    location: loc.clone(),
-                })?;
-
-            let value = &bindings_vec[i + 1];
-            let compiled_value = self.compile(value)?;
-
-            // Add to local scope
-            self.local_vars.insert(name.to_string(), value.clone());
-            compiled_bindings.push((name.to_string(), compiled_value));
-        }
-
-        // Compile body with bindings in scope
-        let body = &elements[2];
-        let compiled_body = self.compile(body)?;
-
-        // Restore local_vars
-        self.local_vars = saved_locals;
-
-        Ok(CompiledExpr::Let {
-            bindings: compiled_bindings,
-            body: Box::new(compiled_body),
-        })
-    }
-
-    /// Compile (fn [params] body)
-    fn compile_fn(
-        &mut self,
-        _elements: &[SheafValue],
-        loc: &crate::core::error::SourceLocation,
-    ) -> SheafResult<CompiledExpr> {
-        // TODO: Implement anonymous functions
-        Err(SheafError::Compile {
-            message: "fn not yet implemented".to_string(),
-            location: loc.clone(),
-        })
-    }
-
-    /// Compile (if condition then else)
-    fn compile_if(
-        &mut self,
-        elements: &[SheafValue],
-        loc: &crate::core::error::SourceLocation,
-    ) -> SheafResult<CompiledExpr> {
-        if elements.len() < 3 || elements.len() > 4 {
-            return Err(SheafError::Compile {
-                message: "if requires: (if condition then) or (if condition then else)".to_string(),
-                location: loc.clone(),
-            });
-        }
-
-        let condition = self.compile(&elements[1])?;
-        let then_branch = self.compile(&elements[2])?;
-        let else_branch = if elements.len() == 4 {
-            Some(Box::new(self.compile(&elements[3])?))
-        } else {
-            None
+        let result = match op {
+            "defn" => DefnForm.compile(self, args, loc),
+            "let" => LetForm.compile(self, args, loc),
+            "fn" => FnForm.compile(self, args, loc),
+            "if" => IfForm.compile(self, args, loc),
+            "do" => DoForm.compile(self, args, loc),
+            "quote" => QuoteForm.compile(self, args, loc),
+            "case" => CaseForm.compile(self, args, loc),
+            "while" => WhileForm.compile(self, args, loc),
+            "repeat" => RepeatForm.compile(self, args, loc),
+            "guard" => GuardForm.compile(self, args, loc),
+            "->" => ThreadFirstForm.compile(self, args, loc),
+            "as->" => ThreadAsForm.compile(self, args, loc),
+            "get" => GetForm.compile(self, args, loc),
+            "get-in" => GetInForm.compile(self, args, loc),
+            "dict" => DictForm.compile(self, args, loc),
+            "assoc" => AssocForm.compile(self, args, loc),
+            "last" => LastForm.compile(self, args, loc),
+            "use" => UseForm.compile(self, args, loc),
+            _ => return None, // Not a special form
         };
 
-        Ok(CompiledExpr::If {
-            condition: Box::new(condition),
-            then_branch: Box::new(then_branch),
-            else_branch,
-        })
-    }
-
-    /// Compile (do expr1 expr2 ...)
-    fn compile_do(
-        &mut self,
-        elements: &[SheafValue],
-        loc: &crate::core::error::SourceLocation,
-    ) -> SheafResult<CompiledExpr> {
-        if elements.len() < 2 {
-            return Err(SheafError::Compile {
-                message: "do requires at least one expression".to_string(),
-                location: loc.clone(),
-            });
-        }
-
-        let exprs: SheafResult<Vec<CompiledExpr>> =
-            elements[1..].iter().map(|e| self.compile(e)).collect();
-
-        Ok(CompiledExpr::Do(exprs?))
-    }
-
-    /// Compile (quote expr)
-    fn compile_quote(
-        &mut self,
-        elements: &[SheafValue],
-        loc: &crate::core::error::SourceLocation,
-    ) -> SheafResult<CompiledExpr> {
-        if elements.len() != 2 {
-            return Err(SheafError::Compile {
-                message: "quote requires exactly one argument".to_string(),
-                location: loc.clone(),
-            });
-        }
-        Ok(CompiledExpr::Quoted(Box::new(elements[1].clone())))
+        Some(result)
     }
 
     /// Compile function call (op arg1 arg2 ...)
