@@ -27,6 +27,7 @@ pub struct FunctionDef {
     pub name: String,
     pub params: Vec<String>,
     pub body: SheafValue,
+    pub signature: Option<crate::core::inference::FunctionSignature>,
 }
 
 impl CompilerContext {

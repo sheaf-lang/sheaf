@@ -45,6 +45,7 @@ impl SpecialForm for DefnForm {
                 name: name.to_string(),
                 params,
                 body,
+                signature: None, // Will be inferred later
             },
         );
 
