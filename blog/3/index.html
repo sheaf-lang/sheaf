@@ -1468,7 +1468,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 For a project aiming to minimize "bloat" and stick to "do one thing and do it well", this is an anti-pattern.</p>
 <p>I briefly considered alternatives: jax.grad, torch.autograd and the TinyGrad autodiff all bring Python back into the compilation pipeline, negating the entire point of V2.</p>
 <h3 id="the-minimal-path"><strong>The Minimal Path</strong></h3>
-<p>Then I started to wonder: do I really need such a large code base to perform differentiation? What does Sheaf actually need?</p>
+<p>Facing these limitations, the question became: do I need such a large code base to perform differentiation? What does Sheaf actually need?</p>
 <p>Enzyme is designed to differentiate arbitrary C++ code with pointers, aliasing, and side effects. Sheaf has none of that. The code is purely functional, immutable, and operates on a small set of mathematical operations: matrix multiplication, element-wise arithmetic, activations, and reductions.</p>
 <p>Besides, I don't need an autodiff engine that optimizes: I need one that generates mathematically correct gradients. IREE will optimize afterward through kernel fusion and vectorization.</p>
 <p>This suggested a different approach: symbolic differentiation on the AST, before StableHLO emission. Since Sheaf code is data (S-expressions), I can transform it directly using standard calculus rules.</p>
