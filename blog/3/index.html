@@ -1461,20 +1461,20 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 <p><em>Feb 15th 2026</em></p>
 <p>The Rust compiler for Sheaf is progressing well. The parser handles S-expressions correctly, and the first StableHLO emission works. Pattern matching in Rust proved to be the right choice: exhaustiveness checking catches missing cases at compile time.</p>
 <p>Before going further, I need to validate the autodiff strategy. The V2 architecture targets IREE, which means I need gradients in StableHLO/Linalg, not through JAX. The obvious candidate was Enzyme-MLIR.</p>
-<h2 id="the-enzyme-detour">The Enzyme Detour</h2>
+<h3 id="the-enzyme-detour"><strong>The Enzyme Detour</strong></h3>
 <p>Enzyme is a compile-time autodiff engine that operates on LLVM IR and MLIR. It checks what I want for Sheaf: MLIR-native, designed for ahead-of-time compilation, and supposedly lightweight.</p>
 <p>I spent time compiling it from source, fixing CMake issues to generate a shared library, and eventually got an 80MB <code>libEnzymeMLIR-23.dylib</code>.</p>
 <p>The problem became clear when trying to integrate it with IREE: IREE doesn't support dynamic plugin loading. To use Enzyme, IREE would need to be rebuilt with Enzyme statically linked, then included in Sheaf. Embedding such a fast-moving project inside Sheaf would turn it into a very large and tightly coupled monolith, with long build times and high maintenance cost.
 For a project aiming to minimize "bloat" and stick to "do one thing and do it well", this is an anti-pattern.</p>
 <p>I briefly considered alternatives: jax.grad, torch.autograd and the TinyGrad autodiff all bring Python back into the compilation pipeline, negating the entire point of V2.</p>
-<h2 id="the-minimal-path">The Minimal Path</h2>
+<h3 id="the-minimal-path"><strong>The Minimal Path</strong></h3>
 <p>Then I started to wonder: do I really need such a large code base to perform differentiation? What does Sheaf actually need?</p>
 <p>Enzyme is designed to differentiate arbitrary C++ code with pointers, aliasing, and side effects. Sheaf has none of that. The code is purely functional, immutable, and operates on a small set of mathematical operations: matrix multiplication, element-wise arithmetic, activations, and reductions.</p>
 <p>Besides, I don't need an autodiff engine that optimizes: I need one that generates mathematically correct gradients. IREE will optimize afterward through kernel fusion and vectorization.</p>
 <p>This suggested a different approach: symbolic differentiation on the AST, before StableHLO emission. Since Sheaf code is data (S-expressions), I can transform it directly using standard calculus rules.</p>
 <p>This also gives me an advantage compared to Enzyme: operating straight on the semantic structure of the program (the AST), not on the compiled MLIR. Enzyme works on LLVM IR, where it must reconstruct intent from low-level operations. In Sheaf, the intent is explicit in the S-expression tree. A multiplication is <code>(* a b)</code>, not a sequence of pointer dereferences and SIMD instructions.</p>
 <p>Having an internal and standalone autograd also solves one of the main architectural issue of the V2: differentiation in the interpreter, which would have otherwise depended on Enzyme.</p>
-<h2 id="proof-of-concept-in-python">Proof of Concept in Python</h2>
+<h3 id="proof-of-concept-in-python"><strong>Proof of Concept in Python</strong></h3>
 <p>To validate this, I built a minimal autodiff in Python. Start with a simple expression:</p>
 <div class="language-python highlight"><pre><span></span><code><span class="n">x</span> <span class="o">=</span> <span class="n">Var</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">)</span>
 <span class="n">y</span> <span class="o">=</span> <span class="n">Var</span><span class="p">(</span><span class="s2">&quot;y&quot;</span><span class="p">)</span>
@@ -1497,7 +1497,7 @@ func.func @grad_x(%x: tensor&lt;f32&gt;, %y: tensor&lt;f32&gt;) -&gt; tensor&lt;
 }
 </code></pre></div>
 <p>Compile with IREE, execute, verify: <code>df/dx(2,3) = 4</code>, <code>df/dy(2,3) = 2</code>. Correct.</p>
-<h2 id="scaling-to-a-real-world-example">Scaling to a Real World Example</h2>
+<h3 id="scaling-to-a-real-world-example"><strong>Scaling to a Real World Example</strong></h3>
 <p>Validating the engine requires more than differentiating a simple expression, so I moved to the XOR MLP (2-&gt;8-&gt;1 architecture, matching the existing Sheaf "Hello world" example). This requires:</p>
 <ul>
 <li>Matrix multiplication with proper transpose for gradients</li>
@@ -1511,7 +1511,7 @@ func.func @grad_x(%x: tensor&lt;f32&gt;, %y: tensor&lt;f32&gt;) -&gt; tensor&lt;
 <div class="language-text highlight"><pre><span></span><code>(loss, dL/dW1, dL/db1, dL/dW2, dL/db2) = train_step(x, W1, b1, W2, b2, y)
 </code></pre></div>
 <p>This compiles to an 18KB VMFB, but more importantly, it outputs the correct shapes and values.</p>
-<h2 id="the-full-training-loop">The Full Training Loop</h2>
+<h3 id="the-full-training-loop"><strong>The Full Training Loop</strong></h3>
 <p>The next step is to compile the entire training loop into the VMFB, not just a hard-coded single pass.
 Instead of calling <code>train_step</code> 500 times from Python, this requires generating MLIR with <code>scf.for</code> that contains forward, backward, and stochastic gradient descent updates:</p>
 <div class="language-text highlight"><pre><span></span><code>func.func @train(%x, %y, %W1_init, %b1_init, %W2_init, %b2_init, %lr, %epochs) {
@@ -1554,7 +1554,7 @@ result<span class="o">[</span><span class="m">4</span><span class="o">]</span>:<
 </code></pre></div>
 <p>I am happy with this result. The compiled training loop is 18KB, the entire standalone package (runtime + VMFB) fits in 850KB, and the network output converges correctly (final prediction ~= 0.998).</p>
 <p>Of course, this is still a Proof of Concept, but this validates that a custom differentiation engine is feasible.</p>
-<h2 id="performance">Performance</h2>
+<h3 id="performance"><strong>Performance</strong></h3>
 <p>Since XLA is highly optimized and probably uses all kind of performance tricks, I didn't expect much from my naive autograd.</p>
 <p>I ran a 500 epochs benchmark on the MLP:</p>
 <ul>
@@ -1563,7 +1563,7 @@ result<span class="o">[</span><span class="m">4</span><span class="o">]</span>:<
 </ul>
 <p>In this specific setup, V2 runs 51× faster than the V1 configuration.
 However, this isn't that surprising as V2 compiles the entire training loop ahead of time, while V1 has a huge dispatch latency as it calls JAX from Python 500 times. But it demonstrates the overhead eliminated by AOT compilation.</p>
-<h2 id="conclusion">Conclusion</h2>
+<h3 id="conclusion"><strong>Conclusion</strong></h3>
 <p>This POC validates the approach for simple networks. Having a standalone differentiation engine will allow me to keep the SDK size minimal with no LLVM dependency in the distributed package, and no 80MB autodiff plugin.
 However, several questions remain open.</p>
 <ul>
