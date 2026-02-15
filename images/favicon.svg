@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <style>
+    @media (prefers-color-scheme: dark) {
+      .favicon-path { fill: #e0e0e0; }
+    }
+    @media (prefers-color-scheme: light) {
+      .favicon-path { fill: #421168; }
+    }
+  </style>
+  <text class="favicon-path" x="10" y="70" font-family="monospace" font-size="80" font-weight="bold">(ʃ)</text>
+</svg>
