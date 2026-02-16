@@ -27,9 +27,32 @@ pub fn emit_random_normal(
     emitter.emit_random_normal(shape)
 }
 
+/// Emit ones tensor: (ones [M N]) -> tensor<MxNxf32>
+pub fn emit_ones(emitter: &mut StableHLOEmitter, shape: &[i64]) -> (Register, StableHLOType) {
+    emitter.emit_ones(shape)
+}
+
+/// Emit reshape: (reshape tensor [M N]) -> tensor<MxNxf32>
+pub fn emit_reshape(
+    emitter: &mut StableHLOEmitter,
+    operand: &Register,
+    operand_ty: &StableHLOType,
+    new_shape: &[i64],
+) -> (Register, StableHLOType) {
+    emitter.emit_reshape(operand, operand_ty, new_shape)
+}
+
+/// Emit transpose: (transpose tensor [1 0]) -> permutes dimensions
+pub fn emit_transpose(
+    emitter: &mut StableHLOEmitter,
+    operand: &Register,
+    operand_ty: &StableHLOType,
+    permutation: &[i64],
+) -> (Register, StableHLOType) {
+    emitter.emit_transpose(operand, operand_ty, permutation)
+}
+
 // TODO: Add more tensor operations
-// - reshape
-// - transpose
 // - slice
 // - concat
 // - sum, mean, min, max (reductions)

@@ -375,6 +375,75 @@ impl CodeGenerator {
                     location: crate::core::error::SourceLocation::unknown(),
                 })
             }
+        }
+        // ones: (ones [M N])
+        else if name == "ones" && args.len() == 1 {
+            if let CompiledExpr::Vector(shape_elems) = &args[0] {
+                let shape: Vec<i64> = shape_elems
+                    .iter()
+                    .map(|e| match e {
+                        CompiledExpr::Integer(n) => *n,
+                        _ => panic!("Shape element must be integer"),
+                    })
+                    .collect();
+                let (reg, ty) = tensor_ops::emit_ones(&mut self.emitter, &shape);
+                Ok((reg, ty))
+            } else {
+                Err(SheafError::Compile {
+                    message: "ones expects a vector shape argument".to_string(),
+                    location: crate::core::error::SourceLocation::unknown(),
+                })
+            }
+        }
+        // reshape: (reshape tensor [M N])
+        else if name == "reshape" && args.len() == 2 {
+            let (operand_reg, operand_ty) = self.generate(&args[0])?;
+            if let CompiledExpr::Vector(shape_elems) = &args[1] {
+                let new_shape: Vec<i64> = shape_elems
+                    .iter()
+                    .map(|e| match e {
+                        CompiledExpr::Integer(n) => *n,
+                        _ => panic!("Shape element must be integer"),
+                    })
+                    .collect();
+                let (reg, ty) = tensor_ops::emit_reshape(
+                    &mut self.emitter,
+                    &operand_reg,
+                    &operand_ty,
+                    &new_shape,
+                );
+                Ok((reg, ty))
+            } else {
+                Err(SheafError::Compile {
+                    message: "reshape expects a vector shape argument".to_string(),
+                    location: crate::core::error::SourceLocation::unknown(),
+                })
+            }
+        }
+        // transpose: (transpose tensor [1 0])
+        else if name == "transpose" && args.len() == 2 {
+            let (operand_reg, operand_ty) = self.generate(&args[0])?;
+            if let CompiledExpr::Vector(perm_elems) = &args[1] {
+                let permutation: Vec<i64> = perm_elems
+                    .iter()
+                    .map(|e| match e {
+                        CompiledExpr::Integer(n) => *n,
+                        _ => panic!("Permutation element must be integer"),
+                    })
+                    .collect();
+                let (reg, ty) = tensor_ops::emit_transpose(
+                    &mut self.emitter,
+                    &operand_reg,
+                    &operand_ty,
+                    &permutation,
+                );
+                Ok((reg, ty))
+            } else {
+                Err(SheafError::Compile {
+                    message: "transpose expects a vector permutation argument".to_string(),
+                    location: crate::core::error::SourceLocation::unknown(),
+                })
+            }
         } else {
             Err(SheafError::Compile {
                 message: format!("Function call not yet supported: {}", name),

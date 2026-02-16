@@ -659,6 +659,78 @@ impl StableHLOEmitter {
         (reg, ty)
     }
 
+    /// Emit ones tensor: (ones [M N]) -> tensor<MxNxf32>
+    pub fn emit_ones(&mut self, shape: &[i64]) -> (Register, StableHLOType) {
+        let reg = self.fresh_register();
+        let ty = StableHLOType::f32_tensor(shape.to_vec());
+
+        self.body.push(format!(
+            "    {} = stablehlo.constant dense<1.0> : {}",
+            reg.to_mlir(),
+            ty.to_mlir()
+        ));
+
+        (reg, ty)
+    }
+
+    /// Emit reshape: (reshape tensor [M N]) -> tensor<MxNxf32>
+    pub fn emit_reshape(
+        &mut self,
+        operand: &Register,
+        operand_ty: &StableHLOType,
+        new_shape: &[i64],
+    ) -> (Register, StableHLOType) {
+        let reg = self.fresh_register();
+        let result_ty = StableHLOType::f32_tensor(new_shape.to_vec());
+
+        self.body.push(format!(
+            "    {} = stablehlo.reshape {} : ({}) -> {}",
+            reg.to_mlir(),
+            operand.to_mlir(),
+            operand_ty.to_mlir(),
+            result_ty.to_mlir()
+        ));
+
+        (reg, result_ty)
+    }
+
+    /// Emit transpose: (transpose tensor [1 0]) -> permutes dimensions
+    pub fn emit_transpose(
+        &mut self,
+        operand: &Register,
+        operand_ty: &StableHLOType,
+        permutation: &[i64],
+    ) -> (Register, StableHLOType) {
+        let reg = self.fresh_register();
+
+        // Compute result shape by applying permutation
+        let operand_shape = operand_ty.shape();
+        let result_shape: Vec<i64> = permutation
+            .iter()
+            .map(|&i| operand_shape[i as usize])
+            .collect();
+
+        let result_ty = StableHLOType::f32_tensor(result_shape);
+
+        // Format permutation as [0, 1, 2]
+        let perm_str = permutation
+            .iter()
+            .map(|d| d.to_string())
+            .collect::<Vec<_>>()
+            .join(", ");
+
+        self.body.push(format!(
+            "    {} = stablehlo.transpose {}, dims = [{}] : ({}) -> {}",
+            reg.to_mlir(),
+            operand.to_mlir(),
+            perm_str,
+            operand_ty.to_mlir(),
+            result_ty.to_mlir()
+        ));
+
+        (reg, result_ty)
+    }
+
     /// Emit a return statement
     pub fn emit_return(&mut self, reg: &Register, ty: &StableHLOType) {
         self.body
