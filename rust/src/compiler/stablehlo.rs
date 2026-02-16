@@ -435,6 +435,33 @@ impl StableHLOEmitter {
         (reg, result_ty)
     }
 
+    /// Emit select operation (conditional): select(pred, on_true, on_false)
+    pub fn emit_select(
+        &mut self,
+        pred: &Register,
+        on_true: &Register,
+        on_false: &Register,
+        pred_ty: &StableHLOType,
+        on_true_ty: &StableHLOType,
+        _on_false_ty: &StableHLOType,
+    ) -> (Register, StableHLOType) {
+        // Result type is the type of the branches (assume they match)
+        let result_ty = on_true_ty.clone();
+
+        let reg = self.fresh_register();
+        self.body.push(format!(
+            "    {} = stablehlo.select {}, {}, {} : {}, {}",
+            reg.to_mlir(),
+            pred.to_mlir(),
+            on_true.to_mlir(),
+            on_false.to_mlir(),
+            pred_ty.to_mlir(),
+            result_ty.to_mlir()
+        ));
+
+        (reg, result_ty)
+    }
+
     /// Emit boolean binary operation (and, or)
     pub fn emit_bool_binop(
         &mut self,

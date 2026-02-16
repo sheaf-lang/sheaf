@@ -154,26 +154,16 @@ impl CodeGenerator {
                 then_branch,
                 else_branch,
             } => {
-                // For now, compile as a simple select operation
-                // TODO: Proper control flow with stablehlo.if
-                let (cond_reg, _cond_ty) = self.generate(condition)?;
+                let (cond_reg, cond_ty) = self.generate(condition)?;
                 let (then_reg, then_ty) = self.generate(then_branch)?;
 
                 if let Some(else_expr) = else_branch {
-                    let (else_reg, _else_ty) = self.generate(else_expr)?;
-                    // Use stablehlo.select: select(cond, then, else)
-                    let result_reg = self.emitter.fresh_register();
-                    self.emitter.emit_instruction(format!(
-                        "    {} = \"stablehlo.select\"({}, {}, {}) : (tensor<i1>, {}, {}) -> {}",
-                        result_reg.to_mlir(),
-                        cond_reg.to_mlir(),
-                        then_reg.to_mlir(),
-                        else_reg.to_mlir(),
-                        then_ty.to_mlir(),
-                        then_ty.to_mlir(),
-                        then_ty.to_mlir()
-                    ));
-                    Ok((result_reg, then_ty))
+                    let (else_reg, else_ty) = self.generate(else_expr)?;
+                    // Use stablehlo.select: result = select(cond, then, else)
+                    let (result_reg, result_ty) = self.emitter.emit_select(
+                        &cond_reg, &then_reg, &else_reg, &cond_ty, &then_ty, &else_ty,
+                    );
+                    Ok((result_reg, result_ty))
                 } else {
                     // If without else: just return then_branch
                     // (assumes condition is always true for now)
