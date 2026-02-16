@@ -435,6 +435,40 @@ impl StableHLOEmitter {
         (reg, result_ty)
     }
 
+    /// Emit boolean binary operation (and, or)
+    pub fn emit_bool_binop(
+        &mut self,
+        op: &str,
+        lhs: &Register,
+        rhs: &Register,
+        lhs_ty: &StableHLOType,
+        rhs_ty: &StableHLOType,
+    ) -> (Register, StableHLOType) {
+        let stablehlo_op = match op {
+            "and" => "stablehlo.and",
+            "or" => "stablehlo.or",
+            _ => panic!("Unsupported boolean binop: {}", op),
+        };
+
+        // Determine result type (broadcast if needed)
+        let result_ty = self.broadcast_types(lhs_ty, rhs_ty);
+
+        // Check if we need to broadcast operands
+        let (actual_lhs, actual_rhs) =
+            self.maybe_broadcast_operands(lhs, rhs, lhs_ty, rhs_ty, &result_ty);
+
+        let reg = self.fresh_register();
+        self.body.push(format!(
+            "    {} = {} {}, {} : {}",
+            reg.to_mlir(),
+            stablehlo_op,
+            actual_lhs.to_mlir(),
+            actual_rhs.to_mlir(),
+            result_ty.to_mlir()
+        ));
+        (reg, result_ty)
+    }
+
     /// Emit unary operation (relu, sigmoid, tanh, etc.)
     pub fn emit_unary(&mut self, op: &str, operand: &Register, ty: &StableHLOType) -> Register {
         let reg = self.fresh_register();
@@ -534,6 +568,15 @@ impl StableHLOEmitter {
             "log" => {
                 self.body.push(format!(
                     "    {} = stablehlo.log {} : {}",
+                    reg.to_mlir(),
+                    operand.to_mlir(),
+                    ty.to_mlir()
+                ));
+            }
+            "not" => {
+                // Boolean NOT
+                self.body.push(format!(
+                    "    {} = stablehlo.not {} : {}",
                     reg.to_mlir(),
                     operand.to_mlir(),
                     ty.to_mlir()

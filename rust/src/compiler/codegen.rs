@@ -267,9 +267,20 @@ impl CodeGenerator {
                 .emit_matmul(&lhs_reg, &rhs_reg, &lhs_ty, &rhs_ty);
             Ok((result_reg, result_ty))
         }
-        // Unary operations: relu, sigmoid, tanh, sqrt, exp, log
-        else if matches!(name, "relu" | "sigmoid" | "tanh" | "sqrt" | "exp" | "log")
-            && args.len() == 1
+        // Boolean binary operations
+        else if matches!(name, "and" | "or") && args.len() == 2 {
+            let (lhs_reg, lhs_ty) = self.generate(&args[0])?;
+            let (rhs_reg, rhs_ty) = self.generate(&args[1])?;
+            let (result_reg, result_ty) = self
+                .emitter
+                .emit_bool_binop(name, &lhs_reg, &rhs_reg, &lhs_ty, &rhs_ty);
+            Ok((result_reg, result_ty))
+        }
+        // Unary operations: relu, sigmoid, tanh, sqrt, exp, log, not
+        else if matches!(
+            name,
+            "relu" | "sigmoid" | "tanh" | "sqrt" | "exp" | "log" | "not"
+        ) && args.len() == 1
         {
             let (operand_reg, operand_ty) = self.generate(&args[0])?;
             let result_reg = self.emitter.emit_unary(name, &operand_reg, &operand_ty);
@@ -421,5 +432,45 @@ mod tests {
         let mlir_str = mlir.unwrap();
         assert!(mlir_str.contains("stablehlo.compare"));
         assert!(mlir_str.contains("comparison_direction = EQ"));
+    }
+
+    #[test]
+    fn test_emit_boolean_and() {
+        let codegen = CodeGenerator::new();
+        let expr = CompiledExpr::FunctionCall {
+            name: "and".to_string(),
+            args: vec![
+                CompiledExpr::FunctionCall {
+                    name: ">".to_string(),
+                    args: vec![CompiledExpr::Float(5.0), CompiledExpr::Float(2.0)],
+                },
+                CompiledExpr::FunctionCall {
+                    name: "<".to_string(),
+                    args: vec![CompiledExpr::Float(1.0), CompiledExpr::Float(3.0)],
+                },
+            ],
+        };
+        let mlir = codegen.emit_function("test_and", &expr);
+        assert!(mlir.is_ok());
+        let mlir_str = mlir.unwrap();
+        assert!(mlir_str.contains("stablehlo.compare"));
+        assert!(mlir_str.contains("stablehlo.and"));
+    }
+
+    #[test]
+    fn test_emit_boolean_not() {
+        let codegen = CodeGenerator::new();
+        let expr = CompiledExpr::FunctionCall {
+            name: "not".to_string(),
+            args: vec![CompiledExpr::FunctionCall {
+                name: ">".to_string(),
+                args: vec![CompiledExpr::Float(5.0), CompiledExpr::Float(10.0)],
+            }],
+        };
+        let mlir = codegen.emit_function("test_not", &expr);
+        assert!(mlir.is_ok());
+        let mlir_str = mlir.unwrap();
+        assert!(mlir_str.contains("stablehlo.compare"));
+        assert!(mlir_str.contains("stablehlo.not"));
     }
 }
