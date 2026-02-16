@@ -15,9 +15,9 @@
 //! - string_ops: String operations (concat, split, etc.) [TODO]
 
 pub mod math_ops;
+pub mod nn_ops;
+pub mod tensor_ops;
 // TODO: Add other runtime modules
-// pub mod tensor_ops;
-// pub mod nn_ops;
 // pub mod core_ops;
 // pub mod io_ops;
 // pub mod string_ops;

@@ -6,7 +6,7 @@
 use crate::compiler::stablehlo::{Register, StableHLOEmitter, StableHLOType};
 use crate::core::compiler::CompiledExpr;
 use crate::core::error::{SheafError, SheafResult};
-use crate::runtime::math_ops;
+use crate::runtime::{math_ops, nn_ops, tensor_ops};
 use std::collections::HashMap;
 
 /// Code generator - converts CompiledExpr to StableHLO
@@ -294,10 +294,18 @@ impl CodeGenerator {
             let result_reg = math_ops::emit_not(&mut self.emitter, &operand_reg, &operand_ty);
             Ok((result_reg, operand_ty))
         }
-        // Neural network unary operations: relu, sigmoid, tanh (stay in stablehlo.rs for now)
-        else if matches!(name, "relu" | "sigmoid" | "tanh") && args.len() == 1 {
+        // Neural network unary operations: relu, sigmoid, tanh
+        else if name == "relu" && args.len() == 1 {
             let (operand_reg, operand_ty) = self.generate(&args[0])?;
-            let result_reg = self.emitter.emit_unary(name, &operand_reg, &operand_ty);
+            let result_reg = nn_ops::emit_relu(&mut self.emitter, &operand_reg, &operand_ty);
+            Ok((result_reg, operand_ty))
+        } else if name == "sigmoid" && args.len() == 1 {
+            let (operand_reg, operand_ty) = self.generate(&args[0])?;
+            let result_reg = nn_ops::emit_sigmoid(&mut self.emitter, &operand_reg, &operand_ty);
+            Ok((result_reg, operand_ty))
+        } else if name == "tanh" && args.len() == 1 {
+            let (operand_reg, operand_ty) = self.generate(&args[0])?;
+            let result_reg = nn_ops::emit_tanh(&mut self.emitter, &operand_reg, &operand_ty);
             Ok((result_reg, operand_ty))
         }
         // zeros: (zeros [M N])
@@ -311,7 +319,7 @@ impl CodeGenerator {
                         _ => panic!("Shape element must be integer"),
                     })
                     .collect();
-                let (reg, ty) = self.emitter.emit_zeros(&shape);
+                let (reg, ty) = tensor_ops::emit_zeros(&mut self.emitter, &shape);
                 Ok((reg, ty))
             } else {
                 Err(SheafError::Compile {
@@ -331,7 +339,7 @@ impl CodeGenerator {
                         _ => panic!("Shape element must be integer"),
                     })
                     .collect();
-                let (reg, ty) = self.emitter.emit_random_normal(&shape);
+                let (reg, ty) = tensor_ops::emit_random_normal(&mut self.emitter, &shape);
                 Ok((reg, ty))
             } else {
                 Err(SheafError::Compile {
