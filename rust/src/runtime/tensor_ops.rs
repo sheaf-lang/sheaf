@@ -52,10 +52,30 @@ pub fn emit_transpose(
     emitter.emit_transpose(operand, operand_ty, permutation)
 }
 
+/// Emit iota (arange): (arange [N]) -> tensor<Nxf32> with values [0, 1, 2, ..., N-1]
+pub fn emit_arange(
+    emitter: &mut StableHLOEmitter,
+    shape: &[i64],
+    dimension: i64,
+) -> (Register, StableHLOType) {
+    emitter.emit_iota(shape, dimension)
+}
+
+/// Emit concatenate: (concat [tensor1 tensor2 ...] axis)
+pub fn emit_concatenate(
+    emitter: &mut StableHLOEmitter,
+    operands: &[Register],
+    operand_types: &[StableHLOType],
+    dimension: i64,
+) -> (Register, StableHLOType) {
+    emitter.emit_concatenate(operands, operand_types, dimension)
+}
+
 // TODO: Add more tensor operations
 // - slice
-// - concat
-// - sum, mean, min, max (reductions)
+// - sum, mean (reductions - require reduce with body)
+// - argmax, argmin
+// - where, einsum
 // - broadcast (already internal in stablehlo.rs)
 
 #[cfg(test)]

@@ -731,6 +731,70 @@ impl StableHLOEmitter {
         (reg, result_ty)
     }
 
+    /// Emit iota (arange): (arange N) -> tensor<Nxf32> with values [0, 1, 2, ..., N-1]
+    /// For now, creates a 1D tensor. Can be extended to multi-dimensional later.
+    pub fn emit_iota(&mut self, shape: &[i64], dimension: i64) -> (Register, StableHLOType) {
+        let reg = self.fresh_register();
+        let ty = StableHLOType::f32_tensor(shape.to_vec());
+
+        self.body.push(format!(
+            "    {} = stablehlo.iota dim = {} : {}",
+            reg.to_mlir(),
+            dimension,
+            ty.to_mlir()
+        ));
+
+        (reg, ty)
+    }
+
+    /// Emit concatenate: (concat [tensor1 tensor2 ...] axis)
+    pub fn emit_concatenate(
+        &mut self,
+        operands: &[Register],
+        operand_types: &[StableHLOType],
+        dimension: i64,
+    ) -> (Register, StableHLOType) {
+        let reg = self.fresh_register();
+
+        // Compute result shape: same as first operand except for concat dimension
+        let first_shape = operand_types[0].shape();
+        let mut result_shape = first_shape.clone();
+
+        // Sum the sizes along the concatenation dimension
+        let concat_dim_size: i64 = operand_types
+            .iter()
+            .map(|ty| ty.shape()[dimension as usize])
+            .sum();
+
+        result_shape[dimension as usize] = concat_dim_size;
+        let result_ty = StableHLOType::f32_tensor(result_shape);
+
+        // Format operands as %0, %1, %2
+        let operands_str = operands
+            .iter()
+            .map(|r| r.to_mlir())
+            .collect::<Vec<_>>()
+            .join(", ");
+
+        // Format types as (tensor<2x3xf32>, tensor<2x3xf32>)
+        let types_str = operand_types
+            .iter()
+            .map(|ty| ty.to_mlir())
+            .collect::<Vec<_>>()
+            .join(", ");
+
+        self.body.push(format!(
+            "    {} = stablehlo.concatenate {}, dim = {} : ({}) -> {}",
+            reg.to_mlir(),
+            operands_str,
+            dimension,
+            types_str,
+            result_ty.to_mlir()
+        ));
+
+        (reg, result_ty)
+    }
+
     /// Emit a return statement
     pub fn emit_return(&mut self, reg: &Register, ty: &StableHLOType) {
         self.body

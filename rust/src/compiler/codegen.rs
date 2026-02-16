@@ -444,6 +444,53 @@ impl CodeGenerator {
                     location: crate::core::error::SourceLocation::unknown(),
                 })
             }
+        }
+        // arange: (arange N) -> tensor<Nxf32> with [0, 1, 2, ..., N-1]
+        else if name == "arange" && args.len() == 1 {
+            if let CompiledExpr::Integer(n) = &args[0] {
+                let shape = vec![*n];
+                let (reg, ty) = tensor_ops::emit_arange(&mut self.emitter, &shape, 0);
+                Ok((reg, ty))
+            } else {
+                Err(SheafError::Compile {
+                    message: "arange expects an integer argument".to_string(),
+                    location: crate::core::error::SourceLocation::unknown(),
+                })
+            }
+        }
+        // concat: (concat [tensor1 tensor2 ...] dim)
+        else if name == "concat" && args.len() == 2 {
+            if let CompiledExpr::Vector(tensor_exprs) = &args[0] {
+                // Generate all tensor operands
+                let mut operand_regs = Vec::new();
+                let mut operand_types = Vec::new();
+                for expr in tensor_exprs {
+                    let (reg, ty) = self.generate(expr)?;
+                    operand_regs.push(reg);
+                    operand_types.push(ty);
+                }
+
+                // Get dimension
+                if let CompiledExpr::Integer(dim) = &args[1] {
+                    let (reg, ty) = tensor_ops::emit_concatenate(
+                        &mut self.emitter,
+                        &operand_regs,
+                        &operand_types,
+                        *dim,
+                    );
+                    Ok((reg, ty))
+                } else {
+                    Err(SheafError::Compile {
+                        message: "concat expects an integer dimension argument".to_string(),
+                        location: crate::core::error::SourceLocation::unknown(),
+                    })
+                }
+            } else {
+                Err(SheafError::Compile {
+                    message: "concat expects a vector of tensors as first argument".to_string(),
+                    location: crate::core::error::SourceLocation::unknown(),
+                })
+            }
         } else {
             Err(SheafError::Compile {
                 message: format!("Function call not yet supported: {}", name),
