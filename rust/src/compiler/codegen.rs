@@ -6,6 +6,7 @@
 use crate::compiler::stablehlo::{Register, StableHLOEmitter, StableHLOType};
 use crate::core::compiler::CompiledExpr;
 use crate::core::error::{SheafError, SheafResult};
+use crate::runtime::math_ops;
 use std::collections::HashMap;
 
 /// Code generator - converts CompiledExpr to StableHLO
@@ -234,44 +235,67 @@ impl CodeGenerator {
         if matches!(name, "+" | "-" | "*" | "/") && args.len() == 2 {
             let (lhs_reg, lhs_ty) = self.generate(&args[0])?;
             let (rhs_reg, rhs_ty) = self.generate(&args[1])?;
-            let (result_reg, result_ty) = self
-                .emitter
-                .emit_binop(name, &lhs_reg, &rhs_reg, &lhs_ty, &rhs_ty);
+            let (result_reg, result_ty) = math_ops::emit_arithmetic_binop(
+                &mut self.emitter,
+                name,
+                &lhs_reg,
+                &rhs_reg,
+                &lhs_ty,
+                &rhs_ty,
+            );
             Ok((result_reg, result_ty))
         }
         // Comparison operations
         else if matches!(name, "=" | "==" | "!=" | "<" | "<=" | ">" | ">=") && args.len() == 2 {
             let (lhs_reg, lhs_ty) = self.generate(&args[0])?;
             let (rhs_reg, rhs_ty) = self.generate(&args[1])?;
-            let (result_reg, result_ty) = self
-                .emitter
-                .emit_compare(name, &lhs_reg, &rhs_reg, &lhs_ty, &rhs_ty);
+            let (result_reg, result_ty) = math_ops::emit_comparison(
+                &mut self.emitter,
+                name,
+                &lhs_reg,
+                &rhs_reg,
+                &lhs_ty,
+                &rhs_ty,
+            );
             Ok((result_reg, result_ty))
         }
         // Matrix multiply
         else if name == "@" && args.len() == 2 {
             let (lhs_reg, lhs_ty) = self.generate(&args[0])?;
             let (rhs_reg, rhs_ty) = self.generate(&args[1])?;
-            let (result_reg, result_ty) = self
-                .emitter
-                .emit_matmul(&lhs_reg, &rhs_reg, &lhs_ty, &rhs_ty);
+            let (result_reg, result_ty) =
+                math_ops::emit_matmul(&mut self.emitter, &lhs_reg, &rhs_reg, &lhs_ty, &rhs_ty);
             Ok((result_reg, result_ty))
         }
         // Boolean binary operations
         else if matches!(name, "and" | "or") && args.len() == 2 {
             let (lhs_reg, lhs_ty) = self.generate(&args[0])?;
             let (rhs_reg, rhs_ty) = self.generate(&args[1])?;
-            let (result_reg, result_ty) = self
-                .emitter
-                .emit_bool_binop(name, &lhs_reg, &rhs_reg, &lhs_ty, &rhs_ty);
+            let (result_reg, result_ty) = math_ops::emit_boolean_binop(
+                &mut self.emitter,
+                name,
+                &lhs_reg,
+                &rhs_reg,
+                &lhs_ty,
+                &rhs_ty,
+            );
             Ok((result_reg, result_ty))
         }
-        // Unary operations: relu, sigmoid, tanh, sqrt, exp, log, not
-        else if matches!(
-            name,
-            "relu" | "sigmoid" | "tanh" | "sqrt" | "exp" | "log" | "not"
-        ) && args.len() == 1
-        {
+        // Math unary operations: sqrt, exp, log
+        else if matches!(name, "sqrt" | "exp" | "log") && args.len() == 1 {
+            let (operand_reg, operand_ty) = self.generate(&args[0])?;
+            let result_reg =
+                math_ops::emit_math_unary(&mut self.emitter, name, &operand_reg, &operand_ty);
+            Ok((result_reg, operand_ty))
+        }
+        // Boolean not
+        else if name == "not" && args.len() == 1 {
+            let (operand_reg, operand_ty) = self.generate(&args[0])?;
+            let result_reg = math_ops::emit_not(&mut self.emitter, &operand_reg, &operand_ty);
+            Ok((result_reg, operand_ty))
+        }
+        // Neural network unary operations: relu, sigmoid, tanh (stay in stablehlo.rs for now)
+        else if matches!(name, "relu" | "sigmoid" | "tanh") && args.len() == 1 {
             let (operand_reg, operand_ty) = self.generate(&args[0])?;
             let result_reg = self.emitter.emit_unary(name, &operand_reg, &operand_ty);
             Ok((result_reg, operand_ty))

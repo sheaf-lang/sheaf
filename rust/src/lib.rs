@@ -10,7 +10,7 @@ pub mod ast;
 pub mod compiler;
 pub mod core;
 pub mod forms;
-// pub mod runtime;  // Phase 2+
+pub mod runtime;
 
 // Re-export main types
 pub use ast::SheafValue;
