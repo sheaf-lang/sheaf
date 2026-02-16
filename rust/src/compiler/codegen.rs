@@ -13,6 +13,8 @@ pub struct CodeGenerator {
     emitter: StableHLOEmitter,
     /// Map from variable names to registers and their types
     bindings: HashMap<String, (Register, StableHLOType)>,
+    /// Function registry for user-defined functions
+    function_registry: HashMap<String, crate::core::compiler::FunctionDef>,
 }
 
 impl CodeGenerator {
@@ -20,6 +22,15 @@ impl CodeGenerator {
         Self {
             emitter: StableHLOEmitter::new(),
             bindings: HashMap::new(),
+            function_registry: HashMap::new(),
+        }
+    }
+
+    pub fn with_registry(registry: HashMap<String, crate::core::compiler::FunctionDef>) -> Self {
+        Self {
+            emitter: StableHLOEmitter::new(),
+            bindings: HashMap::new(),
+            function_registry: registry,
         }
     }
 

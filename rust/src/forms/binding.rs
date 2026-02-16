@@ -35,17 +35,33 @@ impl SpecialForm for DefnForm {
             .collect();
         let params = params?;
 
-        // Body is the third argument
-        let body = args[2].clone();
+        // Body is the third argument - compile it
+        let body_ast = args[2].clone();
 
-        // Register the function in the compiler
+        // Add parameters to local scope temporarily
+        let saved_locals = compiler.local_vars.clone();
+        for param in &params {
+            compiler.local_vars.insert(param.clone(), body_ast.clone()); // Placeholder
+        }
+
+        // Compile body
+        let body_compiled = compiler.compile(&body_ast)?;
+
+        // Restore local scope
+        compiler.local_vars = saved_locals;
+
+        // Infer function signature
+        let signature =
+            crate::core::inference::infer_function_signature(compiler, &params, &body_compiled)?;
+
+        // Register the function in the compiler with compiled body and signature
         compiler.registry.insert(
             name.to_string(),
             FunctionDef {
                 name: name.to_string(),
                 params,
-                body,
-                signature: None, // Will be inferred later
+                body: body_ast,
+                signature: Some(signature),
             },
         );
 
