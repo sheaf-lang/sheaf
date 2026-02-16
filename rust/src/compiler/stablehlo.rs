@@ -15,6 +15,8 @@ pub enum StableHLOType {
     ScalarF64,
     /// Scalar tensor: tensor<i64>
     ScalarI64,
+    /// Scalar tensor: tensor<i1> (boolean)
+    ScalarI1,
     /// Tensor with shape: tensor<2x3xf32>
     Tensor { shape: Vec<i64>, dtype: String },
 }
@@ -42,10 +44,17 @@ impl StableHLOType {
         }
     }
 
+    pub fn i1_tensor(shape: Vec<i64>) -> Self {
+        Self::Tensor {
+            shape,
+            dtype: "i1".to_string(),
+        }
+    }
+
     /// Get the shape of this type, or empty vec for scalars
     pub fn shape(&self) -> Vec<i64> {
         match self {
-            Self::ScalarF32 | Self::ScalarF64 | Self::ScalarI64 => vec![],
+            Self::ScalarF32 | Self::ScalarF64 | Self::ScalarI64 | Self::ScalarI1 => vec![],
             Self::Tensor { shape, .. } => shape.clone(),
         }
     }
@@ -56,6 +65,7 @@ impl StableHLOType {
             Self::ScalarF32 => "f32",
             Self::ScalarF64 => "f64",
             Self::ScalarI64 => "i64",
+            Self::ScalarI1 => "i1",
             Self::Tensor { dtype, .. } => dtype,
         }
     }
@@ -65,6 +75,7 @@ impl StableHLOType {
             Self::ScalarF32 => "tensor<f32>".to_string(),
             Self::ScalarF64 => "tensor<f64>".to_string(),
             Self::ScalarI64 => "tensor<i64>".to_string(),
+            Self::ScalarI1 => "tensor<i1>".to_string(),
             Self::Tensor { shape, dtype } => {
                 let shape_str = shape
                     .iter()
@@ -272,20 +283,31 @@ impl StableHLOEmitter {
 
         // Result type: same shape as operands but with i1 dtype
         let result_ty = if operand_ty.shape().is_empty() {
-            // Scalar comparison returns scalar i1 (we'll use tensor<i1> in StableHLO)
-            StableHLOType::ScalarI64 // We'll use i64 for now, proper i1 would need a new variant
+            // Scalar comparison returns scalar i1
+            StableHLOType::ScalarI1
         } else {
             // Tensor comparison returns tensor of same shape with i1 elements
-            StableHLOType::i64_tensor(operand_ty.shape())
+            StableHLOType::i1_tensor(operand_ty.shape())
         };
 
         let reg = self.fresh_register();
+        // Use generic form with attributes in braces
         self.body.push(format!(
-            "    {} = stablehlo.compare {}, {}, compare_type = FLOAT, comparison_direction = {} : ({}) -> {}",
+            "    {} = \"stablehlo.compare\"({}, {}) {{",
             reg.to_mlir(),
             actual_lhs.to_mlir(),
-            actual_rhs.to_mlir(),
-            comparison_direction,
+            actual_rhs.to_mlir()
+        ));
+        self.body.push(format!(
+            "      comparison_direction = #stablehlo<comparison_direction {}>,",
+            comparison_direction
+        ));
+        self.body.push(format!(
+            "      compare_type = #stablehlo<comparison_type FLOAT>"
+        ));
+        self.body.push(format!(
+            "    }} : ({}, {}) -> {}",
+            operand_ty.to_mlir(),
             operand_ty.to_mlir(),
             result_ty.to_mlir()
         ));
@@ -789,6 +811,126 @@ impl StableHLOEmitter {
             operands_str,
             dimension,
             types_str,
+            result_ty.to_mlir()
+        ));
+
+        (reg, result_ty)
+    }
+
+    /// Emit where (conditional selection): (where condition x y)
+    /// Selects elements from x when condition is true, from y when false
+    pub fn emit_where(
+        &mut self,
+        condition: &Register,
+        x: &Register,
+        y: &Register,
+        condition_ty: &StableHLOType,
+        x_ty: &StableHLOType,
+        y_ty: &StableHLOType,
+    ) -> (Register, StableHLOType) {
+        // Result type is the same as x and y (they should match)
+        let result_ty = x_ty.clone();
+
+        // Use stablehlo.select: select(pred, on_true, on_false)
+        self.emit_select(condition, x, y, condition_ty, x_ty, y_ty)
+    }
+
+    /// Emit swapaxes: (swapaxes x axis1 axis2)
+    /// Interchanges two axes using transpose
+    pub fn emit_swapaxes(
+        &mut self,
+        operand: &Register,
+        operand_ty: &StableHLOType,
+        axis1: i64,
+        axis2: i64,
+    ) -> (Register, StableHLOType) {
+        let operand_shape = operand_ty.shape();
+        let rank = operand_shape.len();
+
+        // Build permutation that swaps axis1 and axis2
+        let mut permutation: Vec<i64> = (0..rank as i64).collect();
+        permutation[axis1 as usize] = axis2;
+        permutation[axis2 as usize] = axis1;
+
+        // Use transpose with the permutation
+        self.emit_transpose(operand, operand_ty, &permutation)
+    }
+
+    /// Emit tril (lower triangular): (tril x)
+    /// Returns the lower triangular part of a matrix, zeros above diagonal
+    pub fn emit_tril(
+        &mut self,
+        operand: &Register,
+        operand_ty: &StableHLOType,
+    ) -> (Register, StableHLOType) {
+        let reg = self.fresh_register();
+        let result_ty = operand_ty.clone();
+
+        // Create a triangular mask using iota operations
+        // For a [M, N] matrix, we need:
+        // mask[i, j] = (i >= j) ? 1.0 : 0.0
+        let shape = operand_ty.shape();
+        if shape.len() != 2 {
+            panic!("tril requires a 2D tensor");
+        }
+
+        let m = shape[0];
+        let n = shape[1];
+
+        // Create row indices: iota dim=0 creates [[0], [1], [2], ...]
+        let row_iota = self.fresh_register();
+        let row_iota_ty = StableHLOType::f32_tensor(vec![m, n]);
+        self.body.push(format!(
+            "    {} = stablehlo.iota dim = 0 : {}",
+            row_iota.to_mlir(),
+            row_iota_ty.to_mlir()
+        ));
+
+        // Create col indices: iota dim=1 creates [[0, 1, 2, ...], [0, 1, 2, ...], ...]
+        let col_iota = self.fresh_register();
+        let col_iota_ty = StableHLOType::f32_tensor(vec![m, n]);
+        self.body.push(format!(
+            "    {} = stablehlo.iota dim = 1 : {}",
+            col_iota.to_mlir(),
+            col_iota_ty.to_mlir()
+        ));
+
+        // Compare: row_idx >= col_idx (i >= j for lower triangle)
+        let mask = self.fresh_register();
+        let mask_ty = StableHLOType::i1_tensor(vec![m, n]); // Comparison returns i1 (boolean)
+        self.body.push(format!(
+            "    {} = \"stablehlo.compare\"({}, {}) {{",
+            mask.to_mlir(),
+            row_iota.to_mlir(),
+            col_iota.to_mlir()
+        ));
+        self.body
+            .push("      comparison_direction = #stablehlo<comparison_direction GE>,".to_string());
+        self.body
+            .push("      compare_type = #stablehlo<comparison_type FLOAT>".to_string());
+        self.body.push(format!(
+            "    }} : ({}, {}) -> {}",
+            row_iota_ty.to_mlir(),
+            col_iota_ty.to_mlir(),
+            mask_ty.to_mlir()
+        ));
+
+        // Create zero tensor for the false branch
+        let zero_reg = self.fresh_register();
+        self.body.push(format!(
+            "    {} = stablehlo.constant dense<0.0> : {}",
+            zero_reg.to_mlir(),
+            result_ty.to_mlir()
+        ));
+
+        // Select: where mask is true, use operand, else use zero
+        self.body.push(format!(
+            "    {} = stablehlo.select {}, {}, {} : {}, {}",
+            reg.to_mlir(),
+            mask.to_mlir(),
+            operand.to_mlir(),
+            zero_reg.to_mlir(),
+            mask_ty.to_mlir(),
             result_ty.to_mlir()
         ));
 

@@ -71,11 +71,44 @@ pub fn emit_concatenate(
     emitter.emit_concatenate(operands, operand_types, dimension)
 }
 
+/// Emit where (conditional selection): (where condition x y)
+pub fn emit_where(
+    emitter: &mut StableHLOEmitter,
+    condition: &Register,
+    x: &Register,
+    y: &Register,
+    condition_ty: &StableHLOType,
+    x_ty: &StableHLOType,
+    y_ty: &StableHLOType,
+) -> (Register, StableHLOType) {
+    emitter.emit_where(condition, x, y, condition_ty, x_ty, y_ty)
+}
+
+/// Emit swapaxes: (swapaxes x axis1 axis2)
+pub fn emit_swapaxes(
+    emitter: &mut StableHLOEmitter,
+    operand: &Register,
+    operand_ty: &StableHLOType,
+    axis1: i64,
+    axis2: i64,
+) -> (Register, StableHLOType) {
+    emitter.emit_swapaxes(operand, operand_ty, axis1, axis2)
+}
+
+/// Emit tril (lower triangular): (tril x)
+pub fn emit_tril(
+    emitter: &mut StableHLOEmitter,
+    operand: &Register,
+    operand_ty: &StableHLOType,
+) -> (Register, StableHLOType) {
+    emitter.emit_tril(operand, operand_ty)
+}
+
 // TODO: Add more tensor operations
 // - slice
 // - sum, mean (reductions - require reduce with body)
 // - argmax, argmin
-// - where, einsum
+// - einsum
 // - broadcast (already internal in stablehlo.rs)
 
 #[cfg(test)]

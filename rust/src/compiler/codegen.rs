@@ -491,6 +491,58 @@ impl CodeGenerator {
                     location: crate::core::error::SourceLocation::unknown(),
                 })
             }
+        }
+        // where: (where condition x y)
+        else if name == "where" && args.len() == 3 {
+            let (condition_reg, condition_ty) = self.generate(&args[0])?;
+            let (x_reg, x_ty) = self.generate(&args[1])?;
+            let (y_reg, y_ty) = self.generate(&args[2])?;
+            let (reg, ty) = tensor_ops::emit_where(
+                &mut self.emitter,
+                &condition_reg,
+                &x_reg,
+                &y_reg,
+                &condition_ty,
+                &x_ty,
+                &y_ty,
+            );
+            Ok((reg, ty))
+        }
+        // swapaxes: (swapaxes x axis1 axis2)
+        else if name == "swapaxes" && args.len() == 3 {
+            let (operand_reg, operand_ty) = self.generate(&args[0])?;
+            let axis1 = match &args[1] {
+                CompiledExpr::Integer(n) => *n,
+                _ => {
+                    return Err(SheafError::Compile {
+                        message: "swapaxes axis1 must be an integer".to_string(),
+                        location: crate::core::error::SourceLocation::unknown(),
+                    });
+                }
+            };
+            let axis2 = match &args[2] {
+                CompiledExpr::Integer(n) => *n,
+                _ => {
+                    return Err(SheafError::Compile {
+                        message: "swapaxes axis2 must be an integer".to_string(),
+                        location: crate::core::error::SourceLocation::unknown(),
+                    });
+                }
+            };
+            let (reg, ty) = tensor_ops::emit_swapaxes(
+                &mut self.emitter,
+                &operand_reg,
+                &operand_ty,
+                axis1,
+                axis2,
+            );
+            Ok((reg, ty))
+        }
+        // tril: (tril x)
+        else if name == "tril" && args.len() == 1 {
+            let (operand_reg, operand_ty) = self.generate(&args[0])?;
+            let (reg, ty) = tensor_ops::emit_tril(&mut self.emitter, &operand_reg, &operand_ty);
+            Ok((reg, ty))
         } else {
             Err(SheafError::Compile {
                 message: format!("Function call not yet supported: {}", name),
@@ -582,8 +634,8 @@ mod tests {
         let result = codegen.generate(&expr);
         assert!(result.is_ok());
         let (_, ty) = result.unwrap();
-        // Result should be i64 type (we use i64 for boolean results)
-        assert!(matches!(ty, StableHLOType::ScalarI64));
+        // Result should be i1 type (boolean results)
+        assert!(matches!(ty, StableHLOType::ScalarI1));
     }
 
     #[test]
@@ -597,7 +649,7 @@ mod tests {
         assert!(mlir.is_ok());
         let mlir_str = mlir.unwrap();
         assert!(mlir_str.contains("stablehlo.compare"));
-        assert!(mlir_str.contains("comparison_direction = EQ"));
+        assert!(mlir_str.contains("comparison_direction = #stablehlo<comparison_direction EQ>"));
     }
 
     #[test]
