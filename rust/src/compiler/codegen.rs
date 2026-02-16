@@ -249,6 +249,15 @@ impl CodeGenerator {
                 .emit_binop(name, &lhs_reg, &rhs_reg, &lhs_ty, &rhs_ty);
             Ok((result_reg, result_ty))
         }
+        // Comparison operations
+        else if matches!(name, "=" | "==" | "!=" | "<" | "<=" | ">" | ">=") && args.len() == 2 {
+            let (lhs_reg, lhs_ty) = self.generate(&args[0])?;
+            let (rhs_reg, rhs_ty) = self.generate(&args[1])?;
+            let (result_reg, result_ty) = self
+                .emitter
+                .emit_compare(name, &lhs_reg, &rhs_reg, &lhs_ty, &rhs_ty);
+            Ok((result_reg, result_ty))
+        }
         // Matrix multiply
         else if name == "@" && args.len() == 2 {
             let (lhs_reg, lhs_ty) = self.generate(&args[0])?;
@@ -384,5 +393,33 @@ mod tests {
         let mlir_str = mlir.unwrap();
         assert!(mlir_str.contains("stablehlo.add"));
         assert!(mlir_str.contains("@test"));
+    }
+
+    #[test]
+    fn test_generate_compare() {
+        let mut codegen = CodeGenerator::new();
+        let expr = CompiledExpr::FunctionCall {
+            name: ">".to_string(),
+            args: vec![CompiledExpr::Float(5.0), CompiledExpr::Float(2.0)],
+        };
+        let result = codegen.generate(&expr);
+        assert!(result.is_ok());
+        let (_, ty) = result.unwrap();
+        // Result should be i64 type (we use i64 for boolean results)
+        assert!(matches!(ty, StableHLOType::ScalarI64));
+    }
+
+    #[test]
+    fn test_emit_compare() {
+        let codegen = CodeGenerator::new();
+        let expr = CompiledExpr::FunctionCall {
+            name: "=".to_string(),
+            args: vec![CompiledExpr::Integer(1), CompiledExpr::Integer(1)],
+        };
+        let mlir = codegen.emit_function("test_eq", &expr);
+        assert!(mlir.is_ok());
+        let mlir_str = mlir.unwrap();
+        assert!(mlir_str.contains("stablehlo.compare"));
+        assert!(mlir_str.contains("comparison_direction = EQ"));
     }
 }

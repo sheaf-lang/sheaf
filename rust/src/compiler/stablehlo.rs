@@ -238,6 +238,56 @@ impl StableHLOEmitter {
         (reg, result_ty)
     }
 
+    /// Emit a comparison operation
+    /// Returns a tensor of i1 (boolean) values
+    pub fn emit_compare(
+        &mut self,
+        op: &str,
+        lhs: &Register,
+        rhs: &Register,
+        lhs_ty: &StableHLOType,
+        rhs_ty: &StableHLOType,
+    ) -> (Register, StableHLOType) {
+        let comparison_direction = match op {
+            "=" | "==" => "EQ",
+            "!=" => "NE",
+            "<" => "LT",
+            "<=" => "LE",
+            ">" => "GT",
+            ">=" => "GE",
+            _ => panic!("Unsupported comparison: {}", op),
+        };
+
+        // Determine result shape (broadcast if needed)
+        let operand_ty = self.broadcast_types(lhs_ty, rhs_ty);
+
+        // Check if we need to broadcast operands
+        let (actual_lhs, actual_rhs) =
+            self.maybe_broadcast_operands(lhs, rhs, lhs_ty, rhs_ty, &operand_ty);
+
+        // Result type: same shape as operands but with i1 dtype
+        let result_ty = if operand_ty.shape().is_empty() {
+            // Scalar comparison returns scalar i1 (we'll use tensor<i1> in StableHLO)
+            StableHLOType::ScalarI64 // We'll use i64 for now, proper i1 would need a new variant
+        } else {
+            // Tensor comparison returns tensor of same shape with i1 elements
+            StableHLOType::i64_tensor(operand_ty.shape())
+        };
+
+        let reg = self.fresh_register();
+        self.body.push(format!(
+            "    {} = stablehlo.compare {}, {}, compare_type = FLOAT, comparison_direction = {} : ({}) -> {}",
+            reg.to_mlir(),
+            actual_lhs.to_mlir(),
+            actual_rhs.to_mlir(),
+            comparison_direction,
+            operand_ty.to_mlir(),
+            result_ty.to_mlir()
+        ));
+
+        (reg, result_ty)
+    }
+
     /// Maybe broadcast operands to match result shape
     /// Returns (lhs_reg, rhs_reg) which may be the originals or broadcasted versions
     fn maybe_broadcast_operands(
