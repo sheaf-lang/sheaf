@@ -4,10 +4,11 @@
 //! Math operations runtime module
 //!
 //! Contains:
-//! - Arithmetic operations: +, -, *, /, @
+//! - Arithmetic operations: +, -, *, /, @, **, //, mod (%)
 //! - Comparison operations: =, ==, !=, <, <=, >, >=
 //! - Boolean operations: and, or, not
-//! - Math functions: sqrt, exp, log, abs, min, max
+//! - Math functions: sqrt, exp, log, abs
+//! - Min/max operations: min, max
 //!
 //! This module provides runtime emission helpers for StableHLO math operations.
 
@@ -69,7 +70,7 @@ pub fn emit_not(
     emitter.emit_unary("not", operand, ty)
 }
 
-/// Emit math unary operations: sqrt, exp, log
+/// Emit math unary operations: sqrt, exp, log, abs
 pub fn emit_math_unary(
     emitter: &mut StableHLOEmitter,
     op: &str,
@@ -77,9 +78,33 @@ pub fn emit_math_unary(
     ty: &StableHLOType,
 ) -> Register {
     match op {
-        "sqrt" | "exp" | "log" => emitter.emit_unary(op, operand, ty),
+        "sqrt" | "exp" | "log" | "abs" => emitter.emit_unary(op, operand, ty),
         _ => panic!("Unsupported math unary operation: {}", op),
     }
+}
+
+/// Emit min/max binary operations
+pub fn emit_minmax(
+    emitter: &mut StableHLOEmitter,
+    op: &str,
+    lhs: &Register,
+    rhs: &Register,
+    lhs_ty: &StableHLOType,
+    rhs_ty: &StableHLOType,
+) -> (Register, StableHLOType) {
+    emitter.emit_binop(op, lhs, rhs, lhs_ty, rhs_ty)
+}
+
+/// Emit power, floor division, and modulo operations
+pub fn emit_extended_arithmetic(
+    emitter: &mut StableHLOEmitter,
+    op: &str,
+    lhs: &Register,
+    rhs: &Register,
+    lhs_ty: &StableHLOType,
+    rhs_ty: &StableHLOType,
+) -> (Register, StableHLOType) {
+    emitter.emit_binop(op, lhs, rhs, lhs_ty, rhs_ty)
 }
 
 #[cfg(test)]

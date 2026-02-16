@@ -245,6 +245,34 @@ impl CodeGenerator {
             );
             Ok((result_reg, result_ty))
         }
+        // Extended arithmetic: **, //, mod
+        else if matches!(name, "**" | "//" | "%" | "mod") && args.len() == 2 {
+            let (lhs_reg, lhs_ty) = self.generate(&args[0])?;
+            let (rhs_reg, rhs_ty) = self.generate(&args[1])?;
+            let (result_reg, result_ty) = math_ops::emit_extended_arithmetic(
+                &mut self.emitter,
+                name,
+                &lhs_reg,
+                &rhs_reg,
+                &lhs_ty,
+                &rhs_ty,
+            );
+            Ok((result_reg, result_ty))
+        }
+        // Min/max operations
+        else if matches!(name, "min" | "max") && args.len() == 2 {
+            let (lhs_reg, lhs_ty) = self.generate(&args[0])?;
+            let (rhs_reg, rhs_ty) = self.generate(&args[1])?;
+            let (result_reg, result_ty) = math_ops::emit_minmax(
+                &mut self.emitter,
+                name,
+                &lhs_reg,
+                &rhs_reg,
+                &lhs_ty,
+                &rhs_ty,
+            );
+            Ok((result_reg, result_ty))
+        }
         // Comparison operations
         else if matches!(name, "=" | "==" | "!=" | "<" | "<=" | ">" | ">=") && args.len() == 2 {
             let (lhs_reg, lhs_ty) = self.generate(&args[0])?;
@@ -281,8 +309,8 @@ impl CodeGenerator {
             );
             Ok((result_reg, result_ty))
         }
-        // Math unary operations: sqrt, exp, log
-        else if matches!(name, "sqrt" | "exp" | "log") && args.len() == 1 {
+        // Math unary operations: sqrt, exp, log, abs
+        else if matches!(name, "sqrt" | "exp" | "log" | "abs") && args.len() == 1 {
             let (operand_reg, operand_ty) = self.generate(&args[0])?;
             let result_reg =
                 math_ops::emit_math_unary(&mut self.emitter, name, &operand_reg, &operand_ty);

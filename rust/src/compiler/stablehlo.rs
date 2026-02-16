@@ -216,6 +216,11 @@ impl StableHLOEmitter {
             "-" => "stablehlo.subtract",
             "*" => "stablehlo.multiply",
             "/" => "stablehlo.divide",
+            "**" => "stablehlo.power",
+            "//" => "stablehlo.floor_divide",
+            "%" | "mod" => "stablehlo.remainder",
+            "min" => "stablehlo.minimum",
+            "max" => "stablehlo.maximum",
             _ => panic!("Unsupported binop: {}", op),
         };
 
@@ -604,6 +609,14 @@ impl StableHLOEmitter {
                 // Boolean NOT
                 self.body.push(format!(
                     "    {} = stablehlo.not {} : {}",
+                    reg.to_mlir(),
+                    operand.to_mlir(),
+                    ty.to_mlir()
+                ));
+            }
+            "abs" => {
+                self.body.push(format!(
+                    "    {} = stablehlo.abs {} : {}",
                     reg.to_mlir(),
                     operand.to_mlir(),
                     ty.to_mlir()
