@@ -61,6 +61,7 @@ impl SpecialForm for DefnForm {
                 name: name.to_string(),
                 params,
                 body: body_ast,
+                body_compiled: Some(body_compiled),
                 signature: Some(signature),
             },
         );

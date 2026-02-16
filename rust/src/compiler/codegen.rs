@@ -34,6 +34,24 @@ impl CodeGenerator {
         }
     }
 
+    /// Create a CodeGenerator with function parameters bound to %arg0, %arg1, etc.
+    pub fn with_function_params(
+        registry: HashMap<String, crate::core::compiler::FunctionDef>,
+        param_names: &[String],
+        param_types: &[StableHLOType],
+    ) -> Self {
+        let mut bindings = HashMap::new();
+        for (i, (name, ty)) in param_names.iter().zip(param_types.iter()).enumerate() {
+            bindings.insert(name.clone(), (Register::arg(i), ty.clone()));
+        }
+
+        Self {
+            emitter: StableHLOEmitter::new(),
+            bindings,
+            function_registry: registry,
+        }
+    }
+
     /// Generate StableHLO for a compiled expression
     pub fn generate(&mut self, expr: &CompiledExpr) -> SheafResult<(Register, StableHLOType)> {
         match expr {
@@ -193,6 +211,35 @@ impl CodeGenerator {
         name: &str,
         args: &[CompiledExpr],
     ) -> SheafResult<(Register, StableHLOType)> {
+        // Check if this is a user-defined function in the registry
+        // Clone the signature to avoid borrow checker issues
+        let signature = self
+            .function_registry
+            .get(name)
+            .and_then(|func_def| func_def.signature.clone());
+
+        if let Some(signature) = signature {
+            // Generate code for each argument
+            let mut arg_registers = Vec::new();
+            let mut arg_types = Vec::new();
+
+            for arg in args {
+                let (reg, ty) = self.generate(arg)?;
+                arg_registers.push(reg);
+                arg_types.push(ty);
+            }
+
+            // Emit func.call with the signature from the registry
+            let result_reg = self.emitter.emit_func_call(
+                name,
+                &arg_registers,
+                &arg_types,
+                &signature.return_type,
+            );
+
+            return Ok((result_reg, signature.return_type.clone()));
+        }
+
         // Binary arithmetic operations
         if matches!(name, "+" | "-" | "*" | "/") && args.len() == 2 {
             let (lhs_reg, lhs_ty) = self.generate(&args[0])?;
@@ -272,6 +319,27 @@ impl CodeGenerator {
         self.emitter.emit_return(&result_reg, &result_ty);
 
         Ok(self.emitter.emit_function_body(name, &result_ty))
+    }
+
+    /// Emit a function declaration from a compiled expression
+    ///
+    /// Generates the body instructions and wraps them in a func.func declaration
+    /// with the given parameter types and return type
+    pub fn emit_func_declaration(
+        mut self,
+        name: &str,
+        expr: &CompiledExpr,
+        param_types: &[StableHLOType],
+        return_type: &StableHLOType,
+    ) -> SheafResult<String> {
+        let (result_reg, result_ty) = self.generate(expr)?;
+        self.emitter.emit_return(&result_reg, &result_ty);
+
+        // Clone body to avoid borrow issues
+        let body = self.emitter.body.clone();
+        Ok(self
+            .emitter
+            .emit_func_declaration(name, param_types, return_type, &body))
     }
 }
 

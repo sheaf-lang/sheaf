@@ -27,6 +27,7 @@ pub struct FunctionDef {
     pub name: String,
     pub params: Vec<String>,
     pub body: SheafValue,
+    pub body_compiled: Option<CompiledExpr>,
     pub signature: Option<crate::core::inference::FunctionSignature>,
 }
 
@@ -338,5 +339,116 @@ mod tests {
         assert!(ctx.registry.contains_key("add"));
         let func = &ctx.registry["add"];
         assert_eq!(func.params, vec!["x", "y"]);
+    }
+
+    #[test]
+    fn test_compile_multi_function() {
+        use crate::compiler::codegen::CodeGenerator;
+        use crate::compiler::stablehlo::StableHLOEmitter;
+
+        let mut ctx = CompilerContext::new();
+
+        // (defn square [x] (* x x))
+        let square_defn = make_list(vec![
+            make_symbol("defn"),
+            make_symbol("square"),
+            SheafValue::Vector(vec![make_symbol("x")], SourceLocation::unknown()),
+            make_list(vec![make_symbol("*"), make_symbol("x"), make_symbol("x")]),
+        ]);
+        ctx.compile(&square_defn).unwrap();
+
+        // (defn add-squares [a b] (+ (square a) (square b)))
+        let add_squares_defn = make_list(vec![
+            make_symbol("defn"),
+            make_symbol("add-squares"),
+            SheafValue::Vector(
+                vec![make_symbol("a"), make_symbol("b")],
+                SourceLocation::unknown(),
+            ),
+            make_list(vec![
+                make_symbol("+"),
+                make_list(vec![make_symbol("square"), make_symbol("a")]),
+                make_list(vec![make_symbol("square"), make_symbol("b")]),
+            ]),
+        ]);
+        ctx.compile(&add_squares_defn).unwrap();
+
+        // Now compile the main call: (add-squares 3.0 4.0)
+        let main_expr = make_list(vec![
+            make_symbol("add-squares"),
+            SheafValue::Float(3.0, SourceLocation::unknown()),
+            SheafValue::Float(4.0, SourceLocation::unknown()),
+        ]);
+        let main_compiled = ctx.compile(&main_expr).unwrap();
+
+        // Generate code for all functions
+        let mut func_declarations = Vec::new();
+
+        // Generate square function
+        let square_def = ctx.registry.get("square").unwrap();
+        let square_body_compiled = square_def.body_compiled.clone().unwrap();
+        let square_sig = square_def.signature.clone().unwrap();
+        let square_params = square_def.params.clone();
+
+        let codegen_square = CodeGenerator::with_function_params(
+            ctx.registry.clone(),
+            &square_params,
+            &square_sig.param_types,
+        );
+
+        let square_decl = codegen_square
+            .emit_func_declaration(
+                "square",
+                &square_body_compiled,
+                &square_sig.param_types,
+                &square_sig.return_type,
+            )
+            .unwrap();
+        func_declarations.push(square_decl);
+
+        // Generate add-squares function
+        let add_squares_def = ctx.registry.get("add-squares").unwrap();
+        let add_squares_body_compiled = add_squares_def.body_compiled.clone().unwrap();
+        let add_squares_sig = add_squares_def.signature.clone().unwrap();
+        let add_squares_params = add_squares_def.params.clone();
+
+        let codegen_add_squares = CodeGenerator::with_function_params(
+            ctx.registry.clone(),
+            &add_squares_params,
+            &add_squares_sig.param_types,
+        );
+
+        let add_squares_decl = codegen_add_squares
+            .emit_func_declaration(
+                "add-squares",
+                &add_squares_body_compiled,
+                &add_squares_sig.param_types,
+                &add_squares_sig.return_type,
+            )
+            .unwrap();
+        func_declarations.push(add_squares_decl);
+
+        // Generate main function that calls add-squares
+        let mut codegen_main = CodeGenerator::with_registry(ctx.registry.clone());
+        let (_, result_ty) = codegen_main.generate(&main_compiled).unwrap();
+
+        let main_decl = CodeGenerator::with_registry(ctx.registry.clone())
+            .emit_func_declaration("main", &main_compiled, &[], &result_ty)
+            .unwrap();
+        func_declarations.push(main_decl);
+
+        // Generate the complete module
+        let module = StableHLOEmitter::emit_module(&func_declarations);
+
+        // Verify the module contains all expected elements
+        assert!(module.contains("@square"));
+        assert!(module.contains("@add_squares"));
+        assert!(module.contains("@main"));
+        assert!(module.contains("func.call"));
+        assert!(module.contains("stablehlo.multiply"));
+        assert!(module.contains("stablehlo.add"));
+
+        // Print the generated module for inspection
+        println!("\nGenerated MLIR module:\n{}", module);
     }
 }
