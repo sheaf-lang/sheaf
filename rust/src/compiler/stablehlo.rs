@@ -19,6 +19,8 @@ pub enum StableHLOType {
     ScalarI1,
     /// Tensor with shape: tensor<2x3xf32>
     Tensor { shape: Vec<i64>, dtype: String },
+    /// Tuple of types: tuple<tensor<2x3xf32>, tensor<8xf32>>
+    Tuple(Vec<StableHLOType>),
 }
 
 impl StableHLOType {
@@ -51,10 +53,14 @@ impl StableHLOType {
         }
     }
 
-    /// Get the shape of this type, or empty vec for scalars
+    /// Get the shape of this type, or empty vec for scalars/tuples
     pub fn shape(&self) -> Vec<i64> {
         match self {
-            Self::ScalarF32 | Self::ScalarF64 | Self::ScalarI64 | Self::ScalarI1 => vec![],
+            Self::ScalarF32
+            | Self::ScalarF64
+            | Self::ScalarI64
+            | Self::ScalarI1
+            | Self::Tuple(_) => vec![],
             Self::Tensor { shape, .. } => shape.clone(),
         }
     }
@@ -67,6 +73,7 @@ impl StableHLOType {
             Self::ScalarI64 => "i64",
             Self::ScalarI1 => "i1",
             Self::Tensor { dtype, .. } => dtype,
+            Self::Tuple(_) => "tuple",
         }
     }
 
@@ -83,6 +90,14 @@ impl StableHLOType {
                     .collect::<Vec<_>>()
                     .join("x");
                 format!("tensor<{}x{}>", shape_str, dtype)
+            }
+            Self::Tuple(elems) => {
+                let elems_str = elems
+                    .iter()
+                    .map(|t| t.to_mlir())
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                format!("tuple<{}>", elems_str)
             }
         }
     }
@@ -935,6 +950,25 @@ impl StableHLOEmitter {
         ));
 
         (reg, result_ty)
+    }
+
+    /// Emit get_tuple_element: extract field from a tuple at a given index
+    pub fn emit_get_tuple_element(
+        &mut self,
+        tuple_reg: &Register,
+        tuple_ty: &StableHLOType,
+        index: usize,
+        result_ty: &StableHLOType,
+    ) -> Register {
+        let reg = self.fresh_register();
+        self.body.push(format!(
+            "    {} = stablehlo.get_tuple_element {} [{index}] : ({}) -> {}",
+            reg.to_mlir(),
+            tuple_reg.to_mlir(),
+            tuple_ty.to_mlir(),
+            result_ty.to_mlir(),
+        ));
+        reg
     }
 
     /// Emit a return statement

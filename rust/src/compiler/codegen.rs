@@ -133,6 +133,60 @@ impl CodeGenerator {
                 }
             }
 
+            CompiledExpr::GetTupleElement { param, indices } => {
+                // Resolve a field extracted by with-params via get_tuple_element
+                // The param must be in bindings with a Tuple type
+                let (param_reg, param_ty) =
+                    self.bindings
+                        .get(param)
+                        .cloned()
+                        .ok_or_else(|| SheafError::Compile {
+                            message: format!(
+                                "GetTupleElement: parameter '{}' not found in bindings",
+                                param
+                            ),
+                            location: crate::core::error::SourceLocation::unknown(),
+                        })?;
+
+                // Walk nested tuple type and emit get_tuple_element for each index
+                let mut current_reg = param_reg;
+                let mut current_ty = param_ty;
+
+                for &idx in indices {
+                    let element_ty = match &current_ty {
+                        StableHLOType::Tuple(elems) => elems.get(idx).cloned().ok_or_else(|| {
+                            SheafError::Compile {
+                                message: format!(
+                                    "GetTupleElement: index {} out of range for tuple with {} elements",
+                                    idx,
+                                    elems.len()
+                                ),
+                                location: crate::core::error::SourceLocation::unknown(),
+                            }
+                        })?,
+                        other => {
+                            return Err(SheafError::Compile {
+                                message: format!(
+                                    "GetTupleElement: expected tuple type, got {}",
+                                    other.to_mlir()
+                                ),
+                                location: crate::core::error::SourceLocation::unknown(),
+                            });
+                        }
+                    };
+                    let result_reg = self.emitter.emit_get_tuple_element(
+                        &current_reg,
+                        &current_ty,
+                        idx,
+                        &element_ty,
+                    );
+                    current_reg = result_reg;
+                    current_ty = element_ty;
+                }
+
+                Ok((current_reg, current_ty))
+            }
+
             CompiledExpr::FunctionCall { name, args } => self.generate_function_call(name, args),
 
             CompiledExpr::Let { bindings, body } => {
