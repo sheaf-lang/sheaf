@@ -16,8 +16,8 @@ pub mod base;
 pub mod binding;
 pub mod control;
 pub mod flow;
+pub mod ml;
 pub mod utils;
-// pub mod ml;  // Phase 3 - ML specific forms
 
 use std::collections::HashMap;
 
@@ -25,6 +25,7 @@ pub use base::SpecialForm;
 pub use binding::{DefnForm, FnForm, LetForm};
 pub use control::{CaseForm, DoForm, GuardForm, IfForm, RepeatForm, WhileForm};
 pub use flow::{ThreadAsForm, ThreadFirstForm};
+pub use ml::{DefparamsForm, WithParamsForm};
 pub use utils::{AssocForm, DictForm, GetForm, GetInForm, LastForm, QuoteForm, UseForm};
 
 /// Create the registry of all special forms
@@ -67,6 +68,10 @@ pub fn special_forms_registry() -> HashMap<&'static str, Box<dyn SpecialForm>> {
     forms.insert("assoc", Box::new(AssocForm));
     forms.insert("last", Box::new(LastForm));
     forms.insert("use", Box::new(UseForm));
+
+    // ML forms
+    forms.insert("defparams", Box::new(DefparamsForm));
+    forms.insert("with-params", Box::new(WithParamsForm));
 
     forms
 }
