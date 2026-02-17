@@ -5,7 +5,7 @@
 
 use crate::ast::SheafValue;
 use crate::core::compiler::{CompiledExpr, CompilerContext, FunctionDef};
-use crate::core::error::{SheafResult, SourceLocation};
+use crate::core::error::{SheafError, SheafResult, SourceLocation};
 use crate::forms::base::{SpecialForm, check_min_arity, expect_symbol, expect_vector};
 
 /// defn - Function definition: (defn name [params] body)
@@ -28,12 +28,60 @@ impl SpecialForm for DefnForm {
         let name = expect_symbol(&args[0], "defn name", loc)?;
         let params_vec = expect_vector(&args[1], "defn parameters", loc)?;
 
-        // Extract parameter names
-        let params: SheafResult<Vec<String>> = params_vec
-            .iter()
-            .map(|p| expect_symbol(p, "parameter name", loc).map(|s| s.to_string()))
-            .collect();
-        let params = params?;
+        // Extract parameter names, handling typed params: (p :as TypeName)
+        // Each element is either:
+        //   - a symbol: simple param  e.g. `x`
+        //   - a list (p :as TypeName): typed param
+        let mut params: Vec<String> = Vec::new();
+        let mut type_annotations: Vec<(String, String)> = Vec::new(); // (param, type_name)
+
+        for p in params_vec {
+            match p {
+                // Simple symbol param: x
+                SheafValue::Symbol(s, _) => {
+                    params.push(s.clone());
+                }
+                // Typed param: (p :as TypeName) - a list with 3 elements
+                SheafValue::List(elems, inner_loc) => {
+                    if elems.len() == 3 {
+                        let pname = expect_symbol(&elems[0], "typed param name", inner_loc)?;
+                        let as_kw = match &elems[1] {
+                            SheafValue::Keyword(k, _) if k == "as" => k,
+                            other => {
+                                return Err(SheafError::Compile {
+                                    message: format!(
+                                        "defn typed param: expected :as keyword, got {}",
+                                        other
+                                    ),
+                                    location: inner_loc.clone(),
+                                });
+                            }
+                        };
+                        let _ = as_kw; // used for validation above
+                        let type_name = expect_symbol(&elems[2], "param type name", inner_loc)?;
+                        params.push(pname.to_string());
+                        type_annotations.push((pname.to_string(), type_name.to_string()));
+                    } else {
+                        return Err(SheafError::Compile {
+                            message: format!(
+                                "defn param: expected (name :as Type), got list with {} elements",
+                                elems.len()
+                            ),
+                            location: inner_loc.clone(),
+                        });
+                    }
+                }
+                other => {
+                    return Err(SheafError::Compile {
+                        message: format!(
+                            "defn param: expected symbol or (name :as Type), got {}",
+                            other
+                        ),
+                        location: loc.clone(),
+                    });
+                }
+            }
+        }
 
         // Body is the third argument - compile it
         let body_ast = args[2].clone();
@@ -44,15 +92,45 @@ impl SpecialForm for DefnForm {
             compiler.local_vars.insert(param.clone(), body_ast.clone()); // Placeholder
         }
 
+        // Register type annotations as __type__<param> in local_vars
+        // so with-params can look them up
+        for (param, type_name) in &type_annotations {
+            let key = format!("__type__{}", param);
+            compiler
+                .local_vars
+                .insert(key, SheafValue::Symbol(type_name.clone(), loc.clone()));
+        }
+
         // Compile body
         let body_compiled = compiler.compile(&body_ast)?;
 
         // Restore local scope
         compiler.local_vars = saved_locals;
 
-        // Infer function signature
-        let signature =
-            crate::core::inference::infer_function_signature(compiler, &params, &body_compiled)?;
+        // Build known param types from defparams annotations
+        let mut known_param_types: Vec<(String, crate::compiler::stablehlo::StableHLOType)> =
+            Vec::new();
+        for (param, type_name) in &type_annotations {
+            if let Some(layout) = compiler.param_types.get(type_name) {
+                let tuple_ty = crate::forms::ml::param_layout_to_stablehlo_type(layout);
+                known_param_types.push((param.clone(), tuple_ty));
+            }
+        }
+
+        // Infer function signature with known types for typed params
+        let mut signature = crate::core::inference::infer_function_signature_with_known(
+            compiler,
+            &params,
+            &body_compiled,
+            &known_param_types,
+        )?;
+
+        // Override param types from known_param_types (infer may have defaulted them)
+        for (param, tuple_ty) in &known_param_types {
+            if let Some(idx) = params.iter().position(|p| p == param) {
+                signature.param_types[idx] = tuple_ty.clone();
+            }
+        }
 
         // Register the function in the compiler with compiled body and signature
         compiler.registry.insert(
