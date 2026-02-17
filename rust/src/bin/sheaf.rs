@@ -14,24 +14,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::process::{Command, exit};
 
-use sheaf_compiler::{CodeGenerator, CompilerContext, SheafValue, parse};
-
-/// Find a function definition by name
-/// Looks for (defn name [...] body) in the expression list
-fn find_function<'a>(exprs: &'a [SheafValue], name: &str) -> Option<&'a SheafValue> {
-    for expr in exprs {
-        if let Some(list) = expr.as_list() {
-            if list.len() >= 3 && list[0].is_symbol("defn") && list[1].is_symbol(name) {
-                // Found the function definition
-                // Return the body (skip defn, name, params)
-                if list.len() > 3 {
-                    return Some(&list[3]);
-                }
-            }
-        }
-    }
-    None
-}
+use sheaf_compiler::{CodeGenerator, CompilerContext, SheafValue, StableHLOEmitter, parse};
 
 #[derive(Parser)]
 #[command(name = "sheaf")]
@@ -84,30 +67,13 @@ fn main() {
         exit(1);
     }
 
-    // Look for the target function (defn main [...] body)
-    // or use the first expression if it's a standalone expr
-    if cli.verbose {
-        println!("Looking for function '{}'...", cli.function);
-    }
-
-    let target_expr = find_function(&exprs, &cli.function).unwrap_or_else(|| {
-        if cli.verbose {
-            println!(
-                "Function '{}' not found, compiling first expression",
-                cli.function
-            );
-        }
-        &exprs[0]
-    });
-
-    // Compile all expressions (register defn, etc.)
+    // Compile all expressions (register defn, defparams, etc.)
     if cli.verbose {
         println!("Compiling expressions...");
     }
 
     let mut compiler = CompilerContext::new();
 
-    // Compile all expressions to populate registry
     for expr in &exprs {
         if let Err(e) = compiler.compile(expr) {
             eprintln!("Compilation error: {}", e);
@@ -115,24 +81,76 @@ fn main() {
         }
     }
 
-    // Now compile the target function body
-    let compiled = compiler.compile(target_expr).unwrap_or_else(|e| {
-        eprintln!("Compilation error: {}", e);
-        exit(1);
-    });
+    // Generate StableHLO for the target function
+    if cli.verbose {
+        println!("Looking for function '{}'...", cli.function);
+    }
 
     // Generate StableHLO
     if cli.verbose {
         println!("Generating StableHLO...");
     }
 
-    let codegen = CodeGenerator::new();
-    let mlir = codegen
-        .emit_function(&cli.function, &compiled)
-        .unwrap_or_else(|e| {
-            eprintln!("Code generation error: {}", e);
+    let mlir = if let Some(func_def) = compiler.registry.get(&cli.function).cloned() {
+        // Function found in registry - use its compiled body and signature
+        let body = func_def.body_compiled.unwrap_or_else(|| {
+            eprintln!("Error: function '{}' has no compiled body", cli.function);
             exit(1);
         });
+        let sig = func_def.signature.unwrap_or_else(|| {
+            eprintln!(
+                "Error: function '{}' has no inferred signature",
+                cli.function
+            );
+            exit(1);
+        });
+
+        let codegen = CodeGenerator::with_function_params(
+            compiler.registry.clone(),
+            &func_def.params,
+            &sig.param_types,
+        );
+        let func_decl = codegen
+            .emit_func_declaration(&cli.function, &body, &sig.param_types, &sig.return_type)
+            .unwrap_or_else(|e| {
+                eprintln!("Code generation error: {}", e);
+                exit(1);
+            });
+        StableHLOEmitter::emit_module(&[func_decl])
+    } else {
+        // No function found — compile first non-defn expression as a standalone main
+        if cli.verbose {
+            println!(
+                "Function '{}' not found in registry, compiling first expression",
+                cli.function
+            );
+        }
+        let standalone = exprs
+            .iter()
+            .find(|e| {
+                e.as_list()
+                    .and_then(|l| l.first())
+                    .and_then(|h| h.as_symbol())
+                    .map(|s| s != "defn" && s != "defparams")
+                    .unwrap_or(true)
+            })
+            .unwrap_or_else(|| {
+                eprintln!("Error: no expressions to compile in '{}'", cli.function);
+                exit(1);
+            });
+
+        let compiled = compiler.compile(standalone).unwrap_or_else(|e| {
+            eprintln!("Compilation error: {}", e);
+            exit(1);
+        });
+
+        CodeGenerator::with_registry(compiler.registry.clone())
+            .emit_function(&cli.function, &compiled)
+            .unwrap_or_else(|e| {
+                eprintln!("Code generation error: {}", e);
+                exit(1);
+            })
+    };
 
     // Determine output path
     let mlir_path = if cli.iree {
