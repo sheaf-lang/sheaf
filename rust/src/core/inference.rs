@@ -20,13 +20,36 @@ pub struct FunctionSignature {
 /// 1. Build a symbol table by traversing the body
 /// 2. Infer types for each parameter based on how they're used
 /// 3. Infer return type from body
+///
+/// `known_param_types`: pre-known types for specific params (e.g. from defparams),
+/// overrides inference. Maps param name -> StableHLOType.
 pub fn infer_function_signature(
     compiler: &CompilerContext,
     params: &[String],
     body_expr: &CompiledExpr,
 ) -> SheafResult<FunctionSignature> {
+    infer_function_signature_with_known(compiler, params, body_expr, &[])
+}
+
+/// Like `infer_function_signature` but accepts pre-known param types.
+pub fn infer_function_signature_with_known(
+    _compiler: &CompilerContext,
+    params: &[String],
+    body_expr: &CompiledExpr,
+    known: &[(String, StableHLOType)],
+) -> SheafResult<FunctionSignature> {
     // Build symbol table with inferred types
     let mut symbol_types = std::collections::HashMap::new();
+
+    // Seed with known param types so return type inference can use them
+    for (name, ty) in known {
+        symbol_types.insert(name.clone(), ty.clone());
+    }
+
+    // Also seed GetTupleElement leaf types into symbol_types so
+    // infer_type_with_context can resolve field references like W, b
+    seed_tuple_element_types(body_expr, &mut symbol_types, known);
+
     infer_symbol_types(body_expr, &mut symbol_types)?;
 
     // Infer parameter types from symbol table
@@ -49,6 +72,67 @@ pub fn infer_function_signature(
     })
 }
 
+/// Seed symbol_types with the resolved element types of GetTupleElement nodes.
+/// This lets return-type inference work for expressions involving typed params.
+fn seed_tuple_element_types(
+    expr: &CompiledExpr,
+    symbol_types: &mut std::collections::HashMap<String, StableHLOType>,
+    known: &[(String, StableHLOType)],
+) {
+    match expr {
+        CompiledExpr::GetTupleElement { param, indices } => {
+            // Resolve the type of this element from the known param type
+            if let Some((_, param_ty)) = known.iter().find(|(n, _)| n == param) {
+                if let Some(element_ty) = resolve_tuple_index(param_ty, indices) {
+                    // We can't directly name this node, but its type is used in FunctionCall args
+                    // Store it in a synthetic key for context
+                    let key = format!(
+                        "__get_tuple_{}__{}",
+                        param,
+                        indices
+                            .iter()
+                            .map(|i| i.to_string())
+                            .collect::<Vec<_>>()
+                            .join("_")
+                    );
+                    symbol_types.insert(key, element_ty);
+                }
+            }
+        }
+        CompiledExpr::FunctionCall { args, .. } => {
+            for arg in args {
+                seed_tuple_element_types(arg, symbol_types, known);
+            }
+        }
+        CompiledExpr::Let { bindings, body } => {
+            for (_, v) in bindings {
+                seed_tuple_element_types(v, symbol_types, known);
+            }
+            seed_tuple_element_types(body, symbol_types, known);
+        }
+        CompiledExpr::Do(exprs) => {
+            for e in exprs {
+                seed_tuple_element_types(e, symbol_types, known);
+            }
+        }
+        _ => {}
+    }
+}
+
+/// Walk a StableHLO tuple type following a sequence of indices.
+fn resolve_tuple_index(ty: &StableHLOType, indices: &[usize]) -> Option<StableHLOType> {
+    let mut current = ty.clone();
+    for &idx in indices {
+        match current {
+            StableHLOType::Tuple(elems) => {
+                current = elems.into_iter().nth(idx)?;
+            }
+            _ => return None,
+        }
+    }
+    Some(current)
+}
+
 /// Infer types for symbols by analyzing how they're used in the expression
 fn infer_symbol_types(
     expr: &CompiledExpr,
@@ -58,17 +142,37 @@ fn infer_symbol_types(
         CompiledExpr::FunctionCall { name, args } => {
             // Infer types from function call context
             if name == "@" && args.len() == 2 {
-                // Matrix multiply: first arg should be 2D, second arg should be 2D
+                // Matrix multiply: (@ lhs rhs)
+                // If rhs type is known (e.g. from tuple), use it to constrain lhs
+                let rhs_ty = infer_type_with_context(&args[1], symbol_types).ok();
+                let lhs_ty = infer_type_with_context(&args[0], symbol_types).ok();
+
                 if let CompiledExpr::Symbol(sym) = &args[0] {
-                    // Can't infer exact shape without more context, default to 2D
-                    symbol_types
-                        .entry(sym.clone())
-                        .or_insert(StableHLOType::f32_tensor(vec![1, 1]));
+                    let ty = if let Some(rhs) = &rhs_ty {
+                        let rhs_shape = rhs.shape();
+                        if rhs_shape.len() == 2 {
+                            // lhs must have contracting dim = rhs_shape[0], use batch=1
+                            StableHLOType::f32_tensor(vec![1, rhs_shape[0]])
+                        } else {
+                            StableHLOType::f32_tensor(vec![1, 1])
+                        }
+                    } else {
+                        StableHLOType::f32_tensor(vec![1, 1])
+                    };
+                    symbol_types.entry(sym.clone()).or_insert(ty);
                 }
                 if let CompiledExpr::Symbol(sym) = &args[1] {
-                    symbol_types
-                        .entry(sym.clone())
-                        .or_insert(StableHLOType::f32_tensor(vec![1, 1]));
+                    let ty = if let Some(lhs) = &lhs_ty {
+                        let lhs_shape = lhs.shape();
+                        if lhs_shape.len() == 2 {
+                            StableHLOType::f32_tensor(vec![lhs_shape[1], 1])
+                        } else {
+                            StableHLOType::f32_tensor(vec![1, 1])
+                        }
+                    } else {
+                        StableHLOType::f32_tensor(vec![1, 1])
+                    };
+                    symbol_types.entry(sym.clone()).or_insert(ty);
                 }
             }
 
@@ -132,6 +236,44 @@ fn infer_type_with_context(
             .get(name)
             .cloned()
             .unwrap_or(StableHLOType::scalar_f32())),
+
+        CompiledExpr::GetTupleElement { param, indices } => {
+            // Resolve element type from the param's tuple type in symbol_types
+            if let Some(param_ty) = symbol_types.get(param) {
+                if let Some(element_ty) = resolve_tuple_index(param_ty, indices) {
+                    return Ok(element_ty);
+                }
+            }
+            Ok(StableHLOType::scalar_f32())
+        }
+
+        CompiledExpr::FunctionCall { name, args } => {
+            // Use context-aware inference for args
+            let ctx_infer = |e: &CompiledExpr| infer_type_with_context(e, symbol_types);
+            match name.as_str() {
+                "+" | "-" | "*" | "/" => {
+                    if args.is_empty() {
+                        return Ok(StableHLOType::scalar_f32());
+                    }
+                    ctx_infer(&args[0])
+                }
+                "@" => {
+                    if args.len() != 2 {
+                        return Ok(StableHLOType::scalar_f32());
+                    }
+                    let lhs_ty = ctx_infer(&args[0])?;
+                    let rhs_ty = ctx_infer(&args[1])?;
+                    let lhs_shape = lhs_ty.shape();
+                    let rhs_shape = rhs_ty.shape();
+                    if lhs_shape.len() == 2 && rhs_shape.len() == 2 {
+                        Ok(StableHLOType::f32_tensor(vec![lhs_shape[0], rhs_shape[1]]))
+                    } else {
+                        Ok(lhs_ty)
+                    }
+                }
+                _ => infer_function_call_type(name, args),
+            }
+        }
 
         _ => infer_type(expr),
     }
