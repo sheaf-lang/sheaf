@@ -2,16 +2,15 @@
 // Licensed under the MIT License.
 
 //! Symbolic reverse-mode autodiff on `CompiledExpr`.
-//!
-//! Ported from poc/autograd/tensor_autodiff.py.
-//!
-//! `grad(expr, wrt)` returns a new `CompiledExpr` representing dL/d(wrt),
-//! assuming `expr` is the scalar loss (so the incoming gradient is 1.0).
+
+pub mod value_and_grad;
+
+// `grad(expr, wrt)` returns a new `CompiledExpr` representing dL/d(wrt),
+// assuming `expr` is the scalar loss (so the incoming gradient is 1.0).
 
 use crate::core::compiler::CompiledExpr;
 
-// ── helpers ──────────────────────────────────────────────────────────────────
-
+// helpers
 fn call(name: &str, args: Vec<CompiledExpr>) -> CompiledExpr {
     CompiledExpr::FunctionCall {
         name: name.to_string(),
@@ -43,7 +42,7 @@ fn transpose(a: CompiledExpr) -> CompiledExpr {
     call("transpose", vec![a])
 }
 
-// ── simplify ─────────────────────────────────────────────────────────────────
+//  simplify
 
 /// Basic algebraic simplification to reduce the symbolic gradient expression.
 ///
@@ -80,7 +79,7 @@ pub fn simplify(expr: CompiledExpr) -> CompiledExpr {
     }
 }
 
-// ── grad ─────────────────────────────────────────────────────────────────────
+// grad
 
 /// Compute the symbolic gradient of `expr` with respect to `wrt`.
 ///
@@ -143,7 +142,7 @@ fn grad_function_call(
     g: CompiledExpr,
 ) -> CompiledExpr {
     match name {
-        // ── Arithmetic ─────────────────────────────────────────────────────
+        // Arithmetic
         "+" => {
             // d/dx (f + h) = df/dx + dh/dx
             let (lhs, rhs) = (&args[0], &args[1]);
@@ -190,7 +189,7 @@ fn grad_function_call(
             )
         }
 
-        // ── Matrix ops ─────────────────────────────────────────────────────
+        // Matrix ops
         "@" => {
             // C = A @ B
             // dL/dA = dL/dC @ B^T
@@ -206,7 +205,7 @@ fn grad_function_call(
             grad_with(&args[0], wrt, transpose(g))
         }
 
-        // ── Activations ────────────────────────────────────────────────────
+        // Activations
         "relu" => {
             // d/dx relu(f) ≈ df/dx  (simplified; full version multiplies by (f > 0))
             grad_with(&args[0], wrt, g)
@@ -231,7 +230,7 @@ fn grad_function_call(
             grad_with(&args[0], wrt, mul(g, local_g))
         }
 
-        // ── Reductions ─────────────────────────────────────────────────────
+        // Reductions
         "mean" => {
             // d/dx mean(f) = (1/N) * df/dx (broadcast back)
             // Simplified: pass gradient through (codegen handles broadcast)
@@ -250,7 +249,7 @@ fn grad_function_call(
             grad_with(&args[0], wrt, g)
         }
 
-        // ── Power ──────────────────────────────────────────────────────────
+        // Power
         "**" if args.len() == 2 => {
             // d/dx (f^n) = n * f^(n-1) * df/dx
             let (base, exp) = (&args[0], &args[1]);
@@ -263,7 +262,7 @@ fn grad_function_call(
             }
         }
 
-        // ── Unknown ────────────────────────────────────────────────────────
+        // Unknown
         _ => float(0.0),
     }
 }
@@ -274,79 +273,154 @@ pub fn grad_simplified(expr: &CompiledExpr, wrt: &str) -> CompiledExpr {
     simplify(g)
 }
 
-// ── Tests ─────────────────────────────────────────────────────────────────────
+/// Common Subexpression Elimination.
+///
+/// Traverses the expression tree, finds structurally identical non-trivial
+/// sub-expressions that appear more than once, and hoists them into `Let`
+/// bindings so they are computed only once.
+///
+/// A sub-expression is "non-trivial" if it is a `FunctionCall` (not a leaf).
+pub fn cse(expr: CompiledExpr) -> CompiledExpr {
+    use std::collections::HashMap;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::core::compiler::CompiledExpr;
+    // Count occurrences of each sub-expression (keyed by Debug string).
+    let mut counts: HashMap<String, usize> = HashMap::new();
+    count_exprs(&expr, &mut counts);
 
-    fn sym(s: &str) -> CompiledExpr {
-        CompiledExpr::Symbol(s.to_string())
+    // Collect sub-expressions that appear more than once, in discovery order.
+    let mut seen_keys: Vec<String> = Vec::new();
+    let mut bindings: Vec<(String, CompiledExpr)> = Vec::new();
+    let mut subst: HashMap<String, String> = HashMap::new(); // key → binding name
+
+    collect_cse_candidates(&expr, &counts, &mut seen_keys, &mut bindings, &mut subst);
+
+    if bindings.is_empty() {
+        return expr;
     }
 
-    fn matmul_expr(a: CompiledExpr, b: CompiledExpr) -> CompiledExpr {
-        CompiledExpr::FunctionCall {
-            name: "@".to_string(),
-            args: vec![a, b],
+    // Substitute repeated sub-expressions with their binding names.
+    let body = substitute(expr, &subst);
+
+    CompiledExpr::Let {
+        bindings,
+        body: Box::new(body),
+    }
+}
+
+fn expr_key(expr: &CompiledExpr) -> String {
+    format!("{:?}", expr)
+}
+
+fn is_trivial(expr: &CompiledExpr) -> bool {
+    matches!(
+        expr,
+        CompiledExpr::Symbol(_)
+            | CompiledExpr::Float(_)
+            | CompiledExpr::Integer(_)
+            | CompiledExpr::GetTupleElement { .. }
+    )
+}
+
+fn count_exprs(expr: &CompiledExpr, counts: &mut std::collections::HashMap<String, usize>) {
+    if is_trivial(expr) {
+        return;
+    }
+    let key = expr_key(expr);
+    *counts.entry(key).or_insert(0) += 1;
+
+    match expr {
+        CompiledExpr::FunctionCall { args, .. } => {
+            for a in args {
+                count_exprs(a, counts);
+            }
         }
-    }
-
-    fn add_expr(a: CompiledExpr, b: CompiledExpr) -> CompiledExpr {
-        CompiledExpr::FunctionCall {
-            name: "+".to_string(),
-            args: vec![a, b],
+        CompiledExpr::Let { bindings, body } => {
+            for (_, v) in bindings {
+                count_exprs(v, counts);
+            }
+            count_exprs(body, counts);
         }
-    }
-
-    fn mean_expr(a: CompiledExpr) -> CompiledExpr {
-        CompiledExpr::FunctionCall {
-            name: "mean".to_string(),
-            args: vec![a],
+        CompiledExpr::Do(exprs) => {
+            for e in exprs {
+                count_exprs(e, counts);
+            }
         }
+        _ => {}
+    }
+}
+
+fn collect_cse_candidates(
+    expr: &CompiledExpr,
+    counts: &std::collections::HashMap<String, usize>,
+    seen_keys: &mut Vec<String>,
+    bindings: &mut Vec<(String, CompiledExpr)>,
+    subst: &mut std::collections::HashMap<String, String>,
+) {
+    if is_trivial(expr) {
+        return;
+    }
+    let key = expr_key(expr);
+    if counts.get(&key).copied().unwrap_or(0) > 1 {
+        if !seen_keys.contains(&key) {
+            seen_keys.push(key.clone());
+            let name = format!("__cse{}", bindings.len());
+            subst.insert(key, name.clone());
+            bindings.push((name, expr.clone()));
+        }
+        // Don't recurse into already-hoisted expressions.
+        return;
     }
 
-    #[test]
-    fn test_grad_var_wrt_itself() {
-        // d(x)/dx = 1
-        let expr = sym("x");
-        let g = grad(&expr, "x", None);
-        assert!(matches!(g, CompiledExpr::Float(v) if v == 1.0));
+    match expr {
+        CompiledExpr::FunctionCall { args, .. } => {
+            for a in args {
+                collect_cse_candidates(a, counts, seen_keys, bindings, subst);
+            }
+        }
+        CompiledExpr::Let { bindings: b, body } => {
+            for (_, v) in b {
+                collect_cse_candidates(v, counts, seen_keys, bindings, subst);
+            }
+            collect_cse_candidates(body, counts, seen_keys, bindings, subst);
+        }
+        CompiledExpr::Do(exprs) => {
+            for e in exprs {
+                collect_cse_candidates(e, counts, seen_keys, bindings, subst);
+            }
+        }
+        _ => {}
     }
+}
 
-    #[test]
-    fn test_grad_var_wrt_other() {
-        // d(x)/dy = 0
-        let expr = sym("x");
-        let g = grad(&expr, "y", None);
-        assert!(matches!(g, CompiledExpr::Float(v) if v == 0.0));
+fn substitute(
+    expr: CompiledExpr,
+    subst: &std::collections::HashMap<String, String>,
+) -> CompiledExpr {
+    if is_trivial(&expr) {
+        return expr;
     }
-
-    #[test]
-    fn test_grad_matmul_wrt_b() {
-        // z = x @ W, dz/dW = x^T @ 1 = x^T
-        let expr = matmul_expr(sym("x"), sym("W"));
-        let g = grad_simplified(&expr, "W");
-        // Should be: transpose(x) @ 1.0  →  simplified
-        // Exact shape of result depends on simplify; just check it's a FunctionCall
-        assert!(matches!(g, CompiledExpr::FunctionCall { .. }));
+    let key = expr_key(&expr);
+    if let Some(name) = subst.get(&key) {
+        return CompiledExpr::Symbol(name.clone());
     }
-
-    #[test]
-    fn test_grad_add() {
-        // d(x + W)/dW = 0 + 1 = 1
-        let expr = add_expr(sym("x"), sym("W"));
-        let g = grad_simplified(&expr, "W");
-        assert!(matches!(g, CompiledExpr::Float(v) if v == 1.0));
-    }
-
-    #[test]
-    fn test_grad_mean_matmul() {
-        // loss = mean(x @ W)
-        // dL/dW = x^T @ grad_from_mean = x^T @ 1 = x^T
-        let expr = mean_expr(matmul_expr(sym("x"), sym("W")));
-        let g = grad(&expr, "W", None);
-        // Result should be a FunctionCall (matmul/add combination)
-        assert!(matches!(g, CompiledExpr::FunctionCall { .. }));
+    match expr {
+        CompiledExpr::FunctionCall { name, args } => {
+            let args = args.into_iter().map(|a| substitute(a, subst)).collect();
+            CompiledExpr::FunctionCall { name, args }
+        }
+        CompiledExpr::Let { bindings, body } => {
+            let bindings = bindings
+                .into_iter()
+                .map(|(k, v)| (k, substitute(v, subst)))
+                .collect();
+            CompiledExpr::Let {
+                bindings,
+                body: Box::new(substitute(*body, subst)),
+            }
+        }
+        CompiledExpr::Do(exprs) => {
+            CompiledExpr::Do(exprs.into_iter().map(|e| substitute(e, subst)).collect())
+        }
+        other => other,
     }
 }

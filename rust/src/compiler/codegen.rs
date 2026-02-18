@@ -499,30 +499,38 @@ impl CodeGenerator {
                 })
             }
         }
-        // transpose: (transpose tensor [1 0])
-        else if name == "transpose" && args.len() == 2 {
+        // transpose: (transpose tensor [1 0]) or (transpose tensor) — default perm [1 0]
+        else if name == "transpose" && (args.len() == 1 || args.len() == 2) {
             let (operand_reg, operand_ty) = self.generate(&args[0])?;
-            if let CompiledExpr::Vector(perm_elems) = &args[1] {
-                let permutation: Vec<i64> = perm_elems
-                    .iter()
-                    .map(|e| match e {
-                        CompiledExpr::Integer(n) => *n,
-                        _ => panic!("Permutation element must be integer"),
-                    })
-                    .collect();
-                let (reg, ty) = tensor_ops::emit_transpose(
-                    &mut self.emitter,
-                    &operand_reg,
-                    &operand_ty,
-                    &permutation,
-                );
-                Ok((reg, ty))
+            let permutation: Vec<i64> = if args.len() == 2 {
+                if let CompiledExpr::Vector(perm_elems) = &args[1] {
+                    perm_elems
+                        .iter()
+                        .map(|e| match e {
+                            CompiledExpr::Integer(n) => *n,
+                            _ => panic!("Permutation element must be integer"),
+                        })
+                        .collect()
+                } else {
+                    return Err(SheafError::Compile {
+                        message: "transpose expects a vector permutation argument".to_string(),
+                        location: crate::core::error::SourceLocation::unknown(),
+                    });
+                }
             } else {
-                Err(SheafError::Compile {
-                    message: "transpose expects a vector permutation argument".to_string(),
-                    location: crate::core::error::SourceLocation::unknown(),
-                })
-            }
+                // Default: swap last two dims (works for 2D matrices)
+                let ndim = operand_ty.shape().len().max(2) as i64;
+                let mut perm: Vec<i64> = (0..ndim).collect();
+                perm.swap((ndim - 2) as usize, (ndim - 1) as usize);
+                perm
+            };
+            let (reg, ty) = tensor_ops::emit_transpose(
+                &mut self.emitter,
+                &operand_reg,
+                &operand_ty,
+                &permutation,
+            );
+            Ok((reg, ty))
         }
         // arange: (arange N) -> tensor<Nxf32> with [0, 1, 2, ..., N-1]
         else if name == "arange" && args.len() == 1 {
@@ -692,6 +700,26 @@ impl CodeGenerator {
         Ok(self
             .emitter
             .emit_func_declaration(name, param_types, return_type, &body))
+    }
+
+    /// Finalize a multi-output function declaration.
+    ///
+    /// Emits a `return %r0, %r1, ...` then wraps everything in a `func.func`
+    /// with a multi-value return type `-> (t0, t1, ...)`.
+    ///
+    /// The caller has already called `generate()` for each output and collected
+    /// the resulting (Register, StableHLOType) pairs.
+    pub fn finish_multi(
+        mut self,
+        name: &str,
+        param_types: &[StableHLOType],
+        result_regs: &[crate::compiler::stablehlo::Register],
+        result_types: &[StableHLOType],
+    ) -> String {
+        self.emitter.emit_return_multi(result_regs, result_types);
+        let body = self.emitter.body.clone();
+        self.emitter
+            .emit_func_declaration_multi(name, param_types, result_types, &body)
     }
 }
 

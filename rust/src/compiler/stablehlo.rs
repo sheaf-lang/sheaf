@@ -1105,6 +1105,69 @@ impl StableHLOEmitter {
             .push(format!("    return {} : {}", reg.to_mlir(), ty.to_mlir()));
     }
 
+    /// Emit a multi-value return: `return %0, %1 : type0, type1`
+    pub fn emit_return_multi(&mut self, regs: &[Register], types: &[StableHLOType]) {
+        let vals = regs
+            .iter()
+            .map(|r| r.to_mlir())
+            .collect::<Vec<_>>()
+            .join(", ");
+        let tys = types
+            .iter()
+            .map(|t| t.to_mlir())
+            .collect::<Vec<_>>()
+            .join(", ");
+        self.body.push(format!("    return {} : {}", vals, tys));
+    }
+
+    /// Emit a function with multiple return values.
+    ///
+    /// `-> (t1, t2, t3)` syntax in StableHLO.
+    pub fn emit_func_declaration_multi(
+        &mut self,
+        name: &str,
+        param_types: &[StableHLOType],
+        return_types: &[StableHLOType],
+        body_instructions: &[String],
+    ) -> String {
+        let sanitized_name = Self::sanitize_func_name(name);
+        let mut output = String::new();
+
+        let params: Vec<String> = param_types
+            .iter()
+            .enumerate()
+            .map(|(i, ty)| format!("%arg{}: {}", i, ty.to_mlir()))
+            .collect();
+        let params_str = params.join(", ");
+
+        let ret_str = if return_types.len() == 1 {
+            return_types[0].to_mlir()
+        } else {
+            format!(
+                "({})",
+                return_types
+                    .iter()
+                    .map(|t| t.to_mlir())
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            )
+        };
+
+        writeln!(
+            output,
+            "  func.func @{}({}) -> {} {{",
+            sanitized_name, params_str, ret_str
+        )
+        .unwrap();
+
+        for line in body_instructions {
+            writeln!(output, "{}", line).unwrap();
+        }
+
+        writeln!(output, "  }}").unwrap();
+        output
+    }
+
     /// Emit a function declaration (func.func)
     ///
     /// Generates: func.func @name(%arg0: type0, %arg1: type1) -> return_type { ... }
