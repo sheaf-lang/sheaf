@@ -3,7 +3,7 @@
 
 //! Integration tests for the StableHLO compiler
 
-use sheaf_compiler::{StableHLOEmitter, parse};
+use sheaf_compiler::{CodeGenerator, CompilerContext, StableHLOEmitter, parse};
 
 #[test]
 fn test_compile_add() {
@@ -145,4 +145,59 @@ fn test_write_mlir_to_file() {
         fs::write(&path, mlir).unwrap();
         println!("[OK] {:?}", path);
     }
+}
+
+// Compile source, run codegen, return MLIR string.
+fn compile_to_mlir(source: &str, fn_name: &str) -> String {
+    let exprs = parse(source, "<test>").unwrap();
+    let mut ctx = CompilerContext::new();
+    for e in &exprs {
+        ctx.compile(e).unwrap();
+    }
+    let func_def = ctx.registry.get(fn_name).unwrap().clone();
+    let body = func_def.body_compiled.clone().unwrap();
+    let sig = func_def.signature.clone().unwrap();
+    let codegen = CodeGenerator::with_function_params(
+        ctx.registry.clone(),
+        &func_def.params,
+        &sig.param_types,
+    );
+    let decl = codegen
+        .emit_func_declaration(fn_name, &body, &sig.param_types, &sig.return_type)
+        .unwrap();
+    StableHLOEmitter::emit_module(&[decl])
+}
+
+#[test]
+fn test_fn_direct_call() {
+    // ((fn [x] (+ x 1.0)) 10.0)
+    let mlir = compile_to_mlir(
+        "(defn test-fn-direct [a] ((fn [x] (+ x 1.0)) a))",
+        "test-fn-direct",
+    );
+    println!("{}", mlir);
+    assert!(mlir.contains("stablehlo.add"));
+    assert!(mlir.contains("dense<1.0>"));
+}
+
+#[test]
+fn test_fn_let_bound() {
+    // (let [double (fn [n] (* n 2.0))] (double 21.0))
+    let mlir = compile_to_mlir(
+        "(defn test-fn-let [a] (let [double (fn [n] (* n 2.0))] (double a)))",
+        "test-fn-let",
+    );
+    println!("{}", mlir);
+    assert!(mlir.contains("stablehlo.multiply"));
+    assert!(mlir.contains("dense<2.0>"));
+}
+
+#[test]
+fn test_fn_higher_order() {
+    // value-and-grad style: apply a loss fn to params
+    // (defn apply-fn [f x] (f x))
+    // (apply-fn (fn [x] (* x x)) 3.0)
+    let mlir = compile_to_mlir("(defn test-fn-ho [a] ((fn [x] (* x x)) a))", "test-fn-ho");
+    println!("{}", mlir);
+    assert!(mlir.contains("stablehlo.multiply"));
 }

@@ -14,6 +14,8 @@ pub struct CodeGenerator {
     emitter: StableHLOEmitter,
     /// Map from variable names to registers and their types
     bindings: HashMap<String, (Register, StableHLOType)>,
+    /// Lambdas bound in let forms — stored for inlining, not emitted as SSA.
+    lambda_bindings: HashMap<String, CompiledExpr>,
     /// Function registry for user-defined functions
     function_registry: HashMap<String, crate::core::compiler::FunctionDef>,
 }
@@ -23,6 +25,7 @@ impl CodeGenerator {
         Self {
             emitter: StableHLOEmitter::new(),
             bindings: HashMap::new(),
+            lambda_bindings: HashMap::new(),
             function_registry: HashMap::new(),
         }
     }
@@ -31,6 +34,7 @@ impl CodeGenerator {
         Self {
             emitter: StableHLOEmitter::new(),
             bindings: HashMap::new(),
+            lambda_bindings: HashMap::new(),
             function_registry: registry,
         }
     }
@@ -49,6 +53,7 @@ impl CodeGenerator {
         Self {
             emitter: StableHLOEmitter::new(),
             bindings,
+            lambda_bindings: HashMap::new(),
             function_registry: registry,
         }
     }
@@ -190,16 +195,25 @@ impl CodeGenerator {
             CompiledExpr::FunctionCall { name, args } => self.generate_function_call(name, args),
 
             CompiledExpr::Let { bindings, body } => {
-                // Evaluate bindings and store in bindings map
+                let mut lambda_names = Vec::new();
                 for (name, value_expr) in bindings {
-                    let (reg, ty) = self.generate(value_expr)?;
-                    self.bindings.insert(name.clone(), (reg, ty));
+                    if matches!(value_expr, CompiledExpr::Lambda { .. }) {
+                        // Store lambda for inlining — no SSA emitted.
+                        self.lambda_bindings
+                            .insert(name.clone(), value_expr.clone());
+                        lambda_names.push(name.clone());
+                    } else {
+                        let (reg, ty) = self.generate(value_expr)?;
+                        self.bindings.insert(name.clone(), (reg, ty));
+                    }
                 }
-                // Evaluate body with bindings in scope
                 let result = self.generate(body)?;
-                // Clean up bindings (for proper scoping)
+                // Clean up (proper scoping)
                 for (name, _) in bindings {
                     self.bindings.remove(name);
+                }
+                for name in &lambda_names {
+                    self.lambda_bindings.remove(name);
                 }
                 Ok(result)
             }
@@ -242,6 +256,19 @@ impl CodeGenerator {
                 message: format!("Cannot generate code for bare function reference: {}", name),
                 location: crate::core::error::SourceLocation::unknown(),
             }),
+
+            // Lambda and LambdaCall: inline at call site.
+            // A bare Lambda without a call is not directly emittable.
+            CompiledExpr::Lambda { .. } => Err(SheafError::Compile {
+                message: "Cannot emit a lambda without a call site".to_string(),
+                location: crate::core::error::SourceLocation::unknown(),
+            }),
+
+            CompiledExpr::LambdaCall { callee, args } => {
+                let callee = callee.clone();
+                let args = args.clone();
+                self.inline_lambda_call(&callee, &args)
+            }
 
             _ => Err(SheafError::Compile {
                 message: format!("Code generation not yet implemented for: {:?}", expr),
@@ -671,6 +698,57 @@ impl CodeGenerator {
                 location: crate::core::error::SourceLocation::unknown(),
             })
         }
+    }
+
+    /// Inline a lambda call: generate args, bind params→registers, generate body.
+    fn inline_lambda_call(
+        &mut self,
+        callee: &CompiledExpr,
+        args: &[CompiledExpr],
+    ) -> SheafResult<(Register, StableHLOType)> {
+        // Resolve callee — may be a Lambda directly, or a Symbol bound in lambda_bindings.
+        let lambda = match callee {
+            CompiledExpr::Lambda { .. } => callee.clone(),
+            CompiledExpr::Symbol(name) => {
+                self.lambda_bindings
+                    .get(name)
+                    .cloned()
+                    .ok_or_else(|| SheafError::Compile {
+                        message: format!("Undefined lambda: {}", name),
+                        location: crate::core::error::SourceLocation::unknown(),
+                    })?
+            }
+            other => {
+                return Err(SheafError::Compile {
+                    message: format!("Expected lambda at call site, got: {:?}", other),
+                    location: crate::core::error::SourceLocation::unknown(),
+                });
+            }
+        };
+
+        let (params, body) = match lambda {
+            CompiledExpr::Lambda { params, body } => (params, *body),
+            _ => unreachable!(),
+        };
+
+        // Generate argument values.
+        let mut arg_regs = Vec::new();
+        let mut arg_tys = Vec::new();
+        for arg in args {
+            let (reg, ty) = self.generate(arg)?;
+            arg_regs.push(reg);
+            arg_tys.push(ty);
+        }
+
+        // Bind param names → (register, type) and generate body.
+        let saved = self.bindings.clone();
+        for (param, (reg, ty)) in params.iter().zip(arg_regs.iter().zip(arg_tys.iter())) {
+            self.bindings
+                .insert(param.clone(), (reg.clone(), ty.clone()));
+        }
+        let result = self.generate(&body);
+        self.bindings = saved;
+        result
     }
 
     /// Emit a complete function module

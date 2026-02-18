@@ -215,15 +215,50 @@ impl SpecialForm for FnForm {
 
     fn compile(
         &self,
-        _compiler: &mut CompilerContext,
-        _args: &[SheafValue],
+        compiler: &mut CompilerContext,
+        args: &[SheafValue],
         loc: &SourceLocation,
     ) -> SheafResult<CompiledExpr> {
-        // TODO: Implement anonymous functions
-        // Will need to capture closure, compile body, etc.
-        Err(crate::core::error::SheafError::Compile {
-            message: "fn (anonymous functions) not yet implemented".to_string(),
-            location: loc.clone(),
+        // (fn [params] body)
+        check_min_arity("fn", args, 2, loc)?;
+
+        let params_vec = expect_vector(&args[0], "fn parameters", loc)?;
+        let param_names: Vec<String> = params_vec
+            .iter()
+            .map(|p| {
+                p.as_symbol()
+                    .map(|s| s.to_string())
+                    .ok_or_else(|| SheafError::Compile {
+                        message: format!("fn: parameter must be a symbol, got {}", p),
+                        location: loc.clone(),
+                    })
+            })
+            .collect::<SheafResult<_>>()?;
+
+        // Compile the body with params registered as local variables so they
+        // resolve as Symbol nodes (not FunctionRef).
+        let saved_locals = compiler.local_vars.clone();
+        for p in &param_names {
+            compiler.local_vars.insert(
+                p.clone(),
+                crate::ast::SheafValue::Symbol(p.clone(), loc.clone()),
+            );
+        }
+
+        let body = if args.len() == 2 {
+            compiler.compile(&args[1])?
+        } else {
+            // Multiple body expressions → implicit do
+            let exprs: SheafResult<Vec<CompiledExpr>> =
+                args[1..].iter().map(|e| compiler.compile(e)).collect();
+            CompiledExpr::Do(exprs?)
+        };
+
+        compiler.local_vars = saved_locals;
+
+        Ok(CompiledExpr::Lambda {
+            params: param_names,
+            body: Box::new(body),
         })
     }
 }

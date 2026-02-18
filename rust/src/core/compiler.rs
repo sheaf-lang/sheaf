@@ -133,7 +133,15 @@ impl CompilerContext {
                         None => self.compile_function_call(elements, loc),
                     }
                 } else {
-                    self.compile_function_call(elements, loc)
+                    // Head is not a symbol — compile it and treat as lambda call.
+                    // e.g. ((fn [x] (+ x 1)) 10)
+                    let callee = self.compile(&elements[0])?;
+                    let args: SheafResult<Vec<CompiledExpr>> =
+                        elements[1..].iter().map(|a| self.compile(a)).collect();
+                    Ok(CompiledExpr::LambdaCall {
+                        callee: Box::new(callee),
+                        args: args?,
+                    })
                 }
             }
 
@@ -182,8 +190,14 @@ impl CompilerContext {
             });
         }
 
-        // Check local variables - return as Symbol for let bindings
-        if self.local_vars.contains_key(name) {
+        // Check local variables
+        if let Some(val) = self.local_vars.get(name).cloned() {
+            // If the value is a fn form, recompile it to get a Lambda.
+            if let SheafValue::List(ref elems, _) = val {
+                if elems.first().and_then(|e| e.as_symbol()) == Some("fn") {
+                    return self.compile(&val);
+                }
+            }
             return Ok(CompiledExpr::Symbol(name.to_string()));
         }
 
@@ -265,6 +279,18 @@ impl CompilerContext {
             args.iter().map(|arg| self.compile(arg)).collect();
         let compiled_args = compiled_args?;
 
+        // If the symbol is a locally-bound lambda, emit a LambdaCall.
+        // e.g. (let [f (fn [x] x)] (f 5))
+        if self.local_vars.contains_key(func_name) {
+            let callee = self.resolve_symbol(func_name, loc)?;
+            if matches!(callee, CompiledExpr::Lambda { .. }) {
+                return Ok(CompiledExpr::LambdaCall {
+                    callee: Box::new(callee),
+                    args: compiled_args,
+                });
+            }
+        }
+
         Ok(CompiledExpr::FunctionCall {
             name: func_name.to_string(),
             args: compiled_args,
@@ -308,6 +334,22 @@ pub enum CompiledExpr {
         param: String,
         /// Sequence of indices for nested tuple access
         indices: Vec<usize>,
+    },
+    /// Anonymous function (lambda). Pure — captures no external state.
+    /// Always inlined at call sites; never emitted as a separate MLIR function.
+    ///
+    /// Corresponds to (fn [params] body) in Sheaf.
+    Lambda {
+        params: Vec<String>,
+        body: Box<CompiledExpr>,
+    },
+    /// Call of a lambda or a locally-bound function value.
+    /// Generated when the callee is not a static function name but an expression.
+    ///
+    /// e.g. ((fn [x] (+ x 1)) 10)  or  (let [f (fn [x] x)] (f 5))
+    LambdaCall {
+        callee: Box<CompiledExpr>,
+        args: Vec<CompiledExpr>,
     },
 }
 
