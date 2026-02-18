@@ -104,12 +104,27 @@ pub fn emit_tril(
     emitter.emit_tril(operand, operand_ty)
 }
 
-// TODO: Add more tensor operations
-// - slice
-// - sum, mean (reductions - require reduce with body)
-// - argmax, argmin
-// - einsum
-// - broadcast (already internal in stablehlo.rs)
+/// Emit sum reduction: (sum x :axis 1) or (sum x :axis 1 :keepdims true)
+pub fn emit_sum(
+    emitter: &mut StableHLOEmitter,
+    operand: &Register,
+    operand_ty: &StableHLOType,
+    axis: i64,
+    keepdims: bool,
+) -> (Register, StableHLOType) {
+    emitter.emit_reduce_sum(operand, operand_ty, axis, keepdims)
+}
+
+/// Emit mean reduction: (mean x :axis 1) or (mean x :axis 1 :keepdims true)
+pub fn emit_mean(
+    emitter: &mut StableHLOEmitter,
+    operand: &Register,
+    operand_ty: &StableHLOType,
+    axis: i64,
+    keepdims: bool,
+) -> (Register, StableHLOType) {
+    emitter.emit_reduce_mean(operand, operand_ty, axis, keepdims)
+}
 
 #[cfg(test)]
 mod tests {

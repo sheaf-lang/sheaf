@@ -176,6 +176,15 @@ fn infer_symbol_types(
                 }
             }
 
+            // sum/mean: first arg should be at least 2D
+            if (name == "sum" || name == "mean") && !args.is_empty() {
+                if let CompiledExpr::Symbol(sym) = &args[0] {
+                    symbol_types
+                        .entry(sym.clone())
+                        .or_insert(StableHLOType::f32_tensor(vec![1, 1]));
+                }
+            }
+
             // Recurse into arguments
             for arg in args {
                 infer_symbol_types(arg, symbol_types)?;
@@ -271,7 +280,32 @@ fn infer_type_with_context(
                         Ok(lhs_ty)
                     }
                 }
+                // Unary ops (including user-defined like softmax): preserve arg type
+                "relu" | "sigmoid" | "tanh" | "sqrt" | "exp" | "log" | "softmax" => {
+                    if args.is_empty() {
+                        return Ok(StableHLOType::scalar_f32());
+                    }
+                    ctx_infer(&args[0])
+                }
                 _ => infer_function_call_type(name, args),
+            }
+        }
+
+        CompiledExpr::Let { bindings, body } => {
+            // Extend symbol_types with let bindings, then infer body type
+            let mut extended = symbol_types.clone();
+            for (name, val) in bindings {
+                let ty = infer_type_with_context(val, &extended)?;
+                extended.insert(name.clone(), ty);
+            }
+            infer_type_with_context(body, &extended)
+        }
+
+        CompiledExpr::Do(exprs) => {
+            if let Some(last) = exprs.last() {
+                infer_type_with_context(last, symbol_types)
+            } else {
+                Ok(StableHLOType::scalar_f32())
             }
         }
 
@@ -374,7 +408,7 @@ fn infer_function_call_type(name: &str, args: &[CompiledExpr]) -> SheafResult<St
         }
 
         // Unary ops preserve input type
-        "relu" | "sigmoid" | "tanh" | "sqrt" | "exp" | "log" => {
+        "relu" | "sigmoid" | "tanh" | "sqrt" | "exp" | "log" | "softmax" => {
             if args.is_empty() {
                 return Ok(StableHLOType::scalar_f32());
             }
@@ -413,6 +447,65 @@ fn infer_function_call_type(name: &str, args: &[CompiledExpr]) -> SheafResult<St
                 Ok(StableHLOType::f32_tensor(shape))
             } else {
                 Ok(StableHLOType::scalar_f32())
+            }
+        }
+
+        // sum: (sum x :axis N :keepdims bool) -> removes or keeps axis N
+        "sum" | "mean" => {
+            if args.is_empty() {
+                return Ok(StableHLOType::scalar_f32());
+            }
+            let input_ty = infer_type(&args[0])?;
+            let shape = input_ty.shape();
+            if shape.is_empty() {
+                return Ok(StableHLOType::scalar_f32());
+            }
+            // Parse :axis and :keepdims from args
+            let mut axis: i64 = -1;
+            let mut keepdims = false;
+            let mut i = 1;
+            while i + 1 < args.len() {
+                match &args[i] {
+                    CompiledExpr::Keyword(k) if k == "axis" => {
+                        if let CompiledExpr::Integer(n) = &args[i + 1] {
+                            axis = *n;
+                        }
+                        i += 2;
+                    }
+                    CompiledExpr::Keyword(k) if k == "keepdims" => {
+                        if let CompiledExpr::Boolean(b) = &args[i + 1] {
+                            keepdims = *b;
+                        }
+                        i += 2;
+                    }
+                    _ => {
+                        i += 1;
+                    }
+                }
+            }
+            let ndim = shape.len();
+            let axis_usize = if axis < 0 {
+                (ndim as i64 + axis) as usize
+            } else {
+                axis as usize
+            };
+            let axis_usize = axis_usize.min(ndim.saturating_sub(1));
+            if keepdims {
+                let mut out_shape = shape.clone();
+                out_shape[axis_usize] = 1;
+                Ok(StableHLOType::f32_tensor(out_shape))
+            } else {
+                let out_shape: Vec<i64> = shape
+                    .iter()
+                    .enumerate()
+                    .filter(|(i, _)| *i != axis_usize)
+                    .map(|(_, &d)| d)
+                    .collect();
+                if out_shape.is_empty() {
+                    Ok(StableHLOType::scalar_f32())
+                } else {
+                    Ok(StableHLOType::f32_tensor(out_shape))
+                }
             }
         }
 

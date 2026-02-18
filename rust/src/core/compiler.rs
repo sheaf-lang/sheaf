@@ -508,10 +508,9 @@ mod tests {
         let module = StableHLOEmitter::emit_module(&func_declarations);
 
         // Verify the module contains all expected elements
-        assert!(module.contains("@square"));
-        assert!(module.contains("@add_squares"));
+        // Note: user-defined functions are inlined by the codegen,
+        // so func.call is no longer emitted.
         assert!(module.contains("@main"));
-        assert!(module.contains("func.call"));
         assert!(module.contains("stablehlo.multiply"));
         assert!(module.contains("stablehlo.add"));
 

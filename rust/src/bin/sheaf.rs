@@ -110,13 +110,16 @@ fn main() {
             &func_def.params,
             &sig.param_types,
         );
-        let func_decl = codegen
+        let main_decl = codegen
             .emit_func_declaration(&cli.function, &body, &sig.param_types, &sig.return_type)
             .unwrap_or_else(|e| {
                 eprintln!("Code generation error: {}", e);
                 exit(1);
             });
-        StableHLOEmitter::emit_module(&[func_decl])
+
+        // User-defined function calls are inlined by the codegen,
+        // so only the main function declaration needs to be in the module.
+        StableHLOEmitter::emit_module(&[main_decl])
     } else {
         // No function found — compile first non-defn expression as a standalone main
         if cli.verbose {

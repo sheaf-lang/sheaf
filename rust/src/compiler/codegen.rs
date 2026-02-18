@@ -263,7 +263,7 @@ impl CodeGenerator {
             .get(name)
             .and_then(|func_def| func_def.signature.clone());
 
-        if let Some(signature) = signature {
+        if let Some(_signature) = signature {
             // Generate code for each argument
             let mut arg_registers = Vec::new();
             let mut arg_types = Vec::new();
@@ -274,15 +274,40 @@ impl CodeGenerator {
                 arg_types.push(ty);
             }
 
-            // Emit func.call with the signature from the registry
-            let result_reg = self.emitter.emit_func_call(
-                name,
-                &arg_registers,
-                &arg_types,
-                &signature.return_type,
-            );
+            // Inline user-defined functions when their body is available and
+            // the call is monomorphic (arg types are known). This avoids the
+            // problem of emitting a func.call to a function compiled with the
+            // wrong (scalar) type from inference.
+            let func_def = self.function_registry.get(name).cloned();
+            if let Some(func_def) = func_def {
+                if let Some(body) = &func_def.body_compiled {
+                    // Bind arg registers to param names in our bindings map
+                    let saved_bindings = self.bindings.clone();
+                    for (param, (reg, ty)) in func_def
+                        .params
+                        .iter()
+                        .zip(arg_registers.iter().zip(arg_types.iter()))
+                    {
+                        self.bindings
+                            .insert(param.clone(), (reg.clone(), ty.clone()));
+                    }
+                    let body = body.clone();
+                    let result = self.generate(&body);
+                    self.bindings = saved_bindings;
+                    return result;
+                }
+            }
 
-            return Ok((result_reg, signature.return_type.clone()));
+            // Fallback: emit func.call (may have type issues if not monomorphic)
+            let sig = self
+                .function_registry
+                .get(name)
+                .and_then(|f| f.signature.clone())
+                .unwrap();
+            let result_reg =
+                self.emitter
+                    .emit_func_call(name, &arg_registers, &arg_types, &sig.return_type);
+            return Ok((result_reg, sig.return_type.clone()));
         }
 
         // Binary arithmetic operations
@@ -596,6 +621,41 @@ impl CodeGenerator {
         else if name == "tril" && args.len() == 1 {
             let (operand_reg, operand_ty) = self.generate(&args[0])?;
             let (reg, ty) = tensor_ops::emit_tril(&mut self.emitter, &operand_reg, &operand_ty);
+            Ok((reg, ty))
+        }
+        // sum/mean: (sum x :axis N) or (sum x :axis N :keepdims true)
+        else if (name == "sum" || name == "mean") && !args.is_empty() {
+            let (operand_reg, operand_ty) = self.generate(&args[0])?;
+
+            // Parse keyword args: :axis N :keepdims bool
+            let mut axis: i64 = -1; // default: last axis
+            let mut keepdims = false;
+            let mut i = 1;
+            while i + 1 < args.len() {
+                match &args[i] {
+                    CompiledExpr::Keyword(k) if k == "axis" => {
+                        if let CompiledExpr::Integer(n) = &args[i + 1] {
+                            axis = *n;
+                        }
+                        i += 2;
+                    }
+                    CompiledExpr::Keyword(k) if k == "keepdims" => {
+                        if let CompiledExpr::Boolean(b) = &args[i + 1] {
+                            keepdims = *b;
+                        }
+                        i += 2;
+                    }
+                    _ => {
+                        i += 1;
+                    }
+                }
+            }
+
+            let (reg, ty) = if name == "sum" {
+                tensor_ops::emit_sum(&mut self.emitter, &operand_reg, &operand_ty, axis, keepdims)
+            } else {
+                tensor_ops::emit_mean(&mut self.emitter, &operand_reg, &operand_ty, axis, keepdims)
+            };
             Ok((reg, ty))
         } else {
             Err(SheafError::Compile {
