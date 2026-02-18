@@ -63,6 +63,10 @@ pub struct CompilerContext {
     /// Param scope: maps symbol name -> (param_name, tuple_indices)
     /// Set by with-params to resolve symbols like W -> get_tuple_element(p, [0, 1])
     pub param_scope: HashMap<String, (String, Vec<usize>)>,
+
+    /// Extra func.func declarations emitted by module-level forms (e.g. value-and-grad).
+    /// Collected by the CLI and included in the final StableHLO module.
+    pub extra_decls: Vec<String>,
 }
 
 /// Function definition
@@ -83,6 +87,7 @@ impl CompilerContext {
             local_vars: HashMap::new(),
             param_types: HashMap::new(),
             param_scope: HashMap::new(),
+            extra_decls: Vec::new(),
         }
     }
 
@@ -228,7 +233,7 @@ impl CompilerContext {
         loc: &crate::core::error::SourceLocation,
     ) -> Option<SheafResult<CompiledExpr>> {
         // Static dispatch to special forms
-        use crate::forms::ml::{DefparamsForm, GradForm, WithParamsForm};
+        use crate::forms::ml::{DefparamsForm, GradForm, ValueAndGradForm, WithParamsForm};
         use crate::forms::*;
 
         let result = match op {
@@ -253,6 +258,7 @@ impl CompilerContext {
             "defparams" => DefparamsForm.compile(self, args, loc),
             "with-params" => WithParamsForm.compile(self, args, loc),
             "grad" => GradForm.compile(self, args, loc),
+            "value-and-grad" => ValueAndGradForm.compile(self, args, loc),
             _ => return None, // Not a special form
         };
 

@@ -436,6 +436,174 @@ impl SpecialForm for GradForm {
 }
 
 // ---------------------------------------------------------------------------
+// value-and-grad
+// ---------------------------------------------------------------------------
+
+/// Emit a named multi-output MLIR function computing the loss and its gradients.
+///
+/// Syntax:
+///   (value-and-grad new-fn-name f :wrt [p1 p2 ...])
+///
+/// - `new-fn-name`: symbol — name of the generated MLIR function
+/// - `f`: symbol — must refer to an existing `defn` in the registry
+/// - `:wrt [p1 p2 ...]`: parameter names to differentiate
+///
+/// The generated `func.func` declaration is pushed into `compiler.extra_decls`
+/// and included in the final module by the CLI. Returns `Nil`.
+pub struct ValueAndGradForm;
+
+impl SpecialForm for ValueAndGradForm {
+    fn name(&self) -> &'static str {
+        "value-and-grad"
+    }
+
+    fn compile(
+        &self,
+        compiler: &mut CompilerContext,
+        args: &[SheafValue],
+        loc: &SourceLocation,
+    ) -> SheafResult<CompiledExpr> {
+        if args.len() < 4 {
+            return Err(SheafError::Compile {
+                message: "value-and-grad: expected (value-and-grad new-fn f :wrt [params])"
+                    .to_string(),
+                location: loc.clone(),
+            });
+        }
+
+        let new_fn_name = args[0].as_symbol().ok_or_else(|| SheafError::Compile {
+            message: "value-and-grad: first argument must be a symbol (new function name)"
+                .to_string(),
+            location: loc.clone(),
+        })?;
+
+        let src_fn_name = args[1].as_symbol().ok_or_else(|| SheafError::Compile {
+            message: "value-and-grad: second argument must be a symbol (source function)"
+                .to_string(),
+            location: loc.clone(),
+        })?;
+
+        // Parse :wrt [p1 p2 ...]
+        let mut wrt_names: Vec<String> = Vec::new();
+        let mut i = 2;
+        while i < args.len() {
+            if let SheafValue::Keyword(k, _) = &args[i] {
+                if k == "wrt" {
+                    i += 1;
+                    match args.get(i) {
+                        Some(SheafValue::Vector(elems, _)) => {
+                            for elem in elems {
+                                let name = elem.as_symbol().ok_or_else(|| SheafError::Compile {
+                                    message: "value-and-grad: :wrt elements must be symbols"
+                                        .to_string(),
+                                    location: loc.clone(),
+                                })?;
+                                wrt_names.push(name.to_string());
+                            }
+                        }
+                        other => {
+                            return Err(SheafError::Compile {
+                                message: format!(
+                                    "value-and-grad: :wrt must be followed by a vector, got {}",
+                                    other.map(|v| v.to_string()).unwrap_or("nothing".into())
+                                ),
+                                location: loc.clone(),
+                            });
+                        }
+                    }
+                }
+            }
+            i += 1;
+        }
+
+        if wrt_names.is_empty() {
+            return Err(SheafError::Compile {
+                message: "value-and-grad: :wrt list is empty or missing".to_string(),
+                location: loc.clone(),
+            });
+        }
+
+        // Look up source function
+        let func_def =
+            compiler
+                .registry
+                .get(src_fn_name)
+                .cloned()
+                .ok_or_else(|| SheafError::Compile {
+                    message: format!(
+                        "value-and-grad: function '{}' not found. Did you forget (defn {})?",
+                        src_fn_name, src_fn_name
+                    ),
+                    location: loc.clone(),
+                })?;
+
+        let body_compiled =
+            func_def
+                .body_compiled
+                .as_ref()
+                .cloned()
+                .ok_or_else(|| SheafError::Compile {
+                    message: format!(
+                        "value-and-grad: function '{}' has no compiled body",
+                        src_fn_name
+                    ),
+                    location: loc.clone(),
+                })?;
+
+        let signature =
+            func_def
+                .signature
+                .as_ref()
+                .cloned()
+                .ok_or_else(|| SheafError::Compile {
+                    message: format!(
+                        "value-and-grad: function '{}' has no inferred signature",
+                        src_fn_name
+                    ),
+                    location: loc.clone(),
+                })?;
+
+        // Build GradParam list
+        let mut grad_params: Vec<crate::autodiff::value_and_grad::GradParam> = Vec::new();
+        for wrt_name in &wrt_names {
+            let idx = func_def
+                .params
+                .iter()
+                .position(|p| p == wrt_name)
+                .ok_or_else(|| SheafError::Compile {
+                    message: format!(
+                        "value-and-grad: '{}' is not a parameter of '{}'",
+                        wrt_name, src_fn_name
+                    ),
+                    location: loc.clone(),
+                })?;
+            grad_params.push(crate::autodiff::value_and_grad::GradParam {
+                name: wrt_name.clone(),
+                ty: signature.param_types[idx].clone(),
+            });
+        }
+
+        // Emit the value-and-grad function declaration
+        let func_decl = crate::autodiff::value_and_grad::emit_value_and_grad_func(
+            new_fn_name,
+            &func_def.params,
+            &signature.param_types,
+            &body_compiled,
+            &grad_params,
+            compiler.registry.clone(),
+        )
+        .map_err(|e| SheafError::Compile {
+            message: format!("value-and-grad: code generation failed: {}", e),
+            location: loc.clone(),
+        })?;
+
+        compiler.extra_decls.push(func_decl);
+
+        Ok(CompiledExpr::Nil)
+    }
+}
+
+// ---------------------------------------------------------------------------
 // ParamLayout → StableHLOType conversion
 // ---------------------------------------------------------------------------
 
