@@ -348,6 +348,94 @@ fn parse_with_params_binding(
 }
 
 // ---------------------------------------------------------------------------
+// grad
+// ---------------------------------------------------------------------------
+
+/// grad - Symbolic differentiation of a compiled expression.
+///
+/// Syntax:
+///   (grad body :wrt param)
+///
+/// Returns a `CompiledExpr` representing d(body)/d(param), simplified.
+///
+/// Example:
+///   (defn linear-grad [x W b]
+///     (grad (+ (@ x W) b) :wrt W))
+///
+/// This expands to the symbolic gradient of `(+ (@ x W) b)` with respect to `W`.
+pub struct GradForm;
+
+impl SpecialForm for GradForm {
+    fn name(&self) -> &'static str {
+        "grad"
+    }
+
+    fn compile(
+        &self,
+        compiler: &mut CompilerContext,
+        args: &[SheafValue],
+        loc: &SourceLocation,
+    ) -> SheafResult<CompiledExpr> {
+        // Syntax: (grad body :wrt param)
+        // args = [body, :wrt, param]
+        if args.len() < 3 {
+            return Err(SheafError::Compile {
+                message: "grad: expected (grad body :wrt param)".to_string(),
+                location: loc.clone(),
+            });
+        }
+
+        // Find :wrt keyword and the following param name
+        let mut body_exprs: Vec<&SheafValue> = Vec::new();
+        let mut wrt_param: Option<String> = None;
+        let mut i = 0;
+        while i < args.len() {
+            match &args[i] {
+                SheafValue::Keyword(k, _) if k == "wrt" => {
+                    i += 1;
+                    if i >= args.len() {
+                        return Err(SheafError::Compile {
+                            message: "grad: :wrt must be followed by a symbol".to_string(),
+                            location: loc.clone(),
+                        });
+                    }
+                    let param = args[i].as_symbol().ok_or_else(|| SheafError::Compile {
+                        message: "grad: :wrt value must be a symbol".to_string(),
+                        location: loc.clone(),
+                    })?;
+                    wrt_param = Some(param.to_string());
+                }
+                other => body_exprs.push(other),
+            }
+            i += 1;
+        }
+
+        let wrt = wrt_param.ok_or_else(|| SheafError::Compile {
+            message: "grad: missing :wrt param".to_string(),
+            location: loc.clone(),
+        })?;
+
+        if body_exprs.is_empty() {
+            return Err(SheafError::Compile {
+                message: "grad: missing body expression".to_string(),
+                location: loc.clone(),
+            });
+        }
+
+        // Compile body expression(s) — use last one as the differentiable expr
+        let compiled_bodies: SheafResult<Vec<CompiledExpr>> =
+            body_exprs.iter().map(|e| compiler.compile(e)).collect();
+        let compiled_bodies = compiled_bodies?;
+        let body_expr = compiled_bodies.into_iter().last().unwrap();
+
+        // Compute symbolic gradient and simplify
+        let gradient = crate::autodiff::grad_simplified(&body_expr, &wrt);
+
+        Ok(gradient)
+    }
+}
+
+// ---------------------------------------------------------------------------
 // ParamLayout → StableHLOType conversion
 // ---------------------------------------------------------------------------
 

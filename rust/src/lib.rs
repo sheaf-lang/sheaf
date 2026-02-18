@@ -7,6 +7,7 @@
 //! compiling directly to StableHLO and running on IREE.
 
 pub mod ast;
+pub mod autodiff;
 pub mod compiler;
 pub mod core;
 pub mod forms;
