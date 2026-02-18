@@ -117,9 +117,19 @@ fn main() {
                 exit(1);
             });
 
-        // User-defined function calls are inlined by the codegen,
-        // so only the main function declaration needs to be in the module.
-        StableHLOEmitter::emit_module(&[main_decl])
+        // Include any extra declarations emitted by module-level forms (e.g. value-and-grad).
+        let mut all_decls = compiler.extra_decls.clone();
+        all_decls.push(main_decl);
+        StableHLOEmitter::emit_module(&all_decls)
+    } else if !compiler.extra_decls.is_empty() {
+        // Function was emitted by a module-level form (e.g. value-and-grad) — no main needed.
+        if cli.verbose {
+            println!(
+                "Function '{}' found in extra_decls (emitted by module-level form)",
+                cli.function
+            );
+        }
+        StableHLOEmitter::emit_module(&compiler.extra_decls)
     } else {
         // No function found — compile first non-defn expression as a standalone main
         if cli.verbose {
