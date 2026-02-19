@@ -442,14 +442,79 @@ impl SpecialForm for GradForm {
 /// Emit a named multi-output MLIR function computing the loss and its gradients.
 ///
 /// Syntax:
-///   (value-and-grad new-fn-name f :wrt [p1 p2 ...])
+///   (value-and-grad name f config :wrt [p1 p2 ...])
+///   (value-and-grad name f :wrt [p1 p2 ...])
 ///
-/// - `new-fn-name`: symbol — name of the generated MLIR function
+/// - `name`: symbol — name of the generated MLIR function
 /// - `f`: symbol — must refer to an existing `defn` in the registry
+/// - `config`: optional dict `{:param [dim ...] ...}` — shapes for specialization
 /// - `:wrt [p1 p2 ...]`: parameter names to differentiate
+///
+/// When a config dict is provided, the function signature is re-inferred with
+/// the given shapes. Otherwise, the pre-inferred signature from `defn` is used.
 ///
 /// The generated `func.func` declaration is pushed into `compiler.extra_decls`
 /// and included in the final module by the CLI. Returns `Nil`.
+/// Parse a shape config dict `{:param [dim1 dim2 ...] ...}` into known types.
+fn parse_shape_dict(
+    dict: &SheafValue,
+    loc: &SourceLocation,
+) -> SheafResult<Vec<(String, StableHLOType)>> {
+    let pairs = match dict {
+        SheafValue::Dict(pairs, _) => pairs,
+        other => {
+            return Err(SheafError::Compile {
+                message: format!("Expected a dict for shape config, got: {}", other),
+                location: loc.clone(),
+            });
+        }
+    };
+    let mut result = Vec::new();
+    for (key, val) in pairs {
+        let name = match key {
+            SheafValue::Keyword(k, _) => k.clone(),
+            SheafValue::Symbol(s, _) => s.clone(),
+            other => {
+                return Err(SheafError::Compile {
+                    message: format!("Shape dict key must be a keyword or symbol, got: {}", other),
+                    location: loc.clone(),
+                });
+            }
+        };
+        let shape = match val {
+            SheafValue::Vector(elems, _) => {
+                let dims: SheafResult<Vec<i64>> = elems
+                    .iter()
+                    .map(|e| match e {
+                        SheafValue::Integer(n, _) => Ok(*n),
+                        other => Err(SheafError::Compile {
+                            message: format!("Shape dimensions must be integers, got: {}", other),
+                            location: loc.clone(),
+                        }),
+                    })
+                    .collect();
+                dims?
+            }
+            other => {
+                return Err(SheafError::Compile {
+                    message: format!(
+                        "Shape value for '{}' must be a vector of dims, got: {}",
+                        name, other
+                    ),
+                    location: loc.clone(),
+                });
+            }
+        };
+        let ty = if shape.is_empty() {
+            StableHLOType::scalar_f32()
+        } else {
+            StableHLOType::f32_tensor(shape)
+        };
+        result.push((name, ty));
+    }
+    Ok(result)
+}
+
 pub struct ValueAndGradForm;
 
 impl SpecialForm for ValueAndGradForm {
@@ -465,7 +530,7 @@ impl SpecialForm for ValueAndGradForm {
     ) -> SheafResult<CompiledExpr> {
         if args.len() < 4 {
             return Err(SheafError::Compile {
-                message: "value-and-grad: expected (value-and-grad new-fn f :wrt [params])"
+                message: "value-and-grad: expected (value-and-grad name f [:wrt | config])"
                     .to_string(),
                 location: loc.clone(),
             });
@@ -483,9 +548,20 @@ impl SpecialForm for ValueAndGradForm {
             location: loc.clone(),
         })?;
 
+        // args[2] may be a config dict, a symbol bound to a dict, or the start of :wrt
+        let config_arg = match &args[2] {
+            SheafValue::Dict(..) => Some(&args[2]),
+            SheafValue::Symbol(name, _) => compiler.local_vars.get(name.as_str()),
+            _ => None,
+        };
+        let (known_types, rest_start) = match config_arg {
+            Some(val @ SheafValue::Dict(..)) => (parse_shape_dict(val, loc)?, 3),
+            _ => (Vec::new(), 2),
+        };
+
         // Parse :wrt [p1 p2 ...]
         let mut wrt_names: Vec<String> = Vec::new();
-        let mut i = 2;
+        let mut i = rest_start;
         while i < args.len() {
             if let SheafValue::Keyword(k, _) = &args[i] {
                 if k == "wrt" {
@@ -550,7 +626,15 @@ impl SpecialForm for ValueAndGradForm {
                     location: loc.clone(),
                 })?;
 
-        let signature =
+        // Infer signature: use config dict if provided, otherwise fall back to defn signature
+        let signature = if !known_types.is_empty() {
+            crate::core::inference::infer_function_signature_with_known(
+                compiler,
+                &func_def.params,
+                &body_compiled,
+                &known_types,
+            )?
+        } else {
             func_def
                 .signature
                 .as_ref()
@@ -561,7 +645,8 @@ impl SpecialForm for ValueAndGradForm {
                         src_fn_name
                     ),
                     location: loc.clone(),
-                })?;
+                })?
+        };
 
         // Build GradParam list
         let mut grad_params: Vec<crate::autodiff::value_and_grad::GradParam> = Vec::new();
