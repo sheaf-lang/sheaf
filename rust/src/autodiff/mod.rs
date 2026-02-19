@@ -42,6 +42,56 @@ fn transpose(a: CompiledExpr) -> CompiledExpr {
     call("transpose", vec![a])
 }
 
+/// Inline let-bindings into the body by replacing symbols with their values.
+fn substitute_bindings(body: &CompiledExpr, bindings: &[(String, CompiledExpr)]) -> CompiledExpr {
+    let mut result = body.clone();
+    for (name, value) in bindings {
+        result = replace_symbol(&result, name, value);
+    }
+    result
+}
+
+fn replace_symbol(expr: &CompiledExpr, name: &str, replacement: &CompiledExpr) -> CompiledExpr {
+    match expr {
+        CompiledExpr::Symbol(s) if s == name => replacement.clone(),
+        CompiledExpr::FunctionCall {
+            name: fn_name,
+            args,
+        } => CompiledExpr::FunctionCall {
+            name: fn_name.clone(),
+            args: args
+                .iter()
+                .map(|a| replace_symbol(a, name, replacement))
+                .collect(),
+        },
+        CompiledExpr::Let { bindings, body } => {
+            let new_bindings: Vec<(String, CompiledExpr)> = bindings
+                .iter()
+                .map(|(k, v)| (k.clone(), replace_symbol(v, name, replacement)))
+                .collect();
+            // If a binding shadows the name, stop substituting in the body
+            if bindings.iter().any(|(k, _)| k == name) {
+                CompiledExpr::Let {
+                    bindings: new_bindings,
+                    body: body.clone(),
+                }
+            } else {
+                CompiledExpr::Let {
+                    bindings: new_bindings,
+                    body: Box::new(replace_symbol(body, name, replacement)),
+                }
+            }
+        }
+        CompiledExpr::Do(exprs) => CompiledExpr::Do(
+            exprs
+                .iter()
+                .map(|e| replace_symbol(e, name, replacement))
+                .collect(),
+        ),
+        other => other.clone(),
+    }
+}
+
 //  simplify
 
 /// Basic algebraic simplification to reduce the symbolic gradient expression.
@@ -117,10 +167,11 @@ fn grad_with(expr: &CompiledExpr, wrt: &str, g: CompiledExpr) -> CompiledExpr {
 
         CompiledExpr::FunctionCall { name, args } => grad_function_call(name, args, wrt, g),
 
-        // Let: differentiate the body; bindings are treated as constants here.
-        // A full treatment would substitute bindings, but for simple cases
-        // (where `wrt` is not shadowed) passing through is correct.
-        CompiledExpr::Let { body, .. } => grad_with(body, wrt, g),
+        // Let: substitute bindings into body, then differentiate.
+        CompiledExpr::Let { bindings, body } => {
+            let expanded = substitute_bindings(body, bindings);
+            grad_with(&expanded, wrt, g)
+        }
 
         // Do: only the last expression matters
         CompiledExpr::Do(exprs) => {
