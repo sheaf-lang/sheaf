@@ -5,7 +5,7 @@
 
 use crate::interpreter::env::{runtime_error, Env};
 use crate::interpreter::value::{Dtype, Value};
-use ndarray::{ArrayD, IxDyn};
+use ndarray::{ArrayD, Dimension, IxDyn};
 use std::collections::BTreeMap;
 
 type R = Result<Value, crate::core::error::SheafError>;
@@ -38,6 +38,67 @@ pub fn register_builtins(env: &mut Env) {
     env.set_builtin("count", builtin_len);
     env.set_builtin("int", builtin_int);
     env.set_builtin("float", builtin_float);
+    // Phase 2: Activations
+    env.set_builtin("relu", builtin_relu);
+    env.set_builtin("leaky-relu", builtin_leaky_relu);
+    env.set_builtin("sigmoid", builtin_sigmoid);
+    env.set_builtin("tanh", builtin_tanh);
+    env.set_builtin("gelu", builtin_gelu);
+    env.set_builtin("selu", builtin_selu);
+    env.set_builtin("celu", builtin_celu);
+    env.set_builtin("silu", builtin_silu);
+    env.set_builtin("softmax", builtin_softmax);
+    env.set_builtin("log-softmax", builtin_log_softmax);
+    // Phase 2: Reductions
+    env.set_builtin("sum", builtin_sum);
+    env.set_builtin("mean", builtin_mean);
+    env.set_builtin("product", builtin_product);
+    env.set_builtin("min", builtin_min);
+    env.set_builtin("max", builtin_max);
+    env.set_builtin("minimum", builtin_minimum);
+    env.set_builtin("maximum", builtin_maximum);
+    env.set_builtin("argmax", builtin_argmax);
+    env.set_builtin("argmin", builtin_argmin);
+    // Phase 2: Tensor construction
+    env.set_builtin("zeros", builtin_zeros);
+    env.set_builtin("ones", builtin_ones);
+    env.set_builtin("arange", builtin_arange);
+    env.set_builtin("eye", builtin_eye);
+    env.set_builtin("one-hot", builtin_one_hot);
+    env.set_builtin("tril", builtin_tril);
+    // Phase 2: Tensor ops
+    env.set_builtin("reshape", builtin_reshape);
+    env.set_builtin("transpose", builtin_transpose);
+    env.set_builtin("concat", builtin_concat);
+    env.set_builtin("slice", builtin_slice);
+    env.set_builtin("get", builtin_get);
+    env.set_builtin("where", builtin_where);
+    env.set_builtin("roll", builtin_roll);
+    env.set_builtin("index-update", builtin_index_update);
+    // Phase 2: List ops
+    env.set_builtin("first", builtin_first);
+    env.set_builtin("second", builtin_second);
+    env.set_builtin("last", builtin_last);
+    env.set_builtin("rest", builtin_rest);
+    env.set_builtin("nth", builtin_nth);
+    env.set_builtin("cons", builtin_cons);
+    env.set_builtin("append", builtin_append);
+    env.set_builtin("empty?", builtin_empty);
+    // Phase 2: Dict ops
+    env.set_builtin("get-in", builtin_get_in);
+    env.set_builtin("assoc", builtin_assoc);
+    env.set_builtin("dissoc", builtin_dissoc);
+    env.set_builtin("merge", builtin_merge);
+    env.set_builtin("keys", builtin_keys);
+    env.set_builtin("vals", builtin_vals);
+    env.set_builtin("dict", builtin_dict);
+    // Phase 2: Higher-order
+    env.set_builtin("map", builtin_map);
+    env.set_builtin("filter", builtin_filter);
+    env.set_builtin("reduce", builtin_reduce);
+    env.set_builtin("apply", builtin_apply);
+    // Phase 2: String
+    env.set_builtin("str", builtin_str);
 }
 
 fn to_array(val: &Value) -> Result<(ArrayD<f64>, Dtype), crate::core::error::SheafError> {
@@ -51,7 +112,7 @@ fn to_array(val: &Value) -> Result<(ArrayD<f64>, Dtype), crate::core::error::She
 }
 
 fn result_dtype(a: Dtype, b: Dtype) -> Dtype {
-    if a == Dtype::F32 || b == Dtype::F32 { Dtype::F32 } else { Dtype::I32 }
+    if a == Dtype::F32 || b == Dtype::F32 { Dtype::F32 } else if a == Dtype::Bool && b == Dtype::Bool { Dtype::Bool } else { Dtype::I32 }
 }
 
 fn binary_op(args: &[Value], op: fn(f64, f64) -> f64) -> R {
@@ -258,8 +319,7 @@ fn cmp_op(args: &[Value], op: fn(f64, f64) -> f64, _dt: Dtype) -> R {
 }
 
 fn bool_tensor(data: ArrayD<f64>) -> Value {
-    // Check if all values are 0 or 1 — display as bool tensor
-    Value::Tensor { data, dtype: Dtype::I32 }
+    Value::Tensor { data, dtype: Dtype::Bool }
 }
 
 fn builtin_lt(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
@@ -343,4 +403,791 @@ fn builtin_float(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
         }
         _ => Err(runtime_error(format!("float: cannot convert {}", args[0].type_name()))),
     }
+}
+
+fn get_axis(kw: &BTreeMap<String, Value>) -> Option<i64> {
+    kw.get("axis").and_then(|v| match v {
+        Value::Int(n) => Some(*n),
+        Value::Float(f) => Some(*f as i64),
+        _ => None,
+    })
+}
+
+fn reduce_along_axis(arr: &ArrayD<f64>, axis: usize, op: fn(&[f64]) -> f64) -> ArrayD<f64> {
+    let shape = arr.shape();
+    let mut new_shape: Vec<usize> = shape.to_vec();
+    new_shape.remove(axis);
+    if new_shape.is_empty() {
+        let data: Vec<f64> = arr.iter().copied().collect();
+        return ArrayD::from_elem(IxDyn(&[]), op(&data));
+    }
+    let total = new_shape.iter().product::<usize>();
+    let mut result_data = Vec::with_capacity(total);
+    let n_axis = shape[axis];
+    for idx in ndarray::indices(&*new_shape) {
+        let mut vals = Vec::with_capacity(n_axis);
+        for k in 0..n_axis {
+            let mut full_idx: Vec<usize> = idx.as_array_view().to_vec();
+            full_idx.insert(axis, k);
+            vals.push(arr[IxDyn(&full_idx)]);
+        }
+        result_data.push(op(&vals));
+    }
+    ArrayD::from_shape_vec(IxDyn(&new_shape), result_data).unwrap()
+}
+
+fn argreduce_along_axis(arr: &ArrayD<f64>, axis: usize, cmp: fn(f64, f64) -> bool) -> ArrayD<f64> {
+    let shape = arr.shape();
+    let mut new_shape: Vec<usize> = shape.to_vec();
+    new_shape.remove(axis);
+    if new_shape.is_empty() {
+        let data: Vec<f64> = arr.iter().copied().collect();
+        let idx = data.iter().enumerate().fold(0, |best, (i, &x)| if cmp(x, data[best]) { i } else { best });
+        return ArrayD::from_elem(IxDyn(&[]), idx as f64);
+    }
+    let total = new_shape.iter().product::<usize>();
+    let mut result_data = Vec::with_capacity(total);
+    let n_axis = shape[axis];
+    for idx in ndarray::indices(&*new_shape) {
+        let mut best_idx = 0;
+        let mut full_idx: Vec<usize> = idx.as_array_view().to_vec();
+        full_idx.insert(axis, 0);
+        let mut best_val = arr[IxDyn(&full_idx)];
+        for k in 1..n_axis {
+            full_idx[axis] = k;
+            let v = arr[IxDyn(&full_idx)];
+            if cmp(v, best_val) {
+                best_val = v;
+                best_idx = k;
+            }
+        }
+        result_data.push(best_idx as f64);
+    }
+    ArrayD::from_shape_vec(IxDyn(&new_shape), result_data).unwrap()
+}
+
+fn builtin_relu(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    unary_op(args, |x| if x > 0.0 { x } else { 0.0 })
+}
+
+fn builtin_leaky_relu(args: &[Value], kw: &BTreeMap<String, Value>) -> R {
+    let slope = kw.get("negative_slope")
+        .and_then(|v| v.to_f64())
+        .unwrap_or(0.01);
+    let (arr, _dt) = to_array(&args[0])?;
+    let result = arr.mapv(|x| if x > 0.0 { x } else { slope * x });
+    if result.shape() == &[] {
+        Ok(Value::Float(*result.first().unwrap()))
+    } else {
+        Ok(Value::Tensor { data: result, dtype: Dtype::F32 })
+    }
+}
+
+fn builtin_sigmoid(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    unary_op(args, |x| {
+        let r = 1.0 / (1.0 + (-x).exp());
+        // Clamp to f32 precision range
+        if r < 1e-7 { 0.0 } else if r > 1.0 - 1e-7 { 1.0 } else { r }
+    })
+}
+
+fn builtin_tanh(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    unary_op(args, f64::tanh)
+}
+
+fn builtin_gelu(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    unary_op(args, |x| {
+        0.5 * x * (1.0 + (std::f64::consts::FRAC_2_SQRT_PI * std::f64::consts::FRAC_1_SQRT_2 * (x + 0.044715 * x * x * x)).tanh())
+    })
+}
+
+fn builtin_selu(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    let alpha = 1.6732632423543772;
+    let scale = 1.0507009873554805;
+    let (arr, _dt) = to_array(&args[0])?;
+    let result = arr.mapv(|x| {
+        if x > 0.0 { scale * x } else { scale * alpha * (x.exp() - 1.0) }
+    });
+    if result.shape() == &[] {
+        Ok(Value::Float(*result.first().unwrap()))
+    } else {
+        Ok(Value::Tensor { data: result, dtype: Dtype::F32 })
+    }
+}
+
+fn builtin_celu(args: &[Value], kw: &BTreeMap<String, Value>) -> R {
+    let alpha = kw.get("alpha").and_then(|v| v.to_f64()).unwrap_or(1.0);
+    let (arr, _dt) = to_array(&args[0])?;
+    let result = arr.mapv(|x| {
+        if x > 0.0 { x } else { alpha * ((x / alpha).exp() - 1.0) }
+    });
+    if result.shape() == &[] {
+        Ok(Value::Float(*result.first().unwrap()))
+    } else {
+        Ok(Value::Tensor { data: result, dtype: Dtype::F32 })
+    }
+}
+
+fn builtin_silu(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    unary_op(args, |x| x / (1.0 + (-x).exp()))
+}
+
+fn builtin_softmax(args: &[Value], kw: &BTreeMap<String, Value>) -> R {
+    let (arr, _dt) = to_array(&args[0])?;
+    let axis = get_axis(kw).unwrap_or(-1);
+    let ndim = arr.ndim();
+    let ax = if axis < 0 { (ndim as i64 + axis) as usize } else { axis as usize };
+    let max_arr = reduce_along_axis(&arr, ax, |v| v.iter().copied().fold(f64::NEG_INFINITY, f64::max));
+    let max_bc = max_arr.insert_axis(ndarray::Axis(ax));
+    let exp_arr = (&arr - &max_bc).mapv(f64::exp);
+    let sum_arr = reduce_along_axis(&exp_arr, ax, |v| v.iter().sum());
+    let sum_bc = sum_arr.insert_axis(ndarray::Axis(ax));
+    let result = &exp_arr / &sum_bc;
+    Ok(Value::tensor_f32(result))
+}
+
+fn builtin_log_softmax(args: &[Value], kw: &BTreeMap<String, Value>) -> R {
+    let (arr, _dt) = to_array(&args[0])?;
+    let axis = get_axis(kw).unwrap_or(-1);
+    let ndim = arr.ndim();
+    let ax = if axis < 0 { (ndim as i64 + axis) as usize } else { axis as usize };
+    let max_arr = reduce_along_axis(&arr, ax, |v| v.iter().copied().fold(f64::NEG_INFINITY, f64::max));
+    let max_bc = max_arr.insert_axis(ndarray::Axis(ax));
+    let shifted = &arr - &max_bc;
+    let exp_arr = shifted.mapv(f64::exp);
+    let sum_arr = reduce_along_axis(&exp_arr, ax, |v| v.iter().sum());
+    let log_sum = sum_arr.mapv(f64::ln);
+    let log_sum_bc = log_sum.insert_axis(ndarray::Axis(ax));
+    let result = &shifted - &log_sum_bc;
+    Ok(Value::tensor_f32(result))
+}
+
+fn builtin_sum(args: &[Value], kw: &BTreeMap<String, Value>) -> R {
+    let (arr, _dt) = to_array(&args[0])?;
+    if let Some(axis) = get_axis(kw) {
+        let ax = if axis < 0 { (arr.ndim() as i64 + axis) as usize } else { axis as usize };
+        let result = reduce_along_axis(&arr, ax, |v| v.iter().sum());
+        Ok(Value::tensor_f32(result))
+    } else {
+        Ok(Value::Float(arr.iter().sum()))
+    }
+}
+
+fn builtin_mean(args: &[Value], kw: &BTreeMap<String, Value>) -> R {
+    let (arr, _dt) = to_array(&args[0])?;
+    if let Some(axis) = get_axis(kw) {
+        let ax = if axis < 0 { (arr.ndim() as i64 + axis) as usize } else { axis as usize };
+        let result = reduce_along_axis(&arr, ax, |v| v.iter().sum::<f64>() / v.len() as f64);
+        Ok(Value::tensor_f32(result))
+    } else {
+        let n = arr.len() as f64;
+        Ok(Value::Float(arr.iter().sum::<f64>() / n))
+    }
+}
+
+fn builtin_product(args: &[Value], kw: &BTreeMap<String, Value>) -> R {
+    let (arr, _dt) = to_array(&args[0])?;
+    if let Some(axis) = get_axis(kw) {
+        let ax = if axis < 0 { (arr.ndim() as i64 + axis) as usize } else { axis as usize };
+        let result = reduce_along_axis(&arr, ax, |v| v.iter().product());
+        if result.shape().is_empty() {
+            Ok(Value::Float(*result.first().unwrap()))
+        } else {
+            Ok(Value::tensor_f32(result))
+        }
+    } else {
+        Ok(Value::Float(arr.iter().product()))
+    }
+}
+
+fn builtin_min(args: &[Value], kw: &BTreeMap<String, Value>) -> R {
+    let (arr, _dt) = to_array(&args[0])?;
+    if let Some(axis) = get_axis(kw) {
+        let ax = if axis < 0 { (arr.ndim() as i64 + axis) as usize } else { axis as usize };
+        let result = reduce_along_axis(&arr, ax, |v| v.iter().copied().fold(f64::INFINITY, f64::min));
+        Ok(Value::tensor_f32(result))
+    } else {
+        Ok(Value::Float(arr.iter().copied().fold(f64::INFINITY, f64::min)))
+    }
+}
+
+fn builtin_max(args: &[Value], kw: &BTreeMap<String, Value>) -> R {
+    let (arr, _dt) = to_array(&args[0])?;
+    if let Some(axis) = get_axis(kw) {
+        let ax = if axis < 0 { (arr.ndim() as i64 + axis) as usize } else { axis as usize };
+        let result = reduce_along_axis(&arr, ax, |v| v.iter().copied().fold(f64::NEG_INFINITY, f64::max));
+        Ok(Value::tensor_f32(result))
+    } else {
+        Ok(Value::Float(arr.iter().copied().fold(f64::NEG_INFINITY, f64::max)))
+    }
+}
+
+fn builtin_minimum(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    binary_op(args, f64::min)
+}
+
+fn builtin_maximum(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    binary_op(args, f64::max)
+}
+
+fn builtin_argmax(args: &[Value], kw: &BTreeMap<String, Value>) -> R {
+    let (arr, _dt) = to_array(&args[0])?;
+    if let Some(axis) = get_axis(kw) {
+        let ax = if axis < 0 { (arr.ndim() as i64 + axis) as usize } else { axis as usize };
+        let result = argreduce_along_axis(&arr, ax, |a, b| a > b);
+        Ok(Value::tensor_i32(result))
+    } else {
+        let data: Vec<f64> = arr.iter().copied().collect();
+        let idx = data.iter().enumerate().fold(0, |best, (i, &x)| if x > data[best] { i } else { best });
+        Ok(Value::Int(idx as i64))
+    }
+}
+
+fn builtin_argmin(args: &[Value], kw: &BTreeMap<String, Value>) -> R {
+    let (arr, _dt) = to_array(&args[0])?;
+    if let Some(axis) = get_axis(kw) {
+        let ax = if axis < 0 { (arr.ndim() as i64 + axis) as usize } else { axis as usize };
+        let result = argreduce_along_axis(&arr, ax, |a, b| a < b);
+        Ok(Value::tensor_i32(result))
+    } else {
+        let data: Vec<f64> = arr.iter().copied().collect();
+        let idx = data.iter().enumerate().fold(0, |best, (i, &x)| if x < data[best] { i } else { best });
+        Ok(Value::Int(idx as i64))
+    }
+}
+
+fn shape_from_value(val: &Value) -> Result<Vec<usize>, crate::core::error::SheafError> {
+    match val {
+        Value::List(items) => {
+            items.iter().map(|v| match v {
+                Value::Int(n) => Ok(*n as usize),
+                Value::Float(f) => Ok(*f as usize),
+                _ => Err(runtime_error("shape must contain integers")),
+            }).collect()
+        }
+        Value::Tensor { data, .. } => {
+            Ok(data.iter().map(|&x| x as usize).collect())
+        }
+        _ => Err(runtime_error(format!("Expected shape list, got {}", val.type_name()))),
+    }
+}
+
+fn builtin_zeros(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    let shape = shape_from_value(&args[0])?;
+    Ok(Value::tensor_f32(ArrayD::zeros(IxDyn(&shape))))
+}
+
+fn builtin_ones(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    let shape = shape_from_value(&args[0])?;
+    Ok(Value::tensor_f32(ArrayD::ones(IxDyn(&shape))))
+}
+
+fn builtin_arange(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    let (start, stop, step) = match args.len() {
+        1 => (0i64, args[0].to_f64().unwrap() as i64, 1i64),
+        2 => (args[0].to_f64().unwrap() as i64, args[1].to_f64().unwrap() as i64, 1),
+        _ => (args[0].to_f64().unwrap() as i64, args[1].to_f64().unwrap() as i64, args[2].to_f64().unwrap() as i64),
+    };
+    let mut data = Vec::new();
+    let mut i = start;
+    while (step > 0 && i < stop) || (step < 0 && i > stop) {
+        data.push(i as f64);
+        i += step;
+    }
+    Ok(Value::tensor_i32(ArrayD::from_shape_vec(IxDyn(&[data.len()]), data).unwrap()))
+}
+
+fn builtin_eye(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    let n = args[0].to_f64().unwrap() as usize;
+    let m = if args.len() > 1 { args[1].to_f64().unwrap() as usize } else { n };
+    let mut data = vec![0.0; n * m];
+    for i in 0..n.min(m) {
+        data[i * m + i] = 1.0;
+    }
+    Ok(Value::tensor_f32(ArrayD::from_shape_vec(IxDyn(&[n, m]), data).unwrap()))
+}
+
+fn builtin_one_hot(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    let num_classes = args[1].to_f64().unwrap() as usize;
+    match &args[0] {
+        Value::Int(idx) => {
+            let mut data = vec![0.0; num_classes];
+            data[*idx as usize] = 1.0;
+            Ok(Value::tensor_f32(ArrayD::from_shape_vec(IxDyn(&[num_classes]), data).unwrap()))
+        }
+        Value::Tensor { data: indices, .. } => {
+            let n = indices.len();
+            let mut result = vec![0.0; n * num_classes];
+            for (i, &idx) in indices.iter().enumerate() {
+                result[i * num_classes + idx as usize] = 1.0;
+            }
+            Ok(Value::tensor_f32(ArrayD::from_shape_vec(IxDyn(&[n, num_classes]), result).unwrap()))
+        }
+        _ => Err(runtime_error("one-hot: expected int or tensor")),
+    }
+}
+
+fn builtin_tril(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    let (arr, _dt) = to_array(&args[0])?;
+    if arr.ndim() != 2 { return Err(runtime_error("tril: expected 2D tensor")); }
+    let shape = arr.shape();
+    let (n, m) = (shape[0], shape[1]);
+    let mut result = arr.clone();
+    for i in 0..n {
+        for j in (i + 1)..m {
+            result[IxDyn(&[i, j])] = 0.0;
+        }
+    }
+    Ok(Value::tensor_f32(result))
+}
+
+fn builtin_reshape(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    let (arr, dt) = to_array(&args[0])?;
+    let shape_val = &args[1];
+    let raw_shape: Vec<i64> = match shape_val {
+        Value::List(items) => items.iter().map(|v| match v {
+            Value::Int(n) => *n,
+            Value::Float(f) => *f as i64,
+            _ => -999,
+        }).collect(),
+        Value::Tensor { data, .. } => data.iter().map(|&x| x as i64).collect(),
+        _ => return Err(runtime_error("reshape: expected shape list")),
+    };
+    let total = arr.len() as i64;
+    let neg_idx = raw_shape.iter().position(|&x| x < 0);
+    let new_shape: Vec<usize> = if let Some(_ni) = neg_idx {
+        let known: i64 = raw_shape.iter().filter(|&&x| x > 0).product();
+        let inferred = total / known;
+        raw_shape.iter().map(|&x| if x < 0 { inferred as usize } else { x as usize }).collect()
+    } else {
+        raw_shape.iter().map(|&x| x as usize).collect()
+    };
+    let result = arr.into_shape_with_order(IxDyn(&new_shape)).map_err(|e| runtime_error(e.to_string()))?;
+    Ok(Value::Tensor { data: result, dtype: dt })
+}
+
+fn builtin_transpose(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    let (arr, _dt) = to_array(&args[0])?;
+    if arr.ndim() == 2 {
+        Ok(Value::tensor_f32(arr.t().to_owned()))
+    } else if arr.ndim() == 1 {
+        Ok(Value::tensor_f32(arr))
+    } else {
+        let mut axes: Vec<usize> = (0..arr.ndim()).rev().collect();
+        if args.len() > 1 {
+            if let Value::List(items) = &args[1] {
+                axes = items.iter().map(|v| v.to_f64().unwrap() as usize).collect();
+            }
+        }
+        Ok(Value::tensor_f32(arr.permuted_axes(IxDyn(&axes))))
+    }
+}
+
+fn builtin_concat(args: &[Value], kw: &BTreeMap<String, Value>) -> R {
+    let axis = get_axis(kw).unwrap_or(0) as usize;
+    // Handle List args (quoted vectors)
+    if matches!(&args[0], Value::List(_)) {
+        let mut all_items = Vec::new();
+        for arg in args {
+            match arg {
+                Value::List(items) => all_items.extend(items.clone()),
+                _ => all_items.push(arg.clone()),
+            }
+        }
+        return Ok(Value::List(all_items));
+    }
+    // Handle Tensor args
+    let arrays: Vec<ArrayD<f64>> = args.iter().map(|a| {
+        to_array(a).map(|(arr, _)| arr)
+    }).collect::<Result<Vec<_>, _>>()?;
+    let views: Vec<ndarray::ArrayViewD<f64>> = arrays.iter().map(|a| a.view()).collect();
+    let result = ndarray::concatenate(ndarray::Axis(axis), &views)
+        .map_err(|e| runtime_error(e.to_string()))?;
+    Ok(Value::tensor_f32(result))
+}
+
+fn builtin_slice(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    let (arr, _dt) = to_array(&args[0])?;
+    let start = args[1].to_f64().unwrap() as usize;
+    let end = args[2].to_f64().unwrap() as usize;
+    let sliced = arr.slice_axis(ndarray::Axis(0), ndarray::Slice::from(start..end));
+    Ok(Value::tensor_f32(sliced.to_owned()))
+}
+
+fn builtin_get(args: &[Value], kw: &BTreeMap<String, Value>) -> R {
+    match &args[0] {
+        Value::Dict(map) => {
+            let key = match &args[1] {
+                Value::Keyword(k) => k.clone(),
+                Value::String(s) => s.clone(),
+                _ => return Err(runtime_error("get: key must be keyword or string")),
+            };
+            match map.get(&key) {
+                Some(v) => Ok(v.clone()),
+                None => {
+                    if args.len() > 2 { Ok(args[2].clone()) }
+                    else if let Some(default) = kw.get("default") { Ok(default.clone()) }
+                    else { Ok(Value::Nil) }
+                }
+            }
+        }
+        Value::Tensor { data, .. } => {
+            let idx = args[1].to_f64().unwrap() as usize;
+            let sliced = data.index_axis(ndarray::Axis(0), idx).to_owned();
+            if sliced.shape().is_empty() {
+                Ok(Value::Float(*sliced.first().unwrap()))
+            } else {
+                Ok(Value::tensor_f32(sliced))
+            }
+        }
+        Value::List(items) => {
+            let idx = args[1].to_f64().unwrap() as usize;
+            items.get(idx).cloned().ok_or_else(|| runtime_error("get: index out of bounds"))
+        }
+        _ => Err(runtime_error(format!("get: expected dict/tensor/list, got {}", args[0].type_name()))),
+    }
+}
+
+fn builtin_where(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    let (cond, _) = to_array(&args[0])?;
+    let (on_true, _) = to_array(&args[1])?;
+    let (on_false, _) = to_array(&args[2])?;
+    let on_true_bc = if on_true.shape() == &[] {
+        ArrayD::from_elem(cond.raw_dim(), *on_true.first().unwrap())
+    } else { on_true };
+    let on_false_bc = if on_false.shape() == &[] {
+        ArrayD::from_elem(cond.raw_dim(), *on_false.first().unwrap())
+    } else { on_false };
+    let result = ndarray::Zip::from(&cond).and(&on_true_bc).and(&on_false_bc)
+        .map_collect(|&c, &t, &f| if c != 0.0 { t } else { f });
+    Ok(Value::tensor_f32(result))
+}
+
+fn builtin_roll(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    let (arr, _dt) = to_array(&args[0])?;
+    let shift = args[1].to_f64().unwrap() as i64;
+    let data: Vec<f64> = arr.iter().copied().collect();
+    let n = data.len() as i64;
+    let shift = ((shift % n) + n) % n;
+    let mut result = vec![0.0; data.len()];
+    for (i, &v) in data.iter().enumerate() {
+        let new_i = ((i as i64 + shift) % n) as usize;
+        result[new_i] = v;
+    }
+    Ok(Value::tensor_f32(ArrayD::from_shape_vec(arr.raw_dim(), result).unwrap()))
+}
+
+fn builtin_index_update(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    let (mut arr, _dt) = to_array(&args[0])?;
+    let idx = args[1].to_f64().unwrap() as usize;
+    match &args[2] {
+        Value::Tensor { data: new_val, .. } => {
+            let mut slice = arr.index_axis_mut(ndarray::Axis(0), idx);
+            slice.assign(new_val);
+        }
+        other => {
+            let v = other.to_f64().unwrap();
+            arr[IxDyn(&[idx])] = v;
+        }
+    }
+    Ok(Value::tensor_f32(arr))
+}
+
+fn builtin_first(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    match &args[0] {
+        Value::List(items) => items.first().cloned().ok_or_else(|| runtime_error("first: empty list")),
+        Value::Tensor { data, .. } => {
+            let sliced = data.index_axis(ndarray::Axis(0), 0).to_owned();
+            if sliced.shape().is_empty() { Ok(Value::Float(*sliced.first().unwrap())) }
+            else { Ok(Value::tensor_f32(sliced)) }
+        }
+        _ => Err(runtime_error("first: expected list or tensor")),
+    }
+}
+
+fn builtin_second(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    match &args[0] {
+        Value::List(items) => items.get(1).cloned().ok_or_else(|| runtime_error("second: list too short")),
+        Value::Tensor { data, .. } => {
+            let sliced = data.index_axis(ndarray::Axis(0), 1).to_owned();
+            if sliced.shape().is_empty() { Ok(Value::Float(*sliced.first().unwrap())) }
+            else { Ok(Value::tensor_f32(sliced)) }
+        }
+        _ => Err(runtime_error("second: expected list or tensor")),
+    }
+}
+
+fn builtin_last(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    match &args[0] {
+        Value::List(items) => items.last().cloned().ok_or_else(|| runtime_error("last: empty list")),
+        Value::Tensor { data, .. } => {
+            let n = data.shape()[0];
+            let sliced = data.index_axis(ndarray::Axis(0), n - 1).to_owned();
+            if sliced.shape().is_empty() { Ok(Value::Float(*sliced.first().unwrap())) }
+            else { Ok(Value::tensor_f32(sliced)) }
+        }
+        _ => Err(runtime_error("last: expected list or tensor")),
+    }
+}
+
+fn builtin_rest(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    match &args[0] {
+        Value::List(items) => {
+            if items.is_empty() { Ok(Value::List(vec![])) }
+            else { Ok(Value::List(items[1..].to_vec())) }
+        }
+        _ => Err(runtime_error("rest: expected list")),
+    }
+}
+
+fn builtin_nth(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    let idx = args[1].to_f64().unwrap() as usize;
+    match &args[0] {
+        Value::List(items) => items.get(idx).cloned().ok_or_else(|| runtime_error("nth: index out of bounds")),
+        Value::Tensor { data, .. } => {
+            let sliced = data.index_axis(ndarray::Axis(0), idx).to_owned();
+            if sliced.shape().is_empty() { Ok(Value::Float(*sliced.first().unwrap())) }
+            else { Ok(Value::tensor_f32(sliced)) }
+        }
+        _ => Err(runtime_error("nth: expected list or tensor")),
+    }
+}
+
+fn builtin_cons(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    let head = args[0].clone();
+    match &args[1] {
+        Value::List(items) => {
+            let mut new = vec![head];
+            new.extend(items.clone());
+            Ok(Value::List(new))
+        }
+        _ => Err(runtime_error("cons: second arg must be list")),
+    }
+}
+
+fn builtin_append(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    match &args[0] {
+        Value::List(items) => {
+            let mut new = items.clone();
+            new.push(args[1].clone());
+            Ok(Value::List(new))
+        }
+        _ => Err(runtime_error("append: first arg must be list")),
+    }
+}
+
+fn builtin_empty(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    match &args[0] {
+        Value::List(items) => Ok(Value::Bool(items.is_empty())),
+        Value::Tensor { data, .. } => Ok(Value::Bool(data.is_empty())),
+        Value::Dict(map) => Ok(Value::Bool(map.is_empty())),
+        _ => Ok(Value::Bool(false)),
+    }
+}
+
+fn builtin_get_in(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    let path = match &args[1] {
+        Value::List(items) => items.clone(),
+        Value::Tensor { data, .. } => data.iter().map(|&x| Value::Int(x as i64)).collect(),
+        _ => return Err(runtime_error("get-in: path must be a list")),
+    };
+    let default = if args.len() > 2 { Some(args[2].clone()) } else { None };
+    let mut current = args[0].clone();
+    for key in &path {
+        current = match (&current, key) {
+            (Value::Dict(map), Value::Keyword(k)) | (Value::Dict(map), Value::String(k)) => {
+                match map.get(k) {
+                    Some(v) => v.clone(),
+                    None => return Ok(default.unwrap_or(Value::Nil)),
+                }
+            }
+            (Value::Tensor { data, .. }, Value::Int(idx)) => {
+                let sliced = data.index_axis(ndarray::Axis(0), *idx as usize).to_owned();
+                if sliced.shape().is_empty() { Value::Float(*sliced.first().unwrap()) }
+                else { Value::tensor_f32(sliced) }
+            }
+            (Value::List(items), Value::Int(idx)) => {
+                match items.get(*idx as usize) {
+                    Some(v) => v.clone(),
+                    None => return Ok(default.unwrap_or(Value::Nil)),
+                }
+            }
+            _ => return Ok(default.unwrap_or(Value::Nil)),
+        };
+    }
+    Ok(current)
+}
+
+fn builtin_assoc(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    match &args[0] {
+        Value::Dict(map) => {
+            let mut new = map.clone();
+            let key = match &args[1] {
+                Value::Keyword(k) => k.clone(),
+                Value::String(s) => s.clone(),
+                _ => return Err(runtime_error("assoc: key must be keyword or string")),
+            };
+            new.insert(key, args[2].clone());
+            Ok(Value::Dict(new))
+        }
+        _ => Err(runtime_error("assoc: expected dict")),
+    }
+}
+
+fn builtin_dissoc(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    match &args[0] {
+        Value::Dict(map) => {
+            let keys_to_remove: Vec<String> = match &args[1] {
+                Value::List(items) => items.iter().filter_map(|v| match v {
+                    Value::Keyword(k) | Value::String(k) => Some(k.clone()),
+                    _ => None,
+                }).collect(),
+                _ => return Err(runtime_error("dissoc: keys must be a list")),
+            };
+            let new: BTreeMap<String, Value> = map.iter()
+                .filter(|(k, _)| !keys_to_remove.contains(k))
+                .map(|(k, v)| (k.clone(), v.clone()))
+                .collect();
+            Ok(Value::Dict(new))
+        }
+        _ => Err(runtime_error("dissoc: expected dict")),
+    }
+}
+
+fn builtin_merge(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    let mut result = BTreeMap::new();
+    for arg in args {
+        if let Value::Dict(map) = arg {
+            result.extend(map.clone());
+        } else {
+            return Err(runtime_error("merge: expected dicts"));
+        }
+    }
+    Ok(Value::Dict(result))
+}
+
+fn builtin_keys(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    match &args[0] {
+        Value::Dict(map) => {
+            Ok(Value::List(map.keys().map(|k| Value::String(k.clone())).collect()))
+        }
+        _ => Err(runtime_error("keys: expected dict")),
+    }
+}
+
+fn builtin_vals(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    match &args[0] {
+        Value::Dict(map) => {
+            Ok(Value::List(map.values().cloned().collect()))
+        }
+        _ => Err(runtime_error("vals: expected dict")),
+    }
+}
+
+fn builtin_dict(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    let mut map = BTreeMap::new();
+    let mut i = 0;
+    while i + 1 < args.len() {
+        let key = match &args[i] {
+            Value::Keyword(k) => k.clone(),
+            Value::String(s) => s.clone(),
+            _ => return Err(runtime_error("dict: key must be keyword or string")),
+        };
+        map.insert(key, args[i + 1].clone());
+        i += 2;
+    }
+    Ok(Value::Dict(map))
+}
+
+fn builtin_map(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    // map takes (fn, collection) - but we can't call fn from here since we need env.
+    // For now: only works with builtin fns
+    let func = &args[0];
+    match &args[1] {
+        Value::List(items) => {
+            let results: Result<Vec<Value>, _> = items.iter().map(|item| {
+                call_value_fn(func, &[item.clone()])
+            }).collect();
+            Ok(Value::List(results?))
+        }
+        Value::Tensor { data, .. } => {
+            let results: Result<Vec<Value>, _> = data.iter().map(|&x| {
+                call_value_fn(func, &[Value::Float(x)])
+            }).collect();
+            Ok(Value::List(results?))
+        }
+        _ => Err(runtime_error("map: expected list or tensor")),
+    }
+}
+
+fn call_value_fn(func: &Value, args: &[Value]) -> R {
+    match func {
+        Value::BuiltinFn { func, .. } => func(args, &BTreeMap::new()),
+        _ => Err(runtime_error("Cannot call non-builtin function in this context")),
+    }
+}
+
+fn builtin_filter(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    let func = &args[0];
+    match &args[1] {
+        Value::List(items) => {
+            let mut results = Vec::new();
+            for item in items {
+                let result = call_value_fn(func, &[item.clone()])?;
+                if result.is_truthy() {
+                    results.push(item.clone());
+                }
+            }
+            Ok(Value::List(results))
+        }
+        _ => Err(runtime_error("filter: expected list")),
+    }
+}
+
+fn builtin_reduce(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    let func = &args[0];
+    let init = args[1].clone();
+    match &args[2] {
+        Value::List(items) => {
+            let mut acc = init;
+            for item in items {
+                acc = call_value_fn(func, &[acc, item.clone()])?;
+            }
+            Ok(acc)
+        }
+        Value::Tensor { data, .. } => {
+            if data.ndim() == 1 {
+                let mut acc = init;
+                for &x in data.iter() {
+                    acc = call_value_fn(func, &[acc, Value::Float(x)])?;
+                }
+                Ok(acc)
+            } else {
+                let mut acc = init;
+                for i in 0..data.shape()[0] {
+                    let row = data.index_axis(ndarray::Axis(0), i).to_owned();
+                    acc = call_value_fn(func, &[acc, Value::tensor_f32(row)])?;
+                }
+                Ok(acc)
+            }
+        }
+        _ => Err(runtime_error("reduce: expected list or tensor")),
+    }
+}
+
+fn builtin_apply(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    let func = &args[0];
+    match &args[1] {
+        Value::List(items) => call_value_fn(func, items),
+        Value::Tensor { data, .. } => {
+            let items: Vec<Value> = data.iter().map(|&x| Value::Float(x)).collect();
+            call_value_fn(func, &items)
+        }
+        _ => Err(runtime_error("apply: expected list or tensor")),
+    }
+}
+
+fn builtin_str(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    if args.is_empty() { return Ok(Value::String(String::new())); }
+    Ok(Value::String(format!("{}", args[0])))
 }

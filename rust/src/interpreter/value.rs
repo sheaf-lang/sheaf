@@ -4,7 +4,7 @@
 //! Runtime values for the Sheaf interpreter.
 
 use crate::core::compiler::CompiledExpr;
-use ndarray::ArrayD;
+use ndarray::{ArrayD, IxDyn};
 use std::collections::BTreeMap;
 use std::fmt;
 
@@ -12,6 +12,7 @@ use std::fmt;
 pub enum Dtype {
     F32,
     I32,
+    Bool,
 }
 
 pub type BuiltinFnPtr = fn(&[Value], &BTreeMap<String, Value>) -> Result<Value, crate::core::error::SheafError>;
@@ -125,14 +126,21 @@ fn format_tensor_f64(x: f64) -> String {
     }
 }
 
+fn format_element(x: f64, dtype: Dtype) -> String {
+    match dtype {
+        Dtype::I32 => format!("{}", x as i64),
+        Dtype::F32 => format_tensor_f64(x),
+        Dtype::Bool => if x != 0.0 { " True".to_string() } else { "False".to_string() },
+    }
+}
+
 fn format_tensor_1d(data: &[f64], dtype: Dtype) -> String {
-    let formatted: Vec<String> = data.iter().map(|&x| {
-        match dtype {
-            Dtype::I32 => format!("{}", x as i64),
-            Dtype::F32 => format_tensor_f64(x),
-        }
+    let formatted: Vec<String> = data.iter().map(|&x| format_element(x, dtype)).collect();
+    let max_width = formatted.iter().map(|s| s.len()).max().unwrap_or(0);
+    let padded: Vec<String> = formatted.iter().map(|s| {
+        format!("{:>width$}", s, width = max_width)
     }).collect();
-    format!("[{}]", formatted.join(" "))
+    format!("[{}]", padded.join(" "))
 }
 
 fn format_tensor_nd(arr: &ArrayD<f64>, dtype: Dtype) -> String {
@@ -143,9 +151,11 @@ fn format_tensor_nd(arr: &ArrayD<f64>, dtype: Dtype) -> String {
             match dtype {
                 Dtype::I32 => format!("{}", x as i64),
                 Dtype::F32 => format_tensor_f64(x),
+                Dtype::Bool => if x != 0.0 { "True".to_string() } else { "False".to_string() },
             }
         }
         1 => format_tensor_1d(arr.as_slice().unwrap(), dtype),
+        2 => format_tensor_2d(arr, dtype),
         _ => {
             let rows: Vec<String> = (0..shape[0]).map(|i| {
                 let sub = arr.index_axis(ndarray::Axis(0), i).to_owned();
@@ -154,6 +164,24 @@ fn format_tensor_nd(arr: &ArrayD<f64>, dtype: Dtype) -> String {
             format!("[{}]", rows.join("\n "))
         }
     }
+}
+
+fn format_tensor_2d(arr: &ArrayD<f64>, dtype: Dtype) -> String {
+    let shape = arr.shape();
+    let (nrows, ncols) = (shape[0], shape[1]);
+    let all_formatted: Vec<Vec<String>> = (0..nrows).map(|r| {
+        (0..ncols).map(|c| format_element(arr[IxDyn(&[r, c])], dtype)).collect()
+    }).collect();
+    let col_widths: Vec<usize> = (0..ncols).map(|c| {
+        all_formatted.iter().map(|row| row[c].len()).max().unwrap_or(0)
+    }).collect();
+    let rows: Vec<String> = all_formatted.iter().map(|row| {
+        let padded: Vec<String> = row.iter().enumerate().map(|(c, s)| {
+            format!("{:>width$}", s, width = col_widths[c])
+        }).collect();
+        format!("[{}]", padded.join(" "))
+    }).collect();
+    format!("[{}]", rows.join("\n "))
 }
 
 impl fmt::Display for Value {
@@ -168,7 +196,12 @@ impl fmt::Display for Value {
             Value::Keyword(k) => write!(f, ":{}", k),
             Value::Tensor { data, dtype } => write!(f, "{}", format_tensor_nd(data, *dtype)),
             Value::List(items) => {
-                let formatted: Vec<String> = items.iter().map(|v| format!("{}", v)).collect();
+                let formatted: Vec<String> = items.iter().map(|v| {
+                    match v {
+                        Value::String(s) => format!("'{}'", s),
+                        _ => format!("{}", v),
+                    }
+                }).collect();
                 write!(f, "({})", formatted.join(", "))
             }
             Value::Dict(map) => {

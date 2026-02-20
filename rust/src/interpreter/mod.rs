@@ -211,8 +211,16 @@ fn eval_call(name: &str, args: &[CompiledExpr], env: &mut Env) -> Result<Value, 
         _ => {}
     }
 
+    // Some functions treat keywords as positional args (not kwargs)
+    let no_kwargs = matches!(name, "get" | "get-in" | "assoc" | "dissoc" | "dict");
+
     // Evaluate args, splitting kwargs
-    let (pos_args, kwargs) = split_kwargs(args, env)?;
+    let (pos_args, kwargs) = if no_kwargs {
+        let pos: Result<Vec<Value>, _> = args.iter().map(|a| eval(a, env)).collect();
+        (pos?, BTreeMap::new())
+    } else {
+        split_kwargs(args, env)?
+    };
 
     // Try builtin from env
     if let Ok(Value::BuiltinFn { func, .. }) = env.get(name) {
