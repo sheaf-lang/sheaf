@@ -76,6 +76,26 @@ pub struct FunctionDef {
     pub signature: Option<crate::core::inference::FunctionSignature>,
 }
 
+fn is_builtin_name(name: &str) -> bool {
+    matches!(name,
+        "+" | "-" | "*" | "/" | "//" | "mod" | "%" | "**"
+        | "abs" | "exp" | "log" | "sqrt" | "@"
+        | "=" | "==" | "!=" | "<" | ">" | "<=" | ">="
+        | "not" | "and" | "or"
+        | "shape" | "ndim" | "len" | "count"
+        | "int" | "float" | "str"
+        | "relu" | "leaky-relu" | "sigmoid" | "tanh" | "gelu" | "selu" | "celu" | "silu"
+        | "softmax" | "log-softmax"
+        | "sum" | "mean" | "product" | "min" | "max" | "minimum" | "maximum"
+        | "argmax" | "argmin"
+        | "zeros" | "ones" | "arange" | "eye" | "one-hot" | "tril"
+        | "reshape" | "transpose" | "concat" | "slice" | "where" | "roll" | "index-update"
+        | "first" | "second" | "last" | "rest" | "nth" | "cons" | "append" | "empty?"
+        | "get" | "get-in" | "assoc" | "dissoc" | "merge" | "keys" | "vals" | "dict"
+        | "map" | "filter" | "reduce" | "apply"
+    )
+}
+
 impl CompilerContext {
     pub fn new() -> Self {
         Self {
@@ -210,6 +230,11 @@ impl CompilerContext {
         // Check registry (user-defined functions)
         if self.registry.contains_key(name) {
             return Ok(CompiledExpr::FunctionRef(name.to_string()));
+        }
+
+        // Allow interpreter builtin names as runtime-resolved symbols
+        if is_builtin_name(name) {
+            return Ok(CompiledExpr::Symbol(name.to_string()));
         }
 
         Err(SheafError::Compile {

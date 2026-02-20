@@ -33,19 +33,21 @@ pub fn eval(expr: &CompiledExpr, env: &mut Env) -> Result<Value, SheafError> {
         CompiledExpr::Quoted(sv) => sheaf_value_to_value(sv),
 
         CompiledExpr::FunctionRef(name) => {
-            // Try env first (builtins), then registry
+            // Try env first (builtins live here)
             if let Ok(val) = env.get(name) {
                 return Ok(val);
             }
-            if env.registry.contains_key(name) {
-                Ok(Value::Function {
-                    params: vec![],
-                    body: CompiledExpr::FunctionRef(name.clone()),
-                    closure: vec![],
-                })
-            } else {
-                Err(runtime_error(format!("Undefined function: {}", name)))
+            // Registry functions → Value::Function with real params/body
+            if let Some(func_def) = env.registry.get(name).cloned() {
+                if let Some(body) = func_def.body_compiled {
+                    return Ok(Value::Function {
+                        params: func_def.params,
+                        body,
+                        closure: vec![],
+                    });
+                }
             }
+            Err(runtime_error(format!("Undefined function: {}", name)))
         }
 
         CompiledExpr::FunctionCall { name, args } => eval_call(name, args, env),
@@ -222,6 +224,15 @@ fn eval_call(name: &str, args: &[CompiledExpr], env: &mut Env) -> Result<Value, 
         split_kwargs(args, env)?
     };
 
+    // Higher-order functions need &mut Env to call lambdas
+    match name {
+        "map" => return eval_map(&pos_args, env),
+        "filter" => return eval_filter(&pos_args, env),
+        "reduce" => return eval_reduce(&pos_args, env),
+        "apply" => return eval_apply(&pos_args, env),
+        _ => {}
+    }
+
     // Try builtin from env
     if let Ok(Value::BuiltinFn { func, .. }) = env.get(name) {
         return func(&pos_args, &kwargs);
@@ -341,6 +352,93 @@ fn get_nested(val: &Value, indices: &[usize]) -> Result<Value, SheafError> {
         };
     }
     Ok(current)
+}
+
+fn eval_map(args: &[Value], env: &mut Env) -> Result<Value, SheafError> {
+    if args.len() != 2 {
+        return Err(runtime_error("map requires 2 arguments: (map fn coll)"));
+    }
+    let func = &args[0];
+    match &args[1] {
+        Value::List(items) => {
+            let mut results = Vec::with_capacity(items.len());
+            for item in items {
+                results.push(call_function(func, &[item.clone()], env)?);
+            }
+            Ok(Value::List(results))
+        }
+        Value::Tensor { data, .. } => {
+            let mut results = Vec::with_capacity(data.len());
+            for &x in data.iter() {
+                results.push(call_function(func, &[Value::Float(x)], env)?);
+            }
+            Ok(Value::List(results))
+        }
+        _ => Err(runtime_error("map: expected list or tensor")),
+    }
+}
+
+fn eval_filter(args: &[Value], env: &mut Env) -> Result<Value, SheafError> {
+    if args.len() != 2 {
+        return Err(runtime_error("filter requires 2 arguments: (filter fn coll)"));
+    }
+    let func = &args[0];
+    match &args[1] {
+        Value::List(items) => {
+            let mut results = Vec::new();
+            for item in items {
+                let result = call_function(func, &[item.clone()], env)?;
+                if result.is_truthy() {
+                    results.push(item.clone());
+                }
+            }
+            Ok(Value::List(results))
+        }
+        _ => Err(runtime_error("filter: expected list")),
+    }
+}
+
+fn eval_reduce(args: &[Value], env: &mut Env) -> Result<Value, SheafError> {
+    if args.len() != 3 {
+        return Err(runtime_error("reduce requires 3 arguments: (reduce fn init coll)"));
+    }
+    let func = &args[0];
+    let mut acc = args[1].clone();
+    match &args[2] {
+        Value::List(items) => {
+            for item in items {
+                acc = call_function(func, &[acc, item.clone()], env)?;
+            }
+            Ok(acc)
+        }
+        Value::Tensor { data, .. } => {
+            if data.ndim() == 1 {
+                for &x in data.iter() {
+                    acc = call_function(func, &[acc, Value::Float(x)], env)?;
+                }
+            } else {
+                for i in 0..data.shape()[0] {
+                    let row = data.index_axis(ndarray::Axis(0), i).to_owned();
+                    acc = call_function(func, &[acc, Value::tensor_f32(row)], env)?;
+                }
+            }
+            Ok(acc)
+        }
+        _ => Err(runtime_error("reduce: expected list or tensor")),
+    }
+}
+
+fn eval_apply(args: &[Value], env: &mut Env) -> Result<Value, SheafError> {
+    if args.len() != 2 {
+        return Err(runtime_error("apply requires 2 arguments: (apply fn args)"));
+    }
+    let func = &args[0];
+    let call_args = match &args[1] {
+        Value::List(items) => items.clone(),
+        Value::Tensor { data, .. } => data.iter().map(|&x| Value::Float(x)).collect(),
+        _ => return Err(runtime_error("apply: expected list or tensor")),
+    };
+    call_function(func, &call_args, env)
 }
 
 /// High-level entry point: parse + compile + eval a Sheaf expression string.

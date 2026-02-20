@@ -92,11 +92,6 @@ pub fn register_builtins(env: &mut Env) {
     env.set_builtin("keys", builtin_keys);
     env.set_builtin("vals", builtin_vals);
     env.set_builtin("dict", builtin_dict);
-    // Phase 2: Higher-order
-    env.set_builtin("map", builtin_map);
-    env.set_builtin("filter", builtin_filter);
-    env.set_builtin("reduce", builtin_reduce);
-    env.set_builtin("apply", builtin_apply);
     // Phase 2: String
     env.set_builtin("str", builtin_str);
 }
@@ -1097,94 +1092,6 @@ fn builtin_dict(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
         i += 2;
     }
     Ok(Value::Dict(map))
-}
-
-fn builtin_map(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
-    // map takes (fn, collection) - but we can't call fn from here since we need env.
-    // For now: only works with builtin fns
-    let func = &args[0];
-    match &args[1] {
-        Value::List(items) => {
-            let results: Result<Vec<Value>, _> = items.iter().map(|item| {
-                call_value_fn(func, &[item.clone()])
-            }).collect();
-            Ok(Value::List(results?))
-        }
-        Value::Tensor { data, .. } => {
-            let results: Result<Vec<Value>, _> = data.iter().map(|&x| {
-                call_value_fn(func, &[Value::Float(x)])
-            }).collect();
-            Ok(Value::List(results?))
-        }
-        _ => Err(runtime_error("map: expected list or tensor")),
-    }
-}
-
-fn call_value_fn(func: &Value, args: &[Value]) -> R {
-    match func {
-        Value::BuiltinFn { func, .. } => func(args, &BTreeMap::new()),
-        _ => Err(runtime_error("Cannot call non-builtin function in this context")),
-    }
-}
-
-fn builtin_filter(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
-    let func = &args[0];
-    match &args[1] {
-        Value::List(items) => {
-            let mut results = Vec::new();
-            for item in items {
-                let result = call_value_fn(func, &[item.clone()])?;
-                if result.is_truthy() {
-                    results.push(item.clone());
-                }
-            }
-            Ok(Value::List(results))
-        }
-        _ => Err(runtime_error("filter: expected list")),
-    }
-}
-
-fn builtin_reduce(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
-    let func = &args[0];
-    let init = args[1].clone();
-    match &args[2] {
-        Value::List(items) => {
-            let mut acc = init;
-            for item in items {
-                acc = call_value_fn(func, &[acc, item.clone()])?;
-            }
-            Ok(acc)
-        }
-        Value::Tensor { data, .. } => {
-            if data.ndim() == 1 {
-                let mut acc = init;
-                for &x in data.iter() {
-                    acc = call_value_fn(func, &[acc, Value::Float(x)])?;
-                }
-                Ok(acc)
-            } else {
-                let mut acc = init;
-                for i in 0..data.shape()[0] {
-                    let row = data.index_axis(ndarray::Axis(0), i).to_owned();
-                    acc = call_value_fn(func, &[acc, Value::tensor_f32(row)])?;
-                }
-                Ok(acc)
-            }
-        }
-        _ => Err(runtime_error("reduce: expected list or tensor")),
-    }
-}
-
-fn builtin_apply(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
-    let func = &args[0];
-    match &args[1] {
-        Value::List(items) => call_value_fn(func, items),
-        Value::Tensor { data, .. } => {
-            let items: Vec<Value> = data.iter().map(|&x| Value::Float(x)).collect();
-            call_value_fn(func, &items)
-        }
-        _ => Err(runtime_error("apply: expected list or tensor")),
-    }
 }
 
 fn builtin_str(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
