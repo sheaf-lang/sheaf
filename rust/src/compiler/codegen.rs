@@ -270,6 +270,14 @@ impl CodeGenerator {
                 self.inline_lambda_call(&callee, &args)
             }
 
+            CompiledExpr::ValueAndGrad { fn_name, .. } => Err(SheafError::Compile {
+                message: format!(
+                    "ValueAndGrad '{}' is a module-level form, not an inline expression",
+                    fn_name
+                ),
+                location: crate::core::error::SourceLocation::unknown(),
+            }),
+
             _ => Err(SheafError::Compile {
                 message: format!("Code generation not yet implemented for: {:?}", expr),
                 location: crate::core::error::SourceLocation::unknown(),

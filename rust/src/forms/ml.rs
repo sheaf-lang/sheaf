@@ -439,27 +439,26 @@ impl SpecialForm for GradForm {
 // value-and-grad
 // ---------------------------------------------------------------------------
 
-/// Emit a named multi-output MLIR function computing the loss and its gradients.
+/// Compile a `value-and-grad` form into a deferred IR node.
 ///
 /// Syntax:
 ///   (value-and-grad name f config :wrt [p1 p2 ...])
 ///   (value-and-grad name f :wrt [p1 p2 ...])
 ///
-/// - `name`: symbol — name of the generated MLIR function
+/// - `name`: symbol — name for the generated function
 /// - `f`: symbol — must refer to an existing `defn` in the registry
 /// - `config`: optional dict `{:param [dim ...] ...}` — shapes for specialization
 /// - `:wrt [p1 p2 ...]`: parameter names to differentiate
 ///
-/// When a config dict is provided, the function signature is re-inferred with
-/// the given shapes. Otherwise, the pre-inferred signature from `defn` is used.
-///
-/// The generated `func.func` declaration is pushed into `compiler.extra_decls`
-/// and included in the final module by the CLI. Returns `Nil`.
-/// Parse a shape config dict `{:param [dim1 dim2 ...] ...}` into known types.
-fn parse_shape_dict(
+/// Returns `CompiledExpr::ValueAndGrad` recording the intent. Actual codegen
+/// or interpretation is deferred to the backend.
+
+/// Parse a shape config dict into raw (name, dims) pairs, without
+/// constructing StableHLOType — keeps the frontend free from codegen types.
+fn parse_shape_dims(
     dict: &SheafValue,
     loc: &SourceLocation,
-) -> SheafResult<Vec<(String, StableHLOType)>> {
+) -> SheafResult<Vec<(String, Vec<i64>)>> {
     let pairs = match dict {
         SheafValue::Dict(pairs, _) => pairs,
         other => {
@@ -481,9 +480,9 @@ fn parse_shape_dict(
                 });
             }
         };
-        let shape = match val {
+        let dims = match val {
             SheafValue::Vector(elems, _) => {
-                let dims: SheafResult<Vec<i64>> = elems
+                let d: SheafResult<Vec<i64>> = elems
                     .iter()
                     .map(|e| match e {
                         SheafValue::Integer(n, _) => Ok(*n),
@@ -493,7 +492,7 @@ fn parse_shape_dict(
                         }),
                     })
                     .collect();
-                dims?
+                d?
             }
             other => {
                 return Err(SheafError::Compile {
@@ -505,12 +504,7 @@ fn parse_shape_dict(
                 });
             }
         };
-        let ty = if shape.is_empty() {
-            StableHLOType::scalar_f32()
-        } else {
-            StableHLOType::f32_tensor(shape)
-        };
-        result.push((name, ty));
+        result.push((name, dims));
     }
     Ok(result)
 }
@@ -554,8 +548,8 @@ impl SpecialForm for ValueAndGradForm {
             SheafValue::Symbol(name, _) => compiler.local_vars.get(name.as_str()),
             _ => None,
         };
-        let (known_types, rest_start) = match config_arg {
-            Some(val @ SheafValue::Dict(..)) => (parse_shape_dict(val, loc)?, 3),
+        let (shape_config, rest_start) = match config_arg {
+            Some(val @ SheafValue::Dict(..)) => (parse_shape_dims(val, loc)?, 3),
             _ => (Vec::new(), 2),
         };
 
@@ -599,92 +593,23 @@ impl SpecialForm for ValueAndGradForm {
             });
         }
 
-        // Look up source function
-        let func_def =
-            compiler
-                .registry
-                .get(src_fn_name)
-                .cloned()
-                .ok_or_else(|| SheafError::Compile {
-                    message: format!(
-                        "value-and-grad: function '{}' not found. Did you forget (defn {})?",
-                        src_fn_name, src_fn_name
-                    ),
-                    location: loc.clone(),
-                })?;
-
-        let body_compiled =
-            func_def
-                .body_compiled
-                .as_ref()
-                .cloned()
-                .ok_or_else(|| SheafError::Compile {
-                    message: format!(
-                        "value-and-grad: function '{}' has no compiled body",
-                        src_fn_name
-                    ),
-                    location: loc.clone(),
-                })?;
-
-        // Infer signature: use config dict if provided, otherwise fall back to defn signature
-        let signature = if !known_types.is_empty() {
-            crate::core::inference::infer_function_signature_with_known(
-                compiler,
-                &func_def.params,
-                &body_compiled,
-                &known_types,
-            )?
-        } else {
-            func_def
-                .signature
-                .as_ref()
-                .cloned()
-                .ok_or_else(|| SheafError::Compile {
-                    message: format!(
-                        "value-and-grad: function '{}' has no inferred signature",
-                        src_fn_name
-                    ),
-                    location: loc.clone(),
-                })?
-        };
-
-        // Build GradParam list
-        let mut grad_params: Vec<crate::autodiff::value_and_grad::GradParam> = Vec::new();
-        for wrt_name in &wrt_names {
-            let idx = func_def
-                .params
-                .iter()
-                .position(|p| p == wrt_name)
-                .ok_or_else(|| SheafError::Compile {
-                    message: format!(
-                        "value-and-grad: '{}' is not a parameter of '{}'",
-                        wrt_name, src_fn_name
-                    ),
-                    location: loc.clone(),
-                })?;
-            grad_params.push(crate::autodiff::value_and_grad::GradParam {
-                name: wrt_name.clone(),
-                ty: signature.param_types[idx].clone(),
+        // Validate source function exists
+        if !compiler.registry.contains_key(src_fn_name) {
+            return Err(SheafError::Compile {
+                message: format!(
+                    "value-and-grad: function '{}' not found. Did you forget (defn {})?",
+                    src_fn_name, src_fn_name
+                ),
+                location: loc.clone(),
             });
         }
 
-        // Emit the value-and-grad function declaration
-        let func_decl = crate::autodiff::value_and_grad::emit_value_and_grad_func(
-            new_fn_name,
-            &func_def.params,
-            &signature.param_types,
-            &body_compiled,
-            &grad_params,
-            compiler.registry.clone(),
-        )
-        .map_err(|e| SheafError::Compile {
-            message: format!("value-and-grad: code generation failed: {}", e),
-            location: loc.clone(),
-        })?;
-
-        compiler.extra_decls.push(func_decl);
-
-        Ok(CompiledExpr::Nil)
+        Ok(CompiledExpr::ValueAndGrad {
+            fn_name: new_fn_name.to_string(),
+            src_fn_name: src_fn_name.to_string(),
+            wrt_params: wrt_names,
+            shape_config,
+        })
     }
 }
 

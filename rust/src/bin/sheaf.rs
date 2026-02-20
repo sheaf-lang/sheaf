@@ -1,20 +1,23 @@
 // Copyright (c) 2025 Damien Boureille
 // Licensed under the MIT License.
 
-//! Sheaf compiler CLI - Phase 1
+//! Sheaf compiler CLI
 //!
-//! Compiles Sheaf AST (from JSON) to StableHLO MLIR
+//! Compiles Sheaf source to StableHLO MLIR
 //!
 //! Usage:
-//!   sheaf-compile input.json -o output.mlir
-//!   sheaf-compile input.json -o output.vmfb --iree
+//!   sheaf input.shf -o output.mlir
+//!   sheaf input.shf -o output.vmfb --iree
 
 use clap::Parser;
 use std::fs;
 use std::path::PathBuf;
 use std::process::{Command, exit};
 
-use sheaf_compiler::{CodeGenerator, CompilerContext, SheafValue, StableHLOEmitter, parse};
+use sheaf_compiler::autodiff::value_and_grad::{GradParam, emit_value_and_grad_func};
+use sheaf_compiler::core::compiler::CompiledExpr;
+use sheaf_compiler::core::inference::infer_function_signature_with_known;
+use sheaf_compiler::{CodeGenerator, CompilerContext, StableHLOEmitter, StableHLOType, parse};
 
 #[derive(Parser)]
 #[command(name = "sheaf")]
@@ -42,6 +45,133 @@ struct Cli {
     /// Verbose output
     #[arg(short, long)]
     verbose: bool,
+}
+
+/// Resolve `CompiledExpr::ValueAndGrad` nodes into MLIR func.func declarations.
+/// Walks all compiled expressions (including inside `Do` blocks) and performs
+/// the codegen that was previously done inline by `ValueAndGradForm`.
+fn resolve_value_and_grad_decls(
+    compiler: &CompilerContext,
+    compiled_exprs: &[CompiledExpr],
+) -> Vec<String> {
+    let mut vag_nodes = Vec::new();
+    for expr in compiled_exprs {
+        collect_vag_nodes(expr, &mut vag_nodes);
+    }
+
+    let mut decls = Vec::new();
+    for (fn_name, src_fn_name, wrt_params, shape_config) in vag_nodes {
+        let func_def = match compiler.registry.get(src_fn_name) {
+            Some(fd) => fd,
+            None => continue,
+        };
+
+        let body_compiled = match &func_def.body_compiled {
+            Some(b) => b,
+            None => continue,
+        };
+
+        let known_types: Vec<(String, StableHLOType)> = shape_config
+            .iter()
+            .map(|(name, dims)| {
+                let ty = if dims.is_empty() {
+                    StableHLOType::scalar_f32()
+                } else {
+                    StableHLOType::f32_tensor(dims.clone())
+                };
+                (name.clone(), ty)
+            })
+            .collect();
+
+        let signature = if !known_types.is_empty() {
+            match infer_function_signature_with_known(
+                compiler,
+                &func_def.params,
+                body_compiled,
+                &known_types,
+            ) {
+                Ok(sig) => sig,
+                Err(e) => {
+                    eprintln!("value-and-grad '{}': signature inference failed: {}", fn_name, e);
+                    exit(1);
+                }
+            }
+        } else {
+            match &func_def.signature {
+                Some(sig) => sig.clone(),
+                None => {
+                    eprintln!("value-and-grad '{}': function '{}' has no inferred signature", fn_name, src_fn_name);
+                    exit(1);
+                }
+            }
+        };
+
+        let grad_params: Vec<GradParam> = wrt_params
+            .iter()
+            .map(|wrt_name| {
+                let idx = func_def
+                    .params
+                    .iter()
+                    .position(|p| p == wrt_name)
+                    .unwrap_or_else(|| {
+                        eprintln!(
+                            "value-and-grad '{}': '{}' is not a parameter of '{}'",
+                            fn_name, wrt_name, src_fn_name
+                        );
+                        exit(1);
+                    });
+                GradParam {
+                    name: wrt_name.clone(),
+                    ty: signature.param_types[idx].clone(),
+                }
+            })
+            .collect();
+
+        let func_decl = emit_value_and_grad_func(
+            fn_name,
+            &func_def.params,
+            &signature.param_types,
+            body_compiled,
+            &grad_params,
+            compiler.registry.clone(),
+        )
+        .unwrap_or_else(|e| {
+            eprintln!("value-and-grad '{}': code generation failed: {}", fn_name, e);
+            exit(1);
+        });
+
+        decls.push(func_decl);
+    }
+    decls
+}
+
+/// Recursively collect ValueAndGrad nodes from compiled expression trees.
+fn collect_vag_nodes<'a>(
+    expr: &'a CompiledExpr,
+    out: &mut Vec<(&'a str, &'a str, &'a Vec<String>, &'a Vec<(String, Vec<i64>)>)>,
+) {
+    match expr {
+        CompiledExpr::ValueAndGrad {
+            fn_name,
+            src_fn_name,
+            wrt_params,
+            shape_config,
+        } => {
+            out.push((fn_name, src_fn_name, wrt_params, shape_config));
+        }
+        CompiledExpr::Do(exprs) => {
+            for e in exprs {
+                collect_vag_nodes(e, out);
+            }
+        }
+        CompiledExpr::Let { bindings, body } => {
+            for (_, v) in bindings {
+                collect_vag_nodes(v, out);
+            }
+            collect_vag_nodes(body, out);
+        }
+        _ => {}
+    }
 }
 
 fn main() {
@@ -73,20 +203,26 @@ fn main() {
     }
 
     let mut compiler = CompilerContext::new();
+    let mut compiled_exprs = Vec::new();
 
     for expr in &exprs {
-        if let Err(e) = compiler.compile(expr) {
-            eprintln!("Compilation error: {}", e);
-            exit(1);
+        match compiler.compile(expr) {
+            Ok(compiled) => compiled_exprs.push(compiled),
+            Err(e) => {
+                eprintln!("Compilation error: {}", e);
+                exit(1);
+            }
         }
     }
+
+    // Resolve value-and-grad nodes into MLIR declarations
+    let extra_decls = resolve_value_and_grad_decls(&compiler, &compiled_exprs);
 
     // Generate StableHLO for the target function
     if cli.verbose {
         println!("Looking for function '{}'...", cli.function);
     }
 
-    // Generate StableHLO
     if cli.verbose {
         println!("Generating StableHLO...");
     }
@@ -117,19 +253,18 @@ fn main() {
                 exit(1);
             });
 
-        // Include any extra declarations emitted by module-level forms (e.g. value-and-grad).
-        let mut all_decls = compiler.extra_decls.clone();
+        let mut all_decls = extra_decls;
         all_decls.push(main_decl);
         StableHLOEmitter::emit_module(&all_decls)
-    } else if !compiler.extra_decls.is_empty() {
-        // Function was emitted by a module-level form (e.g. value-and-grad) — no main needed.
+    } else if !extra_decls.is_empty() {
+        // Function was emitted by a module-level form (e.g. value-and-grad)
         if cli.verbose {
             println!(
-                "Function '{}' found in extra_decls (emitted by module-level form)",
+                "Function '{}' found in extra declarations (emitted by module-level form)",
                 cli.function
             );
         }
-        StableHLOEmitter::emit_module(&compiler.extra_decls)
+        StableHLOEmitter::emit_module(&extra_decls)
     } else {
         // No function found — compile first non-defn expression as a standalone main
         if cli.verbose {
@@ -167,9 +302,7 @@ fn main() {
 
     // Determine output path
     let mlir_path = if cli.iree {
-        // If IREE compilation requested, write to temp .mlir first
-        let temp_mlir = cli.output.with_extension("mlir");
-        temp_mlir
+        cli.output.with_extension("mlir")
     } else {
         cli.output.clone()
     };

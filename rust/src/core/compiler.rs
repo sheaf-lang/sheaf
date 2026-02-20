@@ -64,9 +64,6 @@ pub struct CompilerContext {
     /// Set by with-params to resolve symbols like W -> get_tuple_element(p, [0, 1])
     pub param_scope: HashMap<String, (String, Vec<usize>)>,
 
-    /// Extra func.func declarations emitted by module-level forms (e.g. value-and-grad).
-    /// Collected by the CLI and included in the final StableHLO module.
-    pub extra_decls: Vec<String>,
 }
 
 /// Function definition
@@ -87,7 +84,6 @@ impl CompilerContext {
             local_vars: HashMap::new(),
             param_types: HashMap::new(),
             param_scope: HashMap::new(),
-            extra_decls: Vec::new(),
         }
     }
 
@@ -356,6 +352,15 @@ pub enum CompiledExpr {
     LambdaCall {
         callee: Box<CompiledExpr>,
         args: Vec<CompiledExpr>,
+    },
+    /// Deferred value-and-grad computation.
+    /// Records the intent to differentiate a function; codegen or interpreter handles execution.
+    /// shape_config stores raw (param_name, dims) pairs — no StableHLOType dependency.
+    ValueAndGrad {
+        fn_name: String,
+        src_fn_name: String,
+        wrt_params: Vec<String>,
+        shape_config: Vec<(String, Vec<i64>)>,
     },
 }
 
