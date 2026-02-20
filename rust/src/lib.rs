@@ -11,6 +11,7 @@ pub mod autodiff;
 pub mod compiler;
 pub mod core;
 pub mod forms;
+pub mod interpreter;
 pub mod runtime;
 
 // Re-export main types

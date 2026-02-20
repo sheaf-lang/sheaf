@@ -1,0 +1,377 @@
+// Copyright (c) 2025 Damien Boureille
+// Licensed under the MIT License.
+
+//! Sheaf interpreter — evaluates CompiledExpr directly to runtime Values.
+
+pub mod builtins;
+pub mod env;
+pub mod value;
+
+use crate::ast::SheafValue;
+use crate::core::compiler::{CompiledExpr, CompilerContext};
+use crate::core::error::SheafError;
+use crate::interpreter::env::{runtime_error, Env};
+use crate::interpreter::value::{Dtype, Value};
+use ndarray::{ArrayD, IxDyn};
+use std::collections::BTreeMap;
+
+pub fn eval(expr: &CompiledExpr, env: &mut Env) -> Result<Value, SheafError> {
+    match expr {
+        CompiledExpr::Integer(n) => Ok(Value::Int(*n)),
+        CompiledExpr::Float(x) => Ok(Value::Float(*x)),
+        CompiledExpr::Boolean(b) => Ok(Value::Bool(*b)),
+        CompiledExpr::Nil => Ok(Value::Nil),
+        CompiledExpr::String(s) => Ok(Value::String(s.clone())),
+        CompiledExpr::Keyword(k) => Ok(Value::Keyword(k.clone())),
+
+        CompiledExpr::Symbol(name) => env.get(name),
+
+        CompiledExpr::Vector(elements) => eval_vector(elements, env),
+
+        CompiledExpr::Dict(pairs) => eval_dict(pairs, env),
+
+        CompiledExpr::Quoted(sv) => sheaf_value_to_value(sv),
+
+        CompiledExpr::FunctionRef(name) => {
+            // Try env first (builtins), then registry
+            if let Ok(val) = env.get(name) {
+                return Ok(val);
+            }
+            if env.registry.contains_key(name) {
+                Ok(Value::Function {
+                    params: vec![],
+                    body: CompiledExpr::FunctionRef(name.clone()),
+                    closure: vec![],
+                })
+            } else {
+                Err(runtime_error(format!("Undefined function: {}", name)))
+            }
+        }
+
+        CompiledExpr::FunctionCall { name, args } => eval_call(name, args, env),
+
+        CompiledExpr::Let { bindings, body } => {
+            env.push_scope();
+            for (name, expr) in bindings {
+                let val = eval(expr, env)?;
+                env.set(name, val);
+            }
+            let result = eval(body, env);
+            env.pop_scope();
+            result
+        }
+
+        CompiledExpr::If { condition, then_branch, else_branch } => {
+            let cond = eval(condition, env)?;
+            if cond.is_truthy() {
+                eval(then_branch, env)
+            } else if let Some(else_br) = else_branch {
+                eval(else_br, env)
+            } else {
+                Ok(Value::Nil)
+            }
+        }
+
+        CompiledExpr::Do(exprs) => {
+            let mut result = Value::Nil;
+            for expr in exprs {
+                result = eval(expr, env)?;
+            }
+            Ok(result)
+        }
+
+        CompiledExpr::Lambda { params, body } => {
+            Ok(Value::Function {
+                params: params.clone(),
+                body: *body.clone(),
+                closure: vec![],
+            })
+        }
+
+        CompiledExpr::LambdaCall { callee, args } => {
+            let func = eval(callee, env)?;
+            let mut arg_vals = Vec::new();
+            for arg in args {
+                arg_vals.push(eval(arg, env)?);
+            }
+            call_function(&func, &arg_vals, env)
+        }
+
+        CompiledExpr::GetTupleElement { param, indices } => {
+            let val = env.get(param)?;
+            get_nested(&val, indices)
+        }
+
+        CompiledExpr::ValueAndGrad { fn_name, .. } => {
+            Err(runtime_error(format!(
+                "value-and-grad '{}': interpreter support not yet implemented", fn_name
+            )))
+        }
+    }
+}
+
+fn eval_vector(elements: &[CompiledExpr], env: &mut Env) -> Result<Value, SheafError> {
+    let vals: Result<Vec<Value>, _> = elements.iter().map(|e| eval(e, env)).collect();
+    let vals = vals?;
+
+    if vals.is_empty() {
+        return Ok(Value::List(vec![]));
+    }
+
+    // Check if all elements are numeric → produce a Tensor
+    let all_numeric = vals.iter().all(|v| matches!(v, Value::Int(_) | Value::Float(_)));
+    if all_numeric {
+        let has_float = vals.iter().any(|v| matches!(v, Value::Float(_)));
+        let data: Vec<f64> = vals.iter().map(|v| v.to_f64().unwrap()).collect();
+        let arr = ArrayD::from_shape_vec(IxDyn(&[data.len()]), data).unwrap();
+        let dtype = if has_float { Dtype::F32 } else { Dtype::I32 };
+        return Ok(Value::Tensor { data: arr, dtype });
+    }
+
+    // Check if all elements are vectors/tensors of same shape → produce a 2D+ tensor
+    let all_tensors = vals.iter().all(|v| matches!(v, Value::Tensor { .. }));
+    if all_tensors {
+        let shapes: Vec<_> = vals.iter().map(|v| match v {
+            Value::Tensor { data, .. } => data.shape().to_vec(),
+            _ => unreachable!(),
+        }).collect();
+        if shapes.windows(2).all(|w| w[0] == w[1]) {
+            let has_float = vals.iter().any(|v| match v {
+                Value::Tensor { dtype, .. } => *dtype == Dtype::F32,
+                _ => false,
+            });
+            let inner_shape = &shapes[0];
+            let mut full_shape = vec![vals.len()];
+            full_shape.extend(inner_shape);
+            let mut flat_data = Vec::new();
+            for v in &vals {
+                if let Value::Tensor { data, .. } = v {
+                    flat_data.extend(data.iter());
+                }
+            }
+            let arr = ArrayD::from_shape_vec(IxDyn(&full_shape), flat_data).unwrap();
+            let dtype = if has_float { Dtype::F32 } else { Dtype::I32 };
+            return Ok(Value::Tensor { data: arr, dtype });
+        }
+    }
+
+    // Otherwise, a heterogeneous list
+    Ok(Value::List(vals))
+}
+
+fn eval_dict(pairs: &[(CompiledExpr, CompiledExpr)], env: &mut Env) -> Result<Value, SheafError> {
+    let mut map = BTreeMap::new();
+    for (k, v) in pairs {
+        let key = match eval(k, env)? {
+            Value::Keyword(s) => s,
+            Value::String(s) => s,
+            other => return Err(runtime_error(format!("Dict key must be keyword or string, got {}", other.type_name()))),
+        };
+        let val = eval(v, env)?;
+        map.insert(key, val);
+    }
+    Ok(Value::Dict(map))
+}
+
+fn sheaf_value_to_value(sv: &SheafValue) -> Result<Value, SheafError> {
+    match sv {
+        SheafValue::Integer(n, _) => Ok(Value::Int(*n)),
+        SheafValue::Float(x, _) => Ok(Value::Float(*x)),
+        SheafValue::Boolean(b, _) => Ok(Value::Bool(*b)),
+        SheafValue::Nil(_) => Ok(Value::Nil),
+        SheafValue::String(s, _) => Ok(Value::String(s.clone())),
+        SheafValue::Symbol(s, _) => Ok(Value::String(s.clone())),
+        SheafValue::Keyword(k, _) => Ok(Value::Keyword(k.clone())),
+        SheafValue::List(elems, _) | SheafValue::Vector(elems, _) => {
+            let items: Result<Vec<Value>, _> = elems.iter().map(|e| sheaf_value_to_value(e)).collect();
+            Ok(Value::List(items?))
+        }
+        SheafValue::Dict(pairs, _) => {
+            let mut map = BTreeMap::new();
+            for (k, v) in pairs {
+                let key = match sheaf_value_to_value(k)? {
+                    Value::Keyword(s) => s,
+                    Value::String(s) => s,
+                    other => return Err(runtime_error(format!("Dict key must be keyword or string, got {:?}", other))),
+                };
+                map.insert(key, sheaf_value_to_value(v)?);
+            }
+            Ok(Value::Dict(map))
+        }
+        SheafValue::Quote(inner, _) => sheaf_value_to_value(inner),
+        _ => Err(runtime_error(format!("Cannot convert quoted value: {}", sv))),
+    }
+}
+
+fn eval_call(name: &str, args: &[CompiledExpr], env: &mut Env) -> Result<Value, SheafError> {
+    // Special handling for short-circuit operators
+    match name {
+        "and" => return eval_and(args, env),
+        "or" => return eval_or(args, env),
+        _ => {}
+    }
+
+    // Evaluate args, splitting kwargs
+    let (pos_args, kwargs) = split_kwargs(args, env)?;
+
+    // Try builtin from env
+    if let Ok(Value::BuiltinFn { func, .. }) = env.get(name) {
+        return func(&pos_args, &kwargs);
+    }
+
+    // Try user-defined function from registry
+    if let Some(func_def) = env.registry.get(name).cloned() {
+        if let Some(ref body) = func_def.body_compiled {
+            env.push_scope();
+            for (param, val) in func_def.params.iter().zip(pos_args.iter()) {
+                env.set(param, val.clone());
+            }
+            let result = eval(body, env);
+            env.pop_scope();
+            return result;
+        }
+    }
+
+    // Try function value in env
+    if let Ok(func_val) = env.get(name) {
+        return call_function(&func_val, &pos_args, env);
+    }
+
+    Err(runtime_error(format!("Unknown function: {}", name)))
+}
+
+fn eval_and(args: &[CompiledExpr], env: &mut Env) -> Result<Value, SheafError> {
+    if args.is_empty() {
+        return Ok(Value::Bool(true));
+    }
+    for arg in &args[..args.len() - 1] {
+        let val = eval(arg, env)?;
+        if !val.is_truthy() {
+            return Ok(val);
+        }
+    }
+    eval(&args[args.len() - 1], env)
+}
+
+fn eval_or(args: &[CompiledExpr], env: &mut Env) -> Result<Value, SheafError> {
+    if args.is_empty() {
+        return Ok(Value::Bool(false));
+    }
+    for arg in &args[..args.len() - 1] {
+        let val = eval(arg, env)?;
+        if val.is_truthy() {
+            return Ok(val);
+        }
+    }
+    eval(&args[args.len() - 1], env)
+}
+
+fn split_kwargs(args: &[CompiledExpr], env: &mut Env) -> Result<(Vec<Value>, BTreeMap<String, Value>), SheafError> {
+    let mut pos = Vec::new();
+    let mut kwargs = BTreeMap::new();
+    let mut i = 0;
+    while i < args.len() {
+        if let CompiledExpr::Keyword(k) = &args[i] {
+            if i + 1 < args.len() {
+                // Check if next arg is also a keyword (then this is a flag)
+                if matches!(&args[i + 1], CompiledExpr::Keyword(_)) {
+                    kwargs.insert(k.clone(), Value::Bool(true));
+                } else {
+                    let val = eval(&args[i + 1], env)?;
+                    kwargs.insert(k.clone(), val);
+                    i += 1;
+                }
+            } else {
+                // Last arg is a keyword flag
+                kwargs.insert(k.clone(), Value::Bool(true));
+            }
+        } else {
+            pos.push(eval(&args[i], env)?);
+        }
+        i += 1;
+    }
+    Ok((pos, kwargs))
+}
+
+fn call_function(func: &Value, args: &[Value], env: &mut Env) -> Result<Value, SheafError> {
+    match func {
+        Value::Function { params, body, closure } => {
+            env.push_scope();
+            for (name, val) in closure {
+                env.set(name, val.clone());
+            }
+            for (param, val) in params.iter().zip(args.iter()) {
+                env.set(param, val.clone());
+            }
+            let result = eval(body, env);
+            env.pop_scope();
+            result
+        }
+        Value::BuiltinFn { func, .. } => {
+            func(args, &BTreeMap::new())
+        }
+        _ => Err(runtime_error(format!("Not a function: {}", func.type_name()))),
+    }
+}
+
+fn get_nested(val: &Value, indices: &[usize]) -> Result<Value, SheafError> {
+    let mut current = val.clone();
+    for &idx in indices {
+        current = match current {
+            Value::List(items) => {
+                items.get(idx).cloned().ok_or_else(|| {
+                    runtime_error(format!("Tuple index {} out of bounds (len {})", idx, items.len()))
+                })?
+            }
+            Value::Dict(map) => {
+                let entry = map.values().nth(idx).cloned().ok_or_else(|| {
+                    runtime_error(format!("Tuple index {} out of bounds (len {})", idx, map.len()))
+                })?;
+                entry
+            }
+            _ => return Err(runtime_error(format!("Cannot index into {}", current.type_name()))),
+        };
+    }
+    Ok(current)
+}
+
+/// High-level entry point: parse + compile + eval a Sheaf expression string.
+pub fn eval_str(source: &str) -> Result<Value, SheafError> {
+    let exprs = crate::core::parse(source, "<eval>")?;
+    let mut compiler = CompilerContext::new();
+    let mut last = Value::Nil;
+
+    for expr in &exprs {
+        let compiled = compiler.compile(expr)?;
+        let mut env = Env::with_registry(compiler.registry.clone());
+        builtins::register_builtins(&mut env);
+        last = eval(&compiled, &mut env)?;
+    }
+
+    Ok(last)
+}
+
+/// Evaluate multiple expressions, maintaining state across them.
+pub fn eval_exprs(source: &str) -> Result<Value, SheafError> {
+    let exprs = crate::core::parse(source, "<eval>")?;
+    let mut compiler = CompilerContext::new();
+    let mut last = Value::Nil;
+
+    // First pass: compile all (registers defn, defparams, etc.)
+    let mut compiled_exprs = Vec::new();
+    for expr in &exprs {
+        compiled_exprs.push(compiler.compile(expr)?);
+    }
+
+    // Second pass: evaluate all non-Nil expressions
+    let mut env = Env::with_registry(compiler.registry.clone());
+    builtins::register_builtins(&mut env);
+
+    for compiled in &compiled_exprs {
+        if !matches!(compiled, CompiledExpr::Nil) {
+            last = eval(compiled, &mut env)?;
+        }
+    }
+
+    Ok(last)
+}
