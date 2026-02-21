@@ -230,6 +230,7 @@ fn eval_call(name: &str, args: &[CompiledExpr], env: &mut Env) -> Result<Value, 
         "filter" => return eval_filter(&pos_args, env),
         "reduce" => return eval_reduce(&pos_args, env),
         "apply" => return eval_apply(&pos_args, env),
+        "find" => return eval_find(&pos_args, env),
         _ => {}
     }
 
@@ -439,6 +440,25 @@ fn eval_apply(args: &[Value], env: &mut Env) -> Result<Value, SheafError> {
         _ => return Err(runtime_error("apply: expected list or tensor")),
     };
     call_function(func, &call_args, env)
+}
+
+fn eval_find(args: &[Value], env: &mut Env) -> Result<Value, SheafError> {
+    if args.len() != 2 {
+        return Err(runtime_error("find requires 2 arguments: (find fn coll)"));
+    }
+    let func = &args[0];
+    match &args[1] {
+        Value::List(items) => {
+            for item in items {
+                let result = call_function(func, &[item.clone()], env)?;
+                if result.is_truthy() {
+                    return Ok(item.clone());
+                }
+            }
+            Ok(Value::Nil)
+        }
+        _ => Err(runtime_error("find: expected list")),
+    }
 }
 
 /// High-level entry point: parse + compile + eval a Sheaf expression string.

@@ -94,6 +94,15 @@ pub fn register_builtins(env: &mut Env) {
     env.set_builtin("dict", builtin_dict);
     // Phase 2: String
     env.set_builtin("str", builtin_str);
+    // Phase 3: Easy builtins
+    env.set_builtin("tensor", builtin_tensor);
+    env.set_builtin("range", builtin_range);
+    env.set_builtin("swapaxes", builtin_swapaxes);
+    env.set_builtin("var", builtin_var);
+    env.set_builtin("normalize", builtin_normalize);
+    env.set_builtin("index-of", builtin_index_of);
+    env.set_builtin("gensym", builtin_gensym);
+    env.set_builtin("symbol?", builtin_symbol_q);
 }
 
 fn to_array(val: &Value) -> Result<(ArrayD<f64>, Dtype), crate::core::error::SheafError> {
@@ -1097,4 +1106,113 @@ fn builtin_dict(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
 fn builtin_str(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
     if args.is_empty() { return Ok(Value::String(String::new())); }
     Ok(Value::String(format!("{}", args[0])))
+}
+
+fn builtin_tensor(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    match &args[0] {
+        Value::List(items) => {
+            let has_float = items.iter().any(|v| matches!(v, Value::Float(_)));
+            let all_numeric = items.iter().all(|v| matches!(v, Value::Int(_) | Value::Float(_)));
+            if all_numeric && !items.is_empty() {
+                let data: Vec<f64> = items.iter().map(|v| v.to_f64().unwrap()).collect();
+                let arr = ArrayD::from_shape_vec(IxDyn(&[data.len()]), data).unwrap();
+                let dtype = if has_float { Dtype::F32 } else { Dtype::I32 };
+                Ok(Value::Tensor { data: arr, dtype })
+            } else {
+                Err(runtime_error("tensor: expected list of numbers"))
+            }
+        }
+        Value::Tensor { .. } => Ok(args[0].clone()),
+        _ => Err(runtime_error("tensor: expected list or tensor")),
+    }
+}
+
+fn builtin_range(args: &[Value], kw: &BTreeMap<String, Value>) -> R {
+    builtin_arange(args, kw)
+}
+
+fn builtin_swapaxes(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    let (arr, _dt) = to_array(&args[0])?;
+    let ax0 = args[1].to_f64().unwrap() as usize;
+    let ax1 = args[2].to_f64().unwrap() as usize;
+    let mut axes: Vec<usize> = (0..arr.ndim()).collect();
+    axes[ax0] = ax1;
+    axes[ax1] = ax0;
+    Ok(Value::tensor_f32(arr.permuted_axes(IxDyn(&axes))))
+}
+
+fn builtin_var(args: &[Value], kw: &BTreeMap<String, Value>) -> R {
+    let (arr, _dt) = to_array(&args[0])?;
+    if let Some(axis) = get_axis(kw) {
+        let ax = if axis < 0 { (arr.ndim() as i64 + axis) as usize } else { axis as usize };
+        let mean_arr = reduce_along_axis(&arr, ax, |v| v.iter().sum::<f64>() / v.len() as f64);
+        let mean_bc = mean_arr.insert_axis(ndarray::Axis(ax));
+        let diff = &arr - &mean_bc;
+        let sq = &diff * &diff;
+        let result = reduce_along_axis(&sq, ax, |v| v.iter().sum::<f64>() / v.len() as f64);
+        Ok(Value::tensor_f32(result))
+    } else {
+        let n = arr.len() as f64;
+        let mean = arr.iter().sum::<f64>() / n;
+        let var = arr.iter().map(|&x| (x - mean) * (x - mean)).sum::<f64>() / n;
+        Ok(Value::Float(var))
+    }
+}
+
+fn builtin_normalize(args: &[Value], kw: &BTreeMap<String, Value>) -> R {
+    let (arr, _dt) = to_array(&args[0])?;
+    if let Some(axis) = get_axis(kw) {
+        let ax = if axis < 0 { (arr.ndim() as i64 + axis) as usize } else { axis as usize };
+        let sum_arr = reduce_along_axis(&arr, ax, |v| v.iter().sum());
+        let sum_bc = sum_arr.insert_axis(ndarray::Axis(ax));
+        Ok(Value::tensor_f32((&arr / &sum_bc).mapv(|x| (x as f32) as f64)))
+    } else {
+        let total: f64 = arr.iter().sum();
+        Ok(Value::tensor_f32(arr.mapv(|x| ((x / total) as f32) as f64)))
+    }
+}
+
+fn builtin_index_of(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    match &args[0] {
+        Value::List(items) => {
+            let target = &args[1];
+            for (i, item) in items.iter().enumerate() {
+                let eq = match (item, target) {
+                    (Value::Int(a), Value::Int(b)) => a == b,
+                    (Value::Float(a), Value::Float(b)) => (a - b).abs() < 1e-10,
+                    (Value::Int(a), Value::Float(b)) | (Value::Float(b), Value::Int(a)) => (*a as f64 - b).abs() < 1e-10,
+                    (Value::String(a), Value::String(b)) => a == b,
+                    (Value::Keyword(a), Value::Keyword(b)) => a == b,
+                    (Value::Bool(a), Value::Bool(b)) => a == b,
+                    _ => false,
+                };
+                if eq { return Ok(Value::Int(i as i64)); }
+            }
+            Ok(Value::Int(-1))
+        }
+        _ => Err(runtime_error("index-of: expected list")),
+    }
+}
+
+fn builtin_gensym(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    let prefix = if args.is_empty() {
+        "g".to_string()
+    } else {
+        match &args[0] {
+            Value::String(s) => s.clone(),
+            _ => format!("{}", args[0]),
+        }
+    };
+    use std::time::{SystemTime, UNIX_EPOCH};
+    let t = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default();
+    let hash = format!("{:08x}", (t.as_nanos() & 0xFFFFFFFF) as u32);
+    Ok(Value::String(format!("{}{}", prefix, hash)))
+}
+
+fn builtin_symbol_q(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    if args.is_empty() { return Err(runtime_error("symbol? requires 1 argument")); }
+    match &args[0] {
+        Value::String(_) => Ok(Value::Bool(true)),
+        _ => Ok(Value::Bool(false)),
+    }
 }

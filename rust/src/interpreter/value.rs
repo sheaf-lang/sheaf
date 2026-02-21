@@ -122,7 +122,11 @@ fn format_tensor_f64(x: f64) -> String {
     if x == x.floor() && x.abs() < 1e15 {
         format!("{}.", x as i64)
     } else {
-        format!("{}", x)
+        // NumPy-style: 8 significant digits for f32 values
+        let s = format!("{:.8}", x);
+        let s = s.trim_end_matches('0');
+        let s = if s.ends_with('.') { format!("{}.", &s[..s.len()-1]) } else { s.to_string() };
+        s
     }
 }
 
