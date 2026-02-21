@@ -104,6 +104,8 @@ pub fn register_builtins(env: &mut Env) {
     env.set_builtin("gensym", builtin_gensym);
     env.set_builtin("symbol?", builtin_symbol_q);
     // Phase 3: Medium builtins
+    env.set_builtin("einsum", builtin_einsum);
+    env.set_builtin("append-and-roll", builtin_append_and_roll);
     env.set_builtin("dynamic-slice", builtin_dynamic_slice);
     env.set_builtin("mse-loss", builtin_mse_loss);
     env.set_builtin("mae-loss", builtin_mae_loss);
@@ -146,13 +148,18 @@ fn binary_op(args: &[Value], op: fn(f64, f64) -> f64) -> R {
         } else if acc.shape() == b.shape() {
             acc = ndarray::Zip::from(&acc).and(&b).map_collect(|&a, &b| op(a, b));
         } else {
-            let a_bc = acc.broadcast(b.shape()).ok_or_else(|| {
-                runtime_error(format!("Cannot broadcast shapes {:?} and {:?}", acc.shape(), b.shape()))
-            })?.to_owned();
-            let b_bc = b.broadcast(a_bc.shape()).ok_or_else(|| {
-                runtime_error(format!("Cannot broadcast shapes {:?} and {:?}", acc.shape(), b.shape()))
-            })?.to_owned();
-            acc = ndarray::Zip::from(&a_bc).and(&b_bc).map_collect(|&a, &b| op(a, b));
+            // Try broadcasting a to b's shape, then b to a's shape
+            if let Some(a_bc) = acc.broadcast(b.shape()) {
+                let b_bc = b.broadcast(a_bc.shape()).ok_or_else(|| {
+                    runtime_error(format!("Cannot broadcast shapes {:?} and {:?}", acc.shape(), b.shape()))
+                })?.to_owned();
+                acc = ndarray::Zip::from(&a_bc.to_owned()).and(&b_bc).map_collect(|&a, &b| op(a, b));
+            } else if let Some(b_bc) = b.broadcast(acc.shape()) {
+                let a_bc = &acc;
+                acc = ndarray::Zip::from(a_bc).and(&b_bc.to_owned()).map_collect(|&a, &b| op(a, b));
+            } else {
+                return Err(runtime_error(format!("Cannot broadcast shapes {:?} and {:?}", acc.shape(), b.shape())));
+            }
         }
     }
     // Tensor arithmetic always produces F32 (matches JAX behavior)
@@ -180,7 +187,20 @@ fn unary_op(args: &[Value], op: fn(f64) -> f64) -> R {
     if result.shape() == &[] {
         Ok(Value::Float(*result.first().unwrap()))
     } else {
-        // Math operations always produce F32
+        Ok(Value::Tensor { data: result, dtype: Dtype::F32 })
+    }
+}
+
+// Like unary_op but casts through f32 for JAX-matching precision
+fn unary_op_f32(args: &[Value], op: fn(f32) -> f32) -> R {
+    if args.is_empty() {
+        return Err(runtime_error("Unary operation requires at least 1 argument"));
+    }
+    let (arr, _dt) = to_array(&args[0])?;
+    let result = arr.mapv(|x| op(x as f32) as f64);
+    if result.shape() == &[] {
+        Ok(Value::Float(*result.first().unwrap()))
+    } else {
         Ok(Value::Tensor { data: result, dtype: Dtype::F32 })
     }
 }
@@ -243,7 +263,7 @@ fn builtin_exp(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
 }
 
 fn builtin_log(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
-    unary_op(args, f64::ln)
+    unary_op_f32(args, f32::ln)
 }
 
 fn builtin_sqrt(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
@@ -280,6 +300,118 @@ fn builtin_matmul(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
             "@ not supported for {}D x {}D", a.ndim(), b.ndim()
         ))),
     }
+}
+
+fn builtin_einsum(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    if args.len() != 3 {
+        return Err(runtime_error("einsum requires exactly 3 arguments: subscript, a, b"));
+    }
+    let subscript = match &args[0] {
+        Value::String(s) => s.clone(),
+        _ => return Err(runtime_error("einsum: first argument must be a subscript string")),
+    };
+    let (a, _) = to_array(&args[1])?;
+    let (b, _) = to_array(&args[2])?;
+
+    // Normalise ellipsis — for "...i,...i->..." with 1D inputs, ellipsis covers
+    // zero batch dims, reducing to "i,i->"
+    let subscript = subscript.replace("...", "");
+
+    let arrow = subscript.find("->")
+        .ok_or_else(|| runtime_error("einsum: subscript must contain '->'"))?;
+    let lhs = &subscript[..arrow];
+    let rhs = &subscript[arrow + 2..];
+    let parts: Vec<&str> = lhs.split(',').collect();
+    if parts.len() != 2 {
+        return Err(runtime_error("einsum: only two-operand einsum is supported"));
+    }
+    let idx_a: Vec<char> = parts[0].chars().collect();
+    let idx_b: Vec<char> = parts[1].chars().collect();
+    let idx_out: Vec<char> = rhs.chars().collect();
+
+    // Map each label → its dimension size
+    let mut sizes: std::collections::HashMap<char, usize> = std::collections::HashMap::new();
+    for (&label, &dim) in idx_a.iter().zip(a.shape().iter()) {
+        sizes.insert(label, dim);
+    }
+    for (&label, &dim) in idx_b.iter().zip(b.shape().iter()) {
+        sizes.insert(label, dim);
+    }
+
+    // Output shape
+    let out_shape: Vec<usize> = idx_out.iter()
+        .map(|c| *sizes.get(c).unwrap_or(&1))
+        .collect();
+    let out_len: usize = out_shape.iter().product::<usize>().max(1);
+    let mut result = vec![0.0f64; out_len];
+
+    // All labels in stable order: output labels first, then contracted
+    let mut all_labels: Vec<char> = idx_out.clone();
+    for &c in idx_a.iter().chain(idx_b.iter()) {
+        if !all_labels.contains(&c) {
+            all_labels.push(c);
+        }
+    }
+
+    let label_sizes: Vec<usize> = all_labels.iter()
+        .map(|c| *sizes.get(c).unwrap_or(&1))
+        .collect();
+
+    let label_pos: std::collections::HashMap<char, usize> = all_labels.iter()
+        .enumerate().map(|(i, &c)| (c, i)).collect();
+
+    let out_strides: Vec<usize> = (0..out_shape.len()).map(|i| {
+        out_shape[i + 1..].iter().product::<usize>().max(1)
+    }).collect();
+
+    // Iterate over all combinations of label values via a carry counter
+    let total: usize = label_sizes.iter().product::<usize>().max(1);
+    let mut coords = vec![0usize; all_labels.len()];
+
+    for _ in 0..total {
+        let a_idx: Vec<usize> = idx_a.iter().map(|c| coords[label_pos[c]]).collect();
+        let b_idx: Vec<usize> = idx_b.iter().map(|c| coords[label_pos[c]]).collect();
+        let flat_out: usize = idx_out.iter().enumerate()
+            .map(|(i, c)| coords[label_pos[c]] * out_strides[i])
+            .sum();
+        result[flat_out] += a[IxDyn(&a_idx)] * b[IxDyn(&b_idx)];
+
+        // Increment coords (little-endian carry)
+        for k in (0..coords.len()).rev() {
+            coords[k] += 1;
+            if coords[k] < label_sizes[k] { break; }
+            coords[k] = 0;
+        }
+    }
+
+    // Cast via f32 for JAX-matching precision
+    let result_f32: Vec<f64> = result.iter().map(|&x| (x as f32) as f64).collect();
+
+    if out_shape.is_empty() {
+        Ok(Value::Float(result_f32[0]))
+    } else {
+        let arr = ArrayD::from_shape_vec(IxDyn(&out_shape), result_f32)
+            .map_err(|e| runtime_error(e.to_string()))?;
+        Ok(Value::tensor_f32(arr))
+    }
+}
+
+fn builtin_append_and_roll(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    if args.len() != 2 {
+        return Err(runtime_error("append-and-roll requires 2 arguments: tensor, new-element"));
+    }
+    let (arr, _) = to_array(&args[0])?;
+    if arr.ndim() != 1 {
+        return Err(runtime_error("append-and-roll: first argument must be a 1D tensor"));
+    }
+    let new_val = args[1].to_f64()
+        .ok_or_else(|| runtime_error("append-and-roll: second argument must be a number"))?;
+    let n = arr.shape()[0];
+    // Shift left by 1, append new value at the end
+    let mut data: Vec<f64> = arr.iter().skip(1).copied().collect();
+    data.push(new_val);
+    let result = ArrayD::from_shape_vec(IxDyn(&[n]), data).unwrap();
+    Ok(Value::tensor_f32(result))
 }
 
 fn builtin_eq(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
@@ -363,7 +495,7 @@ fn builtin_shape(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
     match &args[0] {
         Value::Tensor { data, .. } => {
             let shape: Vec<f64> = data.shape().iter().map(|&s| s as f64).collect();
-            Ok(Value::tensor_i32(ArrayD::from_shape_vec(IxDyn(&[shape.len()]), shape).unwrap()))
+            Ok(Value::tensor_f32(ArrayD::from_shape_vec(IxDyn(&[shape.len()]), shape).unwrap()))
         }
         Value::List(items) => Ok(Value::Int(items.len() as i64)),
         _ => Err(runtime_error(format!("shape: expected tensor, got {}", args[0].type_name()))),
@@ -483,9 +615,12 @@ fn builtin_relu(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
 fn builtin_leaky_relu(args: &[Value], kw: &BTreeMap<String, Value>) -> R {
     let slope = kw.get("negative_slope")
         .and_then(|v| v.to_f64())
-        .unwrap_or(0.01);
+        .unwrap_or(0.01) as f32;
     let (arr, _dt) = to_array(&args[0])?;
-    let result = arr.mapv(|x| if x > 0.0 { x } else { slope * x });
+    let result = arr.mapv(|x| {
+        let xf = x as f32;
+        (if xf > 0.0 { xf } else { slope * xf }) as f64
+    });
     if result.shape() == &[] {
         Ok(Value::Float(*result.first().unwrap()))
     } else {
@@ -512,11 +647,12 @@ fn builtin_gelu(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
 }
 
 fn builtin_selu(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
-    let alpha = 1.6732632423543772;
-    let scale = 1.0507009873554805;
+    let alpha = 1.6732632423543772_f32;
+    let scale = 1.0507009873554805_f32;
     let (arr, _dt) = to_array(&args[0])?;
     let result = arr.mapv(|x| {
-        if x > 0.0 { scale * x } else { scale * alpha * (x.exp() - 1.0) }
+        let xf = x as f32;
+        (if xf > 0.0 { scale * xf } else { scale * alpha * (xf.exp() - 1.0) }) as f64
     });
     if result.shape() == &[] {
         Ok(Value::Float(*result.first().unwrap()))
@@ -526,10 +662,11 @@ fn builtin_selu(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
 }
 
 fn builtin_celu(args: &[Value], kw: &BTreeMap<String, Value>) -> R {
-    let alpha = kw.get("alpha").and_then(|v| v.to_f64()).unwrap_or(1.0);
+    let alpha = kw.get("alpha").and_then(|v| v.to_f64()).unwrap_or(1.0) as f32;
     let (arr, _dt) = to_array(&args[0])?;
     let result = arr.mapv(|x| {
-        if x > 0.0 { x } else { alpha * ((x / alpha).exp() - 1.0) }
+        let xf = x as f32;
+        (if xf > 0.0 { xf } else { alpha * ((xf / alpha).exp() - 1.0) }) as f64
     });
     if result.shape() == &[] {
         Ok(Value::Float(*result.first().unwrap()))
@@ -547,12 +684,15 @@ fn builtin_softmax(args: &[Value], kw: &BTreeMap<String, Value>) -> R {
     let axis = get_axis(kw).unwrap_or(-1);
     let ndim = arr.ndim();
     let ax = if axis < 0 { (ndim as i64 + axis) as usize } else { axis as usize };
-    let max_arr = reduce_along_axis(&arr, ax, |v| v.iter().copied().fold(f64::NEG_INFINITY, f64::max));
+    // Compute in f32 for JAX-matching precision
+    let arr_f32 = arr.mapv(|x| x as f32);
+    let max_arr = reduce_along_axis(&arr_f32.mapv(|x| x as f64), ax, |v| v.iter().copied().fold(f64::NEG_INFINITY, f64::max));
     let max_bc = max_arr.insert_axis(ndarray::Axis(ax));
-    let exp_arr = (&arr - &max_bc).mapv(f64::exp);
-    let sum_arr = reduce_along_axis(&exp_arr, ax, |v| v.iter().sum());
+    let shifted = (&arr - &max_bc).mapv(|x| (x as f32) as f64);
+    let exp_arr = shifted.mapv(|x| (x as f32).exp() as f64);
+    let sum_arr = reduce_along_axis(&exp_arr, ax, |v| v.iter().sum::<f64>());
     let sum_bc = sum_arr.insert_axis(ndarray::Axis(ax));
-    let result = &exp_arr / &sum_bc;
+    let result = (&exp_arr / &sum_bc).mapv(|x| (x as f32) as f64);
     Ok(Value::tensor_f32(result))
 }
 
@@ -563,12 +703,12 @@ fn builtin_log_softmax(args: &[Value], kw: &BTreeMap<String, Value>) -> R {
     let ax = if axis < 0 { (ndim as i64 + axis) as usize } else { axis as usize };
     let max_arr = reduce_along_axis(&arr, ax, |v| v.iter().copied().fold(f64::NEG_INFINITY, f64::max));
     let max_bc = max_arr.insert_axis(ndarray::Axis(ax));
-    let shifted = &arr - &max_bc;
-    let exp_arr = shifted.mapv(f64::exp);
-    let sum_arr = reduce_along_axis(&exp_arr, ax, |v| v.iter().sum());
-    let log_sum = sum_arr.mapv(f64::ln);
+    let shifted = (&arr - &max_bc).mapv(|x| (x as f32) as f64);
+    let exp_arr = shifted.mapv(|x| (x as f32).exp() as f64);
+    let sum_arr = reduce_along_axis(&exp_arr, ax, |v| v.iter().sum::<f64>());
+    let log_sum = sum_arr.mapv(|x| (x as f32).ln() as f64);
     let log_sum_bc = log_sum.insert_axis(ndarray::Axis(ax));
-    let result = &shifted - &log_sum_bc;
+    let result = (&shifted - &log_sum_bc).mapv(|x| (x as f32) as f64);
     Ok(Value::tensor_f32(result))
 }
 
@@ -622,6 +762,16 @@ fn builtin_min(args: &[Value], kw: &BTreeMap<String, Value>) -> R {
 }
 
 fn builtin_max(args: &[Value], kw: &BTreeMap<String, Value>) -> R {
+    // Variadic: (max a b c) → max of scalars
+    if args.len() > 1 {
+        let vals: Result<Vec<f64>, _> = args.iter().map(|a| a.to_f64().ok_or_else(|| runtime_error("max: expected number"))).collect();
+        return Ok(Value::Float(vals?.into_iter().fold(f64::NEG_INFINITY, f64::max)));
+    }
+    // List: (max [a b c]) → max of list elements
+    if let Value::List(items) = &args[0] {
+        let vals: Result<Vec<f64>, _> = items.iter().map(|a| a.to_f64().ok_or_else(|| runtime_error("max: list must contain numbers"))).collect();
+        return Ok(Value::Float(vals?.into_iter().fold(f64::NEG_INFINITY, f64::max)));
+    }
     let (arr, _dt) = to_array(&args[0])?;
     if let Some(axis) = get_axis(kw) {
         let ax = if axis < 0 { (arr.ndim() as i64 + axis) as usize } else { axis as usize };
@@ -793,9 +943,56 @@ fn builtin_transpose(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
     }
 }
 
+fn list_to_tensor(v: &Value) -> Option<(ArrayD<f64>, Dtype)> {
+    match v {
+        Value::Tensor { data, dtype } => Some((data.clone(), *dtype)),
+        Value::List(items) => {
+            // 1D list of numbers
+            let all_int = items.iter().all(|x| matches!(x, Value::Int(_)));
+            let nums: Option<Vec<f64>> = items.iter().map(|x| x.to_f64()).collect();
+            if let Some(data) = nums {
+                let dtype = if all_int { Dtype::I32 } else { Dtype::F32 };
+                return ArrayD::from_shape_vec(IxDyn(&[data.len()]), data).ok()
+                    .map(|a| (a, dtype));
+            }
+            // 2D list of lists of numbers
+            let rows: Option<Vec<(ArrayD<f64>, Dtype)>> = items.iter().map(|x| list_to_tensor(x)).collect();
+            if let Some(rows) = rows {
+                let all_i32 = rows.iter().all(|(_, dt)| *dt == Dtype::I32);
+                let dtype = if all_i32 { Dtype::I32 } else { Dtype::F32 };
+                let stacked: Option<ArrayD<f64>> = ndarray::concatenate(
+                    ndarray::Axis(0),
+                    &rows.iter().map(|(r, _)| r.view().insert_axis(ndarray::Axis(0))).collect::<Vec<_>>()
+                ).ok();
+                stacked.map(|a| (a, dtype))
+            } else {
+                None
+            }
+        }
+        _ => None,
+    }
+}
+
 fn builtin_concat(args: &[Value], kw: &BTreeMap<String, Value>) -> R {
     let axis = get_axis(kw).unwrap_or(0) as usize;
-    // Handle List args (quoted vectors)
+    let has_axis_kw = kw.contains_key("axis");
+
+    // Try to convert all args to tensors (works for both Tensor and numeric List)
+    let maybe_arrays: Option<Vec<(ArrayD<f64>, Dtype)>> = args.iter().map(|a| list_to_tensor(a)).collect();
+
+    if let Some(arrays) = maybe_arrays {
+        if has_axis_kw || args.iter().any(|a| matches!(a, Value::Tensor { .. })) {
+            // Tensor concat along axis
+            let all_i32 = arrays.iter().all(|(_, dt)| *dt == Dtype::I32);
+            let dtype = if all_i32 { Dtype::I32 } else { Dtype::F32 };
+            let views: Vec<ndarray::ArrayViewD<f64>> = arrays.iter().map(|(a, _)| a.view()).collect();
+            let result = ndarray::concatenate(ndarray::Axis(axis), &views)
+                .map_err(|e| runtime_error(e.to_string()))?;
+            return Ok(Value::Tensor { data: result, dtype });
+        }
+    }
+
+    // Flat list concat (no axis, lists of non-numeric or heterogeneous)
     if matches!(&args[0], Value::List(_)) {
         let mut all_items = Vec::new();
         for arg in args {
@@ -806,7 +1003,8 @@ fn builtin_concat(args: &[Value], kw: &BTreeMap<String, Value>) -> R {
         }
         return Ok(Value::List(all_items));
     }
-    // Handle Tensor args
+
+    // Tensor args
     let arrays: Vec<ArrayD<f64>> = args.iter().map(|a| {
         to_array(a).map(|(arr, _)| arr)
     }).collect::<Result<Vec<_>, _>>()?;
@@ -1117,13 +1315,11 @@ fn builtin_str(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
 fn builtin_tensor(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
     match &args[0] {
         Value::List(items) => {
-            let has_float = items.iter().any(|v| matches!(v, Value::Float(_)));
             let all_numeric = items.iter().all(|v| matches!(v, Value::Int(_) | Value::Float(_)));
             if all_numeric && !items.is_empty() {
                 let data: Vec<f64> = items.iter().map(|v| v.to_f64().unwrap()).collect();
                 let arr = ArrayD::from_shape_vec(IxDyn(&[data.len()]), data).unwrap();
-                let dtype = if has_float { Dtype::F32 } else { Dtype::I32 };
-                Ok(Value::Tensor { data: arr, dtype })
+                Ok(Value::tensor_f32(arr))
             } else {
                 Err(runtime_error("tensor: expected list of numbers"))
             }

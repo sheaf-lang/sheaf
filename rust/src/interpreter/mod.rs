@@ -120,14 +120,12 @@ fn eval_vector(elements: &[CompiledExpr], env: &mut Env) -> Result<Value, SheafE
         return Ok(Value::List(vec![]));
     }
 
-    // Check if all elements are numeric → produce a Tensor
+    // Check if all elements are numeric → produce a Tensor (always F32 by default)
     let all_numeric = vals.iter().all(|v| matches!(v, Value::Int(_) | Value::Float(_)));
     if all_numeric {
-        let has_float = vals.iter().any(|v| matches!(v, Value::Float(_)));
         let data: Vec<f64> = vals.iter().map(|v| v.to_f64().unwrap()).collect();
         let arr = ArrayD::from_shape_vec(IxDyn(&[data.len()]), data).unwrap();
-        let dtype = if has_float { Dtype::F32 } else { Dtype::I32 };
-        return Ok(Value::Tensor { data: arr, dtype });
+        return Ok(Value::tensor_f32(arr));
     }
 
     // Check if all elements are vectors/tensors of same shape → produce a 2D+ tensor
@@ -138,10 +136,6 @@ fn eval_vector(elements: &[CompiledExpr], env: &mut Env) -> Result<Value, SheafE
             _ => unreachable!(),
         }).collect();
         if shapes.windows(2).all(|w| w[0] == w[1]) {
-            let has_float = vals.iter().any(|v| match v {
-                Value::Tensor { dtype, .. } => *dtype == Dtype::F32,
-                _ => false,
-            });
             let inner_shape = &shapes[0];
             let mut full_shape = vec![vals.len()];
             full_shape.extend(inner_shape);
@@ -152,8 +146,7 @@ fn eval_vector(elements: &[CompiledExpr], env: &mut Env) -> Result<Value, SheafE
                 }
             }
             let arr = ArrayD::from_shape_vec(IxDyn(&full_shape), flat_data).unwrap();
-            let dtype = if has_float { Dtype::F32 } else { Dtype::I32 };
-            return Ok(Value::Tensor { data: arr, dtype });
+            return Ok(Value::tensor_f32(arr));
         }
     }
 

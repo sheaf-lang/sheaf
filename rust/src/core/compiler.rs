@@ -95,6 +95,7 @@ fn is_builtin_name(name: &str) -> bool {
         | "map" | "filter" | "reduce" | "apply" | "find"
         | "tensor" | "range" | "swapaxes" | "var" | "normalize" | "index-of"
         | "gensym" | "symbol?"
+        | "einsum" | "append-and-roll"
         | "dynamic-slice" | "mse-loss" | "mae-loss" | "sparse-cross-entropy"
         | "tree-map" | "tree-map-zeros" | "tree-reduce" | "flatten"
     )

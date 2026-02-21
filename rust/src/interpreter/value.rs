@@ -119,14 +119,14 @@ fn format_scalar_f64(x: f64) -> String {
 }
 
 fn format_tensor_f64(x: f64) -> String {
-    if x == x.floor() && x.abs() < 1e15 {
-        format!("{}.", x as i64)
+    // Format via f32 to match NumPy/JAX float32 display precision
+    let xf = x as f32;
+    if xf == xf.floor() && xf.abs() < 1e15 {
+        format!("{}.", xf as i64)
     } else {
-        // NumPy-style: 8 significant digits for f32 values
-        let s = format!("{:.8}", x);
-        let s = s.trim_end_matches('0');
-        let s = if s.ends_with('.') { format!("{}.", &s[..s.len()-1]) } else { s.to_string() };
-        s
+        // Rust f32 Display uses minimum digits needed to uniquely represent the value,
+        // which matches NumPy's default float32 formatting
+        format!("{}", xf)
     }
 }
 
@@ -206,11 +206,11 @@ impl fmt::Display for Value {
                         _ => format!("{}", v),
                     }
                 }).collect();
-                write!(f, "({})", formatted.join(", "))
+                write!(f, "[{}]", formatted.join(", "))
             }
             Value::Dict(map) => {
                 let pairs: Vec<String> = map.iter().map(|(k, v)| {
-                    format!("'{}': {}", k, v)
+                    format!(":{} {}", k, v)
                 }).collect();
                 write!(f, "{{{}}}", pairs.join(", "))
             }
