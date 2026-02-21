@@ -92,7 +92,11 @@ fn is_builtin_name(name: &str) -> bool {
         | "reshape" | "transpose" | "concat" | "slice" | "where" | "roll" | "index-update"
         | "first" | "second" | "last" | "rest" | "nth" | "cons" | "append" | "empty?"
         | "get" | "get-in" | "assoc" | "dissoc" | "merge" | "keys" | "vals" | "dict"
-        | "map" | "filter" | "reduce" | "apply"
+        | "map" | "filter" | "reduce" | "apply" | "find"
+        | "tensor" | "range" | "swapaxes" | "var" | "normalize" | "index-of"
+        | "gensym" | "symbol?"
+        | "dynamic-slice" | "mse-loss" | "mae-loss" | "sparse-cross-entropy"
+        | "tree-map" | "tree-map-zeros" | "tree-reduce" | "flatten"
     )
 }
 
