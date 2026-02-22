@@ -268,9 +268,14 @@ impl SpecialForm for WithParamsForm {
                 // that are not already in scope and not function names).
                 let free_syms = collect_free_symbols(body, compiler);
 
-                let saved_locals = compiler.local_vars.clone();
+                // Register each free symbol as (get sub_dict :sym) in env so that
+                // compiler.compile(Symbol("W")) will call compile(&getter_ast).
+                // We use env (not local_vars) because env entries are compiled on lookup.
+                let saved_env: Vec<(String, SheafValue)> = free_syms
+                    .iter()
+                    .filter_map(|sym| compiler.env.get(sym).map(|v| (sym.clone(), v.clone())))
+                    .collect();
 
-                // For each free symbol, register it as (get sub_dict :sym)
                 for sym in &free_syms {
                     let getter = SheafValue::List(
                         vec![
@@ -280,14 +285,20 @@ impl SpecialForm for WithParamsForm {
                         ],
                         loc.clone(),
                     );
-                    compiler.local_vars.insert(sym.clone(), getter);
+                    compiler.env.insert(sym.clone(), getter);
                 }
 
                 let compiled_body: SheafResult<Vec<CompiledExpr>> =
                     body.iter().map(|e| compiler.compile(e)).collect();
                 let compiled_body = compiled_body?;
 
-                compiler.local_vars = saved_locals;
+                // Restore env entries we overwrote
+                for sym in &free_syms {
+                    compiler.env.remove(sym);
+                }
+                for (sym, val) in saved_env {
+                    compiler.env.insert(sym, val);
+                }
 
                 return Ok(if compiled_body.len() == 1 {
                     compiled_body.into_iter().next().unwrap()

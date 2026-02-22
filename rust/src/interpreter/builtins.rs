@@ -302,6 +302,13 @@ fn builtin_matmul(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
             let c = a2.dot(&b1);
             Ok(Value::tensor_f32(c.into_dyn()))
         }
+        (1, 2) => {
+            // Row vector @ matrix: [n] @ [n, m] → [m]
+            let a1 = a.into_dimensionality::<ndarray::Ix1>().map_err(|e| runtime_error(e.to_string()))?;
+            let b2 = b.into_dimensionality::<ndarray::Ix2>().map_err(|e| runtime_error(e.to_string()))?;
+            let c = a1.dot(&b2);
+            Ok(Value::tensor_f32(c.into_dyn()))
+        }
         _ => Err(runtime_error(format!(
             "@ not supported for {}D x {}D", a.ndim(), b.ndim()
         ))),
@@ -1563,10 +1570,12 @@ fn format_string(fmt: &str, vals: &[Value]) -> String {
 }
 
 fn format_value_with_spec(val: &Value, spec: &str) -> String {
-    // Parse spec: e.g. ".6f", ".3f", "" (default)
+    // Parse spec: e.g. ".6f", ":.6f", ".3f", ":.3f", "" (default)
     if spec.is_empty() {
         return format!("{}", val);
     }
+    // Strip optional leading ':' (Python-style {:.3f} → spec = ":.3f")
+    let spec = spec.strip_prefix(':').unwrap_or(spec);
     // Try to extract .<n>f
     if let Some(rest) = spec.strip_prefix('.') {
         if let Some(prec_str) = rest.strip_suffix('f') {

@@ -80,6 +80,15 @@ SDK:
     );
 }
 
+fn is_silent_result(val: &sheaf_compiler::interpreter::value::Value) -> bool {
+    use sheaf_compiler::interpreter::value::Value;
+    match val {
+        Value::Nil => true,
+        Value::List(items) => items.iter().all(|v| matches!(v, Value::Nil)),
+        _ => false,
+    }
+}
+
 fn run_expr(source: &str) {
     use sheaf_compiler::interpreter::eval::eval_source;
     match eval_source(source) {
@@ -132,7 +141,7 @@ fn run_file(args: &[String]) {
     };
     match eval_source_with_path(&source, Some(&abs_path)) {
         Ok(val) => {
-            if !matches!(val, Value::Nil) {
+            if !is_silent_result(&val) {
                 println!("{}", val);
             }
         }

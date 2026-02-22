@@ -289,6 +289,7 @@ fn eval_call(name: &str, args: &[CompiledExpr], env: &mut Env) -> Result<Value, 
         "tree-map" => return eval_tree_map(&pos_args, env),
         "tree-reduce" => return eval_tree_reduce(&pos_args, env),
         "flatten" => return eval_flatten(&pos_args),
+        "__value-and-grad-hof__" => return eval_value_and_grad_hof(&pos_args, env),
         _ => {}
     }
 
@@ -373,7 +374,16 @@ fn split_kwargs(args: &[CompiledExpr], env: &mut Env) -> Result<(Vec<Value>, BTr
 
 fn call_function(func: &Value, args: &[Value], env: &mut Env) -> Result<Value, SheafError> {
     match func {
-        Value::Function { params, body, closure } => {
+        Value::Function { params: _, body: _, closure } => {
+            // Detect value-and-grad HOF closure: contains __vag_fn__
+            if let Some((_, vag_fn)) = closure.iter().find(|(k, _)| k == "__vag_fn__") {
+                if args.len() != 1 {
+                    return Err(runtime_error("value-and-grad: expected exactly 1 argument (params)"));
+                }
+                return eval_value_and_grad_call(vag_fn, &args[0], env);
+            }
+            // Normal function call
+            let Value::Function { params, body, closure } = func else { unreachable!() };
             env.push_scope();
             for (name, val) in closure {
                 env.set(name, val.clone());
@@ -426,12 +436,25 @@ fn eval_map(args: &[Value], env: &mut Env) -> Result<Value, SheafError> {
             }
             Ok(Value::List(results))
         }
-        Value::Tensor { data, .. } => {
-            let mut results = Vec::with_capacity(data.len());
-            for &x in data.iter() {
-                results.push(call_function(func, &[Value::Float(x)], env)?);
+        Value::Tensor { data, dtype } => {
+            if data.ndim() == 1 {
+                // 1D: iterate over scalar elements
+                let mut results = Vec::with_capacity(data.len());
+                for &x in data.iter() {
+                    results.push(call_function(func, &[Value::Float(x)], env)?);
+                }
+                Ok(Value::List(results))
+            } else {
+                // ND: iterate over slices along axis 0
+                let n = data.shape()[0];
+                let mut results = Vec::with_capacity(n);
+                for i in 0..n {
+                    let row = data.index_axis(ndarray::Axis(0), i).to_owned();
+                    let row_val = Value::Tensor { data: row, dtype: *dtype };
+                    results.push(call_function(func, &[row_val], env)?);
+                }
+                Ok(Value::List(results))
             }
-            Ok(Value::List(results))
         }
         _ => Err(runtime_error("map: expected list or tensor")),
     }
@@ -519,31 +542,54 @@ fn eval_find(args: &[Value], env: &mut Env) -> Result<Value, SheafError> {
     }
 }
 
-fn tree_map_value(val: &Value, func: &Value, env: &mut Env) -> Result<Value, SheafError> {
-    match val {
+fn tree_map_multi(trees: &[Value], func: &Value, env: &mut Env) -> Result<Value, SheafError> {
+    match &trees[0] {
         Value::Dict(map) => {
             let mut result = BTreeMap::new();
-            for (k, v) in map {
-                result.insert(k.clone(), tree_map_value(v, func, env)?);
+            for k in map.keys() {
+                let sub_trees: Result<Vec<Value>, _> = trees
+                    .iter()
+                    .map(|t| match t {
+                        Value::Dict(m) => m
+                            .get(k)
+                            .cloned()
+                            .ok_or_else(|| runtime_error(format!("tree-map: key {} missing in one tree", k))),
+                        _ => Err(runtime_error("tree-map: tree structure mismatch")),
+                    })
+                    .collect();
+                result.insert(k.clone(), tree_map_multi(&sub_trees?, func, env)?);
             }
             Ok(Value::Dict(result))
         }
         Value::List(items) => {
+            let n = items.len();
             let mut result = Vec::new();
-            for item in items {
-                result.push(tree_map_value(item, func, env)?);
+            for i in 0..n {
+                let sub_trees: Result<Vec<Value>, _> = trees
+                    .iter()
+                    .map(|t| match t {
+                        Value::List(v) => v
+                            .get(i)
+                            .cloned()
+                            .ok_or_else(|| runtime_error("tree-map: list length mismatch")),
+                        _ => Err(runtime_error("tree-map: tree structure mismatch")),
+                    })
+                    .collect();
+                result.push(tree_map_multi(&sub_trees?, func, env)?);
             }
             Ok(Value::List(result))
         }
-        leaf => call_function(func, &[leaf.clone()], env),
+        _ => call_function(func, trees, env),
     }
 }
 
 fn eval_tree_map(args: &[Value], env: &mut Env) -> Result<Value, SheafError> {
-    if args.len() != 2 {
-        return Err(runtime_error("tree-map requires 2 arguments: (tree-map fn tree)"));
+    if args.len() < 2 {
+        return Err(runtime_error("tree-map requires at least 2 arguments: (tree-map fn tree ...)"));
     }
-    tree_map_value(&args[1], &args[0], env)
+    let func = &args[0];
+    let trees = &args[1..];
+    tree_map_multi(trees, func, env)
 }
 
 fn tree_reduce_value(val: &Value, func: &Value, acc: Value, env: &mut Env) -> Result<Value, SheafError> {
@@ -598,6 +644,143 @@ fn eval_flatten(args: &[Value]) -> Result<Value, SheafError> {
     // Returns (leaves_list, reconstruct_fn) — we return a list of [leaves, nil] for now
     // The test only uses (first (flatten params)) → the leaves list
     Ok(Value::List(vec![Value::List(leaves), Value::Nil]))
+}
+
+/// (value-and-grad f) → returns a function that, given params, returns [loss, grad_params].
+///
+/// Gradient computed by central finite differences: grad[i] ≈ (f(p+h) - f(p-h)) / 2h
+/// Applied element-wise to every leaf tensor in the params pytree.
+fn eval_value_and_grad_hof(args: &[Value], _env: &mut Env) -> Result<Value, SheafError> {
+    if args.len() != 1 {
+        return Err(runtime_error("value-and-grad: expected exactly 1 argument (the function)"));
+    }
+    let func = args[0].clone();
+
+    // Return a Value::Function closure that captures `func`.
+    // When called with params, call_function detects __vag_fn__ and dispatches
+    // to eval_value_and_grad_call which computes (loss, grad) via finite differences.
+    Ok(Value::Function {
+        params: vec!["__vag_params__".to_string()],
+        body: crate::core::compiler::CompiledExpr::Symbol("__vag_params__".to_string()),
+        closure: vec![("__vag_fn__".to_string(), func)],
+    })
+}
+
+/// Evaluate a value-and-grad HOF call: the Function created above is called with params.
+/// We intercept it in call_function when we detect the __vag_params__ sentinel.
+fn eval_value_and_grad_call(func: &Value, params: &Value, env: &mut Env) -> Result<Value, SheafError> {
+    let h = 1e-4_f64;
+
+    // Evaluate loss at params
+    let loss_val = call_function(func, &[params.clone()], env)?;
+    let loss = match &loss_val {
+        Value::Float(x) => *x,
+        Value::Int(n) => *n as f64,
+        Value::Tensor { data, .. } => data.first().copied().unwrap_or(0.0),
+        _ => return Err(runtime_error("value-and-grad: loss function must return a scalar")),
+    };
+
+    // Count leaves
+    let n_leaves = {
+        let mut count = 0usize;
+        fn count_leaves_inner(val: &Value, count: &mut usize) {
+            match val {
+                Value::Tensor { data, .. } => *count += data.len(),
+                Value::Dict(map) => map.values().for_each(|v| count_leaves_inner(v, count)),
+                Value::Float(_) | Value::Int(_) => *count += 1,
+                _ => {}
+            }
+        }
+        count_leaves_inner(params, &mut count);
+        count
+    };
+
+    // Central finite differences for each leaf
+    let mut grads = vec![0.0f64; n_leaves];
+    for i in 0..n_leaves {
+        let p_plus = perturb_leaf(params, i, h);
+        let p_minus = perturb_leaf(params, i, -h);
+        let f_plus = call_function(func, &[p_plus], env)?;
+        let f_minus = call_function(func, &[p_minus], env)?;
+        let fp = scalar_from_value(&f_plus)?;
+        let fm = scalar_from_value(&f_minus)?;
+        grads[i] = (fp - fm) / (2.0 * h);
+    }
+
+    let mut counter = 0;
+    let grad_tree = build_grad_tree(params, &grads, &mut counter);
+
+    Ok(Value::List(vec![Value::Float(loss), grad_tree]))
+}
+
+fn perturb_leaf(val: &Value, leaf_idx: usize, delta: f64) -> Value {
+    let mut counter = 0usize;
+    perturb_leaf_inner(val, leaf_idx, delta, &mut counter)
+}
+
+fn perturb_leaf_inner(val: &Value, leaf_idx: usize, delta: f64, counter: &mut usize) -> Value {
+    match val {
+        Value::Tensor { data, dtype } => {
+            let n = data.len();
+            if *counter <= leaf_idx && leaf_idx < *counter + n {
+                let local = leaf_idx - *counter;
+                let mut new_data = data.clone();
+                new_data.as_slice_mut().unwrap()[local] += delta;
+                *counter += n;
+                Value::Tensor { data: new_data, dtype: *dtype }
+            } else {
+                *counter += n;
+                val.clone()
+            }
+        }
+        Value::Dict(map) => Value::Dict(
+            map.iter().map(|(k, v)| (k.clone(), perturb_leaf_inner(v, leaf_idx, delta, counter))).collect()
+        ),
+        Value::Float(x) => {
+            let result = if *counter == leaf_idx { Value::Float(x + delta) } else { val.clone() };
+            *counter += 1;
+            result
+        }
+        Value::Int(n) => {
+            let result = if *counter == leaf_idx { Value::Float(*n as f64 + delta) } else { val.clone() };
+            *counter += 1;
+            result
+        }
+        _ => val.clone(),
+    }
+}
+
+fn scalar_from_value(val: &Value) -> Result<f64, SheafError> {
+    match val {
+        Value::Float(x) => Ok(*x),
+        Value::Int(n) => Ok(*n as f64),
+        Value::Tensor { data, .. } => data.first().copied()
+            .ok_or_else(|| runtime_error("value-and-grad: empty tensor result")),
+        _ => Err(runtime_error("value-and-grad: loss must return a scalar")),
+    }
+}
+
+fn build_grad_tree(params: &Value, grads: &[f64], counter: &mut usize) -> Value {
+    match params {
+        Value::Tensor { data, dtype } => {
+            let n = data.len();
+            let slice = grads[*counter..*counter + n].to_vec();
+            *counter += n;
+            Value::Tensor {
+                data: ndarray::ArrayD::from_shape_vec(ndarray::IxDyn(data.shape()), slice).unwrap(),
+                dtype: *dtype,
+            }
+        }
+        Value::Dict(map) => Value::Dict(
+            map.iter().map(|(k, v)| (k.clone(), build_grad_tree(v, grads, counter))).collect()
+        ),
+        Value::Float(_) | Value::Int(_) => {
+            let g = grads[*counter];
+            *counter += 1;
+            Value::Float(g)
+        }
+        _ => params.clone(),
+    }
 }
 
 /// High-level entry point: parse + compile + eval a Sheaf expression string.
