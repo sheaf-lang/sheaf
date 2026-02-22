@@ -10,7 +10,6 @@
 //!   sheaf build file.shf -o out.vmfb   Compile to VMFB (requires Sheaf SDK)
 //!   sheaf build file.shf -o out.mlir -S  Emit MLIR only (no SDK required)
 
-use std::io::{self, BufRead, Write};
 use std::process::exit;
 
 fn main() {
@@ -153,48 +152,66 @@ fn run_file(args: &[String]) {
 }
 
 fn run_repl() {
+    use rustyline::DefaultEditor;
+    use rustyline::error::ReadlineError;
     use sheaf_compiler::interpreter::eval::Interpreter;
     use sheaf_compiler::interpreter::value::Value;
 
     println!("Sheaf {} — interactive REPL", env!("CARGO_PKG_VERSION"));
     println!("Type :quit or Ctrl-D to exit.\n");
 
+    let history_file = std::env::var_os("HOME")
+        .map(|h| std::path::PathBuf::from(h).join(".sheaf_history"));
+
+    let mut rl = DefaultEditor::new().expect("failed to init line editor");
+    // On macOS/libedit, Ctrl-D needs an explicit binding to trigger EndOfFile
+    rl.bind_sequence(
+        rustyline::KeyEvent(rustyline::KeyCode::Char('d'), rustyline::Modifiers::CTRL),
+        rustyline::Cmd::EndOfFile,
+    );
+    if let Some(ref path) = history_file {
+        let _ = rl.load_history(path);
+    }
+
     let mut interp = Interpreter::new();
-    let stdin = io::stdin();
 
     loop {
-        print!("sheaf> ");
-        io::stdout().flush().ok();
-
-        let mut line = String::new();
-        match stdin.lock().read_line(&mut line) {
-            Ok(0) => {
-                println!();
+        match rl.readline("sheaf> ") {
+            Ok(line) => {
+                let trimmed = line.trim();
+                if trimmed.is_empty() {
+                    continue;
+                }
+                if trimmed == ":quit" || trimmed == ":q" {
+                    break;
+                }
+                rl.add_history_entry(trimmed).ok();
+                match interp.eval(trimmed) {
+                    Ok(val) => {
+                        if !is_silent_result(&val) {
+                            println!("{}", val);
+                        }
+                    }
+                    Err(e) => eprintln!("error: {}", e),
+                }
+            }
+            Err(ReadlineError::Interrupted) => {
+                eprintln!("^C");
+                continue;
+            }
+            Err(ReadlineError::Eof) => {
+                println!("\nBye!");
                 break;
             }
             Err(e) => {
                 eprintln!("sheaf: read error: {}", e);
                 break;
             }
-            Ok(_) => {}
         }
+    }
 
-        let trimmed = line.trim();
-        if trimmed.is_empty() {
-            continue;
-        }
-        if trimmed == ":quit" || trimmed == ":q" {
-            break;
-        }
-
-        match interp.eval(trimmed) {
-            Ok(val) => {
-                if !matches!(val, Value::Nil) {
-                    println!("{}", val);
-                }
-            }
-            Err(e) => eprintln!("error: {}", e),
-        }
+    if let Some(ref path) = history_file {
+        let _ = rl.save_history(path);
     }
 }
 
