@@ -15,9 +15,28 @@ use crate::interpreter;
 
 /// Evaluate a complete Sheaf source string and return the last value.
 /// Each call is fully independent (no shared state).
+/// `file_path` is used to resolve relative `(use ...)` paths; pass `None` for inline expressions.
 pub fn eval_source(source: &str) -> Result<Value, SheafError> {
-    let exprs = crate::core::parse(source, "<eval>")?;
+    eval_source_with_path(source, None)
+}
+
+pub fn eval_source_with_path(
+    source: &str,
+    file_path: Option<&std::path::Path>,
+) -> Result<Value, SheafError> {
+    let filename = file_path
+        .and_then(|p| p.to_str())
+        .unwrap_or("<eval>");
+    let exprs = crate::core::parse(source, filename)?;
     let mut compiler = CompilerContext::new();
+    // Set current_dir so (use module) resolves relative to the file being evaluated
+    if let Some(path) = file_path {
+        if let Some(dir) = path.parent() {
+            compiler.set_current_dir(
+                dir.canonicalize().unwrap_or_else(|_| dir.to_path_buf()),
+            );
+        }
+    }
     let mut compiled = Vec::new();
     for expr in &exprs {
         compiled.push(compiler.compile(expr)?);

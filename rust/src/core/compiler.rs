@@ -7,7 +7,8 @@
 
 use crate::ast::SheafValue;
 use crate::core::error::{SheafError, SheafResult};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
+use std::path::PathBuf;
 
 /// A leaf field in a parameter layout: a named tensor with its shape
 #[derive(Debug, Clone)]
@@ -64,6 +65,14 @@ pub struct CompilerContext {
     /// Set by with-params to resolve symbols like W -> get_tuple_element(p, [0, 1])
     pub param_scope: HashMap<String, (String, Vec<usize>)>,
 
+    /// Search paths for (use module): stdlib directories + current file's directory
+    pub load_path: Vec<PathBuf>,
+
+    /// Absolute paths of already-loaded modules (prevents duplicate loading)
+    pub loaded_modules: HashSet<PathBuf>,
+
+    /// Directory of the file currently being compiled (for relative use paths)
+    pub current_dir: Option<PathBuf>,
 }
 
 /// Function definition
@@ -109,7 +118,47 @@ impl CompilerContext {
             local_vars: HashMap::new(),
             param_types: HashMap::new(),
             param_scope: HashMap::new(),
+            load_path: Self::default_load_path(),
+            loaded_modules: HashSet::new(),
+            current_dir: None,
         }
+    }
+
+    /// Build the default load path: stdlib dir (relative to binary) + cwd.
+    fn default_load_path() -> Vec<PathBuf> {
+        let mut paths = Vec::new();
+
+        // 1. $SHEAF_LIB env var
+        if let Ok(lib) = std::env::var("SHEAF_LIB") {
+            paths.push(PathBuf::from(lib));
+        }
+
+        // 2. Stdlib relative to the running binary: <binary>/../lib/
+        if let Ok(exe) = std::env::current_exe() {
+            if let Some(bin_dir) = exe.parent() {
+                let candidate = bin_dir.join("../lib");
+                if candidate.exists() {
+                    paths.push(candidate.canonicalize().unwrap_or(candidate));
+                }
+                // Also try <binary>/../../sheaf/lib/ for dev layout (rust/target/debug/sheaf)
+                let dev_candidate = bin_dir.join("../../../sheaf/lib");
+                if dev_candidate.exists() {
+                    paths.push(dev_candidate.canonicalize().unwrap_or(dev_candidate));
+                }
+            }
+        }
+
+        // 3. Current working directory
+        if let Ok(cwd) = std::env::current_dir() {
+            paths.push(cwd);
+        }
+
+        paths
+    }
+
+    /// Set the directory of the file being compiled (for relative `use` paths).
+    pub fn set_current_dir(&mut self, dir: PathBuf) {
+        self.current_dir = Some(dir);
     }
 
     /// Initialize global environment with built-in operations

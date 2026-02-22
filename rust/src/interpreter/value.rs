@@ -27,6 +27,9 @@ pub enum Value {
     Keyword(String),
     Tensor { data: ArrayD<f64>, dtype: Dtype },
     List(Vec<Value>),
+    /// Fixed-size heterogeneous tuple — output of VMFB calls and value-and-grad.
+    /// Destructured with `let [[a b] expr]`.
+    Tuple(Vec<Value>),
     Dict(BTreeMap<String, Value>),
     Function {
         params: Vec<String>,
@@ -85,6 +88,7 @@ impl Value {
             Value::Keyword(_) => "keyword",
             Value::Tensor { .. } => "tensor",
             Value::List(_) => "list",
+            Value::Tuple(_) => "tuple",
             Value::Dict(_) => "dict",
             Value::Function { .. } => "function",
             Value::BuiltinFn { .. } => "builtin",
@@ -103,6 +107,7 @@ impl fmt::Debug for Value {
             Value::Keyword(k) => write!(f, "Keyword(:{})", k),
             Value::Tensor { data, dtype } => write!(f, "Tensor({:?}, {:?})", data, dtype),
             Value::List(items) => write!(f, "List({:?})", items),
+            Value::Tuple(items) => write!(f, "Tuple({:?})", items),
             Value::Dict(map) => write!(f, "Dict({:?})", map),
             Value::Function { params, .. } => write!(f, "Function({:?})", params),
             Value::BuiltinFn { name, .. } => write!(f, "BuiltinFn({})", name),
@@ -207,6 +212,10 @@ impl fmt::Display for Value {
                     }
                 }).collect();
                 write!(f, "[{}]", formatted.join(", "))
+            }
+            Value::Tuple(items) => {
+                let formatted: Vec<String> = items.iter().map(|v| format!("{}", v)).collect();
+                write!(f, "({})", formatted.join(", "))
             }
             Value::Dict(map) => {
                 let pairs: Vec<String> = map.iter().map(|(k, v)| {

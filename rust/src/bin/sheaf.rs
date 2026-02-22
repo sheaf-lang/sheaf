@@ -92,7 +92,8 @@ fn run_expr(source: &str) {
 }
 
 fn run_file(args: &[String]) {
-    use sheaf_compiler::interpreter::eval::eval_source;
+    use std::path::PathBuf;
+    use sheaf_compiler::interpreter::eval::eval_source_with_path;
     use sheaf_compiler::interpreter::value::Value;
 
     let path = &args[0];
@@ -102,13 +103,12 @@ fn run_file(args: &[String]) {
     while i < args.len() {
         match args[i].as_str() {
             "--trace" => {
-                // consume optional value
                 if args.get(i + 1).map(|a| !a.starts_with('-')).unwrap_or(false) {
                     i += 1;
                 }
             }
             "--guard" => {
-                i += 1; // consume SPEC
+                i += 1;
             }
             arg => {
                 eprintln!("sheaf: unknown option '{}' for file mode", arg);
@@ -118,17 +118,19 @@ fn run_file(args: &[String]) {
         }
         i += 1;
     }
-    // Note: --trace and --guard are parsed but not yet wired to the interpreter.
-    // They are accepted so the CLI contract is established.
 
-    let source = match std::fs::read_to_string(path) {
+    let abs_path = PathBuf::from(path)
+        .canonicalize()
+        .unwrap_or_else(|_| PathBuf::from(path));
+
+    let source = match std::fs::read_to_string(&abs_path) {
         Ok(s) => s,
         Err(e) => {
             eprintln!("sheaf: cannot read '{}': {}", path, e);
             exit(1);
         }
     };
-    match eval_source(&source) {
+    match eval_source_with_path(&source, Some(&abs_path)) {
         Ok(val) => {
             if !matches!(val, Value::Nil) {
                 println!("{}", val);
