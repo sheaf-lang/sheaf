@@ -182,13 +182,46 @@ impl SpecialForm for LetForm {
         // Process bindings in pairs
         let mut compiled_bindings = Vec::new();
         for i in (0..bindings_vec.len()).step_by(2) {
-            let name = expect_symbol(&bindings_vec[i], "let binding name", loc)?;
+            let pattern = &bindings_vec[i];
             let value = &bindings_vec[i + 1];
             let compiled_value = compiler.compile(value)?;
 
-            // Add to local scope (for subsequent bindings in same let)
-            compiler.local_vars.insert(name.to_string(), value.clone());
-            compiled_bindings.push((name.to_string(), compiled_value));
+            match pattern {
+                // Simple symbol binding: [x expr]
+                SheafValue::Symbol(name, _) => {
+                    compiler.local_vars.insert(name.clone(), value.clone());
+                    compiled_bindings.push((name.clone(), compiled_value));
+                }
+                // Vector destructuring: [[a b] expr]
+                SheafValue::Vector(names, inner_loc) => {
+                    let sym_names: Vec<String> = names
+                        .iter()
+                        .map(|n| {
+                            expect_symbol(n, "let destructuring name", inner_loc)
+                                .map(|s| s.to_string())
+                        })
+                        .collect::<SheafResult<_>>()?;
+                    // Register each name in local scope as a symbol
+                    for n in &sym_names {
+                        compiler.local_vars.insert(
+                            n.clone(),
+                            SheafValue::Symbol(n.clone(), inner_loc.clone()),
+                        );
+                    }
+                    // Encode the pattern as "[a b c]" — interpreter decodes it
+                    let pattern_key = format!("[{}]", sym_names.join(" "));
+                    compiled_bindings.push((pattern_key, compiled_value));
+                }
+                other => {
+                    return Err(SheafError::Compile {
+                        message: format!(
+                            "let binding name must be a symbol or destructuring vector, got {}",
+                            other
+                        ),
+                        location: loc.clone(),
+                    });
+                }
+            }
         }
 
         // Compile body with bindings in scope

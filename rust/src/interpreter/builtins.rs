@@ -111,6 +111,12 @@ pub fn register_builtins(env: &mut Env) {
     env.set_builtin("mae-loss", builtin_mae_loss);
     env.set_builtin("sparse-cross-entropy", builtin_sparse_cross_entropy);
     env.set_builtin("tree-map-zeros", builtin_tree_map_zeros);
+    env.set_builtin("print", builtin_print);
+    env.set_builtin("io", builtin_io);
+    env.set_builtin("random-key", builtin_random_key);
+    env.set_builtin("random-split", builtin_random_split);
+    env.set_builtin("random-normal", builtin_random_normal);
+    env.set_builtin("random-uniform", builtin_random_uniform);
 }
 
 fn to_array(val: &Value) -> Result<(ArrayD<f64>, Dtype), crate::core::error::SheafError> {
@@ -1494,4 +1500,214 @@ pub fn tree_zeros(val: &Value) -> Value {
 fn builtin_tree_map_zeros(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
     if args.is_empty() { return Err(runtime_error("tree-map-zeros requires 1 argument")); }
     Ok(tree_zeros(&args[0]))
+}
+
+/// print - Formatted output: (print "Epoch {} | loss: {:.6f}" epoch loss)
+///
+/// Supports Python-style {} and {:.Nf} format specifiers.
+fn builtin_print(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    if args.is_empty() {
+        println!();
+        return Ok(Value::Nil);
+    }
+    let fmt = match &args[0] {
+        Value::String(s) => s.clone(),
+        other => {
+            println!("{}", other);
+            return Ok(Value::Nil);
+        }
+    };
+    let vals = &args[1..];
+    let result = format_string(&fmt, vals);
+    println!("{}", result);
+    Ok(Value::Nil)
+}
+
+fn format_string(fmt: &str, vals: &[Value]) -> String {
+    let mut result = String::new();
+    let mut val_idx = 0;
+    let mut chars = fmt.chars().peekable();
+    while let Some(c) = chars.next() {
+        if c == '{' {
+            if chars.peek() == Some(&'{') {
+                chars.next();
+                result.push('{');
+                continue;
+            }
+            // Collect until '}'
+            let mut spec = String::new();
+            let mut closed = false;
+            for ch in chars.by_ref() {
+                if ch == '}' { closed = true; break; }
+                spec.push(ch);
+            }
+            if !closed {
+                result.push('{');
+                result.push_str(&spec);
+                continue;
+            }
+            if let Some(val) = vals.get(val_idx) {
+                val_idx += 1;
+                result.push_str(&format_value_with_spec(val, &spec));
+            } else {
+                result.push_str("{}");
+            }
+        } else if c == '}' && chars.peek() == Some(&'}') {
+            chars.next();
+            result.push('}');
+        } else {
+            result.push(c);
+        }
+    }
+    result
+}
+
+fn format_value_with_spec(val: &Value, spec: &str) -> String {
+    // Parse spec: e.g. ".6f", ".3f", "" (default)
+    if spec.is_empty() {
+        return format!("{}", val);
+    }
+    // Try to extract .<n>f
+    if let Some(rest) = spec.strip_prefix('.') {
+        if let Some(prec_str) = rest.strip_suffix('f') {
+            if let Ok(prec) = prec_str.parse::<usize>() {
+                let f = match val {
+                    Value::Float(x) => *x,
+                    Value::Int(n) => *n as f64,
+                    Value::Tensor { data, .. } => data.first().copied().unwrap_or(0.0),
+                    _ => return format!("{}", val),
+                };
+                return format!("{:.prec$}", f, prec = prec);
+            }
+        }
+    }
+    format!("{}", val)
+}
+
+/// io - System I/O: (io "entropy") → random seed as Int
+///
+/// Reads 8 bytes from the OS CSPRNG (/dev/urandom on Unix, BCryptGenRandom on Windows).
+fn builtin_io(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    match args.first() {
+        Some(Value::String(s)) if s == "entropy" => {
+            let mut bytes = [0u8; 8];
+            getrandom::getrandom(&mut bytes).map_err(|e| {
+                runtime_error(format!("io: entropy: {}", e))
+            })?;
+            let seed = u64::from_le_bytes(bytes) as i64;
+            Ok(Value::Int(seed))
+        }
+        _ => Err(runtime_error("io: only (io \"entropy\") is supported")),
+    }
+}
+
+/// random-key - Create a PRNG key from a seed: (random-key seed)
+///
+/// Returns an opaque key (stored as a List of two u32s, like JAX).
+fn builtin_random_key(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    let seed = match args.first() {
+        Some(Value::Int(n)) => *n as u64,
+        Some(Value::Float(f)) => *f as u64,
+        _ => return Err(runtime_error("random-key: expected integer seed")),
+    };
+    // Represent key as [low32, high32]
+    let lo = (seed & 0xFFFFFFFF) as i64;
+    let hi = ((seed >> 32) & 0xFFFFFFFF) as i64;
+    Ok(Value::List(vec![Value::Int(lo), Value::Int(hi)]))
+}
+
+/// Derive a u64 seed from a key value.
+fn key_to_seed(key: &Value) -> u64 {
+    match key {
+        Value::List(items) => {
+            let lo = items.first().and_then(|v| if let Value::Int(n) = v { Some(*n as u64) } else { None }).unwrap_or(0);
+            let hi = items.get(1).and_then(|v| if let Value::Int(n) = v { Some(*n as u64) } else { None }).unwrap_or(0);
+            lo | (hi << 32)
+        }
+        Value::Int(n) => *n as u64,
+        _ => 42,
+    }
+}
+
+/// random-split - Split a key into n subkeys: (random-split key n)
+fn builtin_random_split(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    if args.len() != 2 {
+        return Err(runtime_error("random-split: expected (random-split key n)"));
+    }
+    let seed = key_to_seed(&args[0]);
+    let n = match &args[1] {
+        Value::Int(n) => *n as usize,
+        _ => return Err(runtime_error("random-split: n must be an integer")),
+    };
+    let mut keys = Vec::with_capacity(n);
+    for i in 0..n {
+        let child_seed = seed.wrapping_add(i as u64).wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+        let lo = (child_seed & 0xFFFFFFFF) as i64;
+        let hi = ((child_seed >> 32) & 0xFFFFFFFF) as i64;
+        keys.push(Value::List(vec![Value::Int(lo), Value::Int(hi)]));
+    }
+    Ok(Value::List(keys))
+}
+
+/// SplitMix64 PRNG — high quality, fast, recommended for weight initialization.
+/// Returns a uniform f64 in [0, 1).
+fn splitmix64(state: &mut u64) -> f64 {
+    *state = state.wrapping_add(0x9e3779b97f4a7c15);
+    let mut z = *state;
+    z = (z ^ (z >> 30)).wrapping_mul(0xbf58476d1ce4e5b9);
+    z = (z ^ (z >> 27)).wrapping_mul(0x94d049bb133111eb);
+    z = z ^ (z >> 31);
+    (z >> 11) as f64 / (1u64 << 53) as f64
+}
+
+/// random-normal - Sample from N(0,1): (random-normal key shape)
+fn builtin_random_normal(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    if args.len() != 2 {
+        return Err(runtime_error("random-normal: expected (random-normal key shape)"));
+    }
+    let mut state = key_to_seed(&args[0]);
+    let shape = parse_shape(&args[1])?;
+    let n: usize = shape.iter().product();
+    let mut data = Vec::with_capacity(n);
+    // Box-Muller transform
+    let mut i = 0;
+    while i < n {
+        let u1 = splitmix64(&mut state).max(1e-10);
+        let u2 = splitmix64(&mut state);
+        let r = (-2.0 * u1.ln()).sqrt();
+        let theta = 2.0 * std::f64::consts::PI * u2;
+        data.push((r * theta.cos()) as f64);
+        if i + 1 < n { data.push((r * theta.sin()) as f64); }
+        i += 2;
+    }
+    data.truncate(n);
+    let arr = ArrayD::from_shape_vec(IxDyn(&shape), data)
+        .map_err(|e| runtime_error(format!("random-normal: shape error: {}", e)))?;
+    Ok(Value::tensor_f32(arr))
+}
+
+/// random-uniform - Sample from U(0,1): (random-uniform key shape)
+fn builtin_random_uniform(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    if args.len() != 2 {
+        return Err(runtime_error("random-uniform: expected (random-uniform key shape)"));
+    }
+    let mut state = key_to_seed(&args[0]);
+    let shape = parse_shape(&args[1])?;
+    let n: usize = shape.iter().product();
+    let data: Vec<f64> = (0..n).map(|_| splitmix64(&mut state)).collect();
+    let arr = ArrayD::from_shape_vec(IxDyn(&shape), data)
+        .map_err(|e| runtime_error(format!("random-uniform: shape error: {}", e)))?;
+    Ok(Value::tensor_f32(arr))
+}
+
+fn parse_shape(val: &Value) -> Result<Vec<usize>, crate::core::error::SheafError> {
+    match val {
+        Value::List(items) => items.iter().map(|v| match v {
+            Value::Int(n) => Ok(*n as usize),
+            Value::Float(f) => Ok(*f as usize),
+            _ => Err(runtime_error("shape element must be integer")),
+        }).collect(),
+        Value::Tensor { data, .. } => data.iter().map(|&x| Ok(x as usize)).collect(),
+        _ => Err(runtime_error("shape must be a list or quoted vector")),
+    }
 }

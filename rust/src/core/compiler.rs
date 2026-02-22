@@ -441,6 +441,16 @@ pub enum CompiledExpr {
         wrt_params: Vec<String>,
         shape_config: Vec<(String, Vec<i64>)>,
     },
+    /// Counted loop with accumulator: (repeat [i n] [acc init] body)
+    /// Evaluates body `n` times, binding loop index to `i` and accumulator to `acc`.
+    /// Returns final value of accumulator.
+    Repeat {
+        index_var: String,
+        count: Box<CompiledExpr>,
+        acc_var: String,
+        acc_init: Box<CompiledExpr>,
+        body: Box<CompiledExpr>,
+    },
 }
 
 impl Default for CompilerContext {

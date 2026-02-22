@@ -233,22 +233,69 @@ impl SpecialForm for WithParamsForm {
 
         let (param_name, opt_key) = parse_with_params_binding(binding, loc)?;
 
-        // Find the layout for this param
-        // Look up the param's type annotation from local_vars metadata
-        // For now: look up by convention (the param must be annotated with :as SomeType)
-        let layout_name = compiler
+        // Find the layout for this param.
+        // Look up the param's type annotation from local_vars metadata.
+        // If no annotation is present, fall back to interpreter-mode dict access:
+        // emit a WithParamsDynamic node so the interpreter can do runtime key lookup.
+        let layout_name = match compiler
             .local_vars
             .get(&format!("__type__{}", param_name))
             .and_then(|v| v.as_symbol())
             .map(|s| s.to_string())
-            .ok_or_else(|| SheafError::Compile {
-                message: format!(
-                    "with-params: parameter '{}' has no type annotation. \
-                     Use (defn f [(p :as MyLayout)] ...) to declare its type.",
-                    param_name
-                ),
-                location: loc.clone(),
-            })?;
+        {
+            Some(name) => name,
+            None => {
+                // Interpreter fallback: no layout annotation.
+                // Strategy: collect all free symbols in the body AST,
+                // register them as (get sub_dict :name) in local scope,
+                // compile the body, then restore scope.
+                //
+                // sub_dict = if opt_key: (get param :key), else: param itself
+                let sub_dict_expr = if let Some(ref key) = opt_key {
+                    SheafValue::List(
+                        vec![
+                            SheafValue::Symbol("get".to_string(), loc.clone()),
+                            SheafValue::Symbol(param_name.to_string(), loc.clone()),
+                            SheafValue::Keyword(key.clone(), loc.clone()),
+                        ],
+                        loc.clone(),
+                    )
+                } else {
+                    SheafValue::Symbol(param_name.to_string(), loc.clone())
+                };
+
+                // Collect candidate symbols from the body (simple heuristic: all symbols
+                // that are not already in scope and not function names).
+                let free_syms = collect_free_symbols(body, compiler);
+
+                let saved_locals = compiler.local_vars.clone();
+
+                // For each free symbol, register it as (get sub_dict :sym)
+                for sym in &free_syms {
+                    let getter = SheafValue::List(
+                        vec![
+                            SheafValue::Symbol("get".to_string(), loc.clone()),
+                            sub_dict_expr.clone(),
+                            SheafValue::Keyword(sym.clone(), loc.clone()),
+                        ],
+                        loc.clone(),
+                    );
+                    compiler.local_vars.insert(sym.clone(), getter);
+                }
+
+                let compiled_body: SheafResult<Vec<CompiledExpr>> =
+                    body.iter().map(|e| compiler.compile(e)).collect();
+                let compiled_body = compiled_body?;
+
+                compiler.local_vars = saved_locals;
+
+                return Ok(if compiled_body.len() == 1 {
+                    compiled_body.into_iter().next().unwrap()
+                } else {
+                    CompiledExpr::Do(compiled_body)
+                });
+            }
+        };
 
         let layout = compiler
             .param_types
@@ -296,6 +343,50 @@ impl SpecialForm for WithParamsForm {
             Ok(CompiledExpr::Do(compiled_body))
         }
     }
+}
+
+/// Collect free symbols in an AST body: symbols not already defined in the compiler scope.
+/// Used by with-params fallback to find field names like W, b.
+fn collect_free_symbols(body: &[SheafValue], compiler: &CompilerContext) -> Vec<String> {
+    let mut syms = std::collections::HashSet::new();
+    for expr in body {
+        collect_symbols_in(expr, compiler, &mut syms);
+    }
+    syms.into_iter().collect()
+}
+
+fn collect_symbols_in(
+    expr: &SheafValue,
+    compiler: &CompilerContext,
+    out: &mut std::collections::HashSet<String>,
+) {
+    match expr {
+        SheafValue::Symbol(name, _) => {
+            // Only collect if not already known (not in registry, not in local_vars, not a special form)
+            if !compiler.registry.contains_key(name)
+                && !compiler.local_vars.contains_key(name)
+                && !compiler.env.contains_key(name)
+                && !is_special_form(name)
+            {
+                out.insert(name.clone());
+            }
+        }
+        SheafValue::List(elems, _) | SheafValue::Vector(elems, _) => {
+            // Skip first element if it looks like a function call (symbol = function name)
+            let start = if matches!(elems.first(), Some(SheafValue::Symbol(..))) { 1 } else { 0 };
+            for e in &elems[start..] {
+                collect_symbols_in(e, compiler, out);
+            }
+        }
+        _ => {}
+    }
+}
+
+fn is_special_form(name: &str) -> bool {
+    matches!(name, "let" | "fn" | "defn" | "if" | "do" | "and" | "or" | "not"
+        | "quote" | "use" | "get" | "get-in" | "dict" | "assoc" | "last"
+        | "with-params" | "defparams" | "grad" | "value-and-grad"
+        | "repeat" | "while" | "case" | "as->" | "->")
 }
 
 /// Parse the binding vector of with-params.
@@ -522,6 +613,16 @@ impl SpecialForm for ValueAndGradForm {
         args: &[SheafValue],
         loc: &SourceLocation,
     ) -> SheafResult<CompiledExpr> {
+        // Interpreter HOF form: (value-and-grad f) where f is a lambda or function ref.
+        // Returns a function that, when called with params, returns [loss, grad].
+        if args.len() == 1 {
+            let f = compiler.compile(&args[0])?;
+            return Ok(CompiledExpr::FunctionCall {
+                name: "__value-and-grad-hof__".to_string(),
+                args: vec![f],
+            });
+        }
+
         if args.len() < 4 {
             return Err(SheafError::Compile {
                 message: "value-and-grad: expected (value-and-grad name f [:wrt | config])"

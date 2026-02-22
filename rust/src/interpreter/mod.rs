@@ -57,7 +57,7 @@ pub fn eval(expr: &CompiledExpr, env: &mut Env) -> Result<Value, SheafError> {
             env.push_scope();
             for (name, expr) in bindings {
                 let val = eval(expr, env)?;
-                env.set(name, val);
+                bind_pattern(name, val, env)?;
             }
             let result = eval(body, env);
             env.pop_scope();
@@ -110,7 +110,68 @@ pub fn eval(expr: &CompiledExpr, env: &mut Env) -> Result<Value, SheafError> {
                 "value-and-grad '{}': interpreter support not yet implemented", fn_name
             )))
         }
+
+        CompiledExpr::Repeat { index_var, count, acc_var, acc_init, body } => {
+            let n = match eval(count, env)? {
+                Value::Int(n) => n,
+                Value::Float(f) => f as i64,
+                other => return Err(runtime_error(format!(
+                    "repeat: count must be an integer, got {}", other.type_name()
+                ))),
+            };
+            let mut acc = eval(acc_init, env)?;
+            env.push_scope();
+            for i in 0..n {
+                env.set(index_var, Value::Int(i));
+                env.set(acc_var, acc);
+                acc = eval(body, env)?;
+            }
+            env.pop_scope();
+            Ok(acc)
+        }
     }
+}
+
+/// Bind a pattern name to a value in the current scope.
+///
+/// Patterns:
+///   - Simple: `"x"` → env["x"] = val
+///   - Destructuring: `"[a b]"` (encoded by compiler as "[a b]") → env["a"] = val[0], env["b"] = val[1]
+///
+/// The compiler encodes vector destructuring patterns as a string like `"[k1 k2]"`.
+/// We detect this by the leading `[` and parse the names out.
+fn bind_pattern(name: &str, val: Value, env: &mut Env) -> Result<(), SheafError> {
+    if name.starts_with('[') && name.ends_with(']') {
+        // Destructuring pattern: extract symbol names
+        let inner = &name[1..name.len() - 1];
+        let names: Vec<&str> = inner.split_whitespace().collect();
+        let items = match &val {
+            Value::List(items) => items.clone(),
+            Value::Tuple(items) => items.clone(),
+            Value::Tensor { data, .. } => {
+                if data.ndim() == 1 {
+                    data.iter().map(|&x| Value::Float(x)).collect()
+                } else {
+                    return Err(runtime_error(format!(
+                        "let destructuring: expected list/tuple, got tensor with shape {:?}", data.shape()
+                    )));
+                }
+            }
+            other => return Err(runtime_error(format!(
+                "let destructuring: expected list or tuple, got {}", other.type_name()
+            ))),
+        };
+        for (n, v) in names.iter().zip(items.iter()) {
+            env.set(n, v.clone());
+        }
+        // If fewer values than names, bind remaining to Nil
+        for n in names.iter().skip(items.len()) {
+            env.set(n, Value::Nil);
+        }
+    } else {
+        env.set(name, val);
+    }
+    Ok(())
 }
 
 fn eval_vector(elements: &[CompiledExpr], env: &mut Env) -> Result<Value, SheafError> {
