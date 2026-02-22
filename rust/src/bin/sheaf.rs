@@ -220,16 +220,18 @@ fn run_build(args: &[String]) {
     use std::path::PathBuf;
     use std::process::Command;
 
+    use sheaf_compiler::compiler::{build_index_map, json_to_stablehlo_type, lower_get_calls};
     use sheaf_compiler::core::compiler::CompilerContext;
     use sheaf_compiler::{CodeGenerator, StableHLOEmitter, parse};
 
     if args.first().map(|a| a == "--help" || a == "-h").unwrap_or(false) {
         println!(
-            "Usage: sheaf build FILE -o OUTPUT [-S] [--backend BACKEND] [-v]
+            "Usage: sheaf build FILE -o OUTPUT [-S] [--config JSON] [--backend BACKEND] [-v]
 
     FILE            Input Sheaf source file (.shf)
     -o OUTPUT       Output file (.vmfb or .mlir with -S)
     -S              Emit MLIR only; do not invoke iree-compile
+    --config JSON   Shape config for dict params, e.g. '{{\"p\":{{\"l1\":{{\"W\":[2,8],\"b\":[8]}}}}}}'
     --backend B     IREE target backend (default: llvm-cpu)
     -v, --verbose   Verbose output
 
@@ -244,7 +246,7 @@ Set IREE_COMPILE=/path/to/iree-compile to override."
     let mut emit_mlir_only = false;
     let mut backend = "llvm-cpu".to_string();
     let mut verbose = false;
-    let function = "main".to_string();
+    let mut config_json: Option<serde_json::Value> = None;
 
     let mut i = 0;
     while i < args.len() {
@@ -267,6 +269,17 @@ Set IREE_COMPILE=/path/to/iree-compile to override."
                 backend = args[i].clone();
             }
             "-v" | "--verbose" => verbose = true,
+            "--config" => {
+                i += 1;
+                if i >= args.len() {
+                    eprintln!("sheaf build: --config requires a JSON argument");
+                    exit(1);
+                }
+                config_json = Some(serde_json::from_str(&args[i]).unwrap_or_else(|e| {
+                    eprintln!("sheaf build: --config: invalid JSON: {}", e);
+                    exit(1);
+                }));
+            }
             // Reject interpreter-only options explicitly
             "--trace" | "--guard" => {
                 eprintln!(
@@ -344,59 +357,133 @@ Set IREE_COMPILE=/path/to/iree-compile to override."
         println!("Generating StableHLO...");
     }
 
-    let mlir = if let Some(func_def) = compiler.registry.get(&function).cloned() {
-        let body = func_def.body_compiled.unwrap_or_else(|| {
-            eprintln!("error: function '{}' has no compiled body", function);
+    // Emit all user-defined functions in the registry as a single MLIR module.
+    // Functions from (use ...) imports are included only if they were defined
+    // in the source file itself (tracked via compiled_exprs).
+    let mut all_decls = extra_decls;
+
+    // Collect function names defined directly in this file (i.e. top-level defn forms)
+    let file_functions: Vec<String> = exprs
+        .iter()
+        .filter_map(|e| {
+            e.as_list()
+                .and_then(|l| l.first())
+                .and_then(|h| h.as_symbol())
+                .filter(|&s| s == "defn")
+                .and_then(|_| {
+                    e.as_list()
+                        .and_then(|l| l.get(1))
+                        .and_then(|n| n.as_symbol())
+                        .map(|s| s.to_string())
+                })
+        })
+        .collect();
+
+    if file_functions.is_empty() {
+        eprintln!("error: no functions defined in '{}'", input.display());
+        exit(1);
+    }
+
+    // Build per-param config from --config JSON:
+    // config_json top level: {"param_name": {dict structure}, ...}
+    // e.g. {"p": {"l1": {"W": [2,8], "b": [8]}, "l2": {"W": [8,1], "b": [1]}}}
+    let param_configs: Vec<(String, serde_json::Value)> = match &config_json {
+        Some(serde_json::Value::Object(map)) => map
+            .iter()
+            .map(|(k, v)| (k.clone(), v.clone()))
+            .collect(),
+        Some(_) => {
+            eprintln!("sheaf build: --config must be a JSON object {{\"param\": {{...}}}}");
             exit(1);
-        });
-        let sig = func_def.signature.unwrap_or_else(|| {
-            eprintln!("error: function '{}' has no inferred signature", function);
-            exit(1);
-        });
+        }
+        None => vec![],
+    };
+
+    for name in &file_functions {
+        let func_def = match compiler.registry.get(name).cloned() {
+            Some(f) => f,
+            None => continue,
+        };
+        let mut body = match func_def.body_compiled {
+            Some(b) => b,
+            None => {
+                if verbose { eprintln!("warning: '{}' has no compiled body, skipping", name); }
+                continue;
+            }
+        };
+        let mut sig = match func_def.signature {
+            Some(s) => s,
+            None => {
+                if verbose { eprintln!("warning: '{}' has no inferred signature, skipping", name); }
+                continue;
+            }
+        };
+
+        // Apply dict-to-tuple lowering for each configured param that appears
+        // in this function's parameter list.
+        let mut known_types: Vec<(String, sheaf_compiler::StableHLOType)> = Vec::new();
+        for (param_name, param_config) in &param_configs {
+            if !func_def.params.contains(param_name) {
+                continue;
+            }
+            let tuple_ty = match json_to_stablehlo_type(param_config) {
+                Ok(t) => t,
+                Err(e) => {
+                    eprintln!("sheaf build: --config error for '{}': {}", param_name, e);
+                    exit(1);
+                }
+            };
+            let index_map = build_index_map(param_config);
+            if verbose {
+                println!("  Lowering '{}' param '{}' → {}", name, param_name, tuple_ty.to_mlir());
+            }
+            body = lower_get_calls(&body, param_name, &index_map);
+            known_types.push((param_name.clone(), tuple_ty));
+        }
+
+        // Re-infer signature if we have new known types from the config
+        if !known_types.is_empty() {
+            use sheaf_compiler::core::inference::infer_function_signature_with_known;
+            sig = infer_function_signature_with_known(
+                &compiler,
+                &func_def.params,
+                &body,
+                &known_types,
+            ).unwrap_or_else(|e| {
+                eprintln!("type inference error in '{}': {}", name, e);
+                exit(1);
+            });
+            // Override param types for configured params (inference may default to scalar)
+            for (param_name, tuple_ty) in &known_types {
+                if let Some(idx) = func_def.params.iter().position(|p| p == param_name) {
+                    sig.param_types[idx] = tuple_ty.clone();
+                }
+            }
+        }
+
         let codegen = CodeGenerator::with_function_params(
             compiler.registry.clone(),
             &func_def.params,
             &sig.param_types,
         );
-        let main_decl = codegen
-            .emit_func_declaration(&function, &body, &sig.param_types, &sig.return_type)
-            .unwrap_or_else(|e| {
-                eprintln!("codegen error: {}", e);
-                exit(1);
-            });
-        let mut all_decls = extra_decls;
-        all_decls.push(main_decl);
-        StableHLOEmitter::emit_module(&all_decls)
-    } else if !extra_decls.is_empty() {
-        if verbose {
-            println!("'{}' found in module-level declarations", function);
+        match codegen.emit_func_declaration(name, &body, &sig.param_types, &sig.return_type) {
+            Ok(decl) => all_decls.push(decl),
+            Err(e) => {
+                if verbose {
+                    eprintln!("warning: skipping '{}': {}", name, e);
+                } else {
+                    eprintln!("warning: skipping '{}' (use -v for details)", name);
+                }
+            }
         }
-        StableHLOEmitter::emit_module(&extra_decls)
-    } else {
-        let standalone = exprs
-            .iter()
-            .find(|e| {
-                e.as_list()
-                    .and_then(|l| l.first())
-                    .and_then(|h| h.as_symbol())
-                    .map(|s| s != "defn" && s != "defparams")
-                    .unwrap_or(true)
-            })
-            .unwrap_or_else(|| {
-                eprintln!("error: no expression to compile in '{}'", input.display());
-                exit(1);
-            });
-        let compiled = compiler.compile(standalone).unwrap_or_else(|e| {
-            eprintln!("compilation error: {}", e);
-            exit(1);
-        });
-        CodeGenerator::with_registry(compiler.registry.clone())
-            .emit_function(&function, &compiled)
-            .unwrap_or_else(|e| {
-                eprintln!("codegen error: {}", e);
-                exit(1);
-            })
-    };
+    }
+
+    if all_decls.is_empty() {
+        eprintln!("error: nothing to emit from '{}'", input.display());
+        exit(1);
+    }
+
+    let mlir = StableHLOEmitter::emit_module(&all_decls);
 
     if emit_mlir_only {
         fs::write(&output, &mlir).unwrap_or_else(|e| {

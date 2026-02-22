@@ -145,10 +145,10 @@ fn binary_op(args: &[Value], op: fn(f64, f64) -> f64) -> R {
         if !matches!(arg, Value::Int(_) | Value::Float(_) | Value::Bool(_)) {
             any_tensor = true;
         }
-        if acc.shape() == &[] && b.shape() != &[] {
+        if acc.ndim() == 0 && b.ndim() != 0 {
             let scalar = *acc.first().unwrap();
             acc = b.mapv(|x| op(scalar, x));
-        } else if b.shape() == &[] && acc.shape() != &[] {
+        } else if b.ndim() == 0 && acc.ndim() != 0 {
             let scalar = *b.first().unwrap();
             acc = acc.mapv(|x| op(x, scalar));
         } else if acc.shape() == b.shape() {
@@ -172,7 +172,7 @@ fn binary_op(args: &[Value], op: fn(f64, f64) -> f64) -> R {
     if any_tensor {
         dt = Dtype::F32;
     }
-    if acc.shape() == &[] {
+    if acc.ndim() == 0 {
         let x = *acc.first().unwrap();
         if dt == Dtype::I32 && x == x.floor() {
             Ok(Value::Int(x as i64))
@@ -190,7 +190,7 @@ fn unary_op(args: &[Value], op: fn(f64) -> f64) -> R {
     }
     let (arr, _dt) = to_array(&args[0])?;
     let result = arr.mapv(op);
-    if result.shape() == &[] {
+    if result.ndim() == 0 {
         Ok(Value::Float(*result.first().unwrap()))
     } else {
         Ok(Value::Tensor { data: result, dtype: Dtype::F32 })
@@ -204,7 +204,7 @@ fn unary_op_f32(args: &[Value], op: fn(f32) -> f32) -> R {
     }
     let (arr, _dt) = to_array(&args[0])?;
     let result = arr.mapv(|x| op(x as f32) as f64);
-    if result.shape() == &[] {
+    if result.ndim() == 0 {
         Ok(Value::Float(*result.first().unwrap()))
     } else {
         Ok(Value::Tensor { data: result, dtype: Dtype::F32 })
@@ -223,7 +223,7 @@ fn builtin_sub(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
         // Unary negation
         let (arr, dt) = to_array(&args[0])?;
         let result = arr.mapv(|x| -x);
-        if result.shape() == &[] {
+        if result.ndim() == 0 {
             let x = *result.first().unwrap();
             if dt == Dtype::I32 { return Ok(Value::Int(x as i64)); }
             return Ok(Value::Float(x));
@@ -455,17 +455,17 @@ fn cmp_op(args: &[Value], op: fn(f64, f64) -> f64, _dt: Dtype) -> R {
     let (a, _) = to_array(&args[0])?;
     let (b, _) = to_array(&args[1])?;
     // Broadcast
-    if a.shape() == &[] && b.shape() != &[] {
+    if a.ndim() == 0 && b.ndim() != 0 {
         let scalar = *a.first().unwrap();
         let result = b.mapv(|x| op(scalar, x));
         return Ok(bool_tensor(result));
     }
-    if b.shape() == &[] && a.shape() != &[] {
+    if b.ndim() == 0 && a.ndim() != 0 {
         let scalar = *b.first().unwrap();
         let result = a.mapv(|x| op(x, scalar));
         return Ok(bool_tensor(result));
     }
-    if a.shape() == &[] && b.shape() == &[] {
+    if a.ndim() == 0 && b.ndim() == 0 {
         let r = op(*a.first().unwrap(), *b.first().unwrap());
         return Ok(Value::Bool(r != 0.0));
     }
@@ -634,7 +634,7 @@ fn builtin_leaky_relu(args: &[Value], kw: &BTreeMap<String, Value>) -> R {
         let xf = x as f32;
         (if xf > 0.0 { xf } else { slope * xf }) as f64
     });
-    if result.shape() == &[] {
+    if result.ndim() == 0 {
         Ok(Value::Float(*result.first().unwrap()))
     } else {
         Ok(Value::Tensor { data: result, dtype: Dtype::F32 })
@@ -667,7 +667,7 @@ fn builtin_selu(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
         let xf = x as f32;
         (if xf > 0.0 { scale * xf } else { scale * alpha * (xf.exp() - 1.0) }) as f64
     });
-    if result.shape() == &[] {
+    if result.ndim() == 0 {
         Ok(Value::Float(*result.first().unwrap()))
     } else {
         Ok(Value::Tensor { data: result, dtype: Dtype::F32 })
@@ -681,7 +681,7 @@ fn builtin_celu(args: &[Value], kw: &BTreeMap<String, Value>) -> R {
         let xf = x as f32;
         (if xf > 0.0 { xf } else { alpha * ((xf / alpha).exp() - 1.0) }) as f64
     });
-    if result.shape() == &[] {
+    if result.ndim() == 0 {
         Ok(Value::Float(*result.first().unwrap()))
     } else {
         Ok(Value::Tensor { data: result, dtype: Dtype::F32 })
@@ -1073,10 +1073,10 @@ fn builtin_where(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
     let (cond, _) = to_array(&args[0])?;
     let (on_true, _) = to_array(&args[1])?;
     let (on_false, _) = to_array(&args[2])?;
-    let on_true_bc = if on_true.shape() == &[] {
+    let on_true_bc = if on_true.ndim() == 0 {
         ArrayD::from_elem(cond.raw_dim(), *on_true.first().unwrap())
     } else { on_true };
-    let on_false_bc = if on_false.shape() == &[] {
+    let on_false_bc = if on_false.ndim() == 0 {
         ArrayD::from_elem(cond.raw_dim(), *on_false.first().unwrap())
     } else { on_false };
     let result = ndarray::Zip::from(&cond).and(&on_true_bc).and(&on_false_bc)
