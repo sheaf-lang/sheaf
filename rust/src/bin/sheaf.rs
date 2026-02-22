@@ -324,6 +324,9 @@ Set IREE_COMPILE=/path/to/iree-compile to override."
     }
 
     let mut compiler = CompilerContext::new();
+    if let Some(dir) = input.canonicalize().ok().and_then(|p| p.parent().map(|d| d.to_path_buf())) {
+        compiler.current_dir = Some(dir);
+    }
     let mut compiled_exprs = Vec::new();
     for expr in &exprs {
         match compiler.compile(expr) {
