@@ -220,7 +220,9 @@ fn run_build(args: &[String]) {
     use std::path::PathBuf;
     use std::process::Command;
 
-    use sheaf_compiler::compiler::{build_index_map, json_to_stablehlo_type, lower_get_calls};
+    use sheaf_compiler::compiler::{
+        build_index_map, collect_effects, format_effects, json_to_stablehlo_type, lower_get_calls,
+    };
     use sheaf_compiler::core::compiler::CompilerContext;
     use sheaf_compiler::{CodeGenerator, StableHLOEmitter, parse};
 
@@ -418,6 +420,18 @@ Set IREE_COMPILE=/path/to/iree-compile to override."
                 continue;
             }
         };
+
+        // Refuse functions with side effects: they cannot be emitted as StableHLO.
+        let effects = collect_effects(&body);
+        if !effects.is_empty() {
+            eprintln!(
+                "error: '{}' has side effects ({}) and cannot be compiled",
+                name,
+                format_effects(&effects)
+            );
+            eprintln!("  Only side-effect-free functions can be compiled to StableHLO.");
+            exit(1);
+        }
 
         // Apply dict-to-tuple lowering for each configured param that appears
         // in this function's parameter list.
