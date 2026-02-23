@@ -1003,6 +1003,28 @@ impl StableHLOEmitter {
         reg
     }
 
+    /// Pack registers into a stablehlo.tuple.
+    pub fn emit_tuple(
+        &mut self,
+        regs: &[Register],
+        types: &[StableHLOType],
+    ) -> (Register, StableHLOType) {
+        let reg = self.fresh_register();
+        let operands = regs
+            .iter()
+            .map(|r| r.to_mlir())
+            .collect::<Vec<_>>()
+            .join(", ");
+        let tuple_ty = StableHLOType::Tuple(types.to_vec());
+        self.body.push(format!(
+            "    {} = stablehlo.tuple {} : {}",
+            reg.to_mlir(),
+            operands,
+            tuple_ty.to_mlir()
+        ));
+        (reg, tuple_ty)
+    }
+
     /// Emit stablehlo.reduce to compute sum along one axis.
     ///
     /// input: tensor<...xf32>, axis: which dimension to reduce

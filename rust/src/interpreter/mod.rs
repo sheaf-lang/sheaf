@@ -111,6 +111,19 @@ pub fn eval(expr: &CompiledExpr, env: &mut Env) -> Result<Value, SheafError> {
             )))
         }
 
+        CompiledExpr::InlineValueAndGrad { lambda, args, .. } => {
+            // Evaluate the lambda to get the function value
+            let func = eval(lambda, env)?;
+            // Evaluate args
+            let mut evaluated_args = Vec::new();
+            for arg in args {
+                evaluated_args.push(eval(arg, env)?);
+            }
+            // Use the same HOF path: wrap in vag closure, then call it
+            let vag = eval_value_and_grad_hof(&[func], env)?;
+            call_function(&vag, &evaluated_args, env)
+        }
+
         CompiledExpr::Repeat { index_var, count, acc_var, acc_init, body } => {
             let n = match eval(count, env)? {
                 Value::Int(n) => n,

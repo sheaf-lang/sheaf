@@ -3,6 +3,7 @@
 
 //! Code generation - translate CompiledExpr to StableHLO MLIR
 
+use crate::autodiff::grad_simplified;
 use crate::compiler::stablehlo::{Register, StableHLOEmitter, StableHLOType};
 use crate::core::compiler::CompiledExpr;
 use crate::core::error::{SheafError, SheafResult};
@@ -157,12 +158,41 @@ impl CodeGenerator {
 
             CompiledExpr::Let { bindings, body } => {
                 let mut lambda_names = Vec::new();
+                let mut destructured_names: Vec<String> = Vec::new();
                 for (name, value_expr) in bindings {
                     if matches!(value_expr, CompiledExpr::Lambda { .. }) {
                         // Store lambda for inlining — no SSA emitted.
                         self.lambda_bindings
                             .insert(name.clone(), value_expr.clone());
                         lambda_names.push(name.clone());
+                    } else if name.starts_with('[') && name.ends_with(']') {
+                        // Destructuring bind: [a b c] = tuple → get_tuple_element
+                        let names: Vec<&str> =
+                            name[1..name.len() - 1].split_whitespace().collect();
+                        let (tuple_reg, tuple_ty) = self.generate(value_expr)?;
+                        let element_types = match &tuple_ty {
+                            StableHLOType::Tuple(tys) => tys.clone(),
+                            other => {
+                                return Err(SheafError::Compile {
+                                    message: format!(
+                                        "Let destructuring requires a tuple, got: {}",
+                                        other.to_mlir()
+                                    ),
+                                    location: crate::core::error::SourceLocation::unknown(),
+                                })
+                            }
+                        };
+                        for (i, n) in names.iter().enumerate() {
+                            let elem_reg = self.emitter.emit_get_tuple_element(
+                                &tuple_reg,
+                                &tuple_ty,
+                                i,
+                                &element_types[i],
+                            );
+                            self.bindings
+                                .insert(n.to_string(), (elem_reg, element_types[i].clone()));
+                            destructured_names.push(n.to_string());
+                        }
                     } else {
                         let (reg, ty) = self.generate(value_expr)?;
                         self.bindings.insert(name.clone(), (reg, ty));
@@ -175,6 +205,9 @@ impl CodeGenerator {
                 }
                 for name in &lambda_names {
                     self.lambda_bindings.remove(name);
+                }
+                for name in &destructured_names {
+                    self.bindings.remove(name);
                 }
                 Ok(result)
             }
@@ -238,6 +271,17 @@ impl CodeGenerator {
                 ),
                 location: crate::core::error::SourceLocation::unknown(),
             }),
+
+            CompiledExpr::InlineValueAndGrad {
+                lambda,
+                args,
+                wrt_indices,
+            } => {
+                let lambda = lambda.clone();
+                let args = args.clone();
+                let wrt_indices = wrt_indices.clone();
+                self.generate_inline_value_and_grad(&lambda, &args, &wrt_indices)
+            }
 
             _ => Err(SheafError::Compile {
                 message: format!("Code generation not yet implemented for: {:?}", expr),
@@ -718,6 +762,64 @@ impl CodeGenerator {
         let result = self.generate(&body);
         self.bindings = saved;
         result
+    }
+
+    /// Inline value-and-grad: forward pass + symbolic backward passes → tuple.
+    fn generate_inline_value_and_grad(
+        &mut self,
+        lambda: &CompiledExpr,
+        args: &[CompiledExpr],
+        wrt_indices: &[usize],
+    ) -> SheafResult<(Register, StableHLOType)> {
+        let (params, body) = match lambda {
+            CompiledExpr::Lambda { params, body } => (params, body),
+            _ => {
+                return Err(SheafError::Compile {
+                    message: "InlineValueAndGrad: expected lambda".to_string(),
+                    location: crate::core::error::SourceLocation::unknown(),
+                })
+            }
+        };
+
+        // Generate argument values
+        let mut arg_regs = Vec::new();
+        let mut arg_tys = Vec::new();
+        for arg in args {
+            let (reg, ty) = self.generate(arg)?;
+            arg_regs.push(reg);
+            arg_tys.push(ty);
+        }
+
+        // Bind lambda params → arg registers
+        let saved = self.bindings.clone();
+        for (param, (reg, ty)) in params.iter().zip(arg_regs.iter().zip(arg_tys.iter())) {
+            self.bindings
+                .insert(param.clone(), (reg.clone(), ty.clone()));
+        }
+
+        // Forward pass
+        let (loss_reg, loss_ty) = self.generate(body)?;
+
+        // Backward passes
+        let mut grad_regs = Vec::new();
+        let mut grad_tys = Vec::new();
+        for &idx in wrt_indices {
+            let grad_expr = grad_simplified(body, &params[idx]);
+            let (grad_reg, grad_ty) = self.generate(&grad_expr)?;
+            grad_regs.push(grad_reg);
+            grad_tys.push(grad_ty);
+        }
+
+        // Restore bindings
+        self.bindings = saved;
+
+        // Pack into tuple: (loss, grad0, grad1, ...)
+        let mut all_regs = vec![loss_reg];
+        all_regs.extend(grad_regs);
+        let mut all_tys = vec![loss_ty];
+        all_tys.extend(grad_tys);
+
+        Ok(self.emitter.emit_tuple(&all_regs, &all_tys))
     }
 
     /// Emit a complete function module

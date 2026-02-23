@@ -211,11 +211,27 @@ impl CompilerContext {
                     // Head is not a symbol — compile it and treat as lambda call.
                     // e.g. ((fn [x] (+ x 1)) 10)
                     let callee = self.compile(&elements[0])?;
-                    let args: SheafResult<Vec<CompiledExpr>> =
+                    let call_args: SheafResult<Vec<CompiledExpr>> =
                         elements[1..].iter().map(|a| self.compile(a)).collect();
+                    let call_args = call_args?;
+
+                    // Detect ((value-and-grad f) args) HOF pattern
+                    if let CompiledExpr::FunctionCall { name, args: inner } = &callee {
+                        if name == "__value-and-grad-hof__" && inner.len() == 1 {
+                            if let CompiledExpr::Lambda { params, .. } = &inner[0] {
+                                let wrt_indices = (0..params.len()).collect();
+                                return Ok(CompiledExpr::InlineValueAndGrad {
+                                    lambda: Box::new(inner[0].clone()),
+                                    args: call_args,
+                                    wrt_indices,
+                                });
+                            }
+                        }
+                    }
+
                     Ok(CompiledExpr::LambdaCall {
                         callee: Box::new(callee),
-                        args: args?,
+                        args: call_args,
                     })
                 }
             }
@@ -440,6 +456,14 @@ pub enum CompiledExpr {
         src_fn_name: String,
         wrt_params: Vec<String>,
         shape_config: Vec<(String, Vec<i64>)>,
+    },
+    /// Inline value-and-grad: compile-time resolved HOF form.
+    /// Produced when the compiler detects `((value-and-grad (fn [p] body)) args)`.
+    /// Codegen performs forward pass + symbolic autodiff + tuple packing inline.
+    InlineValueAndGrad {
+        lambda: Box<CompiledExpr>,
+        args: Vec<CompiledExpr>,
+        wrt_indices: Vec<usize>,
     },
     /// Counted loop with accumulator: (repeat [i n] [acc init] body)
     /// Evaluates body `n` times, binding loop index to `i` and accumulator to `acc`.
