@@ -8,7 +8,8 @@ pub mod value_and_grad;
 // `grad(expr, wrt)` returns a new `CompiledExpr` representing dL/d(wrt),
 // assuming `expr` is the scalar loss (so the incoming gradient is 1.0).
 
-use crate::core::compiler::CompiledExpr;
+use crate::core::compiler::{CompiledExpr, FunctionDef};
+use std::collections::HashMap;
 
 // helpers
 fn call(name: &str, args: Vec<CompiledExpr>) -> CompiledExpr {
@@ -322,6 +323,118 @@ fn grad_function_call(
 pub fn grad_simplified(expr: &CompiledExpr, wrt: &str) -> CompiledExpr {
     let g = grad(expr, wrt, None);
     simplify(g)
+}
+
+/// Inline user-defined function calls so that autodiff can see through them.
+///
+/// Replaces `FunctionCall("f", [a, b])` where `f` is in `registry` with:
+///   `Let { bindings: [(p1, a), (p2, b)], body: f.body_compiled }`
+///
+/// Recurses into the result (the inlined body may itself contain calls).
+/// `depth` guards against infinite recursion (mutual/self-recursive functions).
+pub fn inline_function_calls(
+    expr: &CompiledExpr,
+    registry: &HashMap<String, FunctionDef>,
+) -> CompiledExpr {
+    inline_calls_rec(expr, registry, 0)
+}
+
+const MAX_INLINE_DEPTH: usize = 16;
+
+fn inline_calls_rec(
+    expr: &CompiledExpr,
+    registry: &HashMap<String, FunctionDef>,
+    depth: usize,
+) -> CompiledExpr {
+    if depth > MAX_INLINE_DEPTH {
+        return expr.clone();
+    }
+
+    match expr {
+        CompiledExpr::FunctionCall { name, args } => {
+            // First, inline in arguments
+            let inlined_args: Vec<CompiledExpr> = args
+                .iter()
+                .map(|a| inline_calls_rec(a, registry, depth))
+                .collect();
+
+            // Try to inline this call if it's a user-defined function
+            if let Some(func_def) = registry.get(name.as_str()) {
+                if let Some(body) = &func_def.body_compiled {
+                    let bindings: Vec<(String, CompiledExpr)> = func_def
+                        .params
+                        .iter()
+                        .zip(inlined_args.iter())
+                        .map(|(p, a)| (p.clone(), a.clone()))
+                        .collect();
+                    let inlined = CompiledExpr::Let {
+                        bindings,
+                        body: Box::new(body.clone()),
+                    };
+                    // Recurse into the inlined body
+                    return inline_calls_rec(&inlined, registry, depth + 1);
+                }
+            }
+
+            CompiledExpr::FunctionCall {
+                name: name.clone(),
+                args: inlined_args,
+            }
+        }
+
+        CompiledExpr::Let { bindings, body } => {
+            let new_bindings: Vec<(String, CompiledExpr)> = bindings
+                .iter()
+                .map(|(k, v)| (k.clone(), inline_calls_rec(v, registry, depth)))
+                .collect();
+            CompiledExpr::Let {
+                bindings: new_bindings,
+                body: Box::new(inline_calls_rec(body, registry, depth)),
+            }
+        }
+
+        CompiledExpr::Do(exprs) => CompiledExpr::Do(
+            exprs
+                .iter()
+                .map(|e| inline_calls_rec(e, registry, depth))
+                .collect(),
+        ),
+
+        CompiledExpr::If {
+            condition,
+            then_branch,
+            else_branch,
+        } => CompiledExpr::If {
+            condition: Box::new(inline_calls_rec(condition, registry, depth)),
+            then_branch: Box::new(inline_calls_rec(then_branch, registry, depth)),
+            else_branch: else_branch
+                .as_ref()
+                .map(|e| Box::new(inline_calls_rec(e, registry, depth))),
+        },
+
+        CompiledExpr::Lambda { params, body } => CompiledExpr::Lambda {
+            params: params.clone(),
+            body: Box::new(inline_calls_rec(body, registry, depth)),
+        },
+
+        CompiledExpr::LambdaCall { callee, args } => CompiledExpr::LambdaCall {
+            callee: Box::new(inline_calls_rec(callee, registry, depth)),
+            args: args
+                .iter()
+                .map(|a| inline_calls_rec(a, registry, depth))
+                .collect(),
+        },
+
+        CompiledExpr::Vector(elems) => CompiledExpr::Vector(
+            elems
+                .iter()
+                .map(|e| inline_calls_rec(e, registry, depth))
+                .collect(),
+        ),
+
+        // Leaves: no recursion needed
+        _ => expr.clone(),
+    }
 }
 
 /// Common Subexpression Elimination.

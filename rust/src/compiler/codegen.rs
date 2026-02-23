@@ -3,7 +3,7 @@
 
 //! Code generation - translate CompiledExpr to StableHLO MLIR
 
-use crate::autodiff::grad_simplified;
+use crate::autodiff::{grad_simplified, inline_function_calls};
 use crate::compiler::stablehlo::{Register, StableHLOEmitter, StableHLOType};
 use crate::core::compiler::CompiledExpr;
 use crate::core::error::{SheafError, SheafResult};
@@ -157,14 +157,13 @@ impl CodeGenerator {
             CompiledExpr::FunctionCall { name, args } => self.generate_function_call(name, args),
 
             CompiledExpr::Let { bindings, body } => {
-                let mut lambda_names = Vec::new();
-                let mut destructured_names: Vec<String> = Vec::new();
+                let saved_bindings = self.bindings.clone();
+                let saved_lambda_bindings = self.lambda_bindings.clone();
                 for (name, value_expr) in bindings {
                     if matches!(value_expr, CompiledExpr::Lambda { .. }) {
                         // Store lambda for inlining — no SSA emitted.
                         self.lambda_bindings
                             .insert(name.clone(), value_expr.clone());
-                        lambda_names.push(name.clone());
                     } else if name.starts_with('[') && name.ends_with(']') {
                         // Destructuring bind: [a b c] = tuple → get_tuple_element
                         let names: Vec<&str> =
@@ -191,7 +190,6 @@ impl CodeGenerator {
                             );
                             self.bindings
                                 .insert(n.to_string(), (elem_reg, element_types[i].clone()));
-                            destructured_names.push(n.to_string());
                         }
                     } else {
                         let (reg, ty) = self.generate(value_expr)?;
@@ -199,16 +197,8 @@ impl CodeGenerator {
                     }
                 }
                 let result = self.generate(body)?;
-                // Clean up (proper scoping)
-                for (name, _) in bindings {
-                    self.bindings.remove(name);
-                }
-                for name in &lambda_names {
-                    self.lambda_bindings.remove(name);
-                }
-                for name in &destructured_names {
-                    self.bindings.remove(name);
-                }
+                self.bindings = saved_bindings;
+                self.lambda_bindings = saved_lambda_bindings;
                 Ok(result)
             }
 
@@ -797,14 +787,17 @@ impl CodeGenerator {
                 .insert(param.clone(), (reg.clone(), ty.clone()));
         }
 
+        // Inline user-defined functions so autodiff can differentiate through them
+        let inlined_body = inline_function_calls(body, &self.function_registry);
+
         // Forward pass
-        let (loss_reg, loss_ty) = self.generate(body)?;
+        let (loss_reg, loss_ty) = self.generate(&inlined_body)?;
 
         // Backward passes
         let mut grad_regs = Vec::new();
         let mut grad_tys = Vec::new();
         for &idx in wrt_indices {
-            let grad_expr = grad_simplified(body, &params[idx]);
+            let grad_expr = grad_simplified(&inlined_body, &params[idx]);
             let (grad_reg, grad_ty) = self.generate(&grad_expr)?;
             grad_regs.push(grad_reg);
             grad_tys.push(grad_ty);
