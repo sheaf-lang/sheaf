@@ -774,6 +774,12 @@ impl StableHLOEmitter {
 
         // Compute result shape by applying permutation
         let operand_shape = operand_ty.shape();
+
+        // Transpose of a scalar or 1D is identity
+        if operand_shape.len() <= 1 {
+            return (operand.clone(), operand_ty.clone());
+        }
+
         let result_shape: Vec<i64> = permutation
             .iter()
             .map(|&i| operand_shape[i as usize])
@@ -1111,6 +1117,12 @@ impl StableHLOEmitter {
     ) -> (Register, StableHLOType) {
         let shape = input_ty.shape();
         let ndim = shape.len();
+
+        // mean of a scalar is identity
+        if ndim == 0 {
+            return (input.clone(), input_ty.clone());
+        }
+
         let axis_usize = if axis < 0 {
             (ndim as i64 + axis) as usize
         } else {
