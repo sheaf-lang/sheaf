@@ -73,56 +73,17 @@ impl CodeGenerator {
             }
 
             CompiledExpr::Vector(elements) => {
-                // Check if this is a nested vector representing a 2D tensor
-                if let Some(CompiledExpr::Vector(_)) = elements.first() {
-                    // This is a 2D tensor like [[1.0, 2.0], [3.0, 4.0]]
-                    let mut rows: Vec<Vec<f64>> = Vec::new();
-
-                    for elem in elements {
-                        if let CompiledExpr::Vector(row_elems) = elem {
-                            let mut row: Vec<f64> = Vec::new();
-                            for val in row_elems {
-                                match val {
-                                    CompiledExpr::Float(x) => row.push(*x),
-                                    CompiledExpr::Integer(n) => row.push(*n as f64),
-                                    _ => {
-                                        return Err(SheafError::Compile {
-                                            message: "Tensor elements must be numbers".to_string(),
-                                            location: crate::core::error::SourceLocation::unknown(),
-                                        });
-                                    }
-                                }
-                            }
-                            rows.push(row);
-                        } else {
-                            return Err(SheafError::Compile {
-                                message: "Invalid tensor structure".to_string(),
-                                location: crate::core::error::SourceLocation::unknown(),
-                            });
-                        }
+                match try_flatten_to_constant(elements) {
+                    Some((data, shape)) => {
+                        let (reg, ty) = self.emitter.emit_nd_tensor_constant(&data, &shape);
+                        Ok((reg, ty))
                     }
-
-                    let (reg, ty) = self.emitter.emit_tensor_constant(&rows);
-                    Ok((reg, ty))
-                } else {
-                    // 1D vector - treat as a row vector (1xN tensor)
-                    let mut values: Vec<f64> = Vec::new();
-                    for elem in elements {
-                        match elem {
-                            CompiledExpr::Float(x) => values.push(*x),
-                            CompiledExpr::Integer(n) => values.push(*n as f64),
-                            _ => {
-                                return Err(SheafError::Compile {
-                                    message:
-                                        "Vector elements must be numbers for tensor conversion"
-                                            .to_string(),
-                                    location: crate::core::error::SourceLocation::unknown(),
-                                });
-                            }
-                        }
-                    }
-                    let (reg, ty) = self.emitter.emit_tensor_constant(&vec![values]);
-                    Ok((reg, ty))
+                    None => Err(SheafError::Compile {
+                        message: "Vector contains non-constant expressions; \
+                                  cannot emit as tensor constant"
+                            .to_string(),
+                        location: crate::core::error::SourceLocation::unknown(),
+                    }),
                 }
             }
 
@@ -812,6 +773,63 @@ impl CodeGenerator {
 impl Default for CodeGenerator {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+/// Try to flatten a `Vector` of `CompiledExpr` into a constant tensor.
+///
+/// Returns `Some((flat_data, shape))` if every leaf is a numeric literal
+/// (Float or Integer) and all sub-vectors have consistent dimensions.
+/// Returns `None` if any element is a non-literal expression (Symbol,
+/// FunctionCall, etc.) — the caller should then emit a tuple or report
+/// an error.
+///
+/// Works recursively for arbitrary nesting depth:
+///   `[1.0 2.0]`                  → `([1.0, 2.0], [2])`
+///   `[[1.0 2.0] [3.0 4.0]]`     → `([1.0, 2.0, 3.0, 4.0], [2, 2])`
+///   `[[[1] [2]] [[3] [4]]]`     → `([1.0, 2.0, 3.0, 4.0], [2, 2, 1])`
+fn try_flatten_to_constant(elements: &[CompiledExpr]) -> Option<(Vec<f64>, Vec<i64>)> {
+    if elements.is_empty() {
+        return Some((vec![], vec![0]));
+    }
+
+    match &elements[0] {
+        CompiledExpr::Float(_) | CompiledExpr::Integer(_) => {
+            // Leaf level: all elements must be numeric
+            let mut data = Vec::with_capacity(elements.len());
+            for e in elements {
+                match e {
+                    CompiledExpr::Float(x) => data.push(*x),
+                    CompiledExpr::Integer(n) => data.push(*n as f64),
+                    _ => return None,
+                }
+            }
+            Some((data, vec![elements.len() as i64]))
+        }
+        CompiledExpr::Vector(_) => {
+            // Nested: recurse into each sub-vector, check shapes are uniform
+            let mut all_data = Vec::new();
+            let mut inner_shape: Option<Vec<i64>> = None;
+
+            for e in elements {
+                let sub = match e {
+                    CompiledExpr::Vector(sub_elems) => try_flatten_to_constant(sub_elems)?,
+                    _ => return None, // mixed Vector / non-Vector
+                };
+                let (sub_data, sub_shape) = sub;
+                match &inner_shape {
+                    None => inner_shape = Some(sub_shape),
+                    Some(expected) if *expected != sub_shape => return None, // ragged
+                    _ => {}
+                }
+                all_data.extend(sub_data);
+            }
+
+            let mut shape = vec![elements.len() as i64];
+            shape.extend(inner_shape.unwrap_or_default());
+            Some((all_data, shape))
+        }
+        _ => None,
     }
 }
 

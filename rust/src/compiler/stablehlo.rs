@@ -228,6 +228,38 @@ impl StableHLOEmitter {
         (reg, ty)
     }
 
+    /// Emit an N-dimensional tensor constant from flat data and a shape.
+    ///
+    /// `data` contains all elements in row-major order.
+    /// `shape` is the tensor shape, e.g. `[4, 2]` for a 4x2 matrix.
+    ///
+    /// Generates `stablehlo.constant dense<[[[...]]]> : tensor<4x2xf32>` with
+    /// the correct nesting depth matching the number of dimensions.
+    pub fn emit_nd_tensor_constant(
+        &mut self,
+        data: &[f64],
+        shape: &[i64],
+    ) -> (Register, StableHLOType) {
+        let reg = self.fresh_register();
+        let ty = StableHLOType::f32_tensor(shape.to_vec());
+
+        let values_str = if shape.is_empty() {
+            // Scalar
+            format_f64(data[0])
+        } else {
+            format_dense_attr(data, shape, 0)
+        };
+
+        self.body.push(format!(
+            "    {} = stablehlo.constant dense<{}> : {}",
+            reg.to_mlir(),
+            values_str,
+            ty.to_mlir()
+        ));
+
+        (reg, ty)
+    }
+
     /// Emit a binary operation with broadcasting support
     pub fn emit_binop(
         &mut self,
@@ -1515,5 +1547,32 @@ mod tests {
         let mlir = emitter.emit_function("pi", &expr);
 
         assert!(mlir.contains("dense<3.14>"));
+    }
+}
+
+fn format_f64(v: f64) -> String {
+    if v.fract() == 0.0 && v.is_finite() {
+        format!("{:.1}", v)
+    } else {
+        format!("{}", v)
+    }
+}
+
+/// Recursively format flat data into MLIR dense attribute nesting.
+///
+/// For shape `[2, 3]` and data `[1,2,3,4,5,6]`:
+///   `[[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]`
+fn format_dense_attr(data: &[f64], shape: &[i64], dim: usize) -> String {
+    if dim == shape.len() - 1 {
+        let n = shape[dim] as usize;
+        let vals: Vec<String> = data[..n].iter().map(|&v| format_f64(v)).collect();
+        format!("[{}]", vals.join(", "))
+    } else {
+        let stride: usize = shape[dim + 1..].iter().map(|&d| d as usize).product();
+        let n = shape[dim] as usize;
+        let subs: Vec<String> = (0..n)
+            .map(|i| format_dense_attr(&data[i * stride..], shape, dim + 1))
+            .collect();
+        format!("[{}]", subs.join(", "))
     }
 }

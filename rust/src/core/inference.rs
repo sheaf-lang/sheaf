@@ -321,21 +321,7 @@ fn infer_type(expr: &CompiledExpr) -> SheafResult<StableHLOType> {
         CompiledExpr::Boolean(_) => Ok(StableHLOType::scalar_f32()), // For now
 
         CompiledExpr::Vector(elements) => {
-            if elements.is_empty() {
-                return Ok(StableHLOType::scalar_f32());
-            }
-
-            // Check if it's a nested vector (matrix)
-            if let CompiledExpr::Vector(row) = &elements[0] {
-                // 2D tensor
-                let rows = elements.len() as i64;
-                let cols = row.len() as i64;
-                Ok(StableHLOType::f32_tensor(vec![rows, cols]))
-            } else {
-                // 1D vector - treat as row vector [1xN]
-                let len = elements.len() as i64;
-                Ok(StableHLOType::f32_tensor(vec![1, len]))
-            }
+            Ok(StableHLOType::f32_tensor(infer_vector_shape(elements)))
         }
 
         CompiledExpr::FunctionCall { name, args } => infer_function_call_type(name, args),
@@ -372,6 +358,25 @@ fn infer_type(expr: &CompiledExpr) -> SheafResult<StableHLOType> {
         }
 
         _ => Ok(StableHLOType::scalar_f32()), // Default fallback
+    }
+}
+
+/// Recursively infer the shape of a vector literal.
+///
+/// `[1.0 2.0 3.0]`             → `[3]`
+/// `[[1.0 2.0] [3.0 4.0]]`     → `[2, 2]`
+/// `[[[1] [2]] [[3] [4]]]`     → `[2, 2, 1]`
+fn infer_vector_shape(elements: &[CompiledExpr]) -> Vec<i64> {
+    if elements.is_empty() {
+        return vec![0];
+    }
+    match &elements[0] {
+        CompiledExpr::Vector(inner) => {
+            let mut shape = vec![elements.len() as i64];
+            shape.extend(infer_vector_shape(inner));
+            shape
+        }
+        _ => vec![elements.len() as i64],
     }
 }
 
