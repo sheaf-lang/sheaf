@@ -28,12 +28,13 @@ impl SpecialForm for DefnForm {
         let name = expect_symbol(&args[0], "defn name", loc)?;
         let params_vec = expect_vector(&args[1], "defn parameters", loc)?;
 
-        // Extract parameter names, handling typed params: (p :as TypeName)
-        // Each element is either:
-        //   - a symbol: simple param  e.g. `x`
-        //   - a list (p :as TypeName): typed param
+        // Extract parameter names, handling typed params:
+        //   - symbol: simple param  e.g. `x`
+        //   - (p :as TypeName): defparams-typed param
+        //   - (x [4 2]): shape-annotated param → tensor<4x2xf32>
         let mut params: Vec<String> = Vec::new();
         let mut type_annotations: Vec<(String, String)> = Vec::new(); // (param, type_name)
+        let mut shape_annotations: Vec<(String, Vec<i64>)> = Vec::new(); // (param, shape)
 
         for p in params_vec {
             match p {
@@ -41,12 +42,13 @@ impl SpecialForm for DefnForm {
                 SheafValue::Symbol(s, _) => {
                     params.push(s.clone());
                 }
-                // Typed param: (p :as TypeName) - a list with 3 elements
+                // Typed or shape-annotated param: a list
                 SheafValue::List(elems, inner_loc) => {
                     if elems.len() == 3 {
+                        // (p :as TypeName)
                         let pname = expect_symbol(&elems[0], "typed param name", inner_loc)?;
-                        let as_kw = match &elems[1] {
-                            SheafValue::Keyword(k, _) if k == "as" => k,
+                        match &elems[1] {
+                            SheafValue::Keyword(k, _) if k == "as" => {}
                             other => {
                                 return Err(SheafError::Compile {
                                     message: format!(
@@ -57,14 +59,44 @@ impl SpecialForm for DefnForm {
                                 });
                             }
                         };
-                        let _ = as_kw; // used for validation above
                         let type_name = expect_symbol(&elems[2], "param type name", inner_loc)?;
                         params.push(pname.to_string());
                         type_annotations.push((pname.to_string(), type_name.to_string()));
+                    } else if elems.len() == 2 {
+                        // (x [4 2]) — shape annotation
+                        let pname = expect_symbol(&elems[0], "shape-annotated param name", inner_loc)?;
+                        let shape = match &elems[1] {
+                            SheafValue::Vector(dims, dim_loc) => {
+                                dims.iter()
+                                    .map(|d| match d {
+                                        SheafValue::Float(n, _) => Ok(*n as i64),
+                                        SheafValue::Integer(n, _) => Ok(*n),
+                                        other => Err(SheafError::Compile {
+                                            message: format!(
+                                                "defn shape annotation: expected integer dimension, got {}",
+                                                other
+                                            ),
+                                            location: dim_loc.clone(),
+                                        }),
+                                    })
+                                    .collect::<SheafResult<Vec<i64>>>()?
+                            }
+                            other => {
+                                return Err(SheafError::Compile {
+                                    message: format!(
+                                        "defn param: expected shape vector [dim ...], got {}",
+                                        other
+                                    ),
+                                    location: inner_loc.clone(),
+                                });
+                            }
+                        };
+                        params.push(pname.to_string());
+                        shape_annotations.push((pname.to_string(), shape));
                     } else {
                         return Err(SheafError::Compile {
                             message: format!(
-                                "defn param: expected (name :as Type), got list with {} elements",
+                                "defn param: expected (name :as Type) or (name [shape]), got list with {} elements",
                                 elems.len()
                             ),
                             location: inner_loc.clone(),
@@ -74,7 +106,7 @@ impl SpecialForm for DefnForm {
                 other => {
                     return Err(SheafError::Compile {
                         message: format!(
-                            "defn param: expected symbol or (name :as Type), got {}",
+                            "defn param: expected symbol, (name :as Type), or (name [shape]), got {}",
                             other
                         ),
                         location: loc.clone(),
@@ -107,7 +139,7 @@ impl SpecialForm for DefnForm {
         // Restore local scope
         compiler.local_vars = saved_locals;
 
-        // Build known param types from defparams annotations
+        // Build known param types from defparams and shape annotations
         let mut known_param_types: Vec<(String, crate::compiler::stablehlo::StableHLOType)> =
             Vec::new();
         for (param, type_name) in &type_annotations {
@@ -115,6 +147,12 @@ impl SpecialForm for DefnForm {
                 let tuple_ty = crate::forms::ml::param_layout_to_stablehlo_type(layout);
                 known_param_types.push((param.clone(), tuple_ty));
             }
+        }
+        for (param, shape) in &shape_annotations {
+            known_param_types.push((
+                param.clone(),
+                crate::compiler::stablehlo::StableHLOType::f32_tensor(shape.clone()),
+            ));
         }
 
         // Infer function signature with known types for typed params
