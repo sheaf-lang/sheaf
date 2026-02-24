@@ -90,6 +90,9 @@ pub struct FunctionDef {
     pub body_compiled: Option<CompiledExpr>,
     pub signature: Option<crate::core::inference::FunctionSignature>,
     pub vmfb_session_idx: Option<usize>,
+    /// Known parameter types from annotations (shape annotations + defparams).
+    /// Used by the tracing compiler to create dummy inputs.
+    pub known_param_types: Vec<(String, crate::compiler::stablehlo::StableHLOType)>,
 }
 
 fn is_builtin_name(name: &str) -> bool {

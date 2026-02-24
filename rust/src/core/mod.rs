@@ -7,6 +7,7 @@ pub mod compiler;
 pub mod error;
 pub mod inference;
 pub mod parser;
+pub mod trace;
 
 pub use compiler::{CompiledExpr, CompilerContext, FunctionDef};
 pub use error::{SheafError, SheafResult};

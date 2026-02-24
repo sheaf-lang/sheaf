@@ -196,6 +196,7 @@ impl SpecialForm for DefnForm {
                 body_compiled: Some(body_compiled),
                 signature: Some(signature),
                 vmfb_session_idx: None,
+                known_param_types,
             },
         );
 

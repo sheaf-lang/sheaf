@@ -570,6 +570,11 @@ fn get_axis(kw: &BTreeMap<String, Value>) -> Option<i64> {
 
 fn reduce_along_axis(arr: &ArrayD<f64>, axis: usize, op: fn(&[f64]) -> f64) -> ArrayD<f64> {
     let shape = arr.shape();
+    if shape.is_empty() || axis >= shape.len() {
+        // 0-D tensor or out-of-bounds axis: reduce the whole thing
+        let data: Vec<f64> = arr.iter().copied().collect();
+        return ArrayD::from_elem(IxDyn(&[]), op(&data));
+    }
     let mut new_shape: Vec<usize> = shape.to_vec();
     new_shape.remove(axis);
     if new_shape.is_empty() {
