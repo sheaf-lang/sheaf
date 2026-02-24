@@ -78,6 +78,7 @@ pub fn eval_source_with_path(
     }
 
     let mut env = Env::with_registry(compiler.registry.clone());
+    env.vmfb_sessions = compiler.vmfb_sessions.clone();
     register_builtins(&mut env);
     let mut last = Value::Nil;
     for c in &compiled {
@@ -109,8 +110,9 @@ impl Interpreter {
         let mut last = Value::Nil;
         for expr in &exprs {
             let compiled = self.compiler.compile(expr)?;
-            // Sync any newly registered functions into env
+            // Sync any newly registered functions and VMFB sessions into env
             self.env.registry = self.compiler.registry.clone();
+            self.env.vmfb_sessions = self.compiler.vmfb_sessions.clone();
             if !matches!(compiled, CompiledExpr::Nil) {
                 last = interpreter::eval(&compiled, &mut self.env)?;
             }

@@ -313,6 +313,18 @@ fn eval_call(name: &str, args: &[CompiledExpr], env: &mut Env) -> Result<Value, 
 
     // Try user-defined function from registry
     if let Some(func_def) = env.registry.get(name).cloned() {
+        // VMFB dispatch: pure compiled functions run via IREE
+        #[cfg(iree_runtime)]
+        if let Some(session_idx) = func_def.vmfb_session_idx {
+            if let Some(session) = env.vmfb_sessions.get(session_idx) {
+                if let Some(iree_session) = session.downcast_ref::<crate::runtime::iree_session::IreeSession>() {
+                    let full_name = format!("module.{}", name.replace('-', "_"));
+                    return iree_session.call(&full_name, &pos_args);
+                }
+            }
+        }
+
+        // Fallback: interpret
         if let Some(ref body) = func_def.body_compiled {
             env.push_scope();
             for (param, val) in func_def.params.iter().zip(pos_args.iter()) {
