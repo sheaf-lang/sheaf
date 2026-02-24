@@ -77,6 +77,21 @@ impl StableHLOType {
         }
     }
 
+    /// Check if two types have the same tuple nesting structure.
+    /// Leaf types (tensors, scalars) are considered structurally equivalent.
+    pub fn tuple_structure_matches(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Tuple(a), Self::Tuple(b)) => {
+                a.len() == b.len()
+                    && a.iter()
+                        .zip(b.iter())
+                        .all(|(x, y)| x.tuple_structure_matches(y))
+            }
+            (Self::Tuple(_), _) | (_, Self::Tuple(_)) => false,
+            _ => true, // both are leaf types
+        }
+    }
+
     pub fn to_mlir(&self) -> String {
         match self {
             Self::ScalarF32 => "tensor<f32>".to_string(),

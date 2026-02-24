@@ -273,6 +273,30 @@ impl CodeGenerator {
                 self.generate_inline_value_and_grad(&lambda, &args, &wrt_indices)
             }
 
+            CompiledExpr::Dict(pairs) => {
+                // Emit dict as a tuple, keys sorted alphabetically for deterministic layout
+                let mut sorted: Vec<_> = pairs.iter().collect();
+                sorted.sort_by(|(k1, _), (k2, _)| {
+                    let key1 = match k1 {
+                        CompiledExpr::Keyword(k) => k.clone(),
+                        _ => format!("{:?}", k1),
+                    };
+                    let key2 = match k2 {
+                        CompiledExpr::Keyword(k) => k.clone(),
+                        _ => format!("{:?}", k2),
+                    };
+                    key1.cmp(&key2)
+                });
+                let mut regs = Vec::new();
+                let mut tys = Vec::new();
+                for (_, val) in &sorted {
+                    let (r, t) = self.generate(val)?;
+                    regs.push(r);
+                    tys.push(t);
+                }
+                Ok(self.emitter.emit_tuple(&regs, &tys))
+            }
+
             _ => Err(SheafError::Compile {
                 message: format!("Code generation not yet implemented for: {:?}", expr),
                 location: crate::core::error::SourceLocation::unknown(),
@@ -662,18 +686,19 @@ impl CodeGenerator {
             Ok((reg, ty))
         }
         // sum/mean: (sum x :axis N) or (sum x :axis N :keepdims true)
+        // Without :axis → reduce all dimensions to scalar
         else if (name == "sum" || name == "mean") && !args.is_empty() {
             let (operand_reg, operand_ty) = self.generate(&args[0])?;
 
             // Parse keyword args: :axis N :keepdims bool
-            let mut axis: i64 = -1; // default: last axis
+            let mut axis: Option<i64> = None;
             let mut keepdims = false;
             let mut i = 1;
             while i + 1 < args.len() {
                 match &args[i] {
                     CompiledExpr::Keyword(k) if k == "axis" => {
                         if let CompiledExpr::Integer(n) = &args[i + 1] {
-                            axis = *n;
+                            axis = Some(*n);
                         }
                         i += 2;
                     }
@@ -689,13 +714,66 @@ impl CodeGenerator {
                 }
             }
 
-            let (reg, ty) = if name == "sum" {
-                tensor_ops::emit_sum(&mut self.emitter, &operand_reg, &operand_ty, axis, keepdims)
-            } else {
-                tensor_ops::emit_mean(&mut self.emitter, &operand_reg, &operand_ty, axis, keepdims)
+            let (reg, ty) = match axis {
+                Some(ax) => {
+                    if name == "sum" {
+                        tensor_ops::emit_sum(&mut self.emitter, &operand_reg, &operand_ty, ax, keepdims)
+                    } else {
+                        tensor_ops::emit_mean(&mut self.emitter, &operand_reg, &operand_ty, ax, keepdims)
+                    }
+                }
+                None => {
+                    // No :axis → reduce all dimensions sequentially (last to first)
+                    let ndim = operand_ty.shape().len();
+                    if ndim == 0 {
+                        (operand_reg, operand_ty)
+                    } else {
+                        let mut cur_reg = operand_reg;
+                        let mut cur_ty = operand_ty;
+                        for _ in (0..ndim).rev() {
+                            // Always reduce axis 0 of the current shape after prior reductions,
+                            // but it's simpler to always reduce the last axis (-1)
+                            let (r, t) = if name == "sum" {
+                                tensor_ops::emit_sum(&mut self.emitter, &cur_reg, &cur_ty, -1, false)
+                            } else {
+                                tensor_ops::emit_mean(&mut self.emitter, &cur_reg, &cur_ty, -1, false)
+                            };
+                            cur_reg = r;
+                            cur_ty = t;
+                        }
+                        (cur_reg, cur_ty)
+                    }
+                }
             };
             Ok((reg, ty))
-        } else {
+        }
+        // tree-map: (tree-map f tree1 tree2 ...)
+        // Static unrolling when tree args have known tuple types.
+        else if name == "tree-map" && args.len() >= 2 {
+            let lambda = &args[0];
+            let tree_args = &args[1..];
+
+            // Generate tree arguments to get their registers and types
+            let mut tree_regs = Vec::new();
+            let mut tree_tys = Vec::new();
+            for arg in tree_args {
+                let (reg, ty) = self.generate(arg)?;
+                tree_regs.push(reg);
+                tree_tys.push(ty);
+            }
+
+            // All tree args must have the same tuple structure
+            if !tree_tys.iter().all(|t| t.tuple_structure_matches(&tree_tys[0])) {
+                return Err(SheafError::Compile {
+                    message: "tree-map: all tree arguments must have the same tuple structure"
+                        .to_string(),
+                    location: crate::core::error::SourceLocation::unknown(),
+                });
+            }
+
+            self.generate_tree_map(lambda, &tree_regs, &tree_tys[0])
+        }
+        else {
             Err(SheafError::Compile {
                 message: format!("Function call not yet supported: {}", name),
                 location: crate::core::error::SourceLocation::unknown(),
@@ -755,6 +833,11 @@ impl CodeGenerator {
     }
 
     /// Inline value-and-grad: forward pass + symbolic backward passes → tuple.
+    ///
+    /// When a wrt parameter is a tuple (e.g. from defparams), the body contains
+    /// `GetTupleElement { param, indices }` references to its leaves. We replace
+    /// each leaf with a synthetic symbol, differentiate with respect to each one,
+    /// and reassemble the gradients into a tuple matching the parameter structure.
     fn generate_inline_value_and_grad(
         &mut self,
         lambda: &CompiledExpr,
@@ -797,10 +880,51 @@ impl CodeGenerator {
         let mut grad_regs = Vec::new();
         let mut grad_tys = Vec::new();
         for &idx in wrt_indices {
-            let grad_expr = grad_simplified(&inlined_body, &params[idx]);
-            let (grad_reg, grad_ty) = self.generate(&grad_expr)?;
-            grad_regs.push(grad_reg);
-            grad_tys.push(grad_ty);
+            let param_ty = &arg_tys[idx];
+            match param_ty {
+                StableHLOType::Tuple(_) => {
+                    // Tuple parameter: collect all GetTupleElement leaves,
+                    // replace with synthetic symbols, differentiate each.
+                    let param_name = &params[idx];
+                    let leaves = collect_tuple_leaves(&inlined_body, param_name);
+                    let expanded = expand_tuple_to_symbols(&inlined_body, param_name);
+
+                    // Bind each synthetic leaf symbol to the corresponding register
+                    for leaf in &leaves {
+                        let mut current_reg = arg_regs[idx].clone();
+                        let mut current_ty = param_ty.clone();
+                        for &i in &leaf.indices {
+                            let elem_ty = match &current_ty {
+                                StableHLOType::Tuple(elems) => elems[i].clone(),
+                                _ => unreachable!(),
+                            };
+                            current_reg = self.emitter.emit_get_tuple_element(
+                                &current_reg,
+                                &current_ty,
+                                i,
+                                &elem_ty,
+                            );
+                            current_ty = elem_ty;
+                        }
+                        self.bindings
+                            .insert(leaf.symbol.clone(), (current_reg, current_ty));
+                    }
+
+                    // Differentiate w.r.t. each leaf and build the gradient tuple
+                    let (grad_reg, grad_ty) = self.generate_tuple_gradient(
+                        &expanded, &leaves, param_ty,
+                    )?;
+                    grad_regs.push(grad_reg);
+                    grad_tys.push(grad_ty);
+                }
+                _ => {
+                    // Scalar/tensor parameter: differentiate directly
+                    let grad_expr = grad_simplified(&inlined_body, &params[idx]);
+                    let (grad_reg, grad_ty) = self.generate(&grad_expr)?;
+                    grad_regs.push(grad_reg);
+                    grad_tys.push(grad_ty);
+                }
+            }
         }
 
         // Restore bindings
@@ -813,6 +937,123 @@ impl CodeGenerator {
         all_tys.extend(grad_tys);
 
         Ok(self.emitter.emit_tuple(&all_regs, &all_tys))
+    }
+
+    /// Build the gradient tuple for a tuple parameter by differentiating
+    /// w.r.t. each leaf symbol and reassembling into the original tuple structure.
+    fn generate_tuple_gradient(
+        &mut self,
+        expanded_body: &CompiledExpr,
+        leaves: &[TupleLeaf],
+        param_ty: &StableHLOType,
+    ) -> SheafResult<(Register, StableHLOType)> {
+        self.build_grad_tuple(expanded_body, leaves, param_ty, &[])
+    }
+
+    fn build_grad_tuple(
+        &mut self,
+        body: &CompiledExpr,
+        leaves: &[TupleLeaf],
+        ty: &StableHLOType,
+        prefix: &[usize],
+    ) -> SheafResult<(Register, StableHLOType)> {
+        match ty {
+            StableHLOType::Tuple(elems) => {
+                let mut sub_regs = Vec::new();
+                let mut sub_tys = Vec::new();
+                for (i, elem_ty) in elems.iter().enumerate() {
+                    let mut child_prefix = prefix.to_vec();
+                    child_prefix.push(i);
+                    let (r, t) = self.build_grad_tuple(body, leaves, elem_ty, &child_prefix)?;
+                    sub_regs.push(r);
+                    sub_tys.push(t);
+                }
+                Ok(self.emitter.emit_tuple(&sub_regs, &sub_tys))
+            }
+            leaf_ty => {
+                // Find the leaf with matching indices
+                let leaf = leaves
+                    .iter()
+                    .find(|l| l.indices == prefix)
+                    .ok_or_else(|| SheafError::Compile {
+                        message: format!(
+                            "InlineValueAndGrad: no leaf found for indices {:?}",
+                            prefix
+                        ),
+                        location: crate::core::error::SourceLocation::unknown(),
+                    })?;
+                let grad_expr = grad_simplified(body, &leaf.symbol);
+                self.generate(&grad_expr)
+            }
+        }
+    }
+
+    /// Static tree-map unrolling: apply lambda to each leaf of matching tuple trees.
+    ///
+    /// When the type is `Tuple(...)`, recursively extract elements from each tree,
+    /// apply `generate_tree_map` on sub-elements, and reassemble into a new tuple.
+    /// When the type is a leaf (tensor/scalar), inline the lambda with the leaf
+    /// registers as arguments.
+    fn generate_tree_map(
+        &mut self,
+        lambda: &CompiledExpr,
+        tree_regs: &[Register],
+        structure_ty: &StableHLOType,
+    ) -> SheafResult<(Register, StableHLOType)> {
+        match structure_ty {
+            StableHLOType::Tuple(elem_tys) => {
+                let mut result_regs = Vec::new();
+                let mut result_tys = Vec::new();
+                for (idx, elem_ty) in elem_tys.iter().enumerate() {
+                    // Extract element `idx` from each tree
+                    let mut sub_regs = Vec::new();
+                    for tree_reg in tree_regs {
+                        let elem_reg = self.emitter.emit_get_tuple_element(
+                            tree_reg,
+                            structure_ty,
+                            idx,
+                            elem_ty,
+                        );
+                        sub_regs.push(elem_reg);
+                    }
+                    let (r, t) = self.generate_tree_map(lambda, &sub_regs, elem_ty)?;
+                    result_regs.push(r);
+                    result_tys.push(t);
+                }
+                Ok(self.emitter.emit_tuple(&result_regs, &result_tys))
+            }
+            _ => {
+                // Leaf: inline the lambda with tree_regs as arguments
+                let (params, body) = match lambda {
+                    CompiledExpr::Lambda { params, body } => (params, body),
+                    _ => {
+                        return Err(SheafError::Compile {
+                            message: "tree-map: first argument must be a lambda".to_string(),
+                            location: crate::core::error::SourceLocation::unknown(),
+                        })
+                    }
+                };
+                if params.len() != tree_regs.len() {
+                    return Err(SheafError::Compile {
+                        message: format!(
+                            "tree-map: lambda has {} params but {} trees provided",
+                            params.len(),
+                            tree_regs.len()
+                        ),
+                        location: crate::core::error::SourceLocation::unknown(),
+                    });
+                }
+                // Bind lambda params to the leaf registers
+                let saved = self.bindings.clone();
+                for (param, reg) in params.iter().zip(tree_regs.iter()) {
+                    self.bindings
+                        .insert(param.clone(), (reg.clone(), structure_ty.clone()));
+                }
+                let result = self.generate(body);
+                self.bindings = saved;
+                result
+            }
+        }
     }
 
     /// Emit a complete function module
@@ -868,6 +1109,111 @@ impl CodeGenerator {
 impl Default for CodeGenerator {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+/// A leaf of a tuple parameter: maps indices to a synthetic symbol name.
+#[derive(Debug, Clone)]
+struct TupleLeaf {
+    /// Tuple access indices (e.g. [0, 1] for second field of first sub-tuple)
+    indices: Vec<usize>,
+    /// Synthetic symbol name used in the expanded body (e.g. "p__0_1")
+    symbol: String,
+}
+
+/// Collect all unique `GetTupleElement` leaves referencing `param_name` in an expression.
+fn collect_tuple_leaves(expr: &CompiledExpr, param_name: &str) -> Vec<TupleLeaf> {
+    let mut leaves = Vec::new();
+    let mut seen = std::collections::HashSet::new();
+    collect_tuple_leaves_rec(expr, param_name, &mut leaves, &mut seen);
+    leaves
+}
+
+fn collect_tuple_leaves_rec(
+    expr: &CompiledExpr,
+    param_name: &str,
+    out: &mut Vec<TupleLeaf>,
+    seen: &mut std::collections::HashSet<Vec<usize>>,
+) {
+    match expr {
+        CompiledExpr::GetTupleElement { param, indices } if param == param_name => {
+            if seen.insert(indices.clone()) {
+                let symbol = format!("{}_{}", param_name, indices.iter().map(|i| i.to_string()).collect::<Vec<_>>().join("_"));
+                out.push(TupleLeaf {
+                    indices: indices.clone(),
+                    symbol,
+                });
+            }
+        }
+        CompiledExpr::FunctionCall { args, .. } => {
+            for a in args {
+                collect_tuple_leaves_rec(a, param_name, out, seen);
+            }
+        }
+        CompiledExpr::Let { bindings, body } => {
+            for (_, v) in bindings {
+                collect_tuple_leaves_rec(v, param_name, out, seen);
+            }
+            collect_tuple_leaves_rec(body, param_name, out, seen);
+        }
+        CompiledExpr::Do(exprs) => {
+            for e in exprs {
+                collect_tuple_leaves_rec(e, param_name, out, seen);
+            }
+        }
+        CompiledExpr::If { condition, then_branch, else_branch } => {
+            collect_tuple_leaves_rec(condition, param_name, out, seen);
+            collect_tuple_leaves_rec(then_branch, param_name, out, seen);
+            if let Some(e) = else_branch {
+                collect_tuple_leaves_rec(e, param_name, out, seen);
+            }
+        }
+        CompiledExpr::Lambda { body, .. } => {
+            collect_tuple_leaves_rec(body, param_name, out, seen);
+        }
+        CompiledExpr::LambdaCall { callee, args } => {
+            collect_tuple_leaves_rec(callee, param_name, out, seen);
+            for a in args {
+                collect_tuple_leaves_rec(a, param_name, out, seen);
+            }
+        }
+        _ => {}
+    }
+}
+
+/// Replace all `GetTupleElement { param, indices }` referencing `param_name`
+/// with `Symbol(synthetic_name)` for autodiff.
+fn expand_tuple_to_symbols(expr: &CompiledExpr, param_name: &str) -> CompiledExpr {
+    match expr {
+        CompiledExpr::GetTupleElement { param, indices } if param == param_name => {
+            let symbol = format!("{}_{}", param_name, indices.iter().map(|i| i.to_string()).collect::<Vec<_>>().join("_"));
+            CompiledExpr::Symbol(symbol)
+        }
+        CompiledExpr::FunctionCall { name, args } => CompiledExpr::FunctionCall {
+            name: name.clone(),
+            args: args.iter().map(|a| expand_tuple_to_symbols(a, param_name)).collect(),
+        },
+        CompiledExpr::Let { bindings, body } => CompiledExpr::Let {
+            bindings: bindings.iter().map(|(k, v)| (k.clone(), expand_tuple_to_symbols(v, param_name))).collect(),
+            body: Box::new(expand_tuple_to_symbols(body, param_name)),
+        },
+        CompiledExpr::Do(exprs) => CompiledExpr::Do(
+            exprs.iter().map(|e| expand_tuple_to_symbols(e, param_name)).collect(),
+        ),
+        CompiledExpr::If { condition, then_branch, else_branch } => CompiledExpr::If {
+            condition: Box::new(expand_tuple_to_symbols(condition, param_name)),
+            then_branch: Box::new(expand_tuple_to_symbols(then_branch, param_name)),
+            else_branch: else_branch.as_ref().map(|e| Box::new(expand_tuple_to_symbols(e, param_name))),
+        },
+        CompiledExpr::Lambda { params, body } => CompiledExpr::Lambda {
+            params: params.clone(),
+            body: Box::new(expand_tuple_to_symbols(body, param_name)),
+        },
+        CompiledExpr::LambdaCall { callee, args } => CompiledExpr::LambdaCall {
+            callee: Box::new(expand_tuple_to_symbols(callee, param_name)),
+            args: args.iter().map(|a| expand_tuple_to_symbols(a, param_name)).collect(),
+        },
+        other => other.clone(),
     }
 }
 
