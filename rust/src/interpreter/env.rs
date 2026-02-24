@@ -3,7 +3,7 @@
 
 //! Environment for the Sheaf interpreter — scoped variable bindings.
 
-use crate::core::compiler::FunctionDef;
+use crate::core::compiler::{FunctionDef, VmfbSession};
 use crate::core::error::SheafError;
 use crate::interpreter::value::{BuiltinFnPtr, Value};
 use std::collections::HashMap;
@@ -19,6 +19,7 @@ pub fn runtime_error(message: impl Into<String>) -> SheafError {
 pub struct Env {
     scopes: Vec<HashMap<String, Value>>,
     pub registry: HashMap<String, FunctionDef>,
+    pub vmfb_sessions: Vec<VmfbSession>,
 }
 
 impl Env {
@@ -26,6 +27,7 @@ impl Env {
         Self {
             scopes: vec![HashMap::new()],
             registry: HashMap::new(),
+            vmfb_sessions: Vec::new(),
         }
     }
 
@@ -33,6 +35,7 @@ impl Env {
         Self {
             scopes: vec![HashMap::new()],
             registry,
+            vmfb_sessions: Vec::new(),
         }
     }
 

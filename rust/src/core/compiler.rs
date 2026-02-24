@@ -9,6 +9,9 @@ use crate::ast::SheafValue;
 use crate::core::error::{SheafError, SheafResult};
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
+use std::sync::Arc;
+
+pub type VmfbSession = Arc<dyn std::any::Any + Send + Sync>;
 
 /// A leaf field in a parameter layout: a named tensor with its shape
 #[derive(Debug, Clone)]
@@ -73,6 +76,9 @@ pub struct CompilerContext {
 
     /// Directory of the file currently being compiled (for relative use paths)
     pub current_dir: Option<PathBuf>,
+
+    /// Loaded IREE VMFB sessions (indexed by FunctionDef.vmfb_session_idx)
+    pub vmfb_sessions: Vec<VmfbSession>,
 }
 
 /// Function definition
@@ -83,6 +89,7 @@ pub struct FunctionDef {
     pub body: SheafValue,
     pub body_compiled: Option<CompiledExpr>,
     pub signature: Option<crate::core::inference::FunctionSignature>,
+    pub vmfb_session_idx: Option<usize>,
 }
 
 fn is_builtin_name(name: &str) -> bool {
@@ -121,6 +128,7 @@ impl CompilerContext {
             load_path: Self::default_load_path(),
             loaded_modules: HashSet::new(),
             current_dir: None,
+            vmfb_sessions: Vec::new(),
         }
     }
 
