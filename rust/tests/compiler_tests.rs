@@ -162,7 +162,7 @@ fn compile_to_mlir(source: &str, fn_name: &str) -> String {
         &func_def.params,
         &sig.param_types,
     );
-    let decl = codegen
+    let (decl, _ty) = codegen
         .emit_func_declaration(fn_name, &body, &sig.param_types, &sig.return_type)
         .unwrap();
     StableHLOEmitter::emit_module(&[decl])

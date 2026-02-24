@@ -771,7 +771,7 @@ impl CodeGenerator {
                 });
             }
 
-            self.generate_tree_map(lambda, &tree_regs, &tree_tys[0])
+            self.generate_tree_map(lambda, &tree_regs, &tree_tys)
         }
         else {
             Err(SheafError::Compile {
@@ -970,7 +970,7 @@ impl CodeGenerator {
                 }
                 Ok(self.emitter.emit_tuple(&sub_regs, &sub_tys))
             }
-            leaf_ty => {
+            _leaf_ty => {
                 // Find the leaf with matching indices
                 let leaf = leaves
                     .iter()
@@ -983,9 +983,51 @@ impl CodeGenerator {
                         location: crate::core::error::SourceLocation::unknown(),
                     })?;
                 let grad_expr = grad_simplified(body, &leaf.symbol);
-                self.generate(&grad_expr)
+                let (grad_reg, grad_ty) = self.generate(&grad_expr)?;
+                // Reduce broadcast dims: if the gradient has more dims than the
+                // parameter (e.g. batch dim from broadcasting b:[8] to [4,8]),
+                // reduce_sum over the leading extra dimensions.
+                self.reduce_broadcast_grad(&grad_reg, &grad_ty, ty)
             }
         }
+    }
+
+    /// Reduce a gradient to match the parameter shape when broadcasting introduced
+    /// extra leading dimensions. E.g. grad is [4,8] but param is [8] → reduce_sum axis 0.
+    fn reduce_broadcast_grad(
+        &mut self,
+        grad_reg: &Register,
+        grad_ty: &StableHLOType,
+        param_ty: &StableHLOType,
+    ) -> SheafResult<(Register, StableHLOType)> {
+        let grad_shape = grad_ty.shape();
+        let param_shape = param_ty.shape();
+
+        if grad_shape == param_shape {
+            return Ok((grad_reg.clone(), grad_ty.clone()));
+        }
+
+        // Number of extra leading dimensions to reduce
+        let extra = grad_shape.len().saturating_sub(param_shape.len());
+        if extra == 0 {
+            return Ok((grad_reg.clone(), grad_ty.clone()));
+        }
+
+        // Verify trailing dims match the param shape
+        let trailing = &grad_shape[extra..];
+        if trailing != param_shape.as_slice() {
+            return Ok((grad_reg.clone(), grad_ty.clone()));
+        }
+
+        // Reduce_sum over each extra leading dim (from outermost inward)
+        let mut cur_reg = grad_reg.clone();
+        let mut cur_ty = grad_ty.clone();
+        for _ in 0..extra {
+            let (r, t) = self.emitter.emit_reduce_sum(&cur_reg, &cur_ty, 0, false);
+            cur_reg = r;
+            cur_ty = t;
+        }
+        Ok((cur_reg, cur_ty))
     }
 
     /// Static tree-map unrolling: apply lambda to each leaf of matching tuple trees.
@@ -994,29 +1036,39 @@ impl CodeGenerator {
     /// apply `generate_tree_map` on sub-elements, and reassemble into a new tuple.
     /// When the type is a leaf (tensor/scalar), inline the lambda with the leaf
     /// registers as arguments.
+    ///
+    /// `tree_tys` has one type per tree argument (may differ at leaves due to
+    /// broadcast gradients having different shapes from params).
     fn generate_tree_map(
         &mut self,
         lambda: &CompiledExpr,
         tree_regs: &[Register],
-        structure_ty: &StableHLOType,
+        tree_tys: &[StableHLOType],
     ) -> SheafResult<(Register, StableHLOType)> {
-        match structure_ty {
-            StableHLOType::Tuple(elem_tys) => {
+        // Use the first tree's type to drive the tuple structure
+        match &tree_tys[0] {
+            StableHLOType::Tuple(first_elem_tys) => {
                 let mut result_regs = Vec::new();
                 let mut result_tys = Vec::new();
-                for (idx, elem_ty) in elem_tys.iter().enumerate() {
-                    // Extract element `idx` from each tree
+                for (idx, _) in first_elem_tys.iter().enumerate() {
+                    // Extract element `idx` from each tree using its own type
                     let mut sub_regs = Vec::new();
-                    for tree_reg in tree_regs {
+                    let mut sub_tys = Vec::new();
+                    for (tree_reg, tree_ty) in tree_regs.iter().zip(tree_tys.iter()) {
+                        let elem_ty = match tree_ty {
+                            StableHLOType::Tuple(elems) => &elems[idx],
+                            other => other,
+                        };
                         let elem_reg = self.emitter.emit_get_tuple_element(
                             tree_reg,
-                            structure_ty,
+                            tree_ty,
                             idx,
                             elem_ty,
                         );
                         sub_regs.push(elem_reg);
+                        sub_tys.push(elem_ty.clone());
                     }
-                    let (r, t) = self.generate_tree_map(lambda, &sub_regs, elem_ty)?;
+                    let (r, t) = self.generate_tree_map(lambda, &sub_regs, &sub_tys)?;
                     result_regs.push(r);
                     result_tys.push(t);
                 }
@@ -1043,11 +1095,11 @@ impl CodeGenerator {
                         location: crate::core::error::SourceLocation::unknown(),
                     });
                 }
-                // Bind lambda params to the leaf registers
+                // Bind lambda params to the leaf registers with their actual types
                 let saved = self.bindings.clone();
-                for (param, reg) in params.iter().zip(tree_regs.iter()) {
+                for (param, (reg, ty)) in params.iter().zip(tree_regs.iter().zip(tree_tys.iter())) {
                     self.bindings
-                        .insert(param.clone(), (reg.clone(), structure_ty.clone()));
+                        .insert(param.clone(), (reg.clone(), ty.clone()));
                 }
                 let result = self.generate(body);
                 self.bindings = saved;
@@ -1068,21 +1120,23 @@ impl CodeGenerator {
     ///
     /// Generates the body instructions and wraps them in a func.func declaration
     /// with the given parameter types and return type
+    /// Returns (mlir_declaration, actual_return_type).
     pub fn emit_func_declaration(
         mut self,
         name: &str,
         expr: &CompiledExpr,
         param_types: &[StableHLOType],
-        return_type: &StableHLOType,
-    ) -> SheafResult<String> {
+        _return_type: &StableHLOType,
+    ) -> SheafResult<(String, StableHLOType)> {
         let (result_reg, result_ty) = self.generate(expr)?;
         self.emitter.emit_return(&result_reg, &result_ty);
 
-        // Clone body to avoid borrow issues
+        // Use the actual generated type (not inferred) as the return type
         let body = self.emitter.body.clone();
-        Ok(self
+        let decl = self
             .emitter
-            .emit_func_declaration(name, param_types, return_type, &body))
+            .emit_func_declaration(name, param_types, &result_ty, &body);
+        Ok((decl, result_ty))
     }
 
     /// Finalize a multi-output function declaration.

@@ -638,7 +638,7 @@ mod tests {
             &square_sig.param_types,
         );
 
-        let square_decl = codegen_square
+        let (square_decl, _) = codegen_square
             .emit_func_declaration(
                 "square",
                 &square_body_compiled,
@@ -660,7 +660,7 @@ mod tests {
             &add_squares_sig.param_types,
         );
 
-        let add_squares_decl = codegen_add_squares
+        let (add_squares_decl, _) = codegen_add_squares
             .emit_func_declaration(
                 "add-squares",
                 &add_squares_body_compiled,
@@ -674,7 +674,7 @@ mod tests {
         let mut codegen_main = CodeGenerator::with_registry(ctx.registry.clone());
         let (_, result_ty) = codegen_main.generate(&main_compiled).unwrap();
 
-        let main_decl = CodeGenerator::with_registry(ctx.registry.clone())
+        let (main_decl, _) = CodeGenerator::with_registry(ctx.registry.clone())
             .emit_func_declaration("main", &main_compiled, &[], &result_ty)
             .unwrap();
         func_declarations.push(main_decl);

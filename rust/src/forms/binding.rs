@@ -170,6 +170,22 @@ impl SpecialForm for DefnForm {
             }
         }
 
+        // If body returns a Dict, store sorted keys for IREE result reconstruction
+        if let CompiledExpr::Dict(pairs) = &body_compiled {
+            let mut keys: Vec<String> = pairs
+                .iter()
+                .filter_map(|(k, _)| {
+                    if let CompiledExpr::Keyword(s) = k {
+                        Some(s.clone())
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+            keys.sort();
+            signature.return_dict_keys = Some(keys);
+        }
+
         // Register the function in the compiler with compiled body and signature
         compiler.registry.insert(
             name.to_string(),

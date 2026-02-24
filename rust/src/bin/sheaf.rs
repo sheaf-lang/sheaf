@@ -481,7 +481,15 @@ Set IREE_COMPILE=/path/to/iree-compile to override."
             &sig.param_types,
         );
         match codegen.emit_func_declaration(name, &body, &sig.param_types, &sig.return_type) {
-            Ok(decl) => all_decls.push(decl),
+            Ok((decl, actual_return_ty)) => {
+                // Update the signature with the real codegen return type
+                if let Some(fd) = compiler.registry.get_mut(name) {
+                    if let Some(ref mut sig) = fd.signature {
+                        sig.return_type = actual_return_ty;
+                    }
+                }
+                all_decls.push(decl);
+            }
             Err(e) => {
                 if verbose {
                     eprintln!("warning: skipping '{}': {}", name, e);

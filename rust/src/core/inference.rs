@@ -12,6 +12,8 @@ use crate::core::error::{SheafError, SheafResult, SourceLocation};
 pub struct FunctionSignature {
     pub param_types: Vec<StableHLOType>,
     pub return_type: StableHLOType,
+    /// If the function returns a Dict, the sorted key names for reconstruction
+    pub return_dict_keys: Option<Vec<String>>,
 }
 
 /// Infer the signature of a function from its parameters and body
@@ -69,6 +71,7 @@ pub fn infer_function_signature_with_known(
     Ok(FunctionSignature {
         param_types,
         return_type,
+        return_dict_keys: None,
     })
 }
 
@@ -307,6 +310,27 @@ fn infer_type_with_context(
             } else {
                 Ok(StableHLOType::scalar_f32())
             }
+        }
+
+        CompiledExpr::Dict(pairs) => {
+            // Dict becomes a tuple sorted by key — infer element types
+            let mut sorted: Vec<_> = pairs.iter().collect();
+            sorted.sort_by(|(k1, _), (k2, _)| {
+                let key1 = match k1 {
+                    CompiledExpr::Keyword(k) => k.clone(),
+                    _ => format!("{:?}", k1),
+                };
+                let key2 = match k2 {
+                    CompiledExpr::Keyword(k) => k.clone(),
+                    _ => format!("{:?}", k2),
+                };
+                key1.cmp(&key2)
+            });
+            let mut elem_tys = Vec::new();
+            for (_, val) in &sorted {
+                elem_tys.push(infer_type_with_context(val, symbol_types)?);
+            }
+            Ok(StableHLOType::Tuple(elem_tys))
         }
 
         _ => infer_type(expr),
