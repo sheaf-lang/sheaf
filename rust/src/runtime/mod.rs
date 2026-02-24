@@ -17,7 +17,8 @@
 pub mod math_ops;
 pub mod nn_ops;
 pub mod tensor_ops;
-// TODO: Add other runtime modules
-// pub mod core_ops;
-// pub mod io_ops;
-// pub mod string_ops;
+
+#[cfg(iree_runtime)]
+pub mod iree_ffi;
+#[cfg(iree_runtime)]
+pub mod iree_session;
