@@ -1,31 +1,18 @@
 ;; -*- mode: clojure -*-
-;; XOR MLP, the "Hello World" of Sheaf
+;; XOR MLP — pure functions (no side effects): forward pass and training step
 
 (use nn)
 (use optim)
 
-(defn xor-data []
-  ;; Returns [X Y] tuple for XOR problem
-  (let [X [[0.0 0.0] [0.0 1.0] [1.0 0.0] [1.0 1.0]]
-        Y [[0.0] [1.0] [1.0] [0.0]]]
-    [X Y]))
+(defparams MLPParams {:l1 {:W [2 8] :b [8]}
+                      :l2 {:W [8 1] :b [1]}})
 
-
-(defn init-params [key]
-  (let [[k1 k2] (random-split key 2)]
-    {:l1 {:W (random-normal k1 '[2 8])
-          :b (zeros '[8])}
-     :l2 {:W (random-normal k2 '[8 1])
-          :b (zeros '[1])}}))
-
-
-(defn forward [x p]
+(defn forward [(x [4 2]) (p :as MLPParams)]
   (as-> x h
     (with-params [p :l1] (relu (+ (@ h W) b)))
     (with-params [p :l2] (sigmoid (+ (@ h W) b)))))
 
-
-(defn train-step [p x y lr]
+(defn train-step [(p :as MLPParams) (x [4 2]) (y [4 1]) lr]
   (let [loss-fn (fn [p] (mean (** (- (forward x p) y) 2)))
         [l g] ((value-and-grad loss-fn) p)]
     {:p (sgd-step p g lr) :loss l}))

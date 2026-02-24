@@ -2,7 +2,7 @@
 ;; XOR MLP, the "Hello World" of Sheaf
 ;; Run with: sheaf run.shf
 
-(use mlp)
+(use training)
 
 (let [[X Y] (xor-data)
       lr     0.7
