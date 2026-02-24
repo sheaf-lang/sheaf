@@ -103,15 +103,18 @@ impl IreeSession {
             let device = iree_runtime_session_device(self.session);
             let device_alloc = iree_runtime_session_device_allocator(self.session);
 
+            // Flatten tuples/dicts into individual tensor leaves for IREE
+            let flat_inputs = flatten_values(inputs)?;
+
             let mut input_list: *mut iree_vm_list_t = std::ptr::null_mut();
             let variant_type = iree_vm_type_def_t { value: 0 };
             let status =
-                iree_vm_list_create(variant_type, inputs.len(), alloc, &mut input_list);
+                iree_vm_list_create(variant_type, flat_inputs.len(), alloc, &mut input_list);
             if !iree_status_is_ok(status) {
                 return Err(iree_err("failed to create input list"));
             }
 
-            for val in inputs {
+            for val in &flat_inputs {
                 let bv = value_to_buffer_view(device, device_alloc, val)?;
                 let ref_ = iree_hal_buffer_view_retain_ref(bv);
                 let status = iree_vm_list_push_ref_retain(input_list, &ref_);
@@ -166,6 +169,25 @@ impl IreeSession {
                 _ => Ok(Value::Tuple(results)),
             }
         }
+    }
+
+    /// Call with a known return type to reconstruct nested tuple/dict structure
+    /// from IREE's flattened output buffers.
+    pub fn call_typed(
+        &self,
+        fn_name: &str,
+        inputs: &[Value],
+        return_type: &crate::compiler::stablehlo::StableHLOType,
+    ) -> Result<Value, SheafError> {
+        let flat_result = self.call(fn_name, inputs)?;
+        // Unpack the flat result into the expected structure
+        let flat_values = match flat_result {
+            Value::Tuple(vals) => vals,
+            other => vec![other],
+        };
+        let mut cursor = 0;
+        let structured = unflatten_value(return_type, &flat_values, &mut cursor)?;
+        Ok(structured)
     }
 }
 
@@ -257,10 +279,6 @@ unsafe fn value_to_buffer_view(
                 };
                 value_to_buffer_view(device, allocator, &tensor)
             }
-            Value::Dict(_) => {
-                let tuple = dict_to_tuple(val)?;
-                value_to_buffer_view(device, allocator, &tuple)
-            }
             _ => Err(iree_err(&format!(
                 "cannot convert {} to IREE buffer",
                 val.type_name()
@@ -312,18 +330,68 @@ unsafe fn buffer_view_to_value(
     }
 }
 
-fn dict_to_tuple(val: &Value) -> Result<Value, SheafError> {
+/// Flatten a list of values into individual tensor leaves.
+/// Dicts are sorted by key (matching codegen convention), then recursed.
+/// Tuples are recursed. Scalars/tensors pass through.
+fn flatten_values(inputs: &[Value]) -> Result<Vec<Value>, SheafError> {
+    let mut flat = Vec::new();
+    for val in inputs {
+        flatten_value(val, &mut flat)?;
+    }
+    Ok(flat)
+}
+
+fn flatten_value(val: &Value, out: &mut Vec<Value>) -> Result<(), SheafError> {
     match val {
         Value::Dict(map) => {
-            let elems: Result<Vec<Value>, _> = map.values().map(|v| dict_to_tuple(v)).collect();
-            Ok(Value::Tuple(elems?))
+            // Keys are already sorted (BTreeMap)
+            for v in map.values() {
+                flatten_value(v, out)?;
+            }
+            Ok(())
         }
-        Value::Tensor { .. } => Ok(val.clone()),
-        Value::Float(_) | Value::Int(_) => Ok(val.clone()),
+        Value::Tuple(elems) => {
+            for v in elems {
+                flatten_value(v, out)?;
+            }
+            Ok(())
+        }
+        Value::Tensor { .. } | Value::Float(_) | Value::Int(_) => {
+            out.push(val.clone());
+            Ok(())
+        }
         _ => Err(iree_err(&format!(
-            "cannot convert {} to IREE-compatible tuple",
+            "cannot flatten {} for IREE call",
             val.type_name()
         ))),
+    }
+}
+
+/// Reconstruct a nested Value from a flat list of tensor Values,
+/// guided by a StableHLOType structure.
+fn unflatten_value(
+    ty: &crate::compiler::stablehlo::StableHLOType,
+    flat: &[Value],
+    cursor: &mut usize,
+) -> Result<Value, SheafError> {
+    use crate::compiler::stablehlo::StableHLOType;
+    match ty {
+        StableHLOType::Tuple(elem_tys) => {
+            let mut elems = Vec::new();
+            for elem_ty in elem_tys {
+                elems.push(unflatten_value(elem_ty, flat, cursor)?);
+            }
+            Ok(Value::Tuple(elems))
+        }
+        _ => {
+            if *cursor < flat.len() {
+                let val = flat[*cursor].clone();
+                *cursor += 1;
+                Ok(val)
+            } else {
+                Err(iree_err("not enough IREE outputs to reconstruct tuple structure"))
+            }
+        }
     }
 }
 

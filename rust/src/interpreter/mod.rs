@@ -319,6 +319,24 @@ fn eval_call(name: &str, args: &[CompiledExpr], env: &mut Env) -> Result<Value, 
             if let Some(session) = env.vmfb_sessions.get(session_idx) {
                 if let Some(iree_session) = session.downcast_ref::<crate::runtime::iree_session::IreeSession>() {
                     let full_name = format!("module.{}", name.replace('-', "_"));
+                    // Use typed call to reconstruct tuple/dict structure from flat outputs
+                    if let Some(ref sig) = func_def.signature {
+                        let mut result = iree_session.call_typed(&full_name, &pos_args, &sig.return_type)?;
+                        // Reconstruct Dict if the function originally returned one
+                        if let Some(ref keys) = sig.return_dict_keys {
+                            result = match result {
+                                Value::Tuple(elems) if elems.len() == keys.len() => {
+                                    let mut map = std::collections::BTreeMap::new();
+                                    for (k, v) in keys.iter().zip(elems) {
+                                        map.insert(k.clone(), v);
+                                    }
+                                    Value::Dict(map)
+                                }
+                                other => other,
+                            };
+                        }
+                        return Ok(result);
+                    }
                     return iree_session.call(&full_name, &pos_args);
                 }
             }
