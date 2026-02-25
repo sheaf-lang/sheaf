@@ -1071,7 +1071,7 @@ fn builtin_get(args: &[Value], kw: &BTreeMap<String, Value>) -> R {
             let idx = args[1].to_f64().unwrap() as usize;
             items.get(idx).cloned().ok_or_else(|| runtime_error("get: index out of bounds"))
         }
-        _ => Err(runtime_error(format!("get: expected dict/tensor/list, got {}", args[0].type_name()))),
+        _ => Err(runtime_error(format!("get: expected dict/tensor/list, got {} (key: {})", args[0].type_name(), args.get(1).map(|v| format!("{}", v)).unwrap_or_default()))),
     }
 }
 

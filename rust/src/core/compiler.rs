@@ -486,6 +486,15 @@ pub enum CompiledExpr {
         acc_init: Box<CompiledExpr>,
         body: Box<CompiledExpr>,
     },
+    /// Conditional loop: (while cond [acc init] body)
+    /// Evaluates body while cond is truthy, threading accumulator.
+    /// The accumulator variable is visible in both cond and body.
+    While {
+        condition: Box<CompiledExpr>,
+        acc_var: String,
+        acc_init: Box<CompiledExpr>,
+        body: Box<CompiledExpr>,
+    },
 }
 
 impl Default for CompilerContext {

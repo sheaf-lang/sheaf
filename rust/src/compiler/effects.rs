@@ -110,6 +110,11 @@ fn collect_effects_rec(expr: &CompiledExpr, out: &mut Vec<EffectSite>) {
             collect_effects_rec(acc_init, out);
             collect_effects_rec(body, out);
         }
+        CompiledExpr::While { condition, acc_init, body, .. } => {
+            collect_effects_rec(condition, out);
+            collect_effects_rec(acc_init, out);
+            collect_effects_rec(body, out);
+        }
         // Leaf nodes and nodes with no sub-expressions
         CompiledExpr::Integer(_)
         | CompiledExpr::Float(_)
