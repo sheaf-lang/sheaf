@@ -1643,15 +1643,20 @@ fn key_to_seed(key: &Value) -> u64 {
     }
 }
 
-/// random-split - Split a key into n subkeys: (random-split key n)
+/// random-split - Split a key into n subkeys: (random-split key) or (random-split key n)
+/// With 1 arg, defaults to n=2 (JAX convention).
 fn builtin_random_split(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
-    if args.len() != 2 {
-        return Err(runtime_error("random-split: expected (random-split key n)"));
+    if args.is_empty() || args.len() > 2 {
+        return Err(runtime_error("random-split: expected (random-split key) or (random-split key n)"));
     }
     let seed = key_to_seed(&args[0]);
-    let n = match &args[1] {
-        Value::Int(n) => *n as usize,
-        _ => return Err(runtime_error("random-split: n must be an integer")),
+    let n = if args.len() == 2 {
+        match &args[1] {
+            Value::Int(n) => *n as usize,
+            _ => return Err(runtime_error("random-split: n must be an integer")),
+        }
+    } else {
+        2
     };
     let mut keys = Vec::with_capacity(n);
     for i in 0..n {
