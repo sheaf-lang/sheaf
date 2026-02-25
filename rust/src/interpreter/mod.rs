@@ -142,6 +142,22 @@ pub fn eval(expr: &CompiledExpr, env: &mut Env) -> Result<Value, SheafError> {
             env.pop_scope();
             Ok(acc)
         }
+
+        CompiledExpr::While { condition, acc_var, acc_init, body } => {
+            let mut acc = eval(acc_init, env)?;
+            env.push_scope();
+            env.set(acc_var, acc.clone());
+            loop {
+                let cond = eval(condition, env)?;
+                if !cond.is_truthy() {
+                    break;
+                }
+                acc = eval(body, env)?;
+                env.set(acc_var, acc.clone());
+            }
+            env.pop_scope();
+            Ok(acc)
+        }
     }
 }
 

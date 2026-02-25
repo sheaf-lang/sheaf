@@ -112,6 +112,7 @@ pub fn register_builtins(env: &mut Env) {
     env.set_builtin("sparse-cross-entropy", builtin_sparse_cross_entropy);
     env.set_builtin("tree-map-zeros", builtin_tree_map_zeros);
     env.set_builtin("print", builtin_print);
+    env.set_builtin("str-call", builtin_str_call);
     env.set_builtin("io", builtin_io);
     env.set_builtin("random-key", builtin_random_key);
     env.set_builtin("random-split", builtin_random_split);
@@ -1596,6 +1597,60 @@ fn format_value_with_spec(val: &Value, spec: &str) -> String {
         }
     }
     format!("{}", val)
+}
+
+/// str-call - Dispatch string methods: (str-call "method" string args...)
+///
+/// Supports: "format", "upper", "lower", "replace", "startswith", "endswith",
+///           "split", "trim", "contains"
+fn builtin_str_call(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    if args.len() < 2 {
+        return Err(runtime_error("str-call: expected (str-call method string ...)"));
+    }
+    let method = match &args[0] {
+        Value::String(s) => s.as_str(),
+        _ => return Err(runtime_error("str-call: first arg must be a string method name")),
+    };
+    let s = match &args[1] {
+        Value::String(s) => s.clone(),
+        other => format!("{}", other),
+    };
+    let extra = &args[2..];
+    match method {
+        "format" => {
+            let result = format_string(&s, extra);
+            Ok(Value::String(result))
+        }
+        "upper" => Ok(Value::String(s.to_uppercase())),
+        "lower" => Ok(Value::String(s.to_lowercase())),
+        "trim" => Ok(Value::String(s.trim().to_string())),
+        "replace" => {
+            if extra.len() != 2 {
+                return Err(runtime_error("str-call replace: expected (str-call \"replace\" s from to)"));
+            }
+            let from = format!("{}", extra[0]);
+            let to = format!("{}", extra[1]);
+            Ok(Value::String(s.replace(&from, &to)))
+        }
+        "startswith" => {
+            let prefix = extra.first().map(|v| format!("{}", v)).unwrap_or_default();
+            Ok(Value::Bool(s.starts_with(&prefix)))
+        }
+        "endswith" => {
+            let suffix = extra.first().map(|v| format!("{}", v)).unwrap_or_default();
+            Ok(Value::Bool(s.ends_with(&suffix)))
+        }
+        "contains" => {
+            let sub = extra.first().map(|v| format!("{}", v)).unwrap_or_default();
+            Ok(Value::Bool(s.contains(&sub)))
+        }
+        "split" => {
+            let sep = extra.first().map(|v| format!("{}", v)).unwrap_or_else(|| " ".to_string());
+            let parts: Vec<Value> = s.split(&sep).map(|p| Value::String(p.to_string())).collect();
+            Ok(Value::List(parts))
+        }
+        _ => Err(runtime_error(format!("str-call: unknown method '{}'", method))),
+    }
 }
 
 /// io - System I/O: (io "entropy") → random seed as Int
