@@ -1246,15 +1246,20 @@ fn builtin_get_in(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
 }
 
 fn builtin_assoc(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
+    if args.len() < 3 || (args.len() - 1) % 2 != 0 {
+        return Err(runtime_error("assoc: expected (assoc dict key val ...)"));
+    }
     match &args[0] {
         Value::Dict(map) => {
             let mut new = map.clone();
-            let key = match &args[1] {
-                Value::Keyword(k) => k.clone(),
-                Value::String(s) => s.clone(),
-                _ => return Err(runtime_error("assoc: key must be keyword or string")),
-            };
-            new.insert(key, args[2].clone());
+            for pair in args[1..].chunks(2) {
+                let key = match &pair[0] {
+                    Value::Keyword(k) => k.clone(),
+                    Value::String(s) => s.clone(),
+                    _ => return Err(runtime_error("assoc: key must be keyword or string")),
+                };
+                new.insert(key, pair[1].clone());
+            }
             Ok(Value::Dict(new))
         }
         _ => Err(runtime_error("assoc: expected dict")),
