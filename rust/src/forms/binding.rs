@@ -115,8 +115,17 @@ impl SpecialForm for DefnForm {
             }
         }
 
-        // Body is the third argument - compile it
-        let body_ast = args[2].clone();
+        // Body is the third argument, or fourth if legacy :jit annotation is present
+        let body_ast = if let SheafValue::Keyword(k, _) = &args[2] {
+            if k == "jit" && args.len() > 3 {
+                eprintln!("warning: :jit annotation is deprecated in Sheaf v2 (all functions are AOT-compiled via `sheaf build`)");
+                args[3].clone()
+            } else {
+                args[2].clone()
+            }
+        } else {
+            args[2].clone()
+        };
 
         // Add parameters to local scope temporarily
         let saved_locals = compiler.local_vars.clone();
@@ -280,9 +289,14 @@ impl SpecialForm for LetForm {
             }
         }
 
-        // Compile body with bindings in scope
-        let body = &args[1];
-        let compiled_body = compiler.compile(body)?;
+        // Compile body with bindings in scope (implicit do for multiple body exprs)
+        let compiled_body = if args.len() == 2 {
+            compiler.compile(&args[1])?
+        } else {
+            let exprs: SheafResult<Vec<CompiledExpr>> =
+                args[1..].iter().map(|e| compiler.compile(e)).collect();
+            CompiledExpr::Do(exprs?)
+        };
 
         // Restore local_vars (let is scoped)
         compiler.local_vars = saved_locals;
