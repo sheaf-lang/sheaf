@@ -228,14 +228,15 @@ fn run_build(args: &[String]) {
 
     if args.first().map(|a| a == "--help" || a == "-h").unwrap_or(false) {
         println!(
-            "Usage: sheaf build FILE -o OUTPUT [-S] [--config JSON] [--backend BACKEND] [-v]
+            "Usage: sheaf build FILE -o OUTPUT [-S] [--config JSON] [--trace-with FILE] [--backend BACKEND] [-v]
 
-    FILE            Input Sheaf source file (.shf)
-    -o OUTPUT       Output file (.vmfb or .mlir with -S)
-    -S              Emit MLIR only; do not invoke iree-compile
-    --config JSON   Shape config for dict params, e.g. '{{\"p\":{{\"l1\":{{\"W\":[2,8],\"b\":[8]}}}}}}'
-    --backend B     IREE target backend (default: llvm-cpu)
-    -v, --verbose   Verbose output
+    FILE                Input Sheaf source file (.shf)
+    -o OUTPUT           Output file (.vmfb or .mlir with -S)
+    -S                  Emit MLIR only; do not invoke iree-compile
+    --config JSON       Shape config for dict params (manual)
+    --trace-with FILE   Interpret FILE to discover shapes automatically
+    --backend B         IREE target backend (default: llvm-cpu)
+    -v, --verbose       Verbose output
 
 Without -S, requires iree-compile (Sheaf SDK).
 Set IREE_COMPILE=/path/to/iree-compile to override."
@@ -249,6 +250,7 @@ Set IREE_COMPILE=/path/to/iree-compile to override."
     let mut backend = "llvm-cpu".to_string();
     let mut verbose = false;
     let mut config_json: Option<serde_json::Value> = None;
+    let mut trace_with: Option<PathBuf> = None;
 
     let mut i = 0;
     while i < args.len() {
@@ -281,6 +283,14 @@ Set IREE_COMPILE=/path/to/iree-compile to override."
                     eprintln!("sheaf build: --config: invalid JSON: {}", e);
                     exit(1);
                 }));
+            }
+            "--trace-with" => {
+                i += 1;
+                if i >= args.len() {
+                    eprintln!("sheaf build: --trace-with requires a file argument");
+                    exit(1);
+                }
+                trace_with = Some(PathBuf::from(&args[i]));
             }
             // Reject interpreter-only options explicitly
             "--trace" | "--guard" => {
@@ -386,6 +396,11 @@ Set IREE_COMPILE=/path/to/iree-compile to override."
         exit(1);
     }
 
+    // Trace-driven shape discovery: interpret the runner file to observe concrete arg shapes
+    let traced_configs = trace_with.map(|runner_path| {
+        trace_with_runner(&runner_path, &compiler, &file_functions, verbose)
+    });
+
     // Build per-param config from --config JSON:
     // config_json top level: {"param_name": {dict structure}, ...}
     // e.g. {"p": {"l1": {"W": [2,8], "b": [8]}, "l2": {"W": [8,1], "b": [1]}}}
@@ -416,8 +431,31 @@ Set IREE_COMPILE=/path/to/iree-compile to override."
         let mut sig = match func_def.signature {
             Some(s) => s,
             None => {
-                if verbose { eprintln!("warning: '{}' has no inferred signature, skipping", name); }
-                continue;
+                // Without annotations, try to build a signature from traced call records
+                if let Some(ref configs) = traced_configs {
+                    if let Some(fn_config) = configs.get(name.as_str()) {
+                        use sheaf_compiler::core::inference::FunctionSignature;
+                        use sheaf_compiler::StableHLOType;
+                        // Build param types from traced args
+                        let param_types: Vec<StableHLOType> = func_def.params.iter().map(|p| {
+                            fn_config.iter()
+                                .find(|(n, _, _)| n == p)
+                                .map(|(_, ty, _)| ty.clone())
+                                .unwrap_or(StableHLOType::scalar_f32())
+                        }).collect();
+                        FunctionSignature {
+                            param_types,
+                            return_type: StableHLOType::scalar_f32(), // will be refined
+                            return_dict_keys: None,
+                        }
+                    } else {
+                        if verbose { eprintln!("warning: '{}' has no inferred signature, skipping", name); }
+                        continue;
+                    }
+                } else {
+                    if verbose { eprintln!("warning: '{}' has no inferred signature, skipping", name); }
+                    continue;
+                }
             }
         };
 
@@ -436,6 +474,8 @@ Set IREE_COMPILE=/path/to/iree-compile to override."
         // Apply dict-to-tuple lowering for each configured param that appears
         // in this function's parameter list.
         let mut known_types: Vec<(String, sheaf_compiler::StableHLOType)> = Vec::new();
+
+        // Source 1: --config JSON (manual)
         for (param_name, param_config) in &param_configs {
             if !func_def.params.contains(param_name) {
                 continue;
@@ -453,6 +493,23 @@ Set IREE_COMPILE=/path/to/iree-compile to override."
             }
             body = lower_get_calls(&body, param_name, &index_map);
             known_types.push((param_name.clone(), tuple_ty));
+        }
+
+        // Source 2: --trace-with (automatic shape discovery)
+        if let Some(ref configs) = traced_configs {
+            if let Some(fn_config) = configs.get(name.as_str()) {
+                for (param_name, tuple_ty, index_map) in fn_config {
+                    // Skip if already configured by --config JSON
+                    if known_types.iter().any(|(n, _)| n == param_name) {
+                        continue;
+                    }
+                    if verbose {
+                        println!("  Traced '{}' param '{}' → {}", name, param_name, tuple_ty.to_mlir());
+                    }
+                    body = lower_get_calls(&body, param_name, index_map);
+                    known_types.push((param_name.clone(), tuple_ty.clone()));
+                }
+            }
         }
 
         // Re-infer signature if we have new known types from the config
@@ -473,6 +530,13 @@ Set IREE_COMPILE=/path/to/iree-compile to override."
                     sig.param_types[idx] = tuple_ty.clone();
                 }
             }
+        }
+
+        // Update registry with lowered body + refined signature so that
+        // other functions (e.g. train-step inlining forward) see the lowered version.
+        if let Some(fd) = compiler.registry.get_mut(name) {
+            fd.body_compiled = Some(body.clone());
+            fd.signature = Some(sig.clone());
         }
 
         let codegen = CodeGenerator::with_function_params(
@@ -556,6 +620,130 @@ Set IREE_COMPILE=/path/to/iree-compile to override."
         println!("Wrote {}", output.display());
         println!("Done.");
     }
+}
+
+/// Interpret a runner file to discover concrete shapes for function parameters.
+///
+/// Returns a map: function_name -> Vec<(param_name, StableHLOType, index_map)>
+/// where index_map is non-empty for Dict params (enabling get->GetTupleElement lowering).
+fn trace_with_runner(
+    runner_path: &std::path::Path,
+    compiler: &sheaf_compiler::core::compiler::CompilerContext,
+    target_fns: &[String],
+    verbose: bool,
+) -> std::collections::HashMap<String, Vec<(String, sheaf_compiler::StableHLOType, std::collections::BTreeMap<Vec<String>, Vec<usize>>)>> {
+    use std::collections::HashMap;
+    use sheaf_compiler::compiler::layout_to_index_map;
+    use sheaf_compiler::core::trace::{value_to_param_layout, value_to_stablehlo_type};
+    use sheaf_compiler::interpreter::builtins::register_builtins;
+    use sheaf_compiler::interpreter::env::Env;
+    use sheaf_compiler::StableHLOType;
+
+    let runner_abs = runner_path
+        .canonicalize()
+        .unwrap_or_else(|_| runner_path.to_path_buf());
+
+    let source = std::fs::read_to_string(&runner_abs).unwrap_or_else(|e| {
+        eprintln!("sheaf build: cannot read runner '{}': {}", runner_path.display(), e);
+        exit(1);
+    });
+
+    if verbose {
+        println!("Tracing with '{}'...", runner_path.display());
+    }
+
+    // Compile the runner file (which will (use ...) the target module)
+    let mut trace_compiler = sheaf_compiler::core::compiler::CompilerContext::new();
+    if let Some(dir) = runner_abs.parent() {
+        trace_compiler.current_dir = Some(dir.to_path_buf());
+    }
+    // Copy load_path from the build compiler so (use ...) resolves identically
+    trace_compiler.load_path = compiler.load_path.clone();
+
+    let exprs = sheaf_compiler::parse(
+        &source,
+        runner_abs.to_str().unwrap_or("<trace-with>"),
+    ).unwrap_or_else(|e| {
+        eprintln!("sheaf build: parse error in runner '{}': {}", runner_path.display(), e);
+        exit(1);
+    });
+
+    let mut compiled = Vec::new();
+    for expr in &exprs {
+        match trace_compiler.compile(expr) {
+            Ok(c) => compiled.push(c),
+            Err(e) => {
+                eprintln!("sheaf build: compilation error in runner '{}': {}", runner_path.display(), e);
+                exit(1);
+            }
+        }
+    }
+
+    // Interpret with call recording enabled and print suppressed
+    let mut env = Env::with_registry(trace_compiler.registry.clone());
+    register_builtins(&mut env);
+    env.call_records = Some(HashMap::new());
+    // Suppress print output during tracing (io must remain for entropy/random)
+    env.set_builtin("print", |_args, _kwargs| {
+        Ok(sheaf_compiler::interpreter::value::Value::Nil)
+    });
+
+    for c in &compiled {
+        if !matches!(c, sheaf_compiler::core::compiler::CompiledExpr::Nil) {
+            if let Err(e) = sheaf_compiler::interpreter::eval(c, &mut env) {
+                eprintln!("sheaf build: runtime error in runner '{}': {}", runner_path.display(), e);
+                exit(1);
+            }
+        }
+    }
+
+    // Extract per-function, per-param configs from recorded calls
+    let records = env.call_records.take().unwrap_or_default();
+    let mut result: HashMap<String, Vec<(String, StableHLOType, std::collections::BTreeMap<Vec<String>, Vec<usize>>)>> = HashMap::new();
+
+    for fn_name in target_fns {
+        let record = match records.get(fn_name) {
+            Some(r) => r,
+            None => {
+                if verbose {
+                    eprintln!("  trace: no call recorded for '{}' — skipping", fn_name);
+                }
+                continue;
+            }
+        };
+
+        let func_def = match trace_compiler.registry.get(fn_name) {
+            Some(fd) => fd,
+            None => continue,
+        };
+
+        let mut fn_configs = Vec::new();
+        for (param_name, arg_val) in func_def.params.iter().zip(record.arg_values.iter()) {
+            let ty = value_to_stablehlo_type(arg_val).unwrap_or(StableHLOType::scalar_f32());
+
+            // If the arg is a Dict, generate a ParamLayout + index_map for lowering
+            let index_map = if let Some(layout) = value_to_param_layout(param_name, arg_val) {
+                let tuple_ty = sheaf_compiler::forms::ml::param_layout_to_stablehlo_type(&layout);
+                if verbose {
+                    println!("  trace: '{}' param '{}' → {} (dict with {} fields)",
+                        fn_name, param_name, tuple_ty.to_mlir(), layout.fields.len());
+                }
+                fn_configs.push((param_name.clone(), tuple_ty, layout_to_index_map(&layout)));
+                continue;
+            } else {
+                std::collections::BTreeMap::new()
+            };
+
+            if verbose {
+                println!("  trace: '{}' param '{}' → {}", fn_name, param_name, ty.to_mlir());
+            }
+            fn_configs.push((param_name.clone(), ty, index_map));
+        }
+
+        result.insert(fn_name.clone(), fn_configs);
+    }
+
+    result
 }
 
 fn find_iree_compile() -> String {

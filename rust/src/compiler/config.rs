@@ -101,6 +101,28 @@ fn build_index_map_rec(
     }
 }
 
+/// Build an index map from a `ParamLayout` (same format as `build_index_map`).
+///
+/// Converts each field's `path` and `tuple_index` into the expected mapping:
+///   `["l1", "W"]` → `[0, 0]`, etc.
+///
+/// Also inserts prefix paths for intermediate levels:
+///   `["l1"]` → `[0]` (inferred from children with path starting with "l1")
+pub fn layout_to_index_map(layout: &crate::core::compiler::ParamLayout) -> BTreeMap<Vec<String>, Vec<usize>> {
+    let mut map = BTreeMap::new();
+    for field in &layout.fields {
+        // Insert the full path
+        map.insert(field.path.clone(), field.tuple_index.clone());
+        // Insert all prefix paths (for intermediate tuple access)
+        for depth in 1..field.path.len() {
+            let prefix: Vec<String> = field.path[..depth].to_vec();
+            let idx_prefix: Vec<usize> = field.tuple_index[..depth].to_vec();
+            map.entry(prefix).or_insert(idx_prefix);
+        }
+    }
+    map
+}
+
 /// Dict-to-tuple lowering pass.
 ///
 /// Rewrites `FunctionCall("get", [expr, Keyword(k)])` chains rooted at `Symbol(param)`

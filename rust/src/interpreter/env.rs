@@ -15,11 +15,20 @@ pub fn runtime_error(message: impl Into<String>) -> SheafError {
     }
 }
 
+/// A recorded function call: argument values observed during tracing.
+#[derive(Clone, Debug)]
+pub struct CallRecord {
+    pub arg_values: Vec<Value>,
+}
+
 #[derive(Clone)]
 pub struct Env {
     scopes: Vec<HashMap<String, Value>>,
     pub registry: HashMap<String, FunctionDef>,
     pub vmfb_sessions: Vec<VmfbSession>,
+    /// When set, records the first call to each registry function.
+    /// Used by `sheaf build --trace-with` to discover concrete param shapes.
+    pub call_records: Option<HashMap<String, CallRecord>>,
 }
 
 impl Env {
@@ -28,6 +37,7 @@ impl Env {
             scopes: vec![HashMap::new()],
             registry: HashMap::new(),
             vmfb_sessions: Vec::new(),
+            call_records: None,
         }
     }
 
@@ -36,6 +46,7 @@ impl Env {
             scopes: vec![HashMap::new()],
             registry,
             vmfb_sessions: Vec::new(),
+            call_records: None,
         }
     }
 

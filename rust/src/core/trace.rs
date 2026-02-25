@@ -11,7 +11,7 @@
 //! shapes, use those for compilation/dispatch.
 
 use crate::compiler::stablehlo::StableHLOType;
-use crate::core::compiler::{CompilerContext, FunctionDef, ParamLayout};
+use crate::core::compiler::{CompilerContext, FunctionDef, ParamField, ParamLayout};
 use crate::core::error::{SheafError, SheafResult};
 use crate::core::inference::FunctionSignature;
 use crate::interpreter::builtins::register_builtins;
@@ -275,4 +275,60 @@ fn find_param_layout<'a>(
 fn register_trace_overrides(env: &mut Env) {
     env.set_builtin("print", |_args, _kwargs| Ok(Value::Nil));
     env.set_builtin("io", |_args, _kwargs| Ok(Value::Int(42)));
+}
+
+/// Convert a runtime `Value::Dict` (observed from tracing) to a `ParamLayout`.
+/// This is the inverse of `param_layout_to_dummy_value`: given a nested Dict of
+/// tensors, produce the same layout that `defparams` would create.
+///
+/// Keys are sorted alphabetically at each level (BTreeMap order), and tuple
+/// indices are assigned in that order — matching the codegen convention.
+pub fn value_to_param_layout(name: &str, val: &Value) -> Option<ParamLayout> {
+    let dict = match val {
+        Value::Dict(map) => map,
+        _ => return None,
+    };
+
+    let mut fields = Vec::new();
+    let top_keys: Vec<&String> = dict.keys().collect(); // BTreeMap: already sorted
+
+    for (top_idx, key) in top_keys.iter().enumerate() {
+        match &dict[*key] {
+            // Nested dict: two-level path
+            Value::Dict(sub) => {
+                let sub_keys: Vec<&String> = sub.keys().collect();
+                for (sub_idx, sub_key) in sub_keys.iter().enumerate() {
+                    let shape = extract_shape(&sub[*sub_key])?;
+                    fields.push(ParamField {
+                        path: vec![(*key).clone(), (*sub_key).clone()],
+                        shape,
+                        tuple_index: vec![top_idx, sub_idx],
+                    });
+                }
+            }
+            // Leaf tensor: one-level path
+            other => {
+                let shape = extract_shape(other)?;
+                fields.push(ParamField {
+                    path: vec![(*key).clone()],
+                    shape,
+                    tuple_index: vec![top_idx],
+                });
+            }
+        }
+    }
+
+    Some(ParamLayout {
+        name: name.to_string(),
+        fields,
+    })
+}
+
+/// Extract shape from a Value (tensor or scalar).
+fn extract_shape(val: &Value) -> Option<Vec<i64>> {
+    match val {
+        Value::Tensor { data, .. } => Some(data.shape().iter().map(|&d| d as i64).collect()),
+        Value::Float(_) | Value::Int(_) => Some(vec![]),
+        _ => None,
+    }
 }

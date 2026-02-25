@@ -313,6 +313,15 @@ fn eval_call(name: &str, args: &[CompiledExpr], env: &mut Env) -> Result<Value, 
 
     // Try user-defined function from registry
     if let Some(func_def) = env.registry.get(name).cloned() {
+        // Record the first call for tracing (sheaf build --trace-with)
+        if let Some(ref mut records) = env.call_records {
+            records.entry(name.to_string()).or_insert_with(|| {
+                crate::interpreter::env::CallRecord {
+                    arg_values: pos_args.clone(),
+                }
+            });
+        }
+
         // VMFB dispatch: pure compiled functions run via IREE
         #[cfg(iree_runtime)]
         if let Some(session_idx) = func_def.vmfb_session_idx {
