@@ -416,11 +416,15 @@ Set IREE_COMPILE=/path/to/iree-compile to override."
         None => vec![],
     };
 
+    // Track compiled functions for manifest generation
+    let mut compiled_functions: Vec<(String, String)> = Vec::new(); // (name, body_hash)
+
     for name in &file_functions {
         let func_def = match compiler.registry.get(name).cloned() {
             Some(f) => f,
             None => continue,
         };
+        let body_hash = func_def.body_hash();
         let mut body = match func_def.body_compiled {
             Some(b) => b,
             None => {
@@ -459,16 +463,11 @@ Set IREE_COMPILE=/path/to/iree-compile to override."
             }
         };
 
-        // Refuse functions with side effects: they cannot be emitted as StableHLO.
+        // Skip functions with side effects: they cannot be emitted as StableHLO.
         let effects = collect_effects(&body);
         if !effects.is_empty() {
-            eprintln!(
-                "error: '{}' has side effects ({}) and cannot be compiled",
-                name,
-                format_effects(&effects)
-            );
-            eprintln!("  Only side-effect-free functions can be compiled to StableHLO.");
-            exit(1);
+            eprintln!("info: skipping '{}' (has side effects: {})", name, format_effects(&effects));
+            continue;
         }
 
         // Apply dict-to-tuple lowering for each configured param that appears
@@ -553,6 +552,8 @@ Set IREE_COMPILE=/path/to/iree-compile to override."
                     }
                 }
                 all_decls.push(decl);
+                // Record function hash for manifest
+                compiled_functions.push((name.clone(), body_hash.clone()));
             }
             Err(e) => {
                 if verbose {
@@ -616,9 +617,32 @@ Set IREE_COMPILE=/path/to/iree-compile to override."
         exit(1);
     }
 
+    // Write manifest with function hashes
+    write_manifest(&output, &compiled_functions, verbose);
+
     if verbose {
         println!("Wrote {}", output.display());
         println!("Done.");
+    }
+}
+
+/// Write a manifest file alongside the VMFB with content hashes for each compiled function.
+/// Used by `sheaf run` and `(use)` to detect stale compiled artifacts.
+fn write_manifest(vmfb_path: &std::path::Path, functions: &[(String, String)], verbose: bool) {
+    let manifest_path = vmfb_path.with_extension("vmfb.manifest.json");
+    let mut map = serde_json::Map::new();
+    let mut fns = serde_json::Map::new();
+    for (name, hash) in functions {
+        let mut entry = serde_json::Map::new();
+        entry.insert("hash".to_string(), serde_json::Value::String(hash.clone()));
+        fns.insert(name.clone(), serde_json::Value::Object(entry));
+    }
+    map.insert("functions".to_string(), serde_json::Value::Object(fns));
+    let json = serde_json::to_string_pretty(&serde_json::Value::Object(map)).unwrap();
+    if let Err(e) = std::fs::write(&manifest_path, &json) {
+        eprintln!("warning: could not write manifest '{}': {}", manifest_path.display(), e);
+    } else if verbose {
+        println!("Wrote {}", manifest_path.display());
     }
 }
 

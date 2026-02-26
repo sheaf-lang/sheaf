@@ -95,6 +95,19 @@ pub struct FunctionDef {
     pub known_param_types: Vec<(String, crate::compiler::stablehlo::StableHLOType)>,
 }
 
+impl FunctionDef {
+    /// Stable hash of the original AST body, for change detection in manifests.
+    /// Uses Display (not Debug) to exclude SourceLocations from the hash.
+    pub fn body_hash(&self) -> String {
+        use std::hash::{Hash, Hasher};
+        use std::collections::hash_map::DefaultHasher;
+        let repr = format!("{}", self.body);
+        let mut hasher = DefaultHasher::new();
+        repr.hash(&mut hasher);
+        format!("{:016x}", hasher.finish())
+    }
+}
+
 fn is_builtin_name(name: &str) -> bool {
     matches!(name,
         "+" | "-" | "*" | "/" | "//" | "mod" | "%" | "**"

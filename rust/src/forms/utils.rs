@@ -4,7 +4,6 @@
 //! Utility special forms: get, dict, last, use, quote
 
 use crate::ast::SheafValue;
-use crate::compiler::effects::has_side_effects;
 use crate::core::compiler::{CompiledExpr, CompilerContext};
 use crate::core::error::{SheafError, SheafResult, SourceLocation};
 use crate::forms::base::{SpecialForm, check_arity};
@@ -198,103 +197,23 @@ impl SpecialForm for UseForm {
             compiler.compile(expr)?;
         }
 
+        // Try to load companion VMFB for the imported module
         #[cfg(iree_runtime)]
-        try_load_companion_vmfb(compiler, &resolved, &pre_fns, loc)?;
+        {
+            let new_fns: Vec<String> = compiler
+                .registry
+                .keys()
+                .filter(|k| !pre_fns.contains(*k))
+                .cloned()
+                .collect();
+            crate::runtime::vmfb_loader::try_load_vmfb(compiler, &resolved, &new_fns);
+        }
 
         // Restore previous current_dir
         compiler.current_dir = prev_dir;
 
         Ok(CompiledExpr::Nil)
     }
-}
-
-/// Load a companion VMFB if present and fresh, tag pure functions for IREE dispatch,
-/// and trace them to discover accurate return types.
-#[cfg(iree_runtime)]
-fn try_load_companion_vmfb(
-    compiler: &mut CompilerContext,
-    shf_path: &std::path::Path,
-    pre_fns: &std::collections::HashSet<String>,
-    loc: &SourceLocation,
-) -> SheafResult<()> {
-    use std::sync::Arc;
-    use crate::runtime::iree_session::IreeSession;
-
-    let vmfb_path = shf_path.with_extension("vmfb");
-    if !vmfb_path.exists() {
-        return Ok(());
-    }
-
-    let is_fresh = match (
-        std::fs::metadata(shf_path).and_then(|m| m.modified()),
-        std::fs::metadata(&vmfb_path).and_then(|m| m.modified()),
-    ) {
-        (Ok(shf_time), Ok(vmfb_time)) => vmfb_time >= shf_time,
-        _ => false,
-    };
-    if !is_fresh {
-        return Ok(());
-    }
-
-    let new_fns: Vec<String> = compiler
-        .registry
-        .keys()
-        .filter(|k| !pre_fns.contains(*k))
-        .cloned()
-        .collect();
-
-    let pure_fns: Vec<String> = new_fns
-        .into_iter()
-        .filter(|name| {
-            compiler
-                .registry
-                .get(name)
-                .and_then(|fd| fd.body_compiled.as_ref())
-                .map(|body| !has_side_effects(body))
-                .unwrap_or(false)
-        })
-        .collect();
-
-    if pure_fns.is_empty() {
-        return Ok(());
-    }
-
-    // Load the VMFB into an IREE session
-    let vmfb_data = std::fs::read(&vmfb_path).map_err(|e| SheafError::Compile {
-        message: format!("use: cannot read VMFB '{}': {}", vmfb_path.display(), e),
-        location: loc.clone(),
-    })?;
-    let mut session = IreeSession::new().map_err(|e| SheafError::Compile {
-        message: format!("use: IREE init failed: {}", e),
-        location: loc.clone(),
-    })?;
-    session.load_vmfb(vmfb_data).map_err(|e| SheafError::Compile {
-        message: format!("use: failed to load VMFB '{}': {}", vmfb_path.display(), e),
-        location: loc.clone(),
-    })?;
-
-    let session_idx = compiler.vmfb_sessions.len();
-    compiler.vmfb_sessions.push(Arc::new(session));
-
-    for fn_name in &pure_fns {
-        if let Some(fd) = compiler.registry.get_mut(fn_name) {
-            fd.vmfb_session_idx = Some(session_idx);
-        }
-    }
-
-    // Trace pure functions to discover accurate return types.
-    // Static inference can't see through value-and-grad, tree-map, etc.
-    for fn_name in &pure_fns {
-        if let Some(fd) = compiler.registry.get(fn_name).cloned() {
-            if let Ok(traced_sig) = crate::core::trace::trace_function_signature(compiler, &fd) {
-                if let Some(fd_mut) = compiler.registry.get_mut(fn_name) {
-                    fd_mut.signature = Some(traced_sig);
-                }
-            }
-        }
-    }
-
-    Ok(())
 }
 
 /// Resolve a module name to an absolute path.

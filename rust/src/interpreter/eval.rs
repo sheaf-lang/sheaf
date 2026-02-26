@@ -77,6 +77,13 @@ pub fn eval_source_with_path(
         }
     }
 
+    // Auto-detect companion VMFB for the file being run
+    #[cfg(iree_runtime)]
+    if let Some(path) = file_path {
+        let all_fns: Vec<String> = compiler.registry.keys().cloned().collect();
+        crate::runtime::vmfb_loader::try_load_vmfb(&mut compiler, path, &all_fns);
+    }
+
     let mut env = Env::with_registry(compiler.registry.clone());
     env.vmfb_sessions = compiler.vmfb_sessions.clone();
     register_builtins(&mut env);

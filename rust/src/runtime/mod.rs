@@ -22,3 +22,5 @@ pub mod tensor_ops;
 pub mod iree_ffi;
 #[cfg(iree_runtime)]
 pub mod iree_session;
+#[cfg(iree_runtime)]
+pub mod vmfb_loader;
