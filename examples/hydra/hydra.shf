@@ -9,12 +9,12 @@
     (as-> x h
       ;; The reduction acts as a dynamic sequence of layers
       (reduce (fn [h_in layer_p]
-                (with-params layer_p
+                (with-params [layer_p]
                   (relu (linear h_in W b)))) ;; W and b are auto-bound
               h
               layers)
       ;; Final projection using the same pattern
-      (with-params head
+      (with-params [head]
         (linear h W b)))))
 
 

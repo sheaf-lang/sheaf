@@ -3,6 +3,7 @@
 
 //! Symbolic reverse-mode autodiff on `CompiledExpr`.
 
+pub mod trace;
 pub mod value_and_grad;
 
 // `grad(expr, wrt)` returns a new `CompiledExpr` representing dL/d(wrt),
@@ -51,6 +52,7 @@ fn substitute_bindings(body: &CompiledExpr, bindings: &[(String, CompiledExpr)])
     }
     result
 }
+
 
 fn replace_symbol(expr: &CompiledExpr, name: &str, replacement: &CompiledExpr) -> CompiledExpr {
     match expr {
@@ -202,9 +204,11 @@ fn grad_function_call(
         }
 
         "-" if args.len() == 2 => {
-            // d/dx (f - h) = df/dx - dh/dx
+            // d/dx (f - h) = df/dx + d(-h)/dx
+            // We pass -g as upstream to rhs (the negative side), then ADD.
+            // Do NOT sub here: the negation is already in the upstream.
             let (lhs, rhs) = (&args[0], &args[1]);
-            sub(
+            add(
                 grad_with(lhs, wrt, g.clone()),
                 grad_with(rhs, wrt, mul(float(-1.0), g)),
             )
@@ -323,6 +327,37 @@ fn grad_function_call(
 pub fn grad_simplified(expr: &CompiledExpr, wrt: &str) -> CompiledExpr {
     let g = grad(expr, wrt, None);
     simplify(g)
+}
+
+/// Check whether an expression contains ops that the symbolic AD cannot differentiate.
+///
+/// Returns true if the expression contains `get`, `reduce`, `map`, `filter`,
+/// `LambdaCall`, `If`, `While`, `Repeat`, or other structural/side-effecting ops.
+pub fn contains_undiffable_ops(expr: &CompiledExpr) -> bool {
+    match expr {
+        CompiledExpr::FunctionCall { name, args } => {
+            match name.as_str() {
+                "get" | "reduce" | "map" | "filter" | "find"
+                | "range" | "len" | "first" | "last" | "rest"
+                | "cons" | "append" | "concat" | "slice"
+                | "shape" | "print" | "io" => true,
+                _ => args.iter().any(contains_undiffable_ops),
+            }
+        }
+        CompiledExpr::LambdaCall { .. } => true,
+        CompiledExpr::If { .. } | CompiledExpr::While { .. } | CompiledExpr::Repeat { .. } => true,
+        CompiledExpr::Let { bindings, body } => {
+            bindings.iter().any(|(_, v)| contains_undiffable_ops(v))
+                || contains_undiffable_ops(body)
+        }
+        CompiledExpr::Do(exprs) => exprs.iter().any(contains_undiffable_ops),
+        CompiledExpr::Lambda { body, .. } => contains_undiffable_ops(body),
+        CompiledExpr::Vector(elems) => elems.iter().any(contains_undiffable_ops),
+        CompiledExpr::Dict(pairs) => {
+            pairs.iter().any(|(k, v)| contains_undiffable_ops(k) || contains_undiffable_ops(v))
+        }
+        _ => false,
+    }
 }
 
 /// Inline user-defined function calls so that autodiff can see through them.
