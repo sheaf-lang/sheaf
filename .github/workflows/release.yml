@@ -1,0 +1,177 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+env:
+  IREE_VERSION: "3.10.0"
+  IREE_REPO: "https://github.com/iree-org/iree.git"
+
+jobs:
+  build-iree-runtime:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            target: linux-x86_64
+            cmake_extra: ""
+          - os: ubuntu-24.04
+            target: linux-aarch64
+            cmake_extra: >-
+              -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc
+              -DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++
+              -DCMAKE_SYSTEM_NAME=Linux
+              -DCMAKE_SYSTEM_PROCESSOR=aarch64
+          - os: macos-15
+            target: macos-aarch64
+            cmake_extra: ""
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Cache IREE runtime
+        id: cache-iree
+        uses: actions/cache@v4
+        with:
+          path: iree-install
+          key: iree-runtime-${{ env.IREE_VERSION }}-${{ matrix.target }}
+
+      - name: Install cross-compilation toolchain (linux-aarch64)
+        if: steps.cache-iree.outputs.cache-hit != 'true' && matrix.target == 'linux-aarch64'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+
+      - name: Install build tools
+        if: steps.cache-iree.outputs.cache-hit != 'true'
+        run: |
+          if [[ "${{ matrix.os }}" == ubuntu-* ]]; then
+            sudo apt-get update
+            sudo apt-get install -y cmake ninja-build
+          else
+            brew install cmake ninja
+          fi
+
+      - name: Clone IREE
+        if: steps.cache-iree.outputs.cache-hit != 'true'
+        run: |
+          git clone --depth 1 --branch v${{ env.IREE_VERSION }} ${{ env.IREE_REPO }}
+          cd iree
+          git submodule update --init --depth 1
+
+      - name: Build IREE runtime
+        if: steps.cache-iree.outputs.cache-hit != 'true'
+        run: |
+          cmake -G Ninja -B iree-build -S iree \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/iree-install \
+            -DIREE_BUILD_COMPILER=OFF \
+            -DIREE_BUILD_TESTS=OFF \
+            -DIREE_BUILD_SAMPLES=OFF \
+            -DIREE_HAL_DRIVER_LOCAL_SYNC=ON \
+            -DIREE_HAL_DRIVER_LOCAL_TASK=ON \
+            -DIREE_HAL_DRIVER_VULKAN=OFF \
+            ${{ matrix.cmake_extra }}
+          cmake --build iree-build --target iree_runtime_unified
+          # Collect artifacts into install dir
+          mkdir -p iree-install/lib
+          find iree-build -name "libiree_runtime_unified.a" -exec cp {} iree-install/lib/ \;
+          find iree-build -name "libflatcc_parsing.a" -exec cp {} iree-install/lib/ \; 2>/dev/null || true
+          find iree-build -name "libflatcc_runtime.a" -exec cp {} iree-install/lib/ \; 2>/dev/null || true
+
+      - name: Upload IREE runtime
+        uses: actions/upload-artifact@v4
+        with:
+          name: iree-runtime-${{ matrix.target }}
+          path: iree-install/lib/
+
+  build-sheaf:
+    needs: build-iree-runtime
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            target: linux-x86_64
+            rust_target: x86_64-unknown-linux-gnu
+            iree_artifact: iree-runtime-linux-x86_64
+            linker: ""
+          - os: ubuntu-24.04
+            target: linux-aarch64
+            rust_target: aarch64-unknown-linux-gnu
+            iree_artifact: iree-runtime-linux-aarch64
+            linker: aarch64-linux-gnu-gcc
+          - os: macos-15
+            target: macos-aarch64
+            rust_target: aarch64-apple-darwin
+            iree_artifact: iree-runtime-macos-aarch64
+            linker: ""
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust_target }}
+
+      - name: Install cross-linker (linux-aarch64)
+        if: matrix.target == 'linux-aarch64'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu
+
+      - name: Download IREE runtime
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.iree_artifact }}
+          path: iree-runtime-lib
+
+      - name: Build sheaf
+        env:
+          IREE_RUNTIME_LIB_DIR: ${{ github.workspace }}/iree-runtime-lib
+        run: |
+          if [[ -n "${{ matrix.linker }}" ]]; then
+            mkdir -p .cargo
+            cat > .cargo/config.toml << 'TOML'
+          [target.aarch64-unknown-linux-gnu]
+          linker = "${{ matrix.linker }}"
+          TOML
+          fi
+          cd rust
+          cargo build --release --target ${{ matrix.rust_target }}
+
+      - name: Strip and package
+        run: |
+          BIN=rust/target/${{ matrix.rust_target }}/release/sheaf
+          if [[ "${{ matrix.target }}" == linux-aarch64 ]]; then
+            aarch64-linux-gnu-strip "$BIN"
+          else
+            strip "$BIN"
+          fi
+          tar czf sheaf-${{ matrix.target }}.tar.gz -C rust/target/${{ matrix.rust_target }}/release sheaf
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: sheaf-${{ matrix.target }}
+          path: sheaf-${{ matrix.target }}.tar.gz
+
+  release:
+    needs: build-sheaf
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: Download all binaries
+        uses: actions/download-artifact@v4
+        with:
+          pattern: sheaf-*
+          merge-multiple: true
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: sheaf-*.tar.gz
+          generate_release_notes: true
