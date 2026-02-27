@@ -70,10 +70,7 @@ pub fn eval_source_with_path(
                     .unwrap_or(true)
             });
         if all_pure {
-            eprintln!(
-                "hint: '{}' has no side effects — consider compiling with `sheaf build`",
-                filename
-            );
+            eprintln!("hint: pure functions detected — run `sheaf build` to compile them");
         }
     }
 

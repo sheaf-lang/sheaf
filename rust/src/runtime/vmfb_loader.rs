@@ -12,11 +12,11 @@ use crate::compiler::effects::has_side_effects;
 use crate::core::compiler::CompilerContext;
 use crate::runtime::iree_session::IreeSession;
 
-/// Try to load a companion VMFB for a Sheaf source file.
+/// Try to load a compiled-functions.vmfb from the directory of a Sheaf source file.
 ///
-/// Looks for `{shf_path}.vmfb` and validates freshness using a manifest
-/// (`{shf_path}.vmfb.manifest.json`) if present, falling back to timestamp
-/// comparison otherwise.
+/// Looks for `compiled-functions.vmfb` in the same directory as `shf_path`
+/// and validates freshness using a manifest (`compiled-functions.vmfb.manifest.json`)
+/// if present, falling back to timestamp comparison otherwise.
 ///
 /// `candidate_fns`: function names to consider for IREE dispatch.
 /// Only pure (side-effect-free) functions among these will be tagged.
@@ -27,7 +27,8 @@ pub fn try_load_vmfb(
     shf_path: &Path,
     candidate_fns: &[String],
 ) -> bool {
-    let vmfb_path = shf_path.with_extension("vmfb");
+    let dir = shf_path.parent().unwrap_or_else(|| Path::new("."));
+    let vmfb_path = dir.join("compiled-functions.vmfb");
     if !vmfb_path.exists() {
         return false;
     }
@@ -69,7 +70,6 @@ pub fn try_load_vmfb(
             if !is_fresh {
                 return false;
             }
-            // Timestamp says fresh — use all pure functions
             pure_fns
         }
     };
@@ -120,9 +120,8 @@ pub fn try_load_vmfb(
     }
 
     eprintln!(
-        "info: dispatching {} function(s) via IREE from '{}'",
-        valid_fns.len(),
-        vmfb_path.display()
+        "using compiled-functions.vmfb: {}",
+        valid_fns.join(", ")
     );
     true
 }

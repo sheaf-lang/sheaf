@@ -7,8 +7,11 @@
 //!   sheaf                               Launch interactive REPL
 //!   sheaf file.shf                      Interpret a Sheaf file
 //!   sheaf -c '(+ 1 2)'                 Evaluate an expression
-//!   sheaf build file.shf -o out.vmfb   Compile to VMFB (requires Sheaf SDK)
-//!   sheaf build file.shf -o out.mlir -S  Emit MLIR only (no SDK required)
+//!   sheaf build                         Compile all pure functions in current directory
+//!   sheaf build dir/                    Compile all pure functions in directory
+//!   sheaf build file.shf               Compile pure functions from a single file
+//!   sheaf build -r                      Recursive directory scan
+//!   sheaf build -o out.vmfb            Override output filename
 
 use std::process::exit;
 
@@ -51,15 +54,15 @@ Usage:
     sheaf                              Launch interactive REPL
     sheaf FILE [OPTIONS]               Interpret a Sheaf file
     sheaf -c EXPR [OPTIONS]            Evaluate an expression
-    sheaf build FILE -o OUTPUT         Compile to VMFB (requires Sheaf SDK)
-    sheaf build FILE -o OUTPUT -S      Emit MLIR only (no SDK required)
+    sheaf build [DIR|FILE] [OPTIONS]   Compile pure functions to VMFB
 
 Interpreter options:
     --trace [FUNCTIONS]    Trace execution (optionally scoped to functions)
     --guard SPEC           Runtime guard: [scope:]variable:check (repeatable)
 
 Build options:
-    -o OUTPUT              Output file (.vmfb or .mlir)
+    -o OUTPUT              Output file (default: compiled-functions.vmfb)
+    -r                     Scan directories recursively
     -S                     Emit MLIR only, do not invoke iree-compile
     --backend BACKEND      IREE target backend (default: llvm-cpu)
     -v, --verbose          Verbose output
@@ -67,10 +70,12 @@ Build options:
 Examples:
     sheaf script.shf
     sheaf -c '(+ 1 2)'
-    sheaf script.shf --trace forward
-    sheaf build model.shf -o model.vmfb
-    sheaf build model.shf -o model.mlir -S
-    sheaf build model.shf -o model.vmfb --backend cuda
+    sheaf build                             Compile all .shf in current dir
+    sheaf build examples/hydra/             Compile all .shf in directory
+    sheaf build model.shf                   Compile a single file
+    sheaf build -r                          Recursive scan
+    sheaf build -o model.vmfb              Override output name
+    sheaf build model.shf -o model.mlir -S  Emit MLIR only
 
 SDK:
     'sheaf build' without -S requires iree-compile from the Sheaf SDK.
@@ -228,15 +233,25 @@ fn run_build(args: &[String]) {
 
     if args.first().map(|a| a == "--help" || a == "-h").unwrap_or(false) {
         println!(
-            "Usage: sheaf build FILE -o OUTPUT [-S] [--config JSON] [--trace-with FILE] [--backend BACKEND] [-v]
+            "Usage: sheaf build [DIR|FILE] [OPTIONS]
 
-    FILE                Input Sheaf source file (.shf)
-    -o OUTPUT           Output file (.vmfb or .mlir with -S)
+Compile all pure functions from .shf files into a single VMFB artifact.
+
+    DIR                 Directory to scan for .shf files (default: .)
+    FILE                Single .shf file to compile
+    -o OUTPUT           Output file (default: compiled-functions.vmfb)
+    -r                  Scan directories recursively
     -S                  Emit MLIR only; do not invoke iree-compile
     --config JSON       Shape config for dict params (manual)
     --trace-with FILE   Interpret FILE to discover shapes automatically
     --backend B         IREE target backend (default: llvm-cpu)
     -v, --verbose       Verbose output
+
+Examples:
+    sheaf build                         Compile all .shf in current dir
+    sheaf build examples/hydra/         Compile all .shf in directory
+    sheaf build model.shf               Compile a single file
+    sheaf build -r -o model.vmfb        Recursive scan, custom output
 
 Without -S, requires iree-compile (Sheaf SDK).
 Set IREE_COMPILE=/path/to/iree-compile to override."
@@ -247,6 +262,7 @@ Set IREE_COMPILE=/path/to/iree-compile to override."
     let mut input: Option<PathBuf> = None;
     let mut output: Option<PathBuf> = None;
     let mut emit_mlir_only = false;
+    let mut recursive = false;
     let mut backend = "llvm-cpu".to_string();
     let mut verbose = false;
     let mut config_json: Option<serde_json::Value> = None;
@@ -264,6 +280,7 @@ Set IREE_COMPILE=/path/to/iree-compile to override."
                 output = Some(PathBuf::from(&args[i]));
             }
             "-S" => emit_mlir_only = true,
+            "-r" => recursive = true,
             "--backend" => {
                 i += 1;
                 if i >= args.len() {
@@ -292,7 +309,6 @@ Set IREE_COMPILE=/path/to/iree-compile to override."
                 }
                 trace_with = Some(PathBuf::from(&args[i]));
             }
-            // Reject interpreter-only options explicitly
             "--trace" | "--guard" => {
                 eprintln!(
                     "sheaf build: '{}' is an interpreter option and cannot be used with 'build'",
@@ -312,93 +328,121 @@ Set IREE_COMPILE=/path/to/iree-compile to override."
         i += 1;
     }
 
-    let input = input.unwrap_or_else(|| {
-        eprintln!("sheaf build: no input file specified");
+    // Resolve input: default to current directory
+    let input = input.unwrap_or_else(|| PathBuf::from("."));
+
+    // Collect .shf source files
+    let source_files: Vec<PathBuf> = if input.is_dir() {
+        collect_shf_files(&input, recursive)
+    } else if input.is_file() {
+        vec![input.clone()]
+    } else {
+        eprintln!("sheaf build: '{}' is not a file or directory", input.display());
         exit(1);
-    });
+    };
+
+    if source_files.is_empty() {
+        eprintln!("sheaf build: no .shf files found in '{}'", input.display());
+        exit(1);
+    }
+
+    // Resolve output directory (where compiled-functions.vmfb goes)
+    let output_dir = if input.is_dir() {
+        input.canonicalize().unwrap_or_else(|_| input.clone())
+    } else {
+        input.parent().map(|p| p.to_path_buf()).unwrap_or_else(|| PathBuf::from("."))
+            .canonicalize().unwrap_or_else(|_| PathBuf::from("."))
+    };
+
     let output = output.unwrap_or_else(|| {
-        eprintln!("sheaf build: no output file specified (-o)");
-        exit(1);
+        if emit_mlir_only {
+            output_dir.join("compiled-functions.mlir")
+        } else {
+            output_dir.join("compiled-functions.vmfb")
+        }
     });
 
     // Detect output format from extension when -S not set
     let emit_mlir_only = emit_mlir_only
         || output.extension().and_then(|e| e.to_str()) == Some("mlir");
 
-    let source = fs::read_to_string(&input).unwrap_or_else(|e| {
-        eprintln!("sheaf: cannot read '{}': {}", input.display(), e);
-        exit(1);
+    eprintln!("sheaf build: scanning {}", if input.is_dir() {
+        input.display().to_string()
+    } else {
+        input.file_name().unwrap_or_default().to_string_lossy().to_string()
     });
 
-    if verbose {
-        println!("Parsing {}...", input.display());
-    }
-
-    let exprs = parse(&source, input.to_str().unwrap()).unwrap_or_else(|e| {
-        eprintln!("parse error: {}", e);
-        exit(1);
-    });
-
-    if exprs.is_empty() {
-        eprintln!("sheaf: no expressions found in '{}'", input.display());
-        exit(1);
-    }
-
-    if verbose {
-        println!("Compiling...");
-    }
-
+    // Parse and compile all source files into a single compiler context
     let mut compiler = CompilerContext::new();
-    if let Some(dir) = input.canonicalize().ok().and_then(|p| p.parent().map(|d| d.to_path_buf())) {
-        compiler.current_dir = Some(dir);
+    if let Some(dir) = output.parent() {
+        compiler.current_dir = Some(dir.to_path_buf());
     }
-    let mut compiled_exprs = Vec::new();
-    for expr in &exprs {
-        match compiler.compile(expr) {
-            Ok(c) => compiled_exprs.push(c),
-            Err(e) => {
-                eprintln!("compilation error: {}", e);
-                exit(1);
-            }
+    let mut all_compiled_exprs = Vec::new();
+    // Track which functions come from which file
+    let mut file_functions: Vec<(PathBuf, Vec<String>)> = Vec::new();
+
+    for src_path in &source_files {
+        let source = fs::read_to_string(src_path).unwrap_or_else(|e| {
+            eprintln!("sheaf build: cannot read '{}': {}", src_path.display(), e);
+            exit(1);
+        });
+
+        let exprs = parse(&source, src_path.to_str().unwrap_or("<unknown>")).unwrap_or_else(|e| {
+            eprintln!("parse error in '{}': {}", src_path.display(), e);
+            exit(1);
+        });
+
+        if exprs.is_empty() {
+            continue;
         }
-    }
 
-    let extra_decls = resolve_vag_decls(&compiler, &compiled_exprs, verbose);
+        // Set current_dir to the file's directory for (use ...) resolution
+        if let Some(dir) = src_path.canonicalize().ok().and_then(|p| p.parent().map(|d| d.to_path_buf())) {
+            compiler.current_dir = Some(dir);
+        }
 
-    if verbose {
-        println!("Generating StableHLO...");
-    }
-
-    // Emit all user-defined functions in the registry as a single MLIR module.
-    // Functions from (use ...) imports are included only if they were defined
-    // in the source file itself (tracked via compiled_exprs).
-    let mut all_decls = extra_decls;
-
-    // Collect function names defined directly in this file (i.e. top-level defn forms)
-    let file_functions: Vec<String> = exprs
-        .iter()
-        .filter_map(|e| {
-            e.as_list()
+        let mut fn_names = Vec::new();
+        for expr in &exprs {
+            // Collect defn names from this file
+            if let Some(name) = expr.as_list()
                 .and_then(|l| l.first())
                 .and_then(|h| h.as_symbol())
                 .filter(|&s| s == "defn")
-                .and_then(|_| {
-                    e.as_list()
-                        .and_then(|l| l.get(1))
-                        .and_then(|n| n.as_symbol())
-                        .map(|s| s.to_string())
-                })
-        })
+                .and_then(|_| expr.as_list().and_then(|l| l.get(1)).and_then(|n| n.as_symbol()))
+            {
+                fn_names.push(name.to_string());
+            }
+
+            match compiler.compile(expr) {
+                Ok(c) => all_compiled_exprs.push(c),
+                Err(e) => {
+                    eprintln!("compilation error in '{}': {}", src_path.display(), e);
+                    exit(1);
+                }
+            }
+        }
+
+        if !fn_names.is_empty() {
+            file_functions.push((src_path.clone(), fn_names));
+        }
+    }
+
+    let all_fn_names: Vec<String> = file_functions.iter()
+        .flat_map(|(_, names)| names.clone())
         .collect();
 
-    if file_functions.is_empty() {
-        eprintln!("error: no functions defined in '{}'", input.display());
+    if all_fn_names.is_empty() {
+        eprintln!("sheaf build: no functions defined in scanned files");
         exit(1);
     }
 
+    let extra_decls = resolve_vag_decls(&compiler, &all_compiled_exprs, verbose);
+
+    let mut all_decls = extra_decls;
+
     // Trace-driven shape discovery: interpret the runner file to observe concrete arg shapes
     let traced_configs = trace_with.map(|runner_path| {
-        trace_with_runner(&runner_path, &compiler, &file_functions, verbose)
+        trace_with_runner(&runner_path, &compiler, &all_fn_names, verbose)
     });
 
     // Build per-param config from --config JSON:
@@ -416,10 +460,12 @@ Set IREE_COMPILE=/path/to/iree-compile to override."
         None => vec![],
     };
 
-    // Track compiled functions for manifest generation
+    // Track compiled functions for manifest generation + log output
     let mut compiled_functions: Vec<(String, String)> = Vec::new(); // (name, body_hash)
+    let mut compiled_per_file: std::collections::HashMap<String, Vec<String>> = std::collections::HashMap::new();
+    let mut skipped_fns: Vec<(String, String, String)> = Vec::new(); // (file, name, reason)
 
-    for name in &file_functions {
+    for name in &all_fn_names {
         let func_def = match compiler.registry.get(name).cloned() {
             Some(f) => f,
             None => continue,
@@ -466,7 +512,11 @@ Set IREE_COMPILE=/path/to/iree-compile to override."
         // Skip functions with side effects: they cannot be emitted as StableHLO.
         let effects = collect_effects(&body);
         if !effects.is_empty() {
-            eprintln!("info: skipping '{}' (has side effects: {})", name, format_effects(&effects));
+            let src_file = file_functions.iter()
+                .find(|(_, names)| names.contains(name))
+                .map(|(p, _)| p.display().to_string())
+                .unwrap_or_else(|| "?".to_string());
+            skipped_fns.push((src_file, name.clone(), format!("side effects: {}", format_effects(&effects))));
             continue;
         }
 
@@ -552,8 +602,12 @@ Set IREE_COMPILE=/path/to/iree-compile to override."
                     }
                 }
                 all_decls.push(decl);
-                // Record function hash for manifest
                 compiled_functions.push((name.clone(), body_hash.clone()));
+                let src_file = file_functions.iter()
+                    .find(|(_, names)| names.contains(name))
+                    .map(|(p, _)| p.display().to_string())
+                    .unwrap_or_else(|| "?".to_string());
+                compiled_per_file.entry(src_file).or_default().push(name.clone());
             }
             Err(e) => {
                 if verbose {
@@ -566,8 +620,21 @@ Set IREE_COMPILE=/path/to/iree-compile to override."
     }
 
     if all_decls.is_empty() {
-        eprintln!("error: nothing to emit from '{}'", input.display());
+        eprintln!("sheaf build: no compilable functions found");
+        if !skipped_fns.is_empty() {
+            for (file, name, reason) in &skipped_fns {
+                eprintln!("  skipped {}/{} ({})", file, name, reason);
+            }
+        }
         exit(1);
+    }
+
+    // Print build summary
+    for (file, names) in &compiled_per_file {
+        eprintln!("  {} → {}", file, names.join(", "));
+    }
+    for (file, name, reason) in &skipped_fns {
+        eprintln!("  skipped: {}/{} ({})", file, name, reason);
     }
 
     let mlir = StableHLOEmitter::emit_module(&all_decls);
@@ -577,9 +644,7 @@ Set IREE_COMPILE=/path/to/iree-compile to override."
             eprintln!("error writing '{}': {}", output.display(), e);
             exit(1);
         });
-        if verbose {
-            println!("Wrote {}", output.display());
-        }
+        eprintln!("compiled {} function(s) → {}", compiled_functions.len(), output.display());
         return;
     }
 
@@ -594,7 +659,7 @@ Set IREE_COMPILE=/path/to/iree-compile to override."
     });
 
     if verbose {
-        println!("Running iree-compile ({})...", iree_compile);
+        eprintln!("running iree-compile ({})...", iree_compile);
     }
 
     let status = Command::new(&iree_compile)
@@ -620,10 +685,7 @@ Set IREE_COMPILE=/path/to/iree-compile to override."
     // Write manifest with function hashes
     write_manifest(&output, &compiled_functions, verbose);
 
-    if verbose {
-        println!("Wrote {}", output.display());
-        println!("Done.");
-    }
+    eprintln!("compiled {} function(s) → {}", compiled_functions.len(), output.display());
 }
 
 /// Write a manifest file alongside the VMFB with content hashes for each compiled function.
@@ -768,6 +830,28 @@ fn trace_with_runner(
     }
 
     result
+}
+
+/// Collect .shf files from a directory, optionally recursively.
+fn collect_shf_files(dir: &std::path::Path, recursive: bool) -> Vec<std::path::PathBuf> {
+    let mut files = Vec::new();
+    let entries = match std::fs::read_dir(dir) {
+        Ok(e) => e,
+        Err(e) => {
+            eprintln!("sheaf build: cannot read directory '{}': {}", dir.display(), e);
+            return files;
+        }
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.is_file() && path.extension().and_then(|e| e.to_str()) == Some("shf") {
+            files.push(path);
+        } else if recursive && path.is_dir() {
+            files.extend(collect_shf_files(&path, true));
+        }
+    }
+    files.sort();
+    files
 }
 
 fn find_iree_compile() -> String {
