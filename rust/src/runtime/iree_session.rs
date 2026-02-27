@@ -9,10 +9,20 @@ use ndarray::ArrayD;
 
 unsafe fn libc_stderr() -> *mut c_void {
     unsafe {
-        unsafe extern "C" {
-            static __stderrp: *mut c_void;
+        #[cfg(target_os = "macos")]
+        {
+            unsafe extern "C" {
+                static __stderrp: *mut c_void;
+            }
+            __stderrp
         }
-        __stderrp
+        #[cfg(not(target_os = "macos"))]
+        {
+            unsafe extern "C" {
+                static stderr: *mut c_void;
+            }
+            stderr
+        }
     }
 }
 
