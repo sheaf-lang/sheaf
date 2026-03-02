@@ -1421,7 +1421,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   <h1>On the future of Sheaf</h1>
 
 <p><em>Feb 2nd 2026</em></p>
-<p>When I started Sheaf in 2025, it came from a frustration with how we express machine learning. I summarized it in the <a href="rationale.md">rationale</a> but will extend here.</p>
+<p>When I started Sheaf in 2025, it came from a frustration with how we express machine learning. I summarized it in the <a href="../../rationale/">rationale</a> but will extend here.</p>
 <p>PyTorch has become the default way to write machine learning code, but over time has also become a dense stack of abstractions, conventions, and implicit machinery. To me, JAX is a clear improvement. It makes the mathematical structure more explicit and pushes important concepts such as pure functions and transformations closer to the surface. Still, at the end of the day, the center of gravity remained the same: Python as the control plane, requiring a growing amount of machinery to compensate for what the language itself does not express.</p>
 <p>The issue is not performance per se, but semantic weight. Too much of what matters in a model ends up encoded indirectly, through imperative control flow, decorators, and framework-specific plumbing.</p>
 <h3 id="a-systems-perspective"><strong>A systems perspective</strong></h3>
