@@ -8,30 +8,26 @@
       
       
       
-        <link rel="canonical" href="https://sheaf-lang.org/blog/2/">
+        <link rel="canonical" href="https://sheaf-lang.org/distributed-strategies/">
       
       
-        <link rel="prev" href="../3/">
-      
-      
-        <link rel="next" href="../1/">
       
       
         
       
       
-      <link rel="icon" href="../../images/favicon.png">
+      <link rel="icon" href="../images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
     
 
       
-        <title>Rust vs C++ vs Go for Sheaf's Compiler - Sheaf</title>
+        <title>Distributed Training Strategies - Reference - Sheaf</title>
       
     
-<link rel="icon" type="image/png" href="../../images/favicon.png">
+<link rel="icon" type="image/png" href="../images/favicon.png">
 <meta name="robots" content="index, follow">
-<meta property="og:image" content="../../images/sheaf-dark.png">
+<meta property="og:image" content="../images/sheaf-dark.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta property="og:title" content="Sheaf - A Functional Language for Differentiable Programs">
 <meta property="og:description" content="Sheaf is a functional language for describing differentiable computation as topology rather than execution.
@@ -40,7 +36,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 <style>
   /* Replace mkdocs logo with custom logo - header */
   .md-header__button.md-logo {
-    background-image: url('../../images/sheaf-light.png');
+    background-image: url('../images/sheaf-light.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
@@ -54,7 +50,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 
   /* Replace mkdocs logo with custom logo - sidebar (responsive menu) */
   .md-nav__title {
-    background-image: url('../../images/sheaf-light.png');
+    background-image: url('../images/sheaf-light.png');
     background-size: 64px 64px;
     background-repeat: no-repeat;
     background-position: center;
@@ -71,10 +67,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 
     
 
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -480,9 +476,9 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
       
     
     
-      <link rel="stylesheet" href="../../stylesheets/extra.css">
+      <link rel="stylesheet" href="../stylesheets/extra.css">
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -505,7 +501,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     <div data-md-component="skip">
       
         
-        <a href="#the-c-i-know" class="md-skip">
+        <a href="#distributed-training-strategies-reference" class="md-skip">
           Skip to content
         </a>
       
@@ -522,9 +518,9 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="Sheaf" class="md-header__button md-logo" aria-label="Sheaf" data-md-component="logo">
+    <a href=".." title="Sheaf" class="md-header__button md-logo" aria-label="Sheaf" data-md-component="logo">
       
-  <img src="../../images/sheaf-light.png" alt="logo">
+  <img src="../images/sheaf-light.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -541,7 +537,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Rust vs C++ vs Go for Sheaf's Compiler
+              Distributed Training Strategies - Reference
             
           </span>
         </div>
@@ -622,7 +618,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     
     
       <li class="md-tabs__item">
-        <a href="../../quickstart/" class="md-tabs__link">
+        <a href="../quickstart/" class="md-tabs__link">
           
   
   
@@ -642,7 +638,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     
     
       <li class="md-tabs__item">
-        <a href="../../reference/" class="md-tabs__link">
+        <a href="../reference/" class="md-tabs__link">
           
   
   
@@ -658,13 +654,11 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="../4/" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../blog/4/" class="md-tabs__link">
           
   
   
@@ -694,8 +688,6 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
           
             
               
-                
-              
               <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
@@ -707,9 +699,9 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="Sheaf" class="md-nav__button md-logo" aria-label="Sheaf" data-md-component="logo">
+    <a href=".." title="Sheaf" class="md-nav__button md-logo" aria-label="Sheaf" data-md-component="logo">
       
-  <img src="../../images/sheaf-light.png" alt="logo">
+  <img src="../images/sheaf-light.png" alt="logo">
 
     </a>
     Sheaf
@@ -786,7 +778,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../../quickstart/" class="md-nav__link">
+      <a href="../quickstart/" class="md-nav__link">
         
   
   
@@ -814,7 +806,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../../rationale/" class="md-nav__link">
+      <a href="../rationale/" class="md-nav__link">
         
   
   
@@ -842,7 +834,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../../starting/" class="md-nav__link">
+      <a href="../starting/" class="md-nav__link">
         
   
   
@@ -870,7 +862,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../../types/" class="md-nav__link">
+      <a href="../types/" class="md-nav__link">
         
   
   
@@ -898,7 +890,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../../python/" class="md-nav__link">
+      <a href="../python/" class="md-nav__link">
         
   
   
@@ -926,7 +918,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../../changelog/" class="md-nav__link">
+      <a href="../changelog/" class="md-nav__link">
         
   
   
@@ -954,7 +946,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../../roadmap/" class="md-nav__link">
+      <a href="../roadmap/" class="md-nav__link">
         
   
   
@@ -1039,7 +1031,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../../reference/" class="md-nav__link">
+      <a href="../reference/" class="md-nav__link">
         
   
   
@@ -1071,29 +1063,24 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
       
   
   
-    
   
   
-  
     
     
     
     
       
-        
-        
-      
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
             
   
   
@@ -1111,7 +1098,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1129,7 +1116,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../4/" class="md-nav__link">
+      <a href="../blog/4/" class="md-nav__link">
         
   
   
@@ -1157,7 +1144,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../3/" class="md-nav__link">
+      <a href="../blog/3/" class="md-nav__link">
         
   
   
@@ -1182,35 +1169,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Rust vs C++ vs Go for Sheaf's Compiler
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../blog/2/" class="md-nav__link">
         
   
   
@@ -1226,90 +1188,6 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#the-c-i-know" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        The C++ I Know
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#what-rust-actually-offers" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        What Rust Actually Offers
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#the-real-cost" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        The Real Cost
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#the-entropy-principle" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        The Entropy Principle
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#a-word-about-go" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        A Word About Go
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#what-exists-so-far" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        What Exists So Far
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1322,7 +1200,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../1/" class="md-nav__link">
+      <a href="../blog/1/" class="md-nav__link">
         
   
   
@@ -1358,9 +1236,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
             
             
               
-                
-              
-              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" hidden>
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
                     
@@ -1368,6 +1244,8 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
+  
+    
   
   
     <label class="md-nav__title" for="__toc">
@@ -1377,10 +1255,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#the-c-i-know" class="md-nav__link">
+  <a href="#overview-table" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The C++ I Know
+        Overview Table
       
     </span>
   </a>
@@ -1388,10 +1266,82 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
       
         <li class="md-nav__item">
-  <a href="#what-rust-actually-offers" class="md-nav__link">
+  <a href="#detailed-breakdown" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What Rust Actually Offers
+        Detailed Breakdown
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Detailed Breakdown">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-data-parallel-dp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Data Parallel (DP)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-tensor-parallel-tp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Tensor Parallel (TP)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-pipeline-parallel-pp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Pipeline Parallel (PP)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-fsdp-zero-3-fully-sharded-data-parallel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. FSDP / ZeRO-3 (Fully Sharded Data Parallel)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-hybrid-dp-tp-pp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Hybrid (DP + TP + PP)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#communication-primitives-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Communication Primitives Reference
       
     </span>
   </a>
@@ -1399,10 +1349,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
       
         <li class="md-nav__item">
-  <a href="#the-real-cost" class="md-nav__link">
+  <a href="#decision-tree" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The Real Cost
+        Decision Tree
       
     </span>
   </a>
@@ -1410,10 +1360,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
       
         <li class="md-nav__item">
-  <a href="#the-entropy-principle" class="md-nav__link">
+  <a href="#real-world-configurations-estimated" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The Entropy Principle
+        Real-World Configurations (Estimated)
       
     </span>
   </a>
@@ -1421,21 +1371,71 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
       
         <li class="md-nav__item">
-  <a href="#a-word-about-go" class="md-nav__link">
+  <a href="#implementation-priorities-for-sheaf" class="md-nav__link">
     <span class="md-ellipsis">
       
-        A Word About Go
+        Implementation Priorities for Sheaf
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Implementation Priorities for Sheaf">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#phase-1-mvp-data-parallel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 1 (MVP) - Data Parallel
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#what-exists-so-far" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#phase-2-fsdp" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What Exists So Far
+        Phase 2 - FSDP
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-3-tensor-parallel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 3 - Tensor Parallel
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-4-hybrid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 4 - Hybrid
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#further-reading" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Further Reading
       
     </span>
   </a>
@@ -1456,94 +1456,377 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
               <article class="md-content__inner md-typeset">
                 
                   
-  
-
 
 
   
   
 
 
-  <h1>Rust vs C++ vs Go for Sheaf's Compiler</h1>
-
-<p><em>Feb 10th 2026</em></p>
-<p>Last week I outlined the vision for Sheaf V2. The next question was immediate: what do I write the compiler in?</p>
-<p>I come from systems engineering. I know C fairly well and enjoy it: it's clean, small and dependable despite its notorious undefined behaviors. But Sheaf's compiler needs to work with modern ML infrastructure, which means C++.</p>
-<p>C++ is the lingua franca of ML systems. MLIR is C++. IREE is C++. XLA is C++. If I want to call MLIR APIs directly, manipulate IR programmatically, or debug the compilation pipeline, C++ is the obvious choice.</p>
-<p>Rust, on the other hand, I don't really know. I've read about it and played with the rustlings exercises. I somewhat understand the borrow checker... in theory. But I've never shipped any Rust code. Choosing Rust means learning as I build, or relying on an AI agent to produce code I cannot understand well.</p>
-<h3 id="the-c-i-know"><strong>The C++ I Know</strong></h3>
-<p>I am currently working on CUDA courseworks and diving deeper into IREE, which means a lot of exposure to modern C++.</p>
-<p>I like the functional approach that modern C++ offers, reminiscent of Lisp. <code>map</code>, <code>reduce</code>, <code>transform</code>, or <code>tabulate</code> are nice.
-But C++ still fights you on the fundamentals. Memory management isn't just about <code>new</code> and <code>delete</code> anymore. It's <code>unique_ptr</code> vs <code>shared_ptr</code> vs <code>weak_ptr</code>, move semantics, and trying to remember if this API takes ownership or just borrows. The type system doesn't help: it compiles, runs, and then segfaults three weeks later because some object got freed and you didn't notice.</p>
-<p>Build systems are a nightmare of complexity. CMake is its own language. CMakeFiles can be buggy and let you down 90% down the build process (just submitted a PR for IREE). You vendor LLVM? Great, now your build takes 40 minutes. You link dynamically? Good luck with RPATH on macOS.</p>
-<p>I can work in C++, although reluctantly. But maintaining a compiler in C++ over years is something different. Every contributor has to navigate the same landmines. Every refactor triggers a fear that it will break something subtle.</p>
-<p>This is not a general argument against C++, but a local optimum for Sheaf’s constraints.</p>
-<h3 id="what-rust-actually-offers"><strong>What Rust Actually Offers</strong></h3>
-<p>I ended up choosing Rust. I know it's trendy, but I chose it for the elegance I felt when I started building the parser.</p>
-<p>For instance, algebraic data types match how compilers think. An AST node in Sheaf is:</p>
-<div class="language-rust highlight"><pre><span></span><code><span class="k">enum</span><span class="w"> </span><span class="nc">SheafValue</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n">Integer</span><span class="p">(</span><span class="kt">i64</span><span class="p">),</span>
-<span class="w">    </span><span class="n">Float</span><span class="p">(</span><span class="kt">f64</span><span class="p">),</span>
-<span class="w">    </span><span class="n">Symbol</span><span class="p">(</span><span class="nb">String</span><span class="p">),</span>
-<span class="w">    </span><span class="n">List</span><span class="p">(</span><span class="nb">Vec</span><span class="o">&lt;</span><span class="n">SheafValue</span><span class="o">&gt;</span><span class="p">),</span>
-<span class="w">    </span><span class="n">Vector</span><span class="p">(</span><span class="nb">Vec</span><span class="o">&lt;</span><span class="n">SheafValue</span><span class="o">&gt;</span><span class="p">),</span>
-<span class="p">}</span>
+<h1 id="distributed-training-strategies-reference">Distributed Training Strategies - Reference</h1>
+<h2 id="overview-table">Overview Table</h2>
+<table>
+<thead>
+<tr>
+<th>Strategy</th>
+<th>What's Distributed</th>
+<th>Memory per GPU</th>
+<th>Communication Pattern</th>
+<th>Use Case</th>
+<th>Collectives Used</th>
+<th>Complexity</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Data Parallel (DP)</strong></td>
+<td>Dataset only</td>
+<td>Full model</td>
+<td>All-reduce gradients after backward</td>
+<td>Models &lt; 10B params, multiple GPUs</td>
+<td><code>all_reduce</code></td>
+<td>Low</td>
+</tr>
+<tr>
+<td><strong>Tensor Parallel (TP)</strong></td>
+<td>Model weights (horizontal split)</td>
+<td>1/N of each layer</td>
+<td>All-reduce during forward/backward</td>
+<td>Models &gt; 10B params, low latency inference</td>
+<td><code>all_reduce</code>, <code>all_gather</code></td>
+<td>Medium</td>
+</tr>
+<tr>
+<td><strong>Pipeline Parallel (PP)</strong></td>
+<td>Model layers (vertical split)</td>
+<td>1/N of layers</td>
+<td>Point-to-point (activations)</td>
+<td>Very deep models, reduce memory</td>
+<td><code>send</code>, <code>recv</code></td>
+<td>High</td>
+</tr>
+<tr>
+<td><strong>FSDP / ZeRO-3</strong></td>
+<td>Weights + gradients + optimizer states</td>
+<td>1/N of everything</td>
+<td>All-gather weights, reduce-scatter gradients</td>
+<td>Models &gt; 50B params, memory constrained</td>
+<td><code>all_gather</code>, <code>reduce_scatter</code></td>
+<td>Medium</td>
+</tr>
+<tr>
+<td><strong>Hybrid (DP+TP+PP)</strong></td>
+<td>All of the above</td>
+<td>Configurable</td>
+<td>Multiple patterns combined</td>
+<td>Production models (GPT-4, Claude)</td>
+<td>All collectives</td>
+<td>Very High</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="detailed-breakdown">Detailed Breakdown</h2>
+<h3 id="1-data-parallel-dp">1. Data Parallel (DP)</h3>
+<p><strong>What it distributes</strong>: Only the dataset (mini-batches)</p>
+<p><strong>How it works</strong>:
+- Each GPU has a <strong>full copy</strong> of the model
+- Each GPU processes a <strong>different mini-batch</strong>
+- After backward pass: <code>all_reduce</code> averages gradients across all GPUs
+- All GPUs update their models with averaged gradients</p>
+<p><strong>Memory</strong>:
+<div class="language-text highlight"><pre><span></span><code>GPU 0: [full model] [batch 0]
+GPU 1: [full model] [batch 1]
+GPU 2: [full model] [batch 2]
+GPU 3: [full model] [batch 3]
+</code></pre></div></p>
+<p><strong>Communication</strong>:
+- 1 <code>all_reduce</code> per training step
+- Volume: size of all gradients (~model size)
+- Happens <strong>after</strong> backward, not during forward</p>
+<p><strong>When to use</strong>:
+- Model fits in GPU memory (&lt; 40B params on A100 80GB)
+- You have multiple GPUs but model isn't huge
+- Simple to implement, linear scaling</p>
+<p><strong>Examples</strong>: 
+- Fine-tuning Llama 7B on 8 GPUs
+- Training ResNet on ImageNet
+- Most academic research</p>
+<p><strong>Bandwidth requirement</strong>: Moderate (all-reduce gradients once per step)</p>
+<hr />
+<h3 id="2-tensor-parallel-tp">2. Tensor Parallel (TP)</h3>
+<p><strong>What it distributes</strong>: Model weights within each layer (horizontal split)</p>
+<p><strong>How it works</strong>:
+- Each layer's weight matrix is <strong>split across GPUs</strong> (column-wise or row-wise)
+- Example: <code>W [768, 3072]</code> → GPU0: <code>W[:, 0:1024]</code>, GPU1: <code>W[:, 1024:2048]</code>, GPU2: <code>W[:, 2048:3072]</code>
+- During forward: each GPU computes partial result, then <code>all_reduce</code> or <code>all_gather</code>
+- During backward: similar pattern for gradient computation</p>
+<p><strong>Memory</strong>:
+<div class="language-text highlight"><pre><span></span><code>GPU 0: [W_part0, gradW_part0] [full batch]
+GPU 1: [W_part1, gradW_part1] [full batch]
+GPU 2: [W_part2, gradW_part2] [full batch]
+</code></pre></div></p>
+<p><strong>Communication</strong>:
+- Multiple <code>all_reduce</code> / <code>all_gather</code> <strong>during</strong> forward and backward
+- Happens <strong>per layer</strong>, not just once per step
+- High communication frequency but small messages</p>
+<p><strong>When to use</strong>:
+- Model too large for single GPU (&gt; 40B params)
+- Low latency requirement (inference)
+- GPUs are on same node (NVLink high bandwidth)</p>
+<p><strong>Examples</strong>:
+- GPT-3 175B inference (TP across 8 GPUs)
+- Megatron-LM training
+- Claude inference serving</p>
+<p><strong>Bandwidth requirement</strong>: Very high (all-reduce per layer, needs NVLink or InfiniBand)</p>
+<p><strong>Key insight</strong>: TP reduces memory but <strong>increases</strong> latency (more communication). Only worth it if model doesn't fit on single GPU.</p>
+<hr />
+<h3 id="3-pipeline-parallel-pp">3. Pipeline Parallel (PP)</h3>
+<p><strong>What it distributes</strong>: Model layers (vertical split)</p>
+<p><strong>How it works</strong>:
+- Model split into <strong>stages</strong> (groups of consecutive layers)
+- GPU 0: layers 0-29, GPU 1: layers 30-59, GPU 2: layers 60-89, GPU 3: layers 90-119
+- Forward pass: activations flow from GPU0 → GPU1 → GPU2 → GPU3
+- Backward pass: gradients flow back GPU3 → GPU2 → GPU1 → GPU0
+- <strong>Micro-batching</strong>: split batch into smaller chunks to fill pipeline bubbles</p>
+<p><strong>Memory</strong>:
+<div class="language-text highlight"><pre><span></span><code>GPU 0: [layers 0-29]  [activations chunk 0]
+GPU 1: [layers 30-59] [activations chunk 1]
+GPU 2: [layers 60-89] [activations chunk 2]
+GPU 3: [layers 90-119][activations chunk 3]
+</code></pre></div></p>
+<p><strong>Communication</strong>:
+- Point-to-point <code>send</code> / <code>recv</code> (not collectives)
+- Transfer activations forward, gradients backward
+- Communication is sequential, creates pipeline bubbles (idle time)</p>
+<p><strong>When to use</strong>:
+- Very deep models (&gt; 100 layers)
+- Memory constraint but bandwidth limited (can't do TP)
+- Willing to accept pipeline bubbles (~20% idle time)</p>
+<p><strong>Examples</strong>:
+- GPTNeo 20B (pipeline across multiple nodes)
+- Training models across slow interconnects</p>
+<p><strong>Bandwidth requirement</strong>: Low (only send activations between neighbors)</p>
+<p><strong>Key problem</strong>: <strong>Pipeline bubbles</strong> = GPUs sitting idle waiting for activations. Mitigated by micro-batching but never fully eliminated.</p>
+<hr />
+<h3 id="4-fsdp-zero-3-fully-sharded-data-parallel">4. FSDP / ZeRO-3 (Fully Sharded Data Parallel)</h3>
+<p><strong>What it distributes</strong>: Weights + gradients + optimizer states (everything)</p>
+<p><strong>How it works</strong>:
+- Each GPU stores only <strong>1/N</strong> of the model weights
+- Before forward: <code>all_gather</code> to reconstruct full layer weights
+- Compute forward, then discard weights (free memory)
+- Before backward: <code>all_gather</code> again for gradient computation
+- After backward: <code>reduce_scatter</code> to average gradients, each GPU keeps 1/N</p>
+<p><strong>Memory</strong>:
+<div class="language-text highlight"><pre><span></span><code>GPU 0: [W_shard0, optim_state0] [full batch]
+GPU 1: [W_shard1, optim_state1] [full batch]
+GPU 2: [W_shard2, optim_state2] [full batch]
+GPU 3: [W_shard3, optim_state3] [full batch]
+</code></pre></div></p>
+<p><strong>Communication</strong>:
+- <code>all_gather</code> before forward (reconstruct weights)
+- <code>reduce_scatter</code> after backward (shard gradients)
+- More communication than DP, but much less memory</p>
+<p><strong>When to use</strong>:
+- Model &gt; 50B params, doesn't fit in GPU memory
+- You have high bandwidth interconnect (NVLink, InfiniBand)
+- Want simplicity of data parallel but need more memory</p>
+<p><strong>Examples</strong>:
+- Training Llama 70B on 8x A100 80GB
+- PyTorch FSDP, DeepSpeed ZeRO-3
+- Meta's OPT-175B training</p>
+<p><strong>Bandwidth requirement</strong>: Very high (all-gather every layer)</p>
+<p><strong>Key insight</strong>: FSDP is DP with <strong>memory optimization</strong>. It trades communication for memory. With infinite bandwidth, it's equivalent to DP.</p>
+<hr />
+<h3 id="5-hybrid-dp-tp-pp">5. Hybrid (DP + TP + PP)</h3>
+<p><strong>What it distributes</strong>: Everything (dataset, weights, layers)</p>
+<p><strong>How it works</strong>:
+- Combine all strategies in a hierarchy
+- Example: 256 GPUs = 8 DP groups × 8 TP groups × 4 PP stages
+- Outer loop: data parallel (8 copies of model)
+- Middle loop: tensor parallel (split each layer across 8 GPUs)
+- Inner loop: pipeline parallel (split layers into 4 stages)</p>
+<p><strong>Memory</strong>:
+<div class="language-text highlight"><pre><span></span><code>DP group 0, TP group 0, PP stage 0: [layer0-29, shard0] [batch_part0]
+DP group 0, TP group 0, PP stage 1: [layer30-59, shard0] [batch_part0]
+...
+(Repeat for all 256 GPUs)
+</code></pre></div></p>
+<p><strong>Communication</strong>:
+- TP: <code>all_reduce</code> per layer (within TP group)
+- PP: <code>send</code>/<code>recv</code> between stages
+- DP: <code>all_reduce</code> gradients (across DP groups)
+- Communication is <strong>hierarchical</strong> and carefully orchestrated</p>
+<p><strong>When to use</strong>:
+- Production training of models &gt; 100B params
+- You have 100s or 1000s of GPUs
+- Maximum flexibility to tune memory/compute/communication trade-offs</p>
+<p><strong>Examples</strong>:
+- GPT-4 training (estimated 1.76T params, 10k+ GPUs)
+- Claude 3 Opus training
+- PaLM 540B</p>
+<p><strong>Bandwidth requirement</strong>: Extreme (needs NVLink + InfiniBand)</p>
+<p><strong>Key challenge</strong>: <strong>Configuration complexity</strong>. Finding optimal DP/TP/PP split requires expertise and experimentation.</p>
+<hr />
+<h2 id="communication-primitives-reference">Communication Primitives Reference</h2>
+<table>
+<thead>
+<tr>
+<th>Primitive</th>
+<th>What it does</th>
+<th>Used in</th>
+<th>Bandwidth cost</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>all_reduce</code></td>
+<td>Average (or sum) tensor across all GPUs, all GPUs get result</td>
+<td>DP (gradients), TP (activations)</td>
+<td>N × tensor_size</td>
+</tr>
+<tr>
+<td><code>all_gather</code></td>
+<td>Each GPU has a shard, gather full tensor on all GPUs</td>
+<td>FSDP (weights), TP (partial results)</td>
+<td>N × shard_size</td>
+</tr>
+<tr>
+<td><code>reduce_scatter</code></td>
+<td>Average tensor, scatter shards to GPUs</td>
+<td>FSDP (gradients)</td>
+<td>N × tensor_size / N</td>
+</tr>
+<tr>
+<td><code>send</code> / <code>recv</code></td>
+<td>Point-to-point transfer between 2 GPUs</td>
+<td>PP (activations, gradients)</td>
+<td>tensor_size</td>
+</tr>
+<tr>
+<td><code>broadcast</code></td>
+<td>One GPU sends tensor to all others</td>
+<td>Weight initialization</td>
+<td>N × tensor_size</td>
+</tr>
+<tr>
+<td><code>barrier</code></td>
+<td>Synchronization point (no data transfer)</td>
+<td>Checkpointing coordination</td>
+<td>~0</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="decision-tree">Decision Tree</h2>
+<div class="language-text highlight"><pre><span></span><code>Model size &lt; 10B params?
+├─ Yes → Use Data Parallel (DP)
+└─ No → Model size &lt; 100B params?
+    ├─ Yes → Use FSDP or TP
+    │   ├─ High bandwidth (NVLink)? → Use TP
+    │   └─ Moderate bandwidth? → Use FSDP
+    └─ No (&gt; 100B params) → Use Hybrid (DP + TP + PP)
+        └─ Tune configuration based on:
+            - GPU memory (affects TP size, PP stages)
+            - Interconnect bandwidth (affects DP/TP split)
+            - Batch size (affects DP groups)
 </code></pre></div>
-<p>When I write <code>match expr</code>, the compiler forces to handle every case. It will not allow to forget <code>Vector</code> and have it crash at runtime. The structure is <em>explicit</em> in the type system.</p>
-<p>Of course, C++ has ways to perform the same, using <code>variant</code> or inheritance with <code>dynamic_cast</code>, but it's clunkier.</p>
-<p>Rust checks ownership at compile time. This isn't just "no segfaults" (though that's nice), it's that it removes the fear during refactor. If the borrow checker accepts it, the data flow is correct. There's no need for <code>valgrind</code>. No need to trace through pointer lifetimes in my head.</p>
-<p>Cargo and its dependencies management just work. No <code>CMakeLists.txt</code> that breaks on a different version of LLVM. No hunting for where <code>libmlir.so</code> got installed.</p>
-<h3 id="the-real-cost"><strong>The Real Cost</strong></h3>
-<p>Choosing Rust also has real costs, which I am paying for right now.</p>
-<p>The main one, obviously: <strong>I don't know Rust.</strong> I tried asking an LLM to write me some Rust code, and it could have embedded an entire rootkit inside without me noticing. I'm picking up steam, slowly. The main grief is ironically the borrow checker I was praising: it likes to reject things that feel like they should work. I hit lifetime errors I don't fully understand. Claude helps, but I refuse to merge code I don't understand.</p>
-<p><strong>MLIR interop</strong> could be a problem later. Right now, Sheaf emits text MLIR, so there's no FFI. But if I ever need to manipulate MLIR IR programmatically, I'd need Rust bindings to MLIR's C++ APIs. That's manual work. <code>bindgen</code> would help, but MLIR's template-heavy headers seem like a nightmare to wrap.</p>
-<p><strong>The ML systems community speaks C++.</strong> Should I need contributors from IREE, XLA, or TensorFlow teams, they know C++, not Rust. Asking them to learn Rust is friction.</p>
-<p>But here's the thing: these costs are upfront. I pay them now, during initial development. The entropy cost of C++, the "wait, why did this segfault?" and "why doesn't this build on Linux?" compounds over time. With every platform and every refactor...</p>
-<h3 id="the-entropy-principle"><strong>The Entropy Principle</strong></h3>
-<p>One of the goal of Sheaf is to reduce entropy in ML code. That's part the design filters: does this choice add noise or remove it?</p>
-<p>Using C++ would add entropy:</p>
+<hr />
+<h2 id="real-world-configurations-estimated">Real-World Configurations (Estimated)</h2>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Params</th>
+<th>Strategy</th>
+<th>Config</th>
+<th>GPUs</th>
+<th>Training Time</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Llama 7B</td>
+<td>7B</td>
+<td>DP</td>
+<td>DP=8</td>
+<td>8</td>
+<td>~1 week</td>
+</tr>
+<tr>
+<td>Llama 70B</td>
+<td>70B</td>
+<td>FSDP</td>
+<td>FSDP on 64 GPUs</td>
+<td>64</td>
+<td>~2 weeks</td>
+</tr>
+<tr>
+<td>GPT-3</td>
+<td>175B</td>
+<td>Hybrid</td>
+<td>DP=8, TP=8, PP=4</td>
+<td>256</td>
+<td>~1 month</td>
+</tr>
+<tr>
+<td>GPT-4</td>
+<td>~1.76T</td>
+<td>Hybrid</td>
+<td>DP=16, TP=8, PP=8</td>
+<td>1024+</td>
+<td>~3 months</td>
+</tr>
+<tr>
+<td>Claude 3 Opus</td>
+<td>~500B?</td>
+<td>Hybrid</td>
+<td>DP=8, TP=8, PP=4</td>
+<td>256+</td>
+<td>~1 month</td>
+</tr>
+</tbody>
+</table>
+<p><em>(Configurations are educated guesses based on public information and hardware constraints)</em></p>
+<hr />
+<h2 id="implementation-priorities-for-sheaf">Implementation Priorities for Sheaf</h2>
+<h3 id="phase-1-mvp-data-parallel">Phase 1 (MVP) - Data Parallel</h3>
 <ul>
-<li>Build complexity (CMake, dependencies, platform quirks)</li>
-<li>Memory management (manual reasoning about ownership)</li>
-<li>Language cruft (40 years of legacy, multiple ways to do everything)</li>
+<li><strong>Why</strong>: Covers 80% of use cases (models &lt; 10B params)</li>
+<li><strong>What</strong>: <code>--distribute data-parallel --world-size N</code></li>
+<li><strong>Collectives needed</strong>: <code>all_reduce</code>, <code>barrier</code></li>
+<li><strong>Effort</strong>: 2-3 weeks</li>
 </ul>
-<p>Using Rust removes entropy:</p>
+<h3 id="phase-2-fsdp">Phase 2 - FSDP</h3>
 <ul>
-<li>One build tool (Cargo)</li>
-<li>Ownership checked by compiler</li>
-<li>ADTs that match AST structure</li>
-<li>Exhaustive pattern matching</li>
+<li><strong>Why</strong>: Enables training 10B-100B models on moderate GPU clusters</li>
+<li><strong>What</strong>: Shard weights, all-gather before forward</li>
+<li><strong>Collectives needed</strong>: <code>all_gather</code>, <code>reduce_scatter</code></li>
+<li><strong>Effort</strong>: 3-4 weeks</li>
 </ul>
-<p>If I'm building a language about clarity, the compiler should embody that. Not "do as I say, not as I do."</p>
-<h3 id="a-word-about-go"><strong>A Word About Go</strong></h3>
-<p>I actually like Go a lot. It's simple, fast to compile, it's designed by people I highly respect, and the tooling is excellent. <code>go build</code> just works. No lifetime annotations, no borrow checker fights...</p>
-<p>For many compilers, Go would be a great choice, but Sheaf's compiler has a specific constraint: exhaustive pattern matching matters more than simplicity.</p>
-<p>A compiler is a series of transformations on an AST. At each step, every possible node type must be handled properly. Forget one case, and get a subtle bug that only surfaces when someone writes <code>[1 2 3]</code> instead of <code>'[1 2 3]</code>.</p>
-<p>In Rust, the compiler enforces this:</p>
-<div class="language-rust highlight"><pre><span></span><code><span class="k">match</span><span class="w"> </span><span class="n">expr</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n">SheafValue</span><span class="p">::</span><span class="n">Integer</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="o">..</span><span class="p">.,</span>
-<span class="w">    </span><span class="n">SheafValue</span><span class="p">::</span><span class="n">Symbol</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="o">..</span><span class="p">.,</span>
-<span class="w">    </span><span class="c1">// Forget something -&gt; compilation error</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>In Go, type switches are not exhaustive:</p>
-<div class="language-go highlight"><pre><span></span><code><span class="k">switch</span><span class="w"> </span><span class="nx">v</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">expr</span><span class="p">.(</span><span class="kd">type</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="k">case</span><span class="w"> </span><span class="nx">Integer</span><span class="p">:</span><span class="w"> </span><span class="o">...</span>
-<span class="k">case</span><span class="w"> </span><span class="nx">Symbol</span><span class="p">:</span><span class="w"> </span><span class="o">...</span>
-<span class="c1">// Forget something -&gt; compiles, crashes at runtime</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>For a project that will evolve over years, with contributions from both humans and LLMs, I need the compiler to catch these errors. That's the trade-off: Go's simplicity vs Rust's safety guarantees. For Sheaf, safety won, even though Go would be easier. So, Rust it is.</p>
-<h3 id="what-exists-so-far"><strong>What Exists So Far</strong></h3>
-<p>Over the past week, I built a small proof-of-concept to generate MLIR from S-expressions. What I have so far:</p>
+<h3 id="phase-3-tensor-parallel">Phase 3 - Tensor Parallel</h3>
 <ul>
-<li>A parser that handles S-expressions, vectors, symbols, literals</li>
-<li>A compiler stub that tracks function definitions and resolves symbols</li>
-<li>A code generator that emits StableHLO text for <code>(+ 1 2)</code> and <code>(* x y)</code></li>
-<li>Error handling with source locations and meaningful messages</li>
+<li><strong>Why</strong>: Low-latency inference for large models</li>
+<li><strong>What</strong>: Annotations <code>:tensor-parallel</code> on layers</li>
+<li><strong>Collectives needed</strong>: <code>all_reduce</code> (per layer)</li>
+<li><strong>Effort</strong>: 4-6 weeks</li>
 </ul>
-<p>Everything builds and tests pass. The foundation is there. Now comes the real work: function calls, control flow, tensors to make it an actual compiler.</p>
-<p>I'll document the implementation as it unfolds.</p>
+<h3 id="phase-4-hybrid">Phase 4 - Hybrid</h3>
+<ul>
+<li><strong>Why</strong>: Production-scale training (&gt; 100B params)</li>
+<li><strong>What</strong>: Combine DP + TP + PP with hierarchical config</li>
+<li><strong>Effort</strong>: 2-3 months</li>
+</ul>
+<hr />
+<h2 id="further-reading">Further Reading</h2>
+<ul>
+<li><strong>Megatron-LM paper</strong> (NVIDIA): Tensor + Pipeline parallelism</li>
+<li><strong>ZeRO paper</strong> (Microsoft): FSDP approach</li>
+<li><strong>GPipe</strong> (Google): Pipeline parallelism with micro-batching</li>
+<li><strong>PyTorch FSDP docs</strong>: Practical FSDP implementation</li>
+<li><strong>Alpa</strong> (UC Berkeley): Automatic parallelization (finds optimal strategy)</li>
+</ul>
+<hr />
+<p><strong>Key Takeaway</strong>: There's no single "best" strategy. It depends on model size, GPU memory, interconnect bandwidth, and latency requirements. Production systems use <strong>hybrid</strong> approaches and tune configurations based on profiling.</p>
 
 
 
@@ -1551,13 +1834,8 @@ But C++ still fights you on the fundamentals. Memory management isn't just about
 
 
 
-  
-  
 
 
-
-
-  
 
 
 
@@ -1573,7 +1851,7 @@ But C++ still fights you on the fundamentals. Memory management isn't just about
       
 <footer class="md-footer">
     <div class="md-footer__inner md-grid" style="display: flex; justify-content: center; align-items: center; gap: 10px;">
-      <img src="../../images/sheaf-light.png" alt="Logo" style="height: 24px;"/>
+      <img src="../images/sheaf-light.png" alt="Logo" style="height: 24px;"/>
       <span>| © 2025-2026 Damien Boureille</span>
     </div>
 </footer>
@@ -1587,12 +1865,12 @@ But C++ still fights you on the fundamentals. Memory management isn't just about
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.tabs.sticky", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
       
-        <script src="../../javascripts/fix-drawer.js"></script>
+        <script src="../javascripts/fix-drawer.js"></script>
       
     
   </body>

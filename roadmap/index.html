@@ -37,7 +37,37 @@
 <meta property="og:description" content="Sheaf is a functional language for describing differentiable computation as topology rather than execution.
 It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Python ecosystem.">
 <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  /* Replace mkdocs logo with custom logo - header */
+  .md-header__button.md-logo {
+    background-image: url('../images/sheaf-light.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+  }
 
+
+  .md-header__button.md-logo img,
+  .md-header__button.md-logo svg {
+    opacity: 0;
+  }
+
+  /* Replace mkdocs logo with custom logo - sidebar (responsive menu) */
+  .md-nav__title {
+    background-image: url('../images/sheaf-light.png');
+    background-size: 64px 64px;
+    background-repeat: no-repeat;
+    background-position: center;
+    padding-left: 30px !important;
+    font-size: 0 !important;
+    height: 24px !important;
+  }
+
+  .md-nav__title img,
+  .md-nav__title svg {
+    opacity: 0;
+  }
+</style>
 
     
 
@@ -634,7 +664,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     
     
       <li class="md-tabs__item">
-        <a href="../blog/3/" class="md-tabs__link">
+        <a href="../blog/4/" class="md-tabs__link">
           
   
   
@@ -1157,6 +1187,34 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
+      <a href="../blog/4/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    A Single Binary ML Framework
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../blog/3/" class="md-nav__link">
         
   
@@ -1314,9 +1372,9 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 <p><strong>Benefits</strong>:</p>
 <ul>
 <li>Runtime footprint: 1-2MB (vs 500-700MB with Python+JAX or PyTorch)</li>
-<li>No Python runtime required at any point</li>
-<li>Standalone executables (VMFB) with training loops (autodiff, optimizers, checkpointing)</li>
-<li>On-device training (for robotics, space or edge deployment)</li>
+<li>Compile-time footprint: 30-50MB</li>
+<li>No Python runtime required for inference or training</li>
+<li>Standalone executables for deployment</li>
 </ul>
 <p>This will align the technical stack with the language: elegance and concision from syntax to runtime. The transition will also preserve Sheaf's homoiconic nature and functional purity yet eliminate accidental complexity inherited from Python.</p>
 <h3 id="parallelism-and-distribution">Parallelism and distribution</h3>

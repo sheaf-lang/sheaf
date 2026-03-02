@@ -37,7 +37,37 @@
 <meta property="og:description" content="Sheaf is a functional language for describing differentiable computation as topology rather than execution.
 It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Python ecosystem.">
 <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  /* Replace mkdocs logo with custom logo - header */
+  .md-header__button.md-logo {
+    background-image: url('../images/sheaf-light.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+  }
 
+
+  .md-header__button.md-logo img,
+  .md-header__button.md-logo svg {
+    opacity: 0;
+  }
+
+  /* Replace mkdocs logo with custom logo - sidebar (responsive menu) */
+  .md-nav__title {
+    background-image: url('../images/sheaf-light.png');
+    background-size: 64px 64px;
+    background-repeat: no-repeat;
+    background-position: center;
+    padding-left: 30px !important;
+    font-size: 0 !important;
+    height: 24px !important;
+  }
+
+  .md-nav__title img,
+  .md-nav__title svg {
+    opacity: 0;
+  }
+</style>
 
     
 
@@ -634,7 +664,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     
     
       <li class="md-tabs__item">
-        <a href="../blog/3/" class="md-tabs__link">
+        <a href="../blog/4/" class="md-tabs__link">
           
   
   
@@ -963,45 +993,6 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Version history">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#v120-2026-02-06-current" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        v1.2.0 — 2026-02-06 (Current)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#v110-2026-01-24" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        v1.1.0 — 2026-01-24
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#v100-2026-01-13" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        v1.0.0 — 2026-01-13
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
       
     </ul>
@@ -1190,6 +1181,34 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
+      <a href="../blog/4/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    A Single Binary ML Framework
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../blog/3/" class="md-nav__link">
         
   
@@ -1307,45 +1326,6 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Version history">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#v120-2026-02-06-current" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        v1.2.0 — 2026-02-06 (Current)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#v110-2026-01-24" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        v1.1.0 — 2026-01-24
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#v100-2026-01-13" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        v1.0.0 — 2026-01-13
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
       
     </ul>
@@ -1371,26 +1351,26 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   <h1>Version history</h1>
 
 <h2 id="version-history">Version history</h2>
-<h3 id="v120-2026-02-06-current">v1.2.0 — 2026-02-06 (Current)</h3>
+<p>v1.2.0 — 2026-02-06</p>
 <ul>
-<li>Sheaf programs are now mostly independent from Python and most missing primitives for imperative control have been added.</li>
-<li>I/O module: support for <code>(io "load" ...)</code> / <code>(io "save" ...)</code> with safetensors and JSON. Entropy source <code>(io "entropy")</code></li>
-<li>Support for f-strings: <code>(print "loss={:.4f}" loss)</code></li>
-<li>Support for string escape sequences: <code>\n</code>, <code>\t</code>, <code>\"</code>, <code>\\</code></li>
+<li>Sheaf programs are now mostly independent from Python, most missing primitives for imperative control have been added.</li>
+<li>I/O module: <code>(io "load" ...)</code> / <code>(io "save" ...)</code> with safetensors and JSON. Entropy source <code>(io "entropy")</code></li>
+<li>Support f-strings: <code>(print "loss={:.4f}" loss)</code></li>
+<li>Support string escape sequences: <code>\n</code>, <code>\t</code>, <code>\"</code>, <code>\\</code></li>
 <li>New primitives: <code>filter</code>, <code>find</code>, <code>index-of</code>, <code>argmax</code>, <code>argmin</code>, <code>arange</code>, <code>eye</code>, <code>index-update</code>, <code>int</code>, <code>float</code>, <code>sort</code>, <code>chars</code>, <code>rms-norm</code>, <code>do</code>, <code>while</code></li>
 <li>Error messages: suggestions for common mistakes (<code>def</code> -&gt; <code>defn</code>, <code>lambda</code> -&gt; <code>fn</code>, <code>import</code> -&gt; <code>use</code>), paren balancer with culprit detection</li>
-<li>Many bugfixes</li>
-<li>New <code>--trace</code> and <code>--guard</code> modes for standalone tracing and debugging</li>
+<li>More bugfixes</li>
+<li>REPL has <code>--trace</code> and <code>--guard</code> modes for standalone tracing and debugging</li>
 <li>All examples are now standalone and do not require Python</li>
 </ul>
-<h3 id="v110-2026-01-24">v1.1.0 — 2026-01-24</h3>
+<p>v1.1.0 — 2026-01-24 (Current)</p>
 <ul>
 <li>Syntax cleanup: quoted arrays (<code>'[]</code>) are now the canonical way to distinguish lists from tensors. Legacy <code>list</code> form is deprecated.</li>
 <li>More syntax purity: also deprecate <code>lambda</code> (alias for <code>fn</code>) and <code>dict</code></li>
 <li>Protection for special forms (<code>fn</code>, <code>let</code>, <code>get</code>...)</li>
 <li>Many bugfixes in the compiler</li>
 </ul>
-<h3 id="v100-2026-01-13">v1.0.0 — 2026-01-13</h3>
+<p>v1.0.0 — 2026-01-13</p>
 <ul>
 <li>First stable release</li>
 </ul>
