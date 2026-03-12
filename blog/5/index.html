@@ -505,7 +505,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     <div data-md-component="skip">
       
         
-        <a href="#catching-pytorchs-performance" class="md-skip">
+        <a href="#new-tooling" class="md-skip">
           Skip to content
         </a>
       
@@ -1133,8 +1133,6 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
-        
-      
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
           
@@ -1176,8 +1174,6 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
-  
-    
   
   
     <label class="md-nav__title" for="__toc">
@@ -1268,17 +1264,6 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     <span class="md-ellipsis">
       
         Where things stand
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#going-forward" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Going forward
       
     </span>
   </a>
@@ -1430,8 +1415,6 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
   
-    
-  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -1527,17 +1510,6 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#going-forward" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Going forward
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -1558,7 +1530,9 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
 
 
-<h1 id="catching-pytorchs-performance">Catching PyTorch's Performance</h1>
+  <h1>Catching PyTorch's Performance</h1>
+
+<p><em>Mar 11st 2026</em></p>
 <p>As Sheaf V2 moves closer to release, it's time to test it on larger models than BareGPT, my toy generative transformer.</p>
 <p>Last week, I ported Karpathy's NanoGPT to Sheaf and benchmarked it against PyTorch. The first results were humbling:</p>
 <table>
@@ -1725,8 +1699,7 @@ SheafValue::List([Symbol(&quot;defn&quot;), Symbol(&quot;gpt-forward&quot;), ...
 </table>
 <p>From 11 seconds to 533 milliseconds. The remaining 4.2× gap is now dominated by the GPU kernel itself (71.5% of dispatch time). This is IREE's Metal backend vs Apple's MPS, which is a different compiler targeting the same hardware and is outside Sheaf's control.</p>
 <p>On inference, the picture is different. For 100 tokens of autoregressive generation, 94% of the time is spent in the GPU call. Buffer overhead is negligible. The gap with PyTorch (746ms vs 390ms) is entirely in kernel quality.</p>
-<h3 id="going-forward">Going forward</h3>
-<p>The optimizations described here will continue in a follow-up article, where I'll cover the autodiff pipeline, training step fusion, and the path to closing the remaining gap with PyTorch.</p>
+<p>The optimizations described here will continue in a follow-up article, where I'll cover the autodiff pipeline and training step fusion.</p>
 
 
 
