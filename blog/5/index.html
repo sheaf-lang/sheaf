@@ -8,26 +8,30 @@
       
       
       
-        <link rel="canonical" href="https://sheaf-lang.org/distributed-strategies/">
+        <link rel="canonical" href="https://sheaf-lang.org/blog/5/">
       
       
+        <link rel="prev" href="../../reference/">
+      
+      
+        <link rel="next" href="../4/">
       
       
         
       
       
-      <link rel="icon" href="../images/favicon.png">
+      <link rel="icon" href="../../images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
     
 
       
-        <title>Distributed Training Strategies - Reference - Sheaf</title>
+        <title>Catching PyTorch's Performance - Sheaf</title>
       
     
-<link rel="icon" type="image/png" href="../images/favicon.png">
+<link rel="icon" type="image/png" href="../../images/favicon.png">
 <meta name="robots" content="index, follow">
-<meta property="og:image" content="../images/sheaf-dark.png">
+<meta property="og:image" content="../../images/sheaf-dark.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta property="og:title" content="Sheaf - A Functional Language for Differentiable Programs">
 <meta property="og:description" content="Sheaf is a functional language for describing differentiable computation as topology rather than execution.
@@ -36,7 +40,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 <style>
   /* Replace mkdocs logo with custom logo - header */
   .md-header__button.md-logo {
-    background-image: url('../images/sheaf-light.png');
+    background-image: url('../../images/sheaf-light.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
@@ -50,7 +54,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 
   /* Replace mkdocs logo with custom logo - sidebar (responsive menu) */
   .md-nav__title {
-    background-image: url('../images/sheaf-light.png');
+    background-image: url('../../images/sheaf-light.png');
     background-size: 64px 64px;
     background-repeat: no-repeat;
     background-position: center;
@@ -67,10 +71,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 
     
 
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -476,9 +480,9 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
       
     
     
-      <link rel="stylesheet" href="../stylesheets/extra.css">
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -501,7 +505,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     <div data-md-component="skip">
       
         
-        <a href="#distributed-training-strategies-reference" class="md-skip">
+        <a href="#catching-pytorchs-performance" class="md-skip">
           Skip to content
         </a>
       
@@ -518,9 +522,9 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="Sheaf" class="md-header__button md-logo" aria-label="Sheaf" data-md-component="logo">
+    <a href="../.." title="Sheaf" class="md-header__button md-logo" aria-label="Sheaf" data-md-component="logo">
       
-  <img src="../images/sheaf-light.png" alt="logo">
+  <img src="../../images/sheaf-light.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -537,7 +541,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Distributed Training Strategies - Reference
+              Catching PyTorch's Performance
             
           </span>
         </div>
@@ -618,7 +622,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     
     
       <li class="md-tabs__item">
-        <a href="../quickstart/" class="md-tabs__link">
+        <a href="../../quickstart/" class="md-tabs__link">
           
   
   
@@ -638,7 +642,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     
     
       <li class="md-tabs__item">
-        <a href="../reference/" class="md-tabs__link">
+        <a href="../../reference/" class="md-tabs__link">
           
   
   
@@ -654,11 +658,13 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../blog/4/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="./" class="md-tabs__link">
           
   
   
@@ -699,9 +705,9 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="Sheaf" class="md-nav__button md-logo" aria-label="Sheaf" data-md-component="logo">
+    <a href="../.." title="Sheaf" class="md-nav__button md-logo" aria-label="Sheaf" data-md-component="logo">
       
-  <img src="../images/sheaf-light.png" alt="logo">
+  <img src="../../images/sheaf-light.png" alt="logo">
 
     </a>
     Sheaf
@@ -778,7 +784,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../quickstart/" class="md-nav__link">
+      <a href="../../quickstart/" class="md-nav__link">
         
   
   
@@ -806,7 +812,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../rationale/" class="md-nav__link">
+      <a href="../../rationale/" class="md-nav__link">
         
   
   
@@ -834,7 +840,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../starting/" class="md-nav__link">
+      <a href="../../starting/" class="md-nav__link">
         
   
   
@@ -862,7 +868,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../types/" class="md-nav__link">
+      <a href="../../types/" class="md-nav__link">
         
   
   
@@ -890,7 +896,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../python/" class="md-nav__link">
+      <a href="../../python/" class="md-nav__link">
         
   
   
@@ -918,7 +924,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../changelog/" class="md-nav__link">
+      <a href="../../changelog/" class="md-nav__link">
         
   
   
@@ -946,7 +952,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../roadmap/" class="md-nav__link">
+      <a href="../../roadmap/" class="md-nav__link">
         
   
   
@@ -1031,7 +1037,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../reference/" class="md-nav__link">
+      <a href="../../reference/" class="md-nav__link">
         
   
   
@@ -1063,24 +1069,29 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
       
   
   
+    
   
   
+  
     
     
     
     
-      
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
             
   
   
@@ -1098,7 +1109,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1113,10 +1124,184 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
                 
   
   
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Catching PyTorch's Performance
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Catching PyTorch's Performance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#new-tooling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        New tooling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-sheafs-compiler-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How Sheaf's compiler works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-marshalling-wall" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The marshalling wall
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deep-copies-in-the-interpreter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deep copies in the interpreter
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#jit-compilation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        JIT compilation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#f32-everywhere" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        f32 everywhere
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#devicebuffer-and-the-fast-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DeviceBuffer and the fast path
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#where-things-stand" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where things stand
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#going-forward" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Going forward
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
   
   
     <li class="md-nav__item">
-      <a href="../blog/4/" class="md-nav__link">
+      <a href="../4/" class="md-nav__link">
         
   
   
@@ -1144,7 +1329,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../blog/3/" class="md-nav__link">
+      <a href="../3/" class="md-nav__link">
         
   
   
@@ -1172,7 +1357,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../blog/2/" class="md-nav__link">
+      <a href="../2/" class="md-nav__link">
         
   
   
@@ -1200,7 +1385,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../blog/1/" class="md-nav__link">
+      <a href="../1/" class="md-nav__link">
         
   
   
@@ -1255,10 +1440,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#overview-table" class="md-nav__link">
+  <a href="#new-tooling" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Overview Table
+        New tooling
       
     </span>
   </a>
@@ -1266,82 +1451,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
       
         <li class="md-nav__item">
-  <a href="#detailed-breakdown" class="md-nav__link">
+  <a href="#how-sheafs-compiler-works" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Detailed Breakdown
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Detailed Breakdown">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-data-parallel-dp" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. Data Parallel (DP)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-tensor-parallel-tp" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Tensor Parallel (TP)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-pipeline-parallel-pp" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. Pipeline Parallel (PP)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-fsdp-zero-3-fully-sharded-data-parallel" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4. FSDP / ZeRO-3 (Fully Sharded Data Parallel)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#5-hybrid-dp-tp-pp" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        5. Hybrid (DP + TP + PP)
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#communication-primitives-reference" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Communication Primitives Reference
+        How Sheaf's compiler works
       
     </span>
   </a>
@@ -1349,10 +1462,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
       
         <li class="md-nav__item">
-  <a href="#decision-tree" class="md-nav__link">
+  <a href="#the-marshalling-wall" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Decision Tree
+        The marshalling wall
       
     </span>
   </a>
@@ -1360,10 +1473,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
       
         <li class="md-nav__item">
-  <a href="#real-world-configurations-estimated" class="md-nav__link">
+  <a href="#deep-copies-in-the-interpreter" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Real-World Configurations (Estimated)
+        Deep copies in the interpreter
       
     </span>
   </a>
@@ -1371,71 +1484,54 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
       
         <li class="md-nav__item">
-  <a href="#implementation-priorities-for-sheaf" class="md-nav__link">
+  <a href="#jit-compilation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Implementation Priorities for Sheaf
+        JIT compilation
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Implementation Priorities for Sheaf">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#phase-1-mvp-data-parallel" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Phase 1 (MVP) - Data Parallel
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#phase-2-fsdp" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Phase 2 - FSDP
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#phase-3-tensor-parallel" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Phase 3 - Tensor Parallel
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#phase-4-hybrid" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Phase 4 - Hybrid
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#further-reading" class="md-nav__link">
+  <a href="#f32-everywhere" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Further Reading
+        f32 everywhere
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#devicebuffer-and-the-fast-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DeviceBuffer and the fast path
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#where-things-stand" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where things stand
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#going-forward" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Going forward
       
     </span>
   </a>
@@ -1462,371 +1558,175 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
 
 
-<h1 id="distributed-training-strategies-reference">Distributed Training Strategies - Reference</h1>
-<h2 id="overview-table">Overview Table</h2>
+<h1 id="catching-pytorchs-performance">Catching PyTorch's Performance</h1>
+<p>As Sheaf V2 moves closer to release, it's time to test it on larger models than BareGPT, my toy generative transformer.</p>
+<p>Last week, I ported Karpathy's NanoGPT to Sheaf and benchmarked it against PyTorch. The first results were humbling:</p>
 <table>
 <thead>
 <tr>
-<th>Strategy</th>
-<th>What's Distributed</th>
-<th>Memory per GPU</th>
-<th>Communication Pattern</th>
-<th>Use Case</th>
-<th>Collectives Used</th>
-<th>Complexity</th>
+<th>Configuration</th>
+<th>Wall time</th>
+<th>tk/s</th>
+<th>vs PyTorch</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>Data Parallel (DP)</strong></td>
-<td>Dataset only</td>
-<td>Full model</td>
-<td>All-reduce gradients after backward</td>
-<td>Models &lt; 10B params, multiple GPUs</td>
-<td><code>all_reduce</code></td>
-<td>Low</td>
+<td>Interpreter only (no IREE)</td>
+<td>~90s</td>
+<td>~1.1</td>
+<td>108× slower</td>
 </tr>
 <tr>
-<td><strong>Tensor Parallel (TP)</strong></td>
-<td>Model weights (horizontal split)</td>
-<td>1/N of each layer</td>
-<td>All-reduce during forward/backward</td>
-<td>Models &gt; 10B params, low latency inference</td>
-<td><code>all_reduce</code>, <code>all_gather</code></td>
-<td>Medium</td>
+<td>Sheaf build (AOT)</td>
+<td>7.64s</td>
+<td>~13</td>
+<td>9.2× slower</td>
 </tr>
 <tr>
-<td><strong>Pipeline Parallel (PP)</strong></td>
-<td>Model layers (vertical split)</td>
-<td>1/N of layers</td>
-<td>Point-to-point (activations)</td>
-<td>Very deep models, reduce memory</td>
-<td><code>send</code>, <code>recv</code></td>
-<td>High</td>
-</tr>
-<tr>
-<td><strong>FSDP / ZeRO-3</strong></td>
-<td>Weights + gradients + optimizer states</td>
-<td>1/N of everything</td>
-<td>All-gather weights, reduce-scatter gradients</td>
-<td>Models &gt; 50B params, memory constrained</td>
-<td><code>all_gather</code>, <code>reduce_scatter</code></td>
-<td>Medium</td>
-</tr>
-<tr>
-<td><strong>Hybrid (DP+TP+PP)</strong></td>
-<td>All of the above</td>
-<td>Configurable</td>
-<td>Multiple patterns combined</td>
-<td>Production models (GPT-4, Claude)</td>
-<td>All collectives</td>
-<td>Very High</td>
+<td>PyTorch (CPU, reference)</td>
+<td>0.83s</td>
+<td>~120</td>
+<td>baseline</td>
 </tr>
 </tbody>
 </table>
-<hr />
-<h2 id="detailed-breakdown">Detailed Breakdown</h2>
-<h3 id="1-data-parallel-dp">1. Data Parallel (DP)</h3>
-<p><strong>What it distributes</strong>: Only the dataset (mini-batches)</p>
-<p><strong>How it works</strong>:
-- Each GPU has a <strong>full copy</strong> of the model
-- Each GPU processes a <strong>different mini-batch</strong>
-- After backward pass: <code>all_reduce</code> averages gradients across all GPUs
-- All GPUs update their models with averaged gradients</p>
-<p><strong>Memory</strong>:
-<div class="language-text highlight"><pre><span></span><code>GPU 0: [full model] [batch 0]
-GPU 1: [full model] [batch 1]
-GPU 2: [full model] [batch 2]
-GPU 3: [full model] [batch 3]
-</code></pre></div></p>
-<p><strong>Communication</strong>:
-- 1 <code>all_reduce</code> per training step
-- Volume: size of all gradients (~model size)
-- Happens <strong>after</strong> backward, not during forward</p>
-<p><strong>When to use</strong>:
-- Model fits in GPU memory (&lt; 40B params on A100 80GB)
-- You have multiple GPUs but model isn't huge
-- Simple to implement, linear scaling</p>
-<p><strong>Examples</strong>: 
-- Fine-tuning Llama 7B on 8 GPUs
-- Training ResNet on ImageNet
-- Most academic research</p>
-<p><strong>Bandwidth requirement</strong>: Moderate (all-reduce gradients once per step)</p>
-<hr />
-<h3 id="2-tensor-parallel-tp">2. Tensor Parallel (TP)</h3>
-<p><strong>What it distributes</strong>: Model weights within each layer (horizontal split)</p>
-<p><strong>How it works</strong>:
-- Each layer's weight matrix is <strong>split across GPUs</strong> (column-wise or row-wise)
-- Example: <code>W [768, 3072]</code> → GPU0: <code>W[:, 0:1024]</code>, GPU1: <code>W[:, 1024:2048]</code>, GPU2: <code>W[:, 2048:3072]</code>
-- During forward: each GPU computes partial result, then <code>all_reduce</code> or <code>all_gather</code>
-- During backward: similar pattern for gradient computation</p>
-<p><strong>Memory</strong>:
-<div class="language-text highlight"><pre><span></span><code>GPU 0: [W_part0, gradW_part0] [full batch]
-GPU 1: [W_part1, gradW_part1] [full batch]
-GPU 2: [W_part2, gradW_part2] [full batch]
-</code></pre></div></p>
-<p><strong>Communication</strong>:
-- Multiple <code>all_reduce</code> / <code>all_gather</code> <strong>during</strong> forward and backward
-- Happens <strong>per layer</strong>, not just once per step
-- High communication frequency but small messages</p>
-<p><strong>When to use</strong>:
-- Model too large for single GPU (&gt; 40B params)
-- Low latency requirement (inference)
-- GPUs are on same node (NVLink high bandwidth)</p>
-<p><strong>Examples</strong>:
-- GPT-3 175B inference (TP across 8 GPUs)
-- Megatron-LM training
-- Claude inference serving</p>
-<p><strong>Bandwidth requirement</strong>: Very high (all-reduce per layer, needs NVLink or InfiniBand)</p>
-<p><strong>Key insight</strong>: TP reduces memory but <strong>increases</strong> latency (more communication). Only worth it if model doesn't fit on single GPU.</p>
-<hr />
-<h3 id="3-pipeline-parallel-pp">3. Pipeline Parallel (PP)</h3>
-<p><strong>What it distributes</strong>: Model layers (vertical split)</p>
-<p><strong>How it works</strong>:
-- Model split into <strong>stages</strong> (groups of consecutive layers)
-- GPU 0: layers 0-29, GPU 1: layers 30-59, GPU 2: layers 60-89, GPU 3: layers 90-119
-- Forward pass: activations flow from GPU0 → GPU1 → GPU2 → GPU3
-- Backward pass: gradients flow back GPU3 → GPU2 → GPU1 → GPU0
-- <strong>Micro-batching</strong>: split batch into smaller chunks to fill pipeline bubbles</p>
-<p><strong>Memory</strong>:
-<div class="language-text highlight"><pre><span></span><code>GPU 0: [layers 0-29]  [activations chunk 0]
-GPU 1: [layers 30-59] [activations chunk 1]
-GPU 2: [layers 60-89] [activations chunk 2]
-GPU 3: [layers 90-119][activations chunk 3]
-</code></pre></div></p>
-<p><strong>Communication</strong>:
-- Point-to-point <code>send</code> / <code>recv</code> (not collectives)
-- Transfer activations forward, gradients backward
-- Communication is sequential, creates pipeline bubbles (idle time)</p>
-<p><strong>When to use</strong>:
-- Very deep models (&gt; 100 layers)
-- Memory constraint but bandwidth limited (can't do TP)
-- Willing to accept pipeline bubbles (~20% idle time)</p>
-<p><strong>Examples</strong>:
-- GPTNeo 20B (pipeline across multiple nodes)
-- Training models across slow interconnects</p>
-<p><strong>Bandwidth requirement</strong>: Low (only send activations between neighbors)</p>
-<p><strong>Key problem</strong>: <strong>Pipeline bubbles</strong> = GPUs sitting idle waiting for activations. Mitigated by micro-batching but never fully eliminated.</p>
-<hr />
-<h3 id="4-fsdp-zero-3-fully-sharded-data-parallel">4. FSDP / ZeRO-3 (Fully Sharded Data Parallel)</h3>
-<p><strong>What it distributes</strong>: Weights + gradients + optimizer states (everything)</p>
-<p><strong>How it works</strong>:
-- Each GPU stores only <strong>1/N</strong> of the model weights
-- Before forward: <code>all_gather</code> to reconstruct full layer weights
-- Compute forward, then discard weights (free memory)
-- Before backward: <code>all_gather</code> again for gradient computation
-- After backward: <code>reduce_scatter</code> to average gradients, each GPU keeps 1/N</p>
-<p><strong>Memory</strong>:
-<div class="language-text highlight"><pre><span></span><code>GPU 0: [W_shard0, optim_state0] [full batch]
-GPU 1: [W_shard1, optim_state1] [full batch]
-GPU 2: [W_shard2, optim_state2] [full batch]
-GPU 3: [W_shard3, optim_state3] [full batch]
-</code></pre></div></p>
-<p><strong>Communication</strong>:
-- <code>all_gather</code> before forward (reconstruct weights)
-- <code>reduce_scatter</code> after backward (shard gradients)
-- More communication than DP, but much less memory</p>
-<p><strong>When to use</strong>:
-- Model &gt; 50B params, doesn't fit in GPU memory
-- You have high bandwidth interconnect (NVLink, InfiniBand)
-- Want simplicity of data parallel but need more memory</p>
-<p><strong>Examples</strong>:
-- Training Llama 70B on 8x A100 80GB
-- PyTorch FSDP, DeepSpeed ZeRO-3
-- Meta's OPT-175B training</p>
-<p><strong>Bandwidth requirement</strong>: Very high (all-gather every layer)</p>
-<p><strong>Key insight</strong>: FSDP is DP with <strong>memory optimization</strong>. It trades communication for memory. With infinite bandwidth, it's equivalent to DP.</p>
-<hr />
-<h3 id="5-hybrid-dp-tp-pp">5. Hybrid (DP + TP + PP)</h3>
-<p><strong>What it distributes</strong>: Everything (dataset, weights, layers)</p>
-<p><strong>How it works</strong>:
-- Combine all strategies in a hierarchy
-- Example: 256 GPUs = 8 DP groups × 8 TP groups × 4 PP stages
-- Outer loop: data parallel (8 copies of model)
-- Middle loop: tensor parallel (split each layer across 8 GPUs)
-- Inner loop: pipeline parallel (split layers into 4 stages)</p>
-<p><strong>Memory</strong>:
-<div class="language-text highlight"><pre><span></span><code>DP group 0, TP group 0, PP stage 0: [layer0-29, shard0] [batch_part0]
-DP group 0, TP group 0, PP stage 1: [layer30-59, shard0] [batch_part0]
-...
-(Repeat for all 256 GPUs)
-</code></pre></div></p>
-<p><strong>Communication</strong>:
-- TP: <code>all_reduce</code> per layer (within TP group)
-- PP: <code>send</code>/<code>recv</code> between stages
-- DP: <code>all_reduce</code> gradients (across DP groups)
-- Communication is <strong>hierarchical</strong> and carefully orchestrated</p>
-<p><strong>When to use</strong>:
-- Production training of models &gt; 100B params
-- You have 100s or 1000s of GPUs
-- Maximum flexibility to tune memory/compute/communication trade-offs</p>
-<p><strong>Examples</strong>:
-- GPT-4 training (estimated 1.76T params, 10k+ GPUs)
-- Claude 3 Opus training
-- PaLM 540B</p>
-<p><strong>Bandwidth requirement</strong>: Extreme (needs NVLink + InfiniBand)</p>
-<p><strong>Key challenge</strong>: <strong>Configuration complexity</strong>. Finding optimal DP/TP/PP split requires expertise and experimentation.</p>
-<hr />
-<h2 id="communication-primitives-reference">Communication Primitives Reference</h2>
-<table>
-<thead>
-<tr>
-<th>Primitive</th>
-<th>What it does</th>
-<th>Used in</th>
-<th>Bandwidth cost</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>all_reduce</code></td>
-<td>Average (or sum) tensor across all GPUs, all GPUs get result</td>
-<td>DP (gradients), TP (activations)</td>
-<td>N × tensor_size</td>
-</tr>
-<tr>
-<td><code>all_gather</code></td>
-<td>Each GPU has a shard, gather full tensor on all GPUs</td>
-<td>FSDP (weights), TP (partial results)</td>
-<td>N × shard_size</td>
-</tr>
-<tr>
-<td><code>reduce_scatter</code></td>
-<td>Average tensor, scatter shards to GPUs</td>
-<td>FSDP (gradients)</td>
-<td>N × tensor_size / N</td>
-</tr>
-<tr>
-<td><code>send</code> / <code>recv</code></td>
-<td>Point-to-point transfer between 2 GPUs</td>
-<td>PP (activations, gradients)</td>
-<td>tensor_size</td>
-</tr>
-<tr>
-<td><code>broadcast</code></td>
-<td>One GPU sends tensor to all others</td>
-<td>Weight initialization</td>
-<td>N × tensor_size</td>
-</tr>
-<tr>
-<td><code>barrier</code></td>
-<td>Synchronization point (no data transfer)</td>
-<td>Checkpointing coordination</td>
-<td>~0</td>
-</tr>
-</tbody>
-</table>
-<hr />
-<h2 id="decision-tree">Decision Tree</h2>
-<div class="language-text highlight"><pre><span></span><code>Model size &lt; 10B params?
-├─ Yes → Use Data Parallel (DP)
-└─ No → Model size &lt; 100B params?
-    ├─ Yes → Use FSDP or TP
-    │   ├─ High bandwidth (NVLink)? → Use TP
-    │   └─ Moderate bandwidth? → Use FSDP
-    └─ No (&gt; 100B params) → Use Hybrid (DP + TP + PP)
-        └─ Tune configuration based on:
-            - GPU memory (affects TP size, PP stages)
-            - Interconnect bandwidth (affects DP/TP split)
-            - Batch size (affects DP groups)
+<p>I had been confident that IREE and LLVM would handle the heavy lifting, and had mostly focused on the language and the framework itself. These numbers were a wake-up call. They triggered a shift from design work to performance tuning, which is still ongoing as I write this. Spoiler: Sheaf's performance is now a lot closer to PyTorch.</p>
+<h3 id="new-tooling">New tooling</h3>
+<p>To start, I added two features to the CLI:</p>
+<ul>
+<li><code>--blame</code>, inspired by <code>systemd-analyze blame</code>, which profiles Sheaf execution and shows where time is spent</li>
+<li><code>SHEAF_JIT_PROFILE=1</code>, which instruments the IREE dispatch path: buffer marshalling, GPU call, and output transfer</li>
+</ul>
+<p>Some issues were immediately visible:</p>
+<ul>
+<li>Too few functions were being compiled, because side-effects and higher-order functions blocked AOT compilation</li>
+<li>Interpreter performance on a real model (hundreds of operations per forward pass) was so poor that the dual interpreted + AOT mode had to be replaced with a transparent JIT compiler, reusing the AOT logic</li>
+</ul>
+<h3 id="how-sheafs-compiler-works">How Sheaf's compiler works</h3>
+<p>Before diving into the optimizations, a brief overview of Sheaf's compilation pipeline.</p>
+<p><strong>1. Parser.</strong> Sheaf source is transformed into an AST of S-expressions. Unlike a "pure" Lisp such as Scheme, which is its own AST, Sheaf has syntactic sugar (threading macros, destructuring, keyword args), so we need a parser to normalize everything into a uniform tree:</p>
+<div class="language-text highlight"><pre><span></span><code>(defn gpt-forward [x params config] ...)
+↓
+SheafValue::List([Symbol(&quot;defn&quot;), Symbol(&quot;gpt-forward&quot;), ...])
 </code></pre></div>
-<hr />
-<h2 id="real-world-configurations-estimated">Real-World Configurations (Estimated)</h2>
+<p><strong>2. Compiler.</strong> The AST is then lowered into <code>CompiledExpr</code>, an internal IR. This stage expands macros, recognizes special forms (<code>defn</code>, <code>let</code>, <code>if</code>, <code>fn</code>), resolves symbols, and registers functions in the compiler registry. The result is a tree of typed enum variants:</p>
+<div class="language-rust highlight"><pre><span></span><code><span class="k">enum</span><span class="w"> </span><span class="nc">CompiledExpr</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">Integer</span><span class="p">(</span><span class="kt">i64</span><span class="p">),</span>
+<span class="w">    </span><span class="n">Float</span><span class="p">(</span><span class="kt">f64</span><span class="p">),</span>
+<span class="w">    </span><span class="n">Symbol</span><span class="p">(</span><span class="nb">String</span><span class="p">),</span>
+<span class="w">    </span><span class="n">FunctionCall</span><span class="p">(</span><span class="nb">String</span><span class="p">,</span><span class="w"> </span><span class="nb">Vec</span><span class="o">&lt;</span><span class="n">CompiledExpr</span><span class="o">&gt;</span><span class="p">),</span>
+<span class="w">    </span><span class="n">Let</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">bindings</span><span class="p">,</span><span class="w"> </span><span class="n">body</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="n">Lambda</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">params</span><span class="p">,</span><span class="w"> </span><span class="n">body</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="n">If</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">cond</span><span class="p">,</span><span class="w"> </span><span class="n">then</span><span class="p">,</span><span class="w"> </span><span class="n">else_</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="n">GetTupleElement</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">param</span><span class="p">,</span><span class="w"> </span><span class="n">indices</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="n">Vector</span><span class="p">(</span><span class="nb">Vec</span><span class="o">&lt;</span><span class="n">CompiledExpr</span><span class="o">&gt;</span><span class="p">),</span>
+<span class="w">    </span><span class="n">Keyword</span><span class="p">(</span><span class="nb">String</span><span class="p">),</span>
+<span class="w">    </span><span class="o">..</span><span class="p">.</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><strong>3. Transforms.</strong> Several passes rewrite the <code>CompiledExpr</code> tree before codegen: dictionary accesses become positional tuple lookups, known function calls are inlined, <code>reduce</code> loops are unrolled into chains of <code>Let</code> bindings (required for autodiff), and constant subexpressions are evaluated at compile time.</p>
+<p><strong>4. Codegen.</strong> Each <code>CompiledExpr</code> node maps to one or more StableHLO operations. The codegen also computes output shapes for each tensor operation, threading shape information through the entire graph.</p>
+<p><strong>5. Compilation.</strong> Finally, <code>iree-compile</code> lowers the StableHLO module into a VMFB file for a specific backend (CPU, Metal, or CUDA).</p>
+<h3 id="the-marshalling-wall">The marshalling wall</h3>
+<p>With the profiling tools in place, the first bottleneck became obvious: marshalling overhead. Every time the interpreter calls into IREE, it must convert each tensor argument into an IREE buffer view. For NanoGPT's forward pass, that means 27 parameter tensors, converted and uploaded on every single call.</p>
+<p>For 1000 tokens of autoregressive generation, that's 27,000 buffer allocations and roughly 8GB of cumulative memory copies. The GPU was spending more time waiting for data than computing.</p>
+<p>The fix was a fingerprint-based buffer view cache. Computing a hash per function proved very compute-expensive, so each tensor argument is now fingerprinted using <code>Arc</code> pointer identity: same <code>Arc</code> means same data, which means the previously created buffer view can be reused. This is O(1) with no false positives, since Sheaf's values are immutable.</p>
+<p>The cache brought inference from 11.3s down to 7.7s for 1000 tokens (a 32% improvement), but a gap remained.</p>
+<h3 id="deep-copies-in-the-interpreter">Deep copies in the interpreter</h3>
+<p>Profiling the remaining gap revealed a surprising cost: the interpreter was deep-cloning entire tensors on every function call and environment lookup. A GPT forward pass with 27 parameter tensors meant copying ~8MB of weights repeatedly, in what should have been zero-cost reference passing.</p>
+<p>The fix was straightforward: wrap tensor data in <code>Arc&lt;ArrayD&lt;f32&gt;&gt;</code>. Function calls, let bindings, and dictionary lookups now bump a reference count instead of copying data. The impact was dramatic:</p>
 <table>
 <thead>
 <tr>
-<th>Model</th>
-<th>Params</th>
-<th>Strategy</th>
-<th>Config</th>
-<th>GPUs</th>
-<th>Training Time</th>
+<th>Version</th>
+<th>1000 tokens</th>
+<th>vs JAX V1</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Llama 7B</td>
-<td>7B</td>
-<td>DP</td>
-<td>DP=8</td>
-<td>8</td>
-<td>~1 week</td>
+<td>Before optimizations</td>
+<td>11.3s</td>
+<td>1.7× slower</td>
 </tr>
 <tr>
-<td>Llama 70B</td>
-<td>70B</td>
-<td>FSDP</td>
-<td>FSDP on 64 GPUs</td>
-<td>64</td>
-<td>~2 weeks</td>
+<td>+ buffer cache</td>
+<td>7.7s</td>
+<td>1.1× slower</td>
 </tr>
 <tr>
-<td>GPT-3</td>
-<td>175B</td>
-<td>Hybrid</td>
-<td>DP=8, TP=8, PP=4</td>
-<td>256</td>
-<td>~1 month</td>
+<td>+ Arc tensors</td>
+<td>4.85s</td>
+<td>1.4× faster</td>
 </tr>
 <tr>
-<td>GPT-4</td>
-<td>~1.76T</td>
-<td>Hybrid</td>
-<td>DP=16, TP=8, PP=8</td>
-<td>1024+</td>
-<td>~3 months</td>
-</tr>
-<tr>
-<td>Claude 3 Opus</td>
-<td>~500B?</td>
-<td>Hybrid</td>
-<td>DP=8, TP=8, PP=4</td>
-<td>256+</td>
-<td>~1 month</td>
+<td>JAX V1 (Python + JAX)</td>
+<td>6.8s</td>
+<td>baseline</td>
 </tr>
 </tbody>
 </table>
-<p><em>(Configurations are educated guesses based on public information and hardware constraints)</em></p>
-<hr />
-<h2 id="implementation-priorities-for-sheaf">Implementation Priorities for Sheaf</h2>
-<h3 id="phase-1-mvp-data-parallel">Phase 1 (MVP) - Data Parallel</h3>
-<ul>
-<li><strong>Why</strong>: Covers 80% of use cases (models &lt; 10B params)</li>
-<li><strong>What</strong>: <code>--distribute data-parallel --world-size N</code></li>
-<li><strong>Collectives needed</strong>: <code>all_reduce</code>, <code>barrier</code></li>
-<li><strong>Effort</strong>: 2-3 weeks</li>
-</ul>
-<h3 id="phase-2-fsdp">Phase 2 - FSDP</h3>
-<ul>
-<li><strong>Why</strong>: Enables training 10B-100B models on moderate GPU clusters</li>
-<li><strong>What</strong>: Shard weights, all-gather before forward</li>
-<li><strong>Collectives needed</strong>: <code>all_gather</code>, <code>reduce_scatter</code></li>
-<li><strong>Effort</strong>: 3-4 weeks</li>
-</ul>
-<h3 id="phase-3-tensor-parallel">Phase 3 - Tensor Parallel</h3>
-<ul>
-<li><strong>Why</strong>: Low-latency inference for large models</li>
-<li><strong>What</strong>: Annotations <code>:tensor-parallel</code> on layers</li>
-<li><strong>Collectives needed</strong>: <code>all_reduce</code> (per layer)</li>
-<li><strong>Effort</strong>: 4-6 weeks</li>
-</ul>
-<h3 id="phase-4-hybrid">Phase 4 - Hybrid</h3>
-<ul>
-<li><strong>Why</strong>: Production-scale training (&gt; 100B params)</li>
-<li><strong>What</strong>: Combine DP + TP + PP with hierarchical config</li>
-<li><strong>Effort</strong>: 2-3 months</li>
-</ul>
-<hr />
-<h2 id="further-reading">Further Reading</h2>
-<ul>
-<li><strong>Megatron-LM paper</strong> (NVIDIA): Tensor + Pipeline parallelism</li>
-<li><strong>ZeRO paper</strong> (Microsoft): FSDP approach</li>
-<li><strong>GPipe</strong> (Google): Pipeline parallelism with micro-batching</li>
-<li><strong>PyTorch FSDP docs</strong>: Practical FSDP implementation</li>
-<li><strong>Alpa</strong> (UC Berkeley): Automatic parallelization (finds optimal strategy)</li>
-</ul>
-<hr />
-<p><strong>Key Takeaway</strong>: There's no single "best" strategy. It depends on model size, GPU memory, interconnect bandwidth, and latency requirements. Production systems use <strong>hybrid</strong> approaches and tune configurations based on profiling.</p>
+<p>For BareGPT, my small Transformer, Sheaf V2 now beats the Sheaf V1 Python+JAX implementation, in a 3MB binary vs a 500MB runtime.</p>
+<p>The next step was to scale up to GPT-2 124M and benchmark against PyTorch directly.</p>
+<h3 id="jit-compilation">JIT compilation</h3>
+<p>The AOT approach (<code>sheaf build</code>) required a manual compilation step and couldn't handle higher-order functions or closures that capture runtime state. The JIT compiler replaced it with transparent on-first-call compilation.</p>
+<p>When a pure function is called for the first time, the JIT traces its arguments to infer concrete types (no more <code>defparams</code>!) and automatically runs the full compiler pipeline. If the function's source changes, the hash changes, and the JIT recompiles. The <code>iree-compile</code> toolchain is auto-downloaded on first use (Zig-style), so there's nothing to install.</p>
+<h3 id="f32-everywhere">f32 everywhere</h3>
+<p>A less obvious optimization: the interpreter was using f64 internally (Rust and ndarray's default float type), while IREE and the GPU work exclusively in f32. Every tensor crossing the interpreter-IREE boundary was being cast, element by element.</p>
+<p>Switching <code>Value::Float</code> from f64 to f32 eliminated this conversion entirely. The impact on inference was a 31% speedup (1080ms to 746ms for 100 tokens), and training dropped from 1.26s to ~670ms per step.</p>
+<h3 id="devicebuffer-and-the-fast-path">DeviceBuffer and the fast path</h3>
+<p>The final optimization addressed what happens between consecutive IREE calls. When <code>adam-step</code> produces updated parameters on the GPU, those tensors should flow directly into the next <code>train-step</code> call without ever touching host memory.</p>
+<p><code>DeviceBuffer</code> wraps an IREE buffer view that stays on the GPU. When all inputs to an IREE call are already DeviceBuffers, a fast path skips the buffer cache entirely: no mutex lock, no fingerprint check, just a pointer retain and push. For multi-step training, this means step 1 pays the full marshalling cost (all tensors are new), but steps 2+ run with near-zero buffer overhead.</p>
+<div class="language-text highlight"><pre><span></span><code>IREE dispatch profile (3 calls, 1461.5ms total):
+  flatten:      0.0ms ( 0.0%)
+  buffers:    416.7ms (28.5%)  [hits: 908, misses: 454]
+  call:      1044.7ms (71.5%)
+  output:       0.0ms ( 0.0%)
+</code></pre></div>
+<p>All 454 misses occur on step 1. Steps 2 and 3 are 100% cache hits.</p>
+<h3 id="where-things-stand">Where things stand</h3>
+<p>Here is the full journey on GPT-2 124M training so far (batch=1, block=64, Metal GPU):</p>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Per step (warm)</th>
+<th>vs PyTorch MPS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Interpreter only</td>
+<td>~11s</td>
+<td>86×</td>
+</tr>
+<tr>
+<td>+ JIT</td>
+<td>1.26s</td>
+<td>10×</td>
+</tr>
+<tr>
+<td>+ f32 interpreter</td>
+<td>~670ms</td>
+<td>5×</td>
+</tr>
+<tr>
+<td>+ DeviceBuffer fast path</td>
+<td>533ms</td>
+<td>4.2×</td>
+</tr>
+<tr>
+<td>PyTorch (eager, MPS)</td>
+<td>128ms</td>
+<td>baseline</td>
+</tr>
+</tbody>
+</table>
+<p>From 11 seconds to 533 milliseconds. The remaining 4.2× gap is now dominated by the GPU kernel itself (71.5% of dispatch time). This is IREE's Metal backend vs Apple's MPS, which is a different compiler targeting the same hardware and is outside Sheaf's control.</p>
+<p>On inference, the picture is different. For 100 tokens of autoregressive generation, 94% of the time is spent in the GPU call. Buffer overhead is negligible. The gap with PyTorch (746ms vs 390ms) is entirely in kernel quality.</p>
+<h3 id="going-forward">Going forward</h3>
+<p>The optimizations described here will continue in a follow-up article, where I'll cover the autodiff pipeline, training step fusion, and the path to closing the remaining gap with PyTorch.</p>
 
 
 
@@ -1851,7 +1751,7 @@ DP group 0, TP group 0, PP stage 1: [layer30-59, shard0] [batch_part0]
       
 <footer class="md-footer">
     <div class="md-footer__inner md-grid" style="display: flex; justify-content: center; align-items: center; gap: 10px;">
-      <img src="../images/sheaf-light.png" alt="Logo" style="height: 24px;"/>
+      <img src="../../images/sheaf-light.png" alt="Logo" style="height: 24px;"/>
       <span>| © 2025-2026 Damien Boureille</span>
     </div>
 </footer>
@@ -1865,12 +1765,12 @@ DP group 0, TP group 0, PP stage 1: [layer30-59, shard0] [batch_part0]
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.tabs.sticky", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
-        <script src="../javascripts/fix-drawer.js"></script>
+        <script src="../../javascripts/fix-drawer.js"></script>
       
     
   </body>

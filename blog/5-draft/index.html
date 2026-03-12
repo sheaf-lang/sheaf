@@ -22,7 +22,7 @@
     
 
       
-        <title>Distributed Training in Sheaf: 4 Workers, Perfect Synchronization - Sheaf</title>
+        <title>Article 5 — Raw notes & metrics - Sheaf</title>
       
     
 <link rel="icon" type="image/png" href="../../images/favicon.png">
@@ -501,7 +501,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     <div data-md-component="skip">
       
         
-        <a href="#distributed-training-in-sheaf-4-workers-perfect-synchronization" class="md-skip">
+        <a href="#article-5-raw-notes-metrics" class="md-skip">
           Skip to content
         </a>
       
@@ -537,7 +537,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Distributed Training in Sheaf: 4 Workers, Perfect Synchronization
+              Article 5 — Raw notes &amp; metrics
             
           </span>
         </div>
@@ -658,7 +658,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     
     
       <li class="md-tabs__item">
-        <a href="../4/" class="md-tabs__link">
+        <a href="../5/" class="md-tabs__link">
           
   
   
@@ -687,8 +687,6 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
         <div class="md-main__inner md-grid">
           
             
-              
-                
               
               <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
                 <div class="md-sidebar__scrollwrap">
@@ -1118,6 +1116,34 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
+      <a href="../5/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Catching PyTorch's Performance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../4/" class="md-nav__link">
         
   
@@ -1238,9 +1264,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
             
             
               
-                
-              
-              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" hidden>
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
                     
@@ -1259,10 +1283,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#why-data-parallelism" class="md-nav__link">
+  <a href="#context" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Why Data Parallelism
+        Context
       
     </span>
   </a>
@@ -1270,10 +1294,232 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
       
         <li class="md-nav__item">
-  <a href="#the-poc" class="md-nav__link">
+  <a href="#the-problem-marshalling-overhead" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The POC
+        The problem: marshalling overhead
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The problem: marshalling overhead">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cost-breakdown-per-call-estimated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cost breakdown (per call, estimated)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-fix-fingerprint-based-buffer-view-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The fix: fingerprint-based buffer view cache
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The fix: fingerprint-based buffer view cache">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Design
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-fingerprint-bug" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The fingerprint bug
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#refcounting-fix-bonus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Refcounting fix (bonus)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Results
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Results">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#benchmark-1000-tokens-autoregressive-generation-buffer-cache-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Benchmark: 1000 tokens autoregressive generation (buffer cache only)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-the-cache-eliminated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What the cache eliminated
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-remains-the-1s-gap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What remains (the ~1s gap)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-perspective-after-buffer-cache-before-arc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The perspective (after buffer cache, before Arc)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-hidden-cost-deep-tensor-cloning-in-the-interpreter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The hidden cost: deep tensor cloning in the interpreter
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The hidden cost: deep tensor cloning in the interpreter">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-discovery" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The discovery
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-fix-arc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The fix: Arc>
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-mechanical-refactor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The mechanical refactor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#impact-the-numbers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Impact: the numbers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-this-matters-for-language-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why this matters for language design
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-the-estimate-was-wrong" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why the estimate was wrong
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#final-perspective" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Final perspective
       
     </span>
   </a>
@@ -1281,10 +1527,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
       
         <li class="md-nav__item">
-  <a href="#proof-of-synchronization" class="md-nav__link">
+  <a href="#possible-further-optimizations-not-implemented" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Proof of Synchronization
+        Possible further optimizations (not implemented)
       
     </span>
   </a>
@@ -1292,76 +1538,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
       
         <li class="md-nav__item">
-  <a href="#coordinated-checkpointing" class="md-nav__link">
+  <a href="#code-changes-summary-for-the-article" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Coordinated Checkpointing
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#backend-abstraction-gloo-nccl" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Backend Abstraction: Gloo → NCCL
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#why-not-kubernetes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Why Not Kubernetes
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#performance" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Performance
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#what-this-validates" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        What This Validates
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#next-steps" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Next Steps
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#conclusion" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Conclusion
+        Code changes summary (for the article)
       
     </span>
   </a>
@@ -1382,178 +1562,1741 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
               <article class="md-content__inner md-typeset">
                 
                   
-  
-
 
 
   
   
 
 
-<h1 id="distributed-training-in-sheaf-4-workers-perfect-synchronization">Distributed Training in Sheaf: 4 Workers, Perfect Synchronization</h1>
-<p>Training neural networks on a single machine works well for prototypes, but production models need to scale across multiple GPUs or nodes. The standard approach is data parallelism: split the dataset across workers, compute gradients locally, then average them with collective communication primitives.</p>
-<p>I validated this architecture for Sheaf using <strong>4 workers with Gloo backend</strong> (CPU), proving that gradient synchronization works perfectly. The same code will work with NCCL on GPUs by changing a single configuration line.</p>
-<h2 id="why-data-parallelism">Why Data Parallelism</h2>
-<!-- more -->
-
-<p>Data parallelism is the simplest scaling strategy for training:</p>
+<h1 id="article-5-raw-notes-metrics">Article 5 — Raw notes &amp; metrics</h1>
+<p>These are raw notes for blog article 5. Not prose yet — data, calculations, and narrative structure.</p>
+<p>Part 1: BareGPT optimizations (buffer cache, Arc tensor refcounting).
+Part 2: NanoGPT: porting a real model, JIT auto-compilation, MLIR codegen quality.
+Part 5: f32 interpreter + DeviceBuffer fast path.</p>
+<hr />
+<h2 id="context">Context</h2>
+<p>BareGPT: 4-layer transformer (d_model=256, n_heads=4), trained on Shakespeare.
+Autoregressive generation: 1000 tokens, one <code>gpt-model</code> call per token.
+Sheaf V2: interpreter orchestrates the generate loop, IREE executes <code>gpt-model</code> as compiled VMFB.</p>
+<h2 id="the-problem-marshalling-overhead">The problem: marshalling overhead</h2>
+<p>Every call to <code>gpt-model(inputs, params, config)</code> goes through this path:</p>
 <ol>
-<li>Each worker has a <strong>full copy</strong> of the model</li>
-<li>Each worker processes a <strong>different mini-batch</strong></li>
-<li>Gradients are <strong>averaged</strong> across workers using <code>all_reduce</code></li>
-<li>All workers update their models with the averaged gradient</li>
+<li><code>flatten_values(inputs)</code> — recursively traverse dict/tuple structure → 27 flat tensors</li>
+<li>For each tensor: <code>value_to_buffer_view()</code> — convert f64→f32, allocate IREE buffer, memcpy</li>
+<li><code>iree_runtime_session_call_by_name()</code> — actual computation</li>
+<li>Read back output buffer views → f32→f64 conversion</li>
 </ol>
-<p>This scales training throughput linearly: 4 workers → 4× data processed per step.</p>
-<p>The critical operation is <strong>all_reduce</strong>: a collective that computes the average (or sum) of tensors across all workers. If this synchronization is correct, all workers stay in sync. If it fails, workers diverge and training collapses.</p>
-<h2 id="the-poc">The POC</h2>
-<p>I built a proof-of-concept using <strong>4 Docker containers</strong> as workers, training a simple MLP on the XOR problem.</p>
-<p><strong>Configuration</strong>:
-- 4 workers (Docker Compose on MacBook Pro M5)
-- Gloo backend (CPU-optimized collective communication)
-- Model: MLP (2→8→1, ~100 parameters)
-- Dataset: XOR (4 examples)
-- Batch size: 4 per worker → effective batch size 16
-- Training: 1000 steps, learning rate 0.01</p>
-<p><strong>Stack</strong>:
-- <code>torch.distributed</code> for collective primitives
-- Gloo backend (CPU) for this POC, NCCL (GPU) in production
-- Shared volume for checkpoint coordination</p>
-<h2 id="proof-of-synchronization">Proof of Synchronization</h2>
-<p>To prove that gradient synchronization works, I logged the gradient norm at every 50 steps, <strong>before and after <code>all_reduce</code></strong>:</p>
-<div class="language-text highlight"><pre><span></span><code>Step 50:
-[Rank 0] Local grad: 0.3045 | Synced grad: 0.3045
-[Rank 1] Local grad: 0.3045 | Synced grad: 0.3045
-[Rank 2] Local grad: 0.3045 | Synced grad: 0.3045
-[Rank 3] Local grad: 0.3045 | Synced grad: 0.3045
-
-Step 500:
-[Rank 0] Local grad: 0.1728 | Synced grad: 0.1728
-[Rank 1] Local grad: 0.1728 | Synced grad: 0.1728
-[Rank 2] Local grad: 0.1728 | Synced grad: 0.1728
-[Rank 3] Local grad: 0.1728 | Synced grad: 0.1728
-
-Step 1000:
-[Rank 0] Local grad: 0.4943 | Synced grad: 0.4943
-[Rank 1] Local grad: 0.4943 | Synced grad: 0.4943
-[Rank 2] Local grad: 0.4943 | Synced grad: 0.4943
-[Rank 3] Local grad: 0.4943 | Synced grad: 0.4943
-</code></pre></div>
-<p><strong>What this proves</strong>:
-- <code>Local grad</code> = gradient norm computed on this worker's mini-batch (before all_reduce)
-- <code>Synced grad</code> = gradient norm after averaging across all workers
-- <strong>Perfect match to 4 decimals</strong> = all_reduce is working correctly</p>
-<p>After 1000 steps, all workers converge to the <strong>same final loss</strong> (0.2377) and produce <strong>identical predictions</strong>:</p>
-<div class="language-text highlight"><pre><span></span><code>[Rank 0] Final test loss: 0.2377
-[Rank 1] Final test loss: 0.2377
-[Rank 2] Final test loss: 0.2377
-[Rank 3] Final test loss: 0.2377
-
-Predictions (all workers):
-  [0.0, 0.0] -&gt; 0.530 (expected 0.0)
-  [0.0, 1.0] -&gt; 0.500 (expected 1.0)
-  [1.0, 0.0] -&gt; 0.521 (expected 1.0)
-  [1.0, 1.0] -&gt; 0.436 (expected 0.0)
-</code></pre></div>
-<p>This is the gold standard for distributed training validation: <strong>bit-identical models across all workers</strong>.</p>
-<h2 id="coordinated-checkpointing">Coordinated Checkpointing</h2>
-<p>A common pitfall in distributed training is checkpoint conflicts: if all workers try to save the model simultaneously, you get corrupted files or 4× duplicates.</p>
-<p>The solution is <strong>barrier synchronization</strong>: only rank 0 writes the checkpoint, while other ranks wait at a barrier.</p>
-<div class="language-python highlight"><pre><span></span><code><span class="k">if</span> <span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-    <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span> <span class="sa">f</span><span class="s2">&quot;checkpoint_step_</span><span class="si">{</span><span class="n">step</span><span class="si">}</span><span class="s2">.pt&quot;</span><span class="p">)</span>
-<span class="n">dist</span><span class="o">.</span><span class="n">barrier</span><span class="p">()</span>  <span class="c1"># All workers wait here until rank 0 finishes</span>
-</code></pre></div>
-<p>This POC saved checkpoints every 100 steps. The filesystem shows exactly <strong>10 files</strong> (not 40 = 4 workers × 10 steps), proving coordination works:</p>
-<div class="language-bash highlight"><pre><span></span><code>$<span class="w"> </span>ls<span class="w"> </span>checkpoints/
-checkpoint_step_100.pt<span class="w">   </span>checkpoint_step_600.pt
-checkpoint_step_200.pt<span class="w">   </span>checkpoint_step_700.pt
-checkpoint_step_300.pt<span class="w">   </span>checkpoint_step_800.pt
-checkpoint_step_400.pt<span class="w">   </span>checkpoint_step_900.pt
-checkpoint_step_500.pt<span class="w">   </span>checkpoint_step_1000.pt
-</code></pre></div>
-<h2 id="backend-abstraction-gloo-nccl">Backend Abstraction: Gloo → NCCL</h2>
-<p>The POC uses <strong>Gloo</strong> (CPU backend) because my MacBook doesn't have CUDA GPUs. But the architecture is designed for <strong>NCCL</strong> (NVIDIA's GPU-optimized collective library).</p>
-<p>Switching from Gloo to NCCL requires <strong>one configuration change</strong>:</p>
-<div class="language-toml highlight"><pre><span></span><code><span class="c1"># sheaf-config.toml</span>
-<span class="k">[distributed]</span>
-<span class="n">backend</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;gloo&quot;</span><span class="w">  </span><span class="c1"># CPU</span>
-</code></pre></div>
-<p>becomes:</p>
-<div class="language-toml highlight"><pre><span></span><code><span class="k">[distributed]</span>
-<span class="n">backend</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;nccl&quot;</span><span class="w">  </span><span class="c1"># GPU</span>
-</code></pre></div>
-<p>The Python code remains identical. <code>torch.distributed</code> abstracts the backend, so the same <code>all_reduce</code>, <code>broadcast</code>, and <code>barrier</code> calls work transparently with both Gloo and NCCL.</p>
-<p><strong>Why NCCL matters</strong>:
-- Gloo throughput: ~1-2 GB/s (CPU memory bandwidth limited)
-- NCCL throughput: ~50-300 GB/s (GPU-Direct RDMA, NVLink, InfiniBand)
-- For large models (billions of parameters), NCCL is 50-100× faster</p>
-<p>I will validate NCCL on cloud GPUs (AWS T4 or Google Colab) in a follow-up test. The expectation is identical synchronization behavior, just much faster.</p>
-<h2 id="why-not-kubernetes">Why Not Kubernetes</h2>
-<p>A common question: "Why not use Kubernetes for orchestration?"</p>
-<p><strong>Kubernetes adds overhead without value for this use case</strong>:</p>
-<ol>
-<li><strong>Complexity</strong>: YAML manifests, services, ingress, persistent volumes</li>
-<li><strong>Latency</strong>: Pod scheduling, CNI network plugins, service discovery</li>
-<li><strong>Debugging</strong>: Logs scattered across pods, requires <code>kubectl</code> gymnastics</li>
-<li><strong>Cost</strong>: Control plane overhead, etcd, API server</li>
-</ol>
-<p>For distributed training, you need:
-- Fixed topology (4 workers = 4 containers, not auto-scaling)
-- Low-latency networking (localhost or RDMA, not overlay networks)
-- Simple coordination (all_reduce, not service mesh)</p>
-<p><strong>Docker Compose is sufficient</strong>:
-- 20 lines of YAML vs 200 for K8s
-- Direct container networking (no service mesh)
-- Logs via <code>docker-compose logs</code> (no kubectl)</p>
-<p>For production multi-node clusters, <strong>Terraform</strong> is simpler than Kubernetes:
-- Provision 4 VMs with GPUs
-- Install Docker, start workers with <code>docker run</code>
-- NCCL uses native InfiniBand/RoCE (no CNI overhead)</p>
-<p>Kubernetes makes sense for web services with dynamic scaling. Training jobs are batch workloads with fixed topology. Simpler tools win.</p>
-<h2 id="performance">Performance</h2>
-<p>This POC on CPU is not optimized for speed, but the numbers are instructive:</p>
+<p>For 1000 tokens: steps 1-2 run 27,000 times. But only 1 tensor (<code>inputs</code>, shape [128]) changes per iteration. The 26 param tensors (~8MB total, model weights) are identical every call.</p>
+<h3 id="cost-breakdown-per-call-estimated">Cost breakdown (per call, estimated)</h3>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Time</th>
+<th>× 1000 calls</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>gpt-model computation (IREE)</td>
+<td>~6ms</td>
+<td>6.0s</td>
+</tr>
+<tr>
+<td>Param marshalling (26 tensors, f64→f32 + alloc + memcpy)</td>
+<td>~2.5ms</td>
+<td>2.5s</td>
+</tr>
+<tr>
+<td>Input marshalling (1 tensor, 128 floats)</td>
+<td>~0.01ms</td>
+<td>0.01s</td>
+</tr>
+<tr>
+<td>flatten_values dict traversal</td>
+<td>~0.1ms</td>
+<td>0.1s</td>
+</tr>
+<tr>
+<td>Interpreter overhead (reduce loop, get, print, nth)</td>
+<td>~1.6ms</td>
+<td>1.6s</td>
+</tr>
+<tr>
+<td>vm_list create/destroy + ref management</td>
+<td>~0.1ms</td>
+<td>0.1s</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>~10.3ms</strong></td>
+<td><strong>~10.3s</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Measured total before optimization: <strong>11.3s</strong> (broadly consistent).</p>
+<h2 id="the-fix-fingerprint-based-buffer-view-cache">The fix: fingerprint-based buffer view cache</h2>
+<h3 id="design">Design</h3>
+<p>Cache lives on <code>IreeSession</code> behind <code>Mutex&lt;HashMap&lt;String, Vec&lt;Option&lt;CachedBufferView&gt;&gt;&gt;&gt;</code>.
+Keyed by (function_name, flat_arg_position).</p>
+<p>Each cached entry stores:</p>
 <ul>
-<li><strong>Initialization</strong>: ~2s (Gloo backend setup + Docker networking)</li>
-<li><strong>Training</strong>: ~15s for 1000 steps (4 workers in parallel)</li>
-<li><strong>Checkpoint I/O</strong>: &lt;100ms per checkpoint</li>
-<li><strong>Total runtime</strong>: ~17s</li>
+<li>A <code>TensorFingerprint</code>: shape + num_elements + 4 sample values as exact f64 bits</li>
+<li>A retained <code>*mut iree_hal_buffer_view_t</code> (IREE refcounted, survives across calls)</li>
 </ul>
-<p>For comparison, a single worker would take ~4× longer (no parallelism). The speedup is linear because the model is small and CPU-bound. With NCCL on GPUs, the speedup would be even better due to lower communication overhead.</p>
-<h2 id="what-this-validates">What This Validates</h2>
-<p>This POC proves the <strong>orchestration layer</strong> of Sheaf's architecture:</p>
+<p>On each call:</p>
 <ul>
-<li>✅ Collective primitives (<code>all_reduce</code>, <code>broadcast</code>, <code>barrier</code>) work correctly</li>
-<li>✅ Gradient synchronization produces bit-identical models</li>
-<li>✅ Checkpointing coordination prevents write conflicts</li>
-<li>✅ Backend abstraction (Gloo/NCCL) is sound</li>
+<li>Fingerprint every flat input tensor — O(1) per tensor (4 element reads)</li>
+<li>Cache hit → reuse existing IREE buffer view (just <code>retain_ref</code> for the input list)</li>
+<li>Cache miss → allocate new buffer view, release old cached one, store new one</li>
 </ul>
-<p>The same API will scale from 4 CPUs → 4 GPUs → 32 GPUs without code changes, just configuration.</p>
-<h2 id="next-steps">Next Steps</h2>
+<h3 id="the-fingerprint-bug">The fingerprint bug</h3>
+<p>First version sampled <code>[0, 1, 2, 3]</code> (first 4 elements). Failed on BareGPT:</p>
+<p><code>append-and-roll</code> shifts the context window left by 1, appends new token at end.
+With block_size=128 and a short prompt, the first ~100 elements are zeros for many iterations.
+Fingerprint saw <code>[0, 0, 0, 0]</code> → false cache hit → model received stale context → output was newlines.</p>
+<p>Fix: sample spread positions <code>[0, n/4, 3n/4, n-1]</code>. For a 128-element tensor: positions <code>[0, 32, 96, 127]</code>.
+The last element changes every iteration (new token appended). Bug fixed.</p>
+<p>This is a good blog anecdote: probabilistic caching is powerful but the sampling strategy matters.
+The fix is one line but required understanding the data access pattern.</p>
+<h3 id="refcounting-fix-bonus">Refcounting fix (bonus)</h3>
+<p>While implementing the cache, discovered a pre-existing refcount leak in the IREE call path:</p>
+<div class="language-text highlight"><pre><span></span><code>value_to_buffer_view() → bv refcount = 1
+retain_ref(bv) → vm_ref on stack; bv refcount = 2
+push_ref_retain(list, ref) → list retains; bv refcount = 3
+release(bv) → bv refcount = 2
+// stack vm_ref goes out of scope — no Drop impl → refcount stays at 2
+// list release → refcount = 1 (leaked!)
+</code></pre></div>
+<p>Fix: added <code>iree_vm_ref_release</code> to FFI bindings, call it after each push. Proper cleanup.
+Without the cache this leaked ~27 buffer views per call × 1000 calls = 27,000 leaked refs.
+With the cache, cached entries are properly released in <code>IreeSession::Drop</code>.</p>
+<h2 id="results">Results</h2>
+<h3 id="benchmark-1000-tokens-autoregressive-generation-buffer-cache-only">Benchmark: 1000 tokens autoregressive generation (buffer cache only)</h3>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Time</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>V1 (Python + JAX)</td>
+<td><strong>6.8s</strong></td>
+<td>JAX jit-compiled, Python orchestration</td>
+</tr>
+<tr>
+<td>V2 before cache</td>
+<td><strong>11.3s</strong></td>
+<td>Every call marshals all 27 tensors</td>
+</tr>
+<tr>
+<td>V2 after cache</td>
+<td><strong>7.7s</strong></td>
+<td>26/27 tensors cached, 1 marshalled per call</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Improvement: 32% faster (11.3s → 7.7s). Gap with JAX: 1.0s.</strong></p>
+<p>(Further optimizations below close this gap entirely — see "The hidden cost" section.)</p>
+<h3 id="what-the-cache-eliminated">What the cache eliminated</h3>
+<ul>
+<li>26,000 IREE buffer allocations (26 params × 1000 calls)</li>
+<li>26,000 f64→f32 conversions of weight tensors</li>
+<li>~8MB × 1000 = 8GB of cumulative memcpy avoided</li>
+<li>Replaced by 27,000 fingerprint comparisons (4 u64 compares each, ~ns)</li>
+</ul>
+<h3 id="what-remains-the-1s-gap">What remains (the ~1s gap)</h3>
+<ul>
+<li><strong>Interpreter overhead (~1.6s)</strong>: the generate loop is pure interpreter — <code>reduce</code>, <code>let</code>, <code>get</code>, <code>print</code>, <code>append-and-roll</code>, <code>nth</code>. JAX's Python loop is also interpreted, but CPython is faster at dict lookups than Sheaf's tree-walking interpreter.</li>
+<li><strong>flatten_values (~0.1s)</strong>: recursive BTreeMap traversal to extract 27 leaf tensors, 1000 times.</li>
+<li><strong>vm_list lifecycle (~0.1s)</strong>: create + populate + destroy an IREE input/output list per call.</li>
+<li><strong>Input tensor marshalling (~0.01s)</strong>: 1 tensor × 128 floats × 1000 calls. Negligible.</li>
+</ul>
+<h3 id="the-perspective-after-buffer-cache-before-arc">The perspective (after buffer cache, before Arc)</h3>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>V1 (JAX)</th>
+<th>V2 (IREE)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Runtime binary</td>
+<td>~500MB (Python + JAX + XLA)</td>
+<td>3.1MB (single static binary)</td>
+</tr>
+<tr>
+<td>100 tokens</td>
+<td>2.2s</td>
+<td>1.67s</td>
+</tr>
+<tr>
+<td>1000 tokens</td>
+<td>6.8s</td>
+<td>7.7s</td>
+</tr>
+<tr>
+<td>Compilation</td>
+<td>JIT at first call</td>
+<td>AOT (<code>sheaf build</code>)</td>
+</tr>
+<tr>
+<td>Param caching</td>
+<td>Automatic (JAX traces)</td>
+<td>Fingerprint-based buffer cache</td>
+</tr>
+</tbody>
+</table>
+<p>V2 is faster on short runs (100 tokens) because there's no JIT warmup.
+V2 is ~14% slower on long runs (1000 tokens) due to interpreter overhead in the generate loop.
+V2 is 160× smaller.</p>
+<hr />
+<h2 id="the-hidden-cost-deep-tensor-cloning-in-the-interpreter">The hidden cost: deep tensor cloning in the interpreter</h2>
+<p>After the buffer cache brought us to 7.7s, we profiled the remaining gap (1.0s vs JAX).
+The cost breakdown pointed to "interpreter overhead (~1.6s)", but what was hiding in there?</p>
+<h3 id="the-discovery">The discovery</h3>
+<p>Sheaf's <code>Value::Tensor</code> stored <code>ArrayD&lt;f64&gt;</code> — ndarray's owned array type.
+<code>Clone</code> on <code>ArrayD&lt;f64&gt;</code> is a <strong>deep copy</strong>: allocates new memory, copies all elements.</p>
+<p>The interpreter's <code>env.get()</code> returns values by <strong>cloning</strong> them (the environment owns the value,
+the caller gets an independent copy). For scalars, strings, keywords — this is fine.
+For tensors, this means <strong>copying all tensor data on every variable access</strong>.</p>
+<p>In the generate loop, <code>params</code> (a dict of 26 weight tensors, ~8MB total) flows through
+the call chain:</p>
+<div class="language-text highlight"><pre><span></span><code>generate (reduce body)
+→ env.get(&quot;params&quot;) → clone #1: 8MB deep copy
+→ eval_call(&quot;generate-token&quot;, args)
+→ env.set(&quot;params&quot;, val.clone()) → clone #2: 8MB deep copy
+→ env.get(&quot;params&quot;) → clone #3: 8MB deep copy
+→ eval_call(&quot;gpt-model&quot;, args) → IREE dispatch (no clone! refs only)
+</code></pre></div>
+<p>Three deep clones of the entire param dict per token. Over 1000 tokens:</p>
+<ul>
+<li><strong>3 × 8MB × 1000 = 24GB</strong> of unnecessary memory copies</li>
+<li><strong>3 × 26 × 1000 = 78,000</strong> malloc/free cycles</li>
+</ul>
+<p>At 150GB/s memory bandwidth, the memcpy alone costs ~160ms.
+The malloc/free overhead (system allocator fragmentation) adds another ~100ms.
+Total: <strong>~260ms</strong>, but the real cost is worse — the single-threaded clone work blocks
+IREE's multi-threaded task system from overlapping computation.</p>
+<h3 id="the-fix-arc">The fix: Arc<ArrayD\<f64>></h3>
+<p>The Sheaf language is <strong>functionally immutable</strong> — values are never mutated in place.
+Operations always create new tensors. This is the perfect use case for reference counting.</p>
+<p>One-line type change:</p>
+<div class="language-rust highlight"><pre><span></span><code><span class="c1">// Before</span>
+<span class="n">Tensor</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">data</span><span class="p">:</span><span class="w"> </span><span class="nc">ArrayD</span><span class="o">&lt;</span><span class="kt">f64</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="n">dtype</span><span class="p">:</span><span class="w"> </span><span class="nc">Dtype</span><span class="w"> </span><span class="p">}</span>
+
+<span class="c1">// After</span>
+<span class="n">Tensor</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">data</span><span class="p">:</span><span class="w"> </span><span class="nc">Arc</span><span class="o">&lt;</span><span class="n">ArrayD</span><span class="o">&lt;</span><span class="kt">f64</span><span class="o">&gt;&gt;</span><span class="p">,</span><span class="w"> </span><span class="n">dtype</span><span class="p">:</span><span class="w"> </span><span class="nc">Dtype</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<p><code>Clone</code> on <code>Arc&lt;T&gt;</code> is O(1) — an atomic increment of a reference counter, regardless of
+tensor size. An 8MB weight matrix and a 128-element input vector cost the same: ~1 nanosecond.</p>
+<h3 id="the-mechanical-refactor">The mechanical refactor</h3>
+<p>The change touches 17 files but is entirely mechanical:</p>
+<ul>
+<li><strong>Constructors</strong> (<code>Value::tensor_f32(arr)</code>, direct <code>Value::Tensor { ... }</code>): wrap in <code>Arc::new()</code></li>
+<li><strong>Read access</strong> (<code>data.shape()</code>, <code>data.iter()</code>, <code>data.len()</code>): unchanged — <code>Arc</code> implements
+  <code>Deref&lt;Target=ArrayD&lt;f64&gt;&gt;</code>, so all method calls auto-deref transparently</li>
+<li><strong>Mutation sites</strong> (rare — only <code>perturb_leaf</code> for numeric gradients, <code>reduce_grad_to_param_shape</code>):
+  explicit deep clone with <code>(**data).clone()</code> before mutating</li>
+</ul>
+<p>37 constructor sites updated. Zero changes to read-only access patterns.
+The compiler catches every missed site — if you forget an <code>Arc::new()</code>, it's a type error, not a runtime bug.</p>
+<h3 id="impact-the-numbers">Impact: the numbers</h3>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Wall time</th>
+<th>User time</th>
+<th>CPU%</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>V2 before all optimizations</td>
+<td>11.3s</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td>V2 + buffer cache</td>
+<td>7.7s</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td>V2 + cache + zero-copy flatten</td>
+<td>7.15s</td>
+<td>28.1s</td>
+<td>434%</td>
+</tr>
+<tr>
+<td>V2 + cache + Arc tensors (cold)</td>
+<td>5.5s</td>
+<td>26.3s</td>
+<td>525%</td>
+</tr>
+<tr>
+<td><strong>V2 + cache + Arc (steady-state)</strong></td>
+<td><strong>4.85s</strong></td>
+<td><strong>25.6s</strong></td>
+<td><strong>590%</strong></td>
+</tr>
+<tr>
+<td>V1 (Python + JAX)</td>
+<td>6.8s</td>
+<td>13.9s</td>
+<td>233%</td>
+</tr>
+</tbody>
+</table>
+<p><strong>V2 is now 29% faster than JAX on 1000 tokens.</strong> The 3.1MB binary beats the 450MB runtime.</p>
+<p>Two effects compound:</p>
+<p><strong>1. User time dropped by 2.5s (28.1s → 25.6s).</strong>
+This is actual CPU time saved by eliminating deep copies. Arc refcount bumps cost ~1ns each
+vs ~50μs for an 8MB deep copy. The difference is 50,000×.</p>
+<p><strong>2. CPU utilization jumped from 434% to 590%.</strong>
+The IREE local-task driver uses a thread pool (6 performance cores on M-series).
+Previously, the main thread spent significant time in single-threaded clone work between
+IREE calls. This serialized the pipeline: the worker threads had to wait for the main thread
+to finish copying tensors before the next IREE dispatch could start.</p>
+<p>With Arc, the inter-call overhead dropped to near zero. The main thread hands off work to IREE
+almost immediately, and IREE's worker threads stay saturated. Less serialization, more overlap,
+higher throughput. The Arc optimization didn't just save CPU time — it unlocked parallelism
+that was always available but couldn't be exploited.</p>
+<p><strong>Cold vs steady-state</strong>: first run after build: 5.5s. Subsequent runs: 4.85s (stable).
+The ~0.7s difference is OS-level warmup: page cache (VMFB + weights file), allocator arenas,
+TLB entries. Not an IREE-level cache — just the usual first-access penalty for I/O and memory.
+JAX's 6.8s already includes its own cold start (JIT compilation on first call).</p>
+<h3 id="why-this-matters-for-language-design">Why this matters for language design</h3>
+<p>This is a lesson about the interaction between <strong>language semantics</strong> and <strong>runtime performance</strong>.</p>
+<p>Sheaf is immutable-by-default. Values flow through function calls without mutation.
+The interpreter implemented this with deep copies — correct but expensive.
+Reference counting preserves the same semantics (immutability) while making copies free.</p>
+<p>The key insight: in a functional language where values are never mutated, <strong>ownership is a lie</strong>.
+There's no reason to give each scope its own physical copy of the data. A shared reference
+is semantically identical and physically optimal.</p>
+<p>JAX solved this differently: Python objects are mutable, but JAX values are opaque device arrays
+managed by XLA's runtime. The "copy" of a JAX array is already just a pointer bump.
+We arrived at the same destination from different starting points.</p>
+<h3 id="why-the-estimate-was-wrong">Why the estimate was wrong</h3>
+<p>We initially estimated ~170ms savings based on memcpy bandwidth analysis (24GB / 150GB/s).
+The actual savings were ~1.6s — almost 10× the estimate.</p>
+<p>The bandwidth calculation only counted the memcpy time for flat arrays. It missed:</p>
 <ol>
-<li><strong>NCCL validation on cloud GPUs</strong> (AWS T4 or Colab)</li>
-<li>Prove same perfect synchronization with GPU backend</li>
-<li>
-<p>Benchmark throughput (GB/s) for gradient all_reduce</p>
-</li>
-<li>
-<p><strong>Integration into Sheaf interpreter</strong> (Rust)</p>
-</li>
-<li>Port distributed primitives to Rust</li>
-<li>Link against libnccl.so / libgloo.a</li>
-<li>
-<p>Expose as <code>(dist/all-reduce ...)</code> in Sheaf syntax</p>
-</li>
-<li>
-<p><strong>Multi-node testing</strong> (future)</p>
-</li>
-<li>4 nodes × 8 GPUs = 32 GPUs</li>
-<li>InfiniBand or RoCE networking</li>
-<li>Real workload: BareGPT on Shakespeare dataset</li>
+<li><strong>Malloc/free overhead</strong>: each of the 78,000 allocations goes through the system allocator.
+   Fragmentation and lock contention in <code>malloc</code> dominate small-allocation patterns.</li>
+<li><strong>Dict/Vec structure cloning</strong>: cloning a <code>BTreeMap&lt;String, Value&gt;</code> of 26 entries doesn't just
+   clone the tensors — it clones the tree structure, all the string keys, and recursively
+   clones nested dicts. The structural overhead compounds.</li>
+<li><strong>Cache pollution</strong>: 24GB of write traffic through L1/L2 evicts hot data (IREE's compiled
+   kernels, the interpreter's dispatch tables). The indirect cost of cache misses downstream
+   is invisible in a bandwidth calculation.</li>
+<li><strong>Parallelism starvation</strong>: the serialization effect (main thread blocked → worker threads idle)
+   creates a multiplicative penalty that doesn't show up in single-thread analysis.</li>
 </ol>
-<h2 id="conclusion">Conclusion</h2>
-<p>Distributed training is often seen as complex, requiring Kubernetes, Horovod, or Ray. This POC shows it can be simple: <code>all_reduce</code>, <code>broadcast</code>, <code>barrier</code>, and coordinated checkpointing.</p>
-<p>The proof is in the gradient norms: <strong>0.3045 across all 4 workers, to 4 decimal places</strong>. Perfect synchronization, validated.</p>
-<p>The architecture scales from 4 CPUs to 4 GPUs to 32 GPUs. Gloo and NCCL are standard libraries, not frameworks. Terraform is simpler than Kubernetes for batch workloads.</p>
-<p>This validates the distributed training layer for Sheaf V2. The interpreter will implement these primitives in Rust, targeting NCCL for production GPU clusters.</p>
+<p>The lesson: <strong>wall-clock profiling beats napkin math</strong>, especially when threading is involved.</p>
+<hr />
+<h2 id="final-perspective">Final perspective</h2>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>V1 (JAX)</th>
+<th>V2 (IREE + Arc)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Runtime binary</td>
+<td>~450MB (Python + JAX + XLA)</td>
+<td>3.1MB (single static binary)</td>
+</tr>
+<tr>
+<td>100 tokens</td>
+<td>2.2s</td>
+<td>1.67s</td>
+</tr>
+<tr>
+<td>1000 tokens</td>
+<td>6.8s</td>
+<td><strong>4.85s</strong></td>
+</tr>
+<tr>
+<td>Compilation</td>
+<td>JIT at first call</td>
+<td>AOT (<code>sheaf build</code>)</td>
+</tr>
+<tr>
+<td>Param caching</td>
+<td>Automatic (JAX traces)</td>
+<td>Fingerprint-based buffer cache</td>
+</tr>
+</tbody>
+</table>
+<p>V2 is faster at all generation lengths. 145× smaller. Compiles ahead of time.</p>
+<h2 id="possible-further-optimizations-not-implemented">Possible further optimizations (not implemented)</h2>
+<ol>
+<li><strong>Cache the vm_list itself</strong>: keep a persistent input list, only replace changed entries via <code>iree_vm_list_set_ref</code>. Would eliminate list create/destroy overhead.</li>
+<li><strong>Skip flatten_values for unchanged args</strong>: cache the flattened tensor vector alongside the buffer views.</li>
+<li><strong>Batch interpreter operations</strong>: the generate loop does ~10 interpreter operations between IREE calls. A lightweight "fast path" for reduce-over-range could help.</li>
+<li><strong>Move generate loop to IREE</strong>: compile the entire generation loop (including sampling) as a single VMFB function. Would eliminate all per-token interpreter overhead. This is the nuclear option — essentially what JAX does with <code>jax.lax.scan</code>.</li>
+</ol>
+<hr />
+<h2 id="code-changes-summary-for-the-article">Code changes summary (for the article)</h2>
+<p><strong>Buffer cache</strong> (optimization 1):</p>
+<ul>
+<li><code>runtime/iree_ffi.rs</code> — added <code>iree_vm_ref_release</code> binding</li>
+<li><code>runtime/iree_session.rs</code> — <code>TensorFingerprint</code>, <code>CachedBufferView</code>, <code>BufferCache</code> on <code>IreeSession</code>, refactored <code>call()</code> with cache logic, proper refcount cleanup in <code>Drop</code></li>
+<li>Net: ~65 lines for a 32% speedup (11.3s → 7.7s)</li>
+</ul>
+<p><strong>Arc tensor refcounting</strong> (optimization 2):</p>
+<ul>
+<li><code>interpreter/value.rs</code> — <code>data: ArrayD&lt;f64&gt;</code> → <code>data: Arc&lt;ArrayD&lt;f64&gt;&gt;</code></li>
+<li>17 files updated: <code>value.rs</code>, <code>mod.rs</code>, <code>trace.rs</code>, <code>iree_session.rs</code>, all builtins (<code>arithmetic.rs</code>, <code>activations.rs</code>, <code>comparison.rs</code>, <code>tensor_ops.rs</code>, <code>losses.rs</code>, <code>random.rs</code>, <code>io.rs</code>, <code>pickle.rs</code>, <code>collections.rs</code>, <code>tensor_create.rs</code>)</li>
+<li>Net: ~37 constructor site changes for a 23% speedup (7.15s → 5.5s)</li>
+</ul>
+<p><strong>Combined</strong>: 57% total speedup (11.3s → 4.85s steady-state). Two focused optimizations, no algorithmic changes.</p>
+<hr />
+<hr />
+<h1 id="part-2-nanogpt-porting-a-real-model-jit-and-mlir-quality">Part 2 — NanoGPT: porting a real model, JIT, and MLIR quality</h1>
+<h2 id="context_1">Context</h2>
+<p>NanoGPT: Karpathy's GPT-2 implementation, char-level Shakespeare.
+6 layers, 384 dim, 4 heads, 65 vocab. Pre-trained weights from PyTorch.
+Faithful port to Sheaf — same weights, same architecture, same results.</p>
+<p>Benchmark: 100 tokens autoregressive generation.
+Reference: PyTorch (CPU) ~1.6s (~62 tk/s).</p>
+<h2 id="the-model-in-sheaf">The model in Sheaf</h2>
+<div class="language-clojure highlight"><pre><span></span><code><span class="c1">;; LayerNorm without bias</span>
+<span class="p">(</span><span class="kd">defn </span><span class="nv">layer-norm-nb</span><span class="w"> </span><span class="p">[</span><span class="nv">x</span><span class="w"> </span><span class="nv">gamma</span><span class="p">]</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">m</span><span class="w"> </span><span class="p">(</span><span class="nf">mean</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="ss">:axis</span><span class="w"> </span><span class="mi">-1</span><span class="w"> </span><span class="ss">:keepdims</span><span class="p">)</span>
+<span class="w">        </span><span class="nv">v</span><span class="w"> </span><span class="p">(</span><span class="k">var </span><span class="nv">x</span><span class="w"> </span><span class="ss">:axis</span><span class="w"> </span><span class="mi">-1</span><span class="w"> </span><span class="ss">:keepdims</span><span class="p">)]</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">* </span><span class="p">(</span><span class="nb">/ </span><span class="p">(</span><span class="nb">- </span><span class="nv">x</span><span class="w"> </span><span class="nv">m</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">sqrt</span><span class="w"> </span><span class="p">(</span><span class="nb">+ </span><span class="nv">v</span><span class="w"> </span><span class="mi">1</span><span class="nv">e-5</span><span class="p">)))</span><span class="w"> </span><span class="nv">gamma</span><span class="p">)))</span>
+
+<span class="c1">;; Causal self-attention</span>
+<span class="p">(</span><span class="kd">defn </span><span class="nv">causal-self-attention</span><span class="w"> </span><span class="p">[</span><span class="nv">x</span><span class="w"> </span><span class="nv">attn-p</span><span class="w"> </span><span class="nv">config</span><span class="p">]</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">D</span><span class="w">  </span><span class="p">(</span><span class="nf">static</span><span class="w"> </span><span class="p">(</span><span class="nb">get </span><span class="nv">config</span><span class="w"> </span><span class="ss">:n_embd</span><span class="p">))</span>
+<span class="w">        </span><span class="nv">H</span><span class="w">  </span><span class="p">(</span><span class="nf">static</span><span class="w"> </span><span class="p">(</span><span class="nb">get </span><span class="nv">config</span><span class="w"> </span><span class="ss">:n_head</span><span class="p">))</span>
+<span class="w">        </span><span class="nv">Hd</span><span class="w"> </span><span class="p">(</span><span class="nf">static</span><span class="w"> </span><span class="p">(</span><span class="nb">/ </span><span class="nv">D</span><span class="w"> </span><span class="nv">H</span><span class="p">))</span>
+<span class="w">        </span><span class="nv">T</span><span class="w">  </span><span class="p">(</span><span class="nb">get </span><span class="p">(</span><span class="nf">shape</span><span class="w"> </span><span class="nv">x</span><span class="p">)</span><span class="w"> </span><span class="mi">-2</span><span class="p">)</span>
+<span class="w">        </span><span class="nv">W</span><span class="w">  </span><span class="p">(</span><span class="nf">get-in</span><span class="w"> </span><span class="nv">attn-p</span><span class="w"> </span><span class="p">[</span><span class="ss">:c_attn</span><span class="w"> </span><span class="ss">:weight</span><span class="p">])</span>
+<span class="w">        </span><span class="nv">Wq</span><span class="w"> </span><span class="p">(</span><span class="nf">slice</span><span class="w"> </span><span class="nv">W</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="nv">D</span><span class="p">)</span>
+<span class="w">        </span><span class="nv">Wk</span><span class="w"> </span><span class="p">(</span><span class="nf">slice</span><span class="w"> </span><span class="nv">W</span><span class="w"> </span><span class="nv">D</span><span class="w"> </span><span class="p">(</span><span class="nb">* </span><span class="mi">2</span><span class="w"> </span><span class="nv">D</span><span class="p">))</span>
+<span class="w">        </span><span class="nv">Wv</span><span class="w"> </span><span class="p">(</span><span class="nf">slice</span><span class="w"> </span><span class="nv">W</span><span class="w"> </span><span class="p">(</span><span class="nb">* </span><span class="mi">2</span><span class="w"> </span><span class="nv">D</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">* </span><span class="mi">3</span><span class="w"> </span><span class="nv">D</span><span class="p">))</span>
+<span class="w">        </span><span class="nv">q</span><span class="w"> </span><span class="p">(</span><span class="nf">swapaxes</span><span class="w"> </span><span class="p">(</span><span class="nf">reshape</span><span class="w"> </span><span class="p">(</span><span class="o">@</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="p">(</span><span class="nf">transpose</span><span class="w"> </span><span class="nv">Wq</span><span class="p">))</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="w"> </span><span class="nv">T</span><span class="w"> </span><span class="nv">H</span><span class="w"> </span><span class="nv">Hd</span><span class="p">])</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span>
+<span class="w">        </span><span class="nv">k</span><span class="w"> </span><span class="p">(</span><span class="nf">swapaxes</span><span class="w"> </span><span class="p">(</span><span class="nf">reshape</span><span class="w"> </span><span class="p">(</span><span class="o">@</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="p">(</span><span class="nf">transpose</span><span class="w"> </span><span class="nv">Wk</span><span class="p">))</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="w"> </span><span class="nv">T</span><span class="w"> </span><span class="nv">H</span><span class="w"> </span><span class="nv">Hd</span><span class="p">])</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span>
+<span class="w">        </span><span class="nv">v</span><span class="w"> </span><span class="p">(</span><span class="nf">swapaxes</span><span class="w"> </span><span class="p">(</span><span class="nf">reshape</span><span class="w"> </span><span class="p">(</span><span class="o">@</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="p">(</span><span class="nf">transpose</span><span class="w"> </span><span class="nv">Wv</span><span class="p">))</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="w"> </span><span class="nv">T</span><span class="w"> </span><span class="nv">H</span><span class="w"> </span><span class="nv">Hd</span><span class="p">])</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span>
+<span class="w">        </span><span class="nv">att</span><span class="w"> </span><span class="p">(</span><span class="nb">/ </span><span class="p">(</span><span class="o">@</span><span class="w"> </span><span class="nv">q</span><span class="w"> </span><span class="p">(</span><span class="nf">swapaxes</span><span class="w"> </span><span class="nv">k</span><span class="w"> </span><span class="mi">-1</span><span class="w"> </span><span class="mi">-2</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nf">sqrt</span><span class="w"> </span><span class="nv">Hd</span><span class="p">))</span>
+<span class="w">        </span><span class="nv">att</span><span class="w"> </span><span class="p">(</span><span class="nf">softmax</span><span class="w"> </span><span class="p">(</span><span class="nf">where</span><span class="w"> </span><span class="p">(</span><span class="nb">== </span><span class="p">(</span><span class="nf">tril</span><span class="w"> </span><span class="p">(</span><span class="nf">ones</span><span class="w"> </span><span class="p">[</span><span class="nv">T</span><span class="w"> </span><span class="nv">T</span><span class="p">]))</span><span class="w"> </span><span class="mf">1.0</span><span class="p">)</span><span class="w"> </span><span class="nv">att</span><span class="w"> </span><span class="mi">-1</span><span class="nv">e10</span><span class="p">)</span><span class="w"> </span><span class="ss">:axis</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span>
+<span class="w">        </span><span class="nv">Wo</span><span class="w"> </span><span class="p">(</span><span class="nf">get-in</span><span class="w"> </span><span class="nv">attn-p</span><span class="w"> </span><span class="p">[</span><span class="ss">:c_proj</span><span class="w"> </span><span class="ss">:weight</span><span class="p">])]</span>
+<span class="w">    </span><span class="p">(</span><span class="o">@</span><span class="w"> </span><span class="p">(</span><span class="nf">reshape</span><span class="w"> </span><span class="p">(</span><span class="nf">swapaxes</span><span class="w"> </span><span class="p">(</span><span class="o">@</span><span class="w"> </span><span class="nv">att</span><span class="w"> </span><span class="nv">v</span><span class="p">)</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="w"> </span><span class="nv">T</span><span class="w"> </span><span class="nv">D</span><span class="p">])</span>
+<span class="w">       </span><span class="p">(</span><span class="nf">transpose</span><span class="w"> </span><span class="nv">Wo</span><span class="p">))))</span>
+
+<span class="c1">;; MLP block</span>
+<span class="p">(</span><span class="kd">defn </span><span class="nv">mlp-block</span><span class="w"> </span><span class="p">[</span><span class="nv">x</span><span class="w"> </span><span class="nv">mlp-p</span><span class="p">]</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">as-&gt;</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">h</span>
+<span class="w">    </span><span class="p">(</span><span class="o">@</span><span class="w"> </span><span class="nv">h</span><span class="w"> </span><span class="p">(</span><span class="nf">transpose</span><span class="w"> </span><span class="p">(</span><span class="nf">get-in</span><span class="w"> </span><span class="nv">mlp-p</span><span class="w"> </span><span class="p">[</span><span class="ss">:c_fc</span><span class="w"> </span><span class="ss">:weight</span><span class="p">])))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">gelu</span><span class="w"> </span><span class="nv">h</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="o">@</span><span class="w"> </span><span class="nv">h</span><span class="w"> </span><span class="p">(</span><span class="nf">transpose</span><span class="w"> </span><span class="p">(</span><span class="nf">get-in</span><span class="w"> </span><span class="nv">mlp-p</span><span class="w"> </span><span class="p">[</span><span class="ss">:c_proj</span><span class="w"> </span><span class="ss">:weight</span><span class="p">])))))</span>
+
+<span class="c1">;; Transformer block = LN + attention + residual + LN + MLP + residual</span>
+<span class="p">(</span><span class="kd">defn </span><span class="nv">transformer-block</span><span class="w"> </span><span class="p">[</span><span class="nv">x</span><span class="w"> </span><span class="nv">block-p</span><span class="w"> </span><span class="nv">config</span><span class="p">]</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">as-&gt;</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">h</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">+ </span><span class="nv">h</span><span class="w"> </span><span class="p">(</span><span class="nf">causal-self-attention</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">layer-norm-nb</span><span class="w"> </span><span class="nv">h</span><span class="w"> </span><span class="p">(</span><span class="nf">get-in</span><span class="w"> </span><span class="nv">block-p</span><span class="w"> </span><span class="p">[</span><span class="ss">:ln_1</span><span class="w"> </span><span class="ss">:weight</span><span class="p">]))</span>
+<span class="w">            </span><span class="p">(</span><span class="nb">get </span><span class="nv">block-p</span><span class="w"> </span><span class="ss">:attn</span><span class="p">)</span><span class="w"> </span><span class="nv">config</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">+ </span><span class="nv">h</span><span class="w"> </span><span class="p">(</span><span class="nf">mlp-block</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">layer-norm-nb</span><span class="w"> </span><span class="nv">h</span><span class="w"> </span><span class="p">(</span><span class="nf">get-in</span><span class="w"> </span><span class="nv">block-p</span><span class="w"> </span><span class="p">[</span><span class="ss">:ln_2</span><span class="w"> </span><span class="ss">:weight</span><span class="p">]))</span>
+<span class="w">            </span><span class="p">(</span><span class="nb">get </span><span class="nv">block-p</span><span class="w"> </span><span class="ss">:mlp</span><span class="p">)))))</span>
+</code></pre></div>
+<p>Key: the source code is idiomatic Sheaf. No compilation hints, no shape annotations.
+<code>(static expr)</code> marks compile-time constants (config values known at trace time).</p>
+<h2 id="performance-timeline">Performance timeline</h2>
+<table>
+<thead>
+<tr>
+<th>Configuration</th>
+<th>Wall time</th>
+<th>tk/s</th>
+<th>vs PyTorch</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Interpreter only (no IREE)</td>
+<td>~90s</td>
+<td>~1.1</td>
+<td>108× slower</td>
+</tr>
+<tr>
+<td>JIT (1-entry buffer cache)</td>
+<td>7.64s</td>
+<td>~13</td>
+<td>9.2× slower</td>
+</tr>
+<tr>
+<td>JIT + mean CSE fix</td>
+<td>5.4s</td>
+<td>~18.5</td>
+<td>6.5× slower</td>
+</tr>
+<tr>
+<td>JIT + multi-entry buffer cache (Metal)</td>
+<td>3.90s</td>
+<td>~25.6</td>
+<td>4.7× slower</td>
+</tr>
+<tr>
+<td>JIT + VMFB disk cache (Metal)</td>
+<td>3.06s</td>
+<td>~32.7</td>
+<td>3.7× slower</td>
+</tr>
+<tr>
+<td>JIT + device tensor passthrough (Metal)</td>
+<td><strong>2.82s</strong></td>
+<td>~35.5</td>
+<td>3.4× slower</td>
+</tr>
+<tr>
+<td>JIT + multi-entry buffer cache (CPU)</td>
+<td>7.16s</td>
+<td>~14.0</td>
+<td>8.6× slower</td>
+</tr>
+<tr>
+<td>PyTorch (CPU, reference)</td>
+<td>0.83s</td>
+<td>~120</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p>Note: PyTorch reference updated — 0.83s with the same model on the same machine (M-series).
+Earlier measurements showed ~1.6s (likely included model loading or cold start).</p>
+<h2 id="jit-auto-compilation">JIT auto-compilation</h2>
+<h3 id="the-need">The need</h3>
+<p><code>sheaf build</code> works but adds friction. User has to run a separate build step before running.
+Goal: transparent JIT — pure functions compiled on first call, cached, dispatched via IREE.</p>
+<h3 id="architecture">Architecture</h3>
+<div class="language-text highlight"><pre><span></span><code>eval_call(&quot;transformer-block&quot;, args, env)
+  → try_iree_dispatch() → None (no vmfb)
+  → try_jit_compile()
+    → purity check (no side effects, no HOF)
+    → type inference from concrete runtime args
+    → inline called functions
+    → lower dict access → GetTupleElement
+    → resolve static constants
+    → codegen → MLIR → iree-compile → VMFB
+    → load into IreeSession
+  → next call: try_iree_dispatch() → hits cached session
+</code></pre></div>
+<h3 id="what-jit-compiles">What JIT compiles</h3>
+<ul>
+<li><code>transformer-block</code> (the hot function — 600 calls for 100 tokens with 6 layers)</li>
+<li><code>layer-norm-nb</code> (called standalone outside transformer-block in gpt-forward)</li>
+<li><code>causal-self-attention</code> and <code>mlp-block</code>: inlined into <code>transformer-block</code>, not compiled separately</li>
+<li><code>gpt-forward</code>: too deep (nested dict params), falls back to interpreter</li>
+<li><code>generate-token</code>: has side effects (random-split), interpreter handles it</li>
+<li><code>generate</code>: has side effects (print), interpreter handles it</li>
+</ul>
+<h3 id="key-implementation-challenges">Key implementation challenges</h3>
+<p><strong>Nested get resolution</strong>: <code>(get-in attn-p [:c_attn :weight])</code> desugars at compile time to
+<code>(get (get attn-p :c_attn) :weight)</code>. After function inlining, <code>attn-p</code> is bound to
+<code>GetTupleElement("block-p", [0])</code>. The outer <code>get</code> sees a <code>GetTupleElement</code> as first arg,
+not a <code>Symbol</code> → codegen fails.</p>
+<p>Fix: extended <code>lower_inlined_gets</code> to handle recursive resolution — when args[0] resolves
+to a <code>GetTupleElement</code>, use a reverse index map to reconstruct the path, extend with the
+new keyword keys, look up the full indices.</p>
+<p><strong>Type inference from runtime values</strong>: <code>value_to_stablehlo_type()</code> infers tensor types directly
+from concrete argument values at call time. <code>value_to_param_layout()</code> detects nested dict
+structure for tuple flattening. No trace step needed — the runtime args are the trace.</p>
+<h2 id="iree-dispatch-profiling">IREE dispatch profiling</h2>
+<h3 id="instrumentation">Instrumentation</h3>
+<p>Added <code>SHEAF_PROFILE_IREE=1</code> env var. AtomicU64 counters on <code>IreeSession</code>:</p>
+<ul>
+<li><code>t_flatten_ns</code>: time to flatten Value tree into leaf tensors</li>
+<li><code>t_buffers_ns</code>: time to create/lookup IREE buffer views</li>
+<li><code>t_call_ns</code>: time in actual IREE kernel execution</li>
+<li><code>t_output_ns</code>: time to read back results</li>
+<li><code>n_cache_hits / n_cache_misses</code>: buffer view cache statistics</li>
+</ul>
+<p>Summary printed in <code>Drop</code> impl when session is destroyed.</p>
+<h3 id="results-before-mean-cse-fix">Results (before mean CSE fix)</h3>
+<div class="language-text highlight"><pre><span></span><code>IREE dispatch profile (700 calls, 6306.0ms total):
+  flatten:      0.2ms ( 0.0%)
+  buffers:    878.3ms (13.9%)  [hits: 4292, misses: 4308]
+  call:      5397.3ms (85.6%)
+  output:      30.1ms ( 0.5%)
+</code></pre></div>
+<p>700 calls = 600 transformer-block + 100 layer-norm-nb.
+85.6% is actual compute. 13.9% is buffer allocation/cache.</p>
+<p>Buffer cache thrashes: 50/50 hit/miss ratio. 6 transformer layers share one function entry,
+but each layer has different weight tensors → position-based cache evicts on every layer switch.</p>
+<h3 id="results-after-mean-cse-fix">Results (after mean CSE fix)</h3>
+<div class="language-text highlight"><pre><span></span><code>IREE dispatch profile (700 calls, 5212.2ms total):
+  flatten:      0.2ms ( 0.0%)
+  buffers:    809.4ms (15.5%)  [hits: 4292, misses: 4308]
+  call:      4377.5ms (84.0%)
+  output:      25.1ms ( 0.5%)
+</code></pre></div>
+<p>IREE compute dropped from 5397ms → 4378ms (<strong>-19%</strong>).
+Wall time dropped from 8.6s → 5.4s (<strong>-37%</strong>).</p>
+<h3 id="per-call-breakdown">Per-call breakdown</h3>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Before CSE</th>
+<th>After CSE</th>
+<th>Delta</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>transformer-block avg</td>
+<td>10.48ms</td>
+<td>8.65ms</td>
+<td>-17%</td>
+</tr>
+<tr>
+<td>Total IREE call time</td>
+<td>5397ms</td>
+<td>4378ms</td>
+<td>-19%</td>
+</tr>
+<tr>
+<td>Wall time (100 tokens)</td>
+<td>8.6s</td>
+<td>5.4s</td>
+<td>-37%</td>
+</tr>
+</tbody>
+</table>
+<h3 id="fixing-the-buffer-cache-thrashing">Fixing the buffer cache thrashing</h3>
+<p>The 50/50 hit/miss ratio above is a design flaw, not an inherent cost.</p>
+<p>The buffer cache stores one entry per argument position per function. <code>transformer-block</code>
+is called 6 times per token (once per layer), each time with different weight tensors but
+the same argument positions. Layer 1's weights evict layer 0's, layer 2's evict layer 1's,
+and so on. By the next token, nothing is cached — permanent thrashing.</p>
+<p>The fix: expand from 1-entry to 8-entry per position, with MRU (most recently used) ordering.
+Each layer's weights coexist in the cache. After the first token, all 6 × 7 = 42 weight
+buffers are resident.</p>
+<div class="language-text highlight"><pre><span></span><code>// Before: Vec&lt;Option&lt;CachedBufferView&gt;&gt; — one slot per position
+// After:  Vec&lt;Vec&lt;CachedBufferView&gt;&gt;    — up to 8 slots per position, MRU-ordered
+</code></pre></div>
+<p>On cache lookup: linear scan of up to 8 entries (fingerprint comparison). On hit, swap to
+front. On miss, evict the oldest entry if at capacity.</p>
+<p>Results on Metal GPU (100 tokens, NanoGPT):</p>
+<div class="language-text highlight"><pre><span></span><code>Before (1-entry):
+IREE dispatch profile (600 calls, 6736.2ms total):
+  buffers:   4064.2ms (60.3%)  [hits: 4193, misses: 4207]
+  call:      2329.2ms (34.6%)
+  output:     342.5ms ( 5.1%)
+→ 7.64s wall
+
+After (8-entry):
+IREE dispatch profile (600 calls, 2983.6ms total):
+  buffers:    385.8ms (12.9%)  [hits: 7763, misses: 637]
+  call:      2246.0ms (75.3%)
+  output:     351.6ms (11.8%)
+→ 3.90s wall
+</code></pre></div>
+<p>Buffer allocation time: <strong>4064ms → 386ms</strong> (10.5× reduction).
+Cache hit rate: <strong>50% → 92%</strong>.
+Wall time: <strong>7.64s → 3.90s</strong> (1.96× speedup).</p>
+<p>The 637 remaining misses are the activations (intermediate <code>x</code> tensor), which change at every
+call — these can never be cached. The 7763 hits are the model weights, now uploaded once to
+the GPU and reused across all 100 tokens.</p>
+<p>Why 8 and not 6? The function signature flattens dict args into individual tensors, and some
+positions see both weight tensors (6 variants) and config scalars (1 variant) depending on
+the calling context. 8 accommodates this with headroom for other calling patterns.</p>
+<h3 id="device-tensor-passthrough">Device tensor passthrough</h3>
+<p>After the multi-entry cache fix, the remaining buffer cost is the activation tensor <code>x</code> —
+it changes every call, so it can never be cached. But there's a subtlety: <code>x</code> at the <em>input</em>
+of transformer-block layer N is exactly the <em>output</em> of layer N-1. The data is already on
+the GPU. We're pulling it back to the CPU (D2H), then immediately pushing it back (H2D).</p>
+<p>The fix: retain output buffer views from the last IREE call. On the next call, before
+allocating a new buffer, check if any input matches a retained output (by fingerprint).
+If so, reuse the on-device buffer directly — zero-copy passthrough.</p>
+<div class="language-rust highlight"><pre><span></span><code><span class="c1">// After each IREE call: retain output buffer views</span>
+<span class="n">iree_hal_buffer_view_retain</span><span class="p">(</span><span class="n">bv</span><span class="p">);</span>
+<span class="n">new_output_bvs</span><span class="p">.</span><span class="n">push</span><span class="p">((</span><span class="n">fingerprint</span><span class="p">,</span><span class="w"> </span><span class="n">bv</span><span class="p">));</span>
+
+<span class="c1">// Before each IREE call: check retained outputs first</span>
+<span class="kd">let</span><span class="w"> </span><span class="n">output_hit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">prev_outputs</span><span class="p">.</span><span class="n">iter</span><span class="p">()</span>
+<span class="w">    </span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="o">|</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span><span class="w"> </span><span class="n">_</span><span class="p">)</span><span class="o">|</span><span class="w"> </span><span class="n">fp</span><span class="p">.</span><span class="n">matches</span><span class="p">(</span><span class="n">val</span><span class="p">))</span>
+<span class="w">    </span><span class="p">.</span><span class="n">map</span><span class="p">(</span><span class="o">|</span><span class="p">(</span><span class="n">_</span><span class="p">,</span><span class="w"> </span><span class="n">bv</span><span class="p">)</span><span class="o">|</span><span class="w"> </span><span class="o">*</span><span class="n">bv</span><span class="p">);</span>
+</code></pre></div>
+<p>Results on Metal GPU (100 tokens, NanoGPT, cached VMFBs):</p>
+<div class="language-text highlight"><pre><span></span><code>Before (no passthrough):
+  buffers:    385.8ms (12.9%)  [hits: 7763, misses: 637]
+→ 3.06s wall
+
+After (output passthrough):
+  buffers:     72.4ms ( 2.8%)  [hits: 8302, misses: 98]
+→ 2.82s wall
+</code></pre></div>
+<p>Buffer time: <strong>386ms → 72ms</strong> (5.4× reduction). Cache misses: <strong>637 → 98</strong> (−85%).
+The remaining 98 misses are the genuinely new tensors (initial token embedding, first-call
+weights). Wall time: <strong>3.06s → 2.82s</strong> — modest because GPU compute dominates at 85%.</p>
+<p>Note: D2H still happens (we need the output values on the CPU for the interpreter). The
+saving is only on the H2D side: we avoid re-uploading data that's already on the GPU.</p>
+<h2 id="mlir-codegen-quality-mean-cse">MLIR codegen quality: mean CSE</h2>
+<h3 id="the-problem">The problem</h3>
+<p>LayerNorm source:</p>
+<div class="language-clojure highlight"><pre><span></span><code><span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">m</span><span class="w"> </span><span class="p">(</span><span class="nf">mean</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="ss">:axis</span><span class="w"> </span><span class="mi">-1</span><span class="w"> </span><span class="ss">:keepdims</span><span class="p">)</span>
+<span class="w">      </span><span class="nv">v</span><span class="w"> </span><span class="p">(</span><span class="k">var </span><span class="nv">x</span><span class="w"> </span><span class="ss">:axis</span><span class="w"> </span><span class="mi">-1</span><span class="w"> </span><span class="ss">:keepdims</span><span class="p">)]</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">* </span><span class="p">(</span><span class="nb">/ </span><span class="p">(</span><span class="nb">- </span><span class="nv">x</span><span class="w"> </span><span class="nv">m</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">sqrt</span><span class="w"> </span><span class="p">(</span><span class="nb">+ </span><span class="nv">v</span><span class="w"> </span><span class="mi">1</span><span class="nv">e-5</span><span class="p">)))</span><span class="w"> </span><span class="nv">gamma</span><span class="p">))</span>
+</code></pre></div>
+<p><code>var</code> is implemented as <code>mean((x - mean(x))^2)</code>. The internal <code>mean(x)</code> call inside <code>var</code>
+duplicates the explicit <code>(mean x)</code> that's already bound to <code>m</code>.</p>
+<p>Before fix: 3 <code>stablehlo.reduce</code> ops per LayerNorm (sum-for-mean, sum-for-mean-in-var, sum-for-var).
+After fix: 2 <code>stablehlo.reduce</code> ops per LayerNorm (sum-for-mean reused, sum-for-var).</p>
+<p>Impact: 2 LayerNorms × 6 layers × 100 tokens = <strong>1200 unnecessary reductions eliminated</strong>.</p>
+<h3 id="the-fix">The fix</h3>
+<p>Register-level CSE cache on <code>StableHLOEmitter</code>:</p>
+<div class="language-rust highlight"><pre><span></span><code><span class="c1">// In StableHLOEmitter struct:</span>
+<span class="n">reduce_mean_cache</span><span class="p">:</span><span class="w"> </span><span class="nc">HashMap</span><span class="o">&lt;</span><span class="p">(</span><span class="n">Register</span><span class="p">,</span><span class="w"> </span><span class="kt">usize</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="p">),</span><span class="w"> </span><span class="p">(</span><span class="n">Register</span><span class="p">,</span><span class="w"> </span><span class="n">StableHLOType</span><span class="p">)</span><span class="o">&gt;</span><span class="p">,</span>
+
+<span class="c1">// In emit_reduce_mean():</span>
+<span class="kd">let</span><span class="w"> </span><span class="n">cache_key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">input</span><span class="p">,</span><span class="w"> </span><span class="n">axis_usize</span><span class="p">,</span><span class="w"> </span><span class="n">keepdims</span><span class="p">);</span>
+<span class="k">if</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nb">Some</span><span class="p">(</span><span class="n">cached</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="bp">self</span><span class="p">.</span><span class="n">reduce_mean_cache</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="o">&amp;</span><span class="n">cache_key</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">cached</span><span class="p">.</span><span class="n">clone</span><span class="p">();</span>
+<span class="p">}</span>
+<span class="c1">// ... compute mean ...</span>
+<span class="bp">self</span><span class="p">.</span><span class="n">reduce_mean_cache</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="n">cache_key</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">result_reg</span><span class="p">,</span><span class="w"> </span><span class="n">sum_ty</span><span class="p">.</span><span class="n">clone</span><span class="p">()));</span>
+</code></pre></div>
+<p>When <code>emit_var</code> calls <code>emit_reduce_mean</code> on the same register+axis that was already computed
+by the explicit <code>(mean x)</code>, it gets the cached result. Zero new MLIR ops emitted.</p>
+<h3 id="why-not-a-general-cse-pass">Why not a general CSE pass?</h3>
+<p>Could run a generic CSE pass on the MLIR output (IREE has one). But catching it at the emitter
+level is simpler: it's a 6-line cache, specific to the known pattern (var reuses mean).
+General CSE on StableHLO would require hash-consing all ops — overkill for one known pattern.</p>
+<h2 id="mlir-codegen-quality-qkv-matmul-the-gpu-trap">MLIR codegen quality: QKV matmul — the GPU trap</h2>
+<h3 id="the-hypothesis">The hypothesis</h3>
+<p>Source code slices the fused QKV weight matrix and does 3 separate matmuls:</p>
+<div class="language-clojure highlight"><pre><span></span><code><span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">W</span><span class="w">  </span><span class="p">(</span><span class="nf">get-in</span><span class="w"> </span><span class="nv">attn-p</span><span class="w"> </span><span class="p">[</span><span class="ss">:c_attn</span><span class="w"> </span><span class="ss">:weight</span><span class="p">])</span><span class="w">   </span><span class="c1">;; [3D, D] = [1152, 384]</span>
+<span class="w">      </span><span class="nv">Wq</span><span class="w"> </span><span class="p">(</span><span class="nf">slice</span><span class="w"> </span><span class="nv">W</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="nv">D</span><span class="p">)</span><span class="w">                        </span><span class="c1">;; [384, 384]</span>
+<span class="w">      </span><span class="nv">Wk</span><span class="w"> </span><span class="p">(</span><span class="nf">slice</span><span class="w"> </span><span class="nv">W</span><span class="w"> </span><span class="nv">D</span><span class="w"> </span><span class="p">(</span><span class="nb">* </span><span class="mi">2</span><span class="w"> </span><span class="nv">D</span><span class="p">))</span><span class="w">                  </span><span class="c1">;; [384, 384]</span>
+<span class="w">      </span><span class="nv">Wv</span><span class="w"> </span><span class="p">(</span><span class="nf">slice</span><span class="w"> </span><span class="nv">W</span><span class="w"> </span><span class="p">(</span><span class="nb">* </span><span class="mi">2</span><span class="w"> </span><span class="nv">D</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">* </span><span class="mi">3</span><span class="w"> </span><span class="nv">D</span><span class="p">))</span><span class="w">            </span><span class="c1">;; [384, 384]</span>
+<span class="w">      </span><span class="nv">q</span><span class="w">  </span><span class="p">(</span><span class="o">@</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="p">(</span><span class="nf">transpose</span><span class="w"> </span><span class="nv">Wq</span><span class="p">))</span><span class="w">                 </span><span class="c1">;; matmul #1</span>
+<span class="w">      </span><span class="nv">k</span><span class="w">  </span><span class="p">(</span><span class="o">@</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="p">(</span><span class="nf">transpose</span><span class="w"> </span><span class="nv">Wk</span><span class="p">))</span><span class="w">                 </span><span class="c1">;; matmul #2</span>
+<span class="w">      </span><span class="nv">v</span><span class="w">  </span><span class="p">(</span><span class="o">@</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="p">(</span><span class="nf">transpose</span><span class="w"> </span><span class="nv">Wv</span><span class="p">))]</span><span class="w">                </span><span class="c1">;; matmul #3</span>
+<span class="w">  </span><span class="nv">...</span><span class="p">)</span>
+</code></pre></div>
+<p>PyTorch does: <code>qkv = x @ W.T</code> (one matmul [1,T,D] × [D,3D] → [1,T,3D]), then splits.
+3 matmuls → 1 fused matmul. Should be faster, right?</p>
+<h3 id="the-experiment">The experiment</h3>
+<p>Implemented fused version. Added <code>(slice tensor start end :axis -1)</code> to slice along
+the last axis of the [1,T,3D] result.</p>
+<div class="language-clojure highlight"><pre><span></span><code><span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">W</span><span class="w">   </span><span class="p">(</span><span class="nf">get-in</span><span class="w"> </span><span class="nv">attn-p</span><span class="w"> </span><span class="p">[</span><span class="ss">:c_attn</span><span class="w"> </span><span class="ss">:weight</span><span class="p">])</span>
+<span class="w">      </span><span class="nv">qkv</span><span class="w"> </span><span class="p">(</span><span class="o">@</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="p">(</span><span class="nf">transpose</span><span class="w"> </span><span class="nv">W</span><span class="p">))</span><span class="w">                 </span><span class="c1">;; one matmul → [1,T,3D]</span>
+<span class="w">      </span><span class="nv">q</span><span class="w"> </span><span class="p">(</span><span class="nf">slice</span><span class="w"> </span><span class="nv">qkv</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="nv">D</span><span class="w"> </span><span class="ss">:axis</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span><span class="w">              </span><span class="c1">;; [1,T,D]</span>
+<span class="w">      </span><span class="nv">k</span><span class="w"> </span><span class="p">(</span><span class="nf">slice</span><span class="w"> </span><span class="nv">qkv</span><span class="w"> </span><span class="nv">D</span><span class="w"> </span><span class="p">(</span><span class="nb">* </span><span class="mi">2</span><span class="w"> </span><span class="nv">D</span><span class="p">)</span><span class="w"> </span><span class="ss">:axis</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span>
+<span class="w">      </span><span class="nv">v</span><span class="w"> </span><span class="p">(</span><span class="nf">slice</span><span class="w"> </span><span class="nv">qkv</span><span class="w"> </span><span class="p">(</span><span class="nb">* </span><span class="mi">2</span><span class="w"> </span><span class="nv">D</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">* </span><span class="mi">3</span><span class="w"> </span><span class="nv">D</span><span class="p">)</span><span class="w"> </span><span class="ss">:axis</span><span class="w"> </span><span class="mi">-1</span><span class="p">)]</span>
+<span class="w">  </span><span class="nv">...</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="the-result-neutral-on-cpu">The result: neutral on CPU</h3>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>IREE call time (700 calls)</th>
+<th>Avg/call</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>3 separate matmuls</td>
+<td>4850–5140ms</td>
+<td>~8.5ms</td>
+</tr>
+<tr>
+<td>1 fused matmul + 3 slices</td>
+<td>4570–5290ms</td>
+<td>~8.5ms</td>
+</tr>
+</tbody>
+</table>
+<p>No measurable difference. The variance between runs (~10%) swamps any signal.</p>
+<h3 id="why-it-doesnt-help-on-cpu">Why it doesn't help on CPU</h3>
+<p>The intuition "one big matmul is faster" comes from GPU optimization:</p>
+<ul>
+<li>GPU: kernel launch overhead dominates small operations. Fusing 3 kernels into 1 saves
+  significant launch + synchronization cost.</li>
+<li>CPU (IREE local-task): no kernel launch overhead. IREE tiles matmuls into thread-pool tasks.
+  Three [256,384]×[384,384] matmuls have better L2 cache utilization than one [256,384]×[384,1152].
+  Each 384×384 weight block fits in L2; the fused 384×1152 may not.</li>
+</ul>
+<p>Plus the fused version adds 3 <code>stablehlo.slice</code> ops to extract the Q,K,V chunks — extra
+memory traffic that offsets any fusion benefit.</p>
+<p>Decision: keep the 3-matmul version. It's more readable, and equally fast on CPU.
+This will change when we add GPU support — the fused version is the right default for GPU.</p>
+<h2 id="narrative-arc-for-the-article">Narrative arc for the article</h2>
+<ol>
+<li><strong>BareGPT recap</strong>: buffer cache (32%), Arc (23%), combined 57% faster than JAX</li>
+<li><strong>NanoGPT arrives</strong>: real GPT-2 model, pre-trained PyTorch weights, faithful port</li>
+<li><strong>The gap</strong>: 90s interpreted → 8.6s compiled → but PyTorch does 0.83s</li>
+<li><strong>JIT auto-compilation</strong>: no more <code>sheaf build</code> required, transparent compilation</li>
+<li><strong>Profiling with IREE instrumentation</strong>: where does the time go? 85% compute, 14% buffers</li>
+<li><strong>MLIR quality matters</strong>: duplicate mean = 19% wasted compute, fixed with 6-line cache</li>
+<li><strong>Buffer cache thrashing</strong>: 6 transformer layers evict each other → 50% miss rate. Fix:
+   multi-entry MRU cache → 92% hit rate, 10.5× reduction in buffer allocation, 1.96× speedup</li>
+<li><strong>Metal GPU</strong>: first GPU results — 3.90s on Metal vs 7.24s on CPU (1.86× faster).
+   Remaining cost: 75% in GPU compute, 12% in D2H transfer, 13% in buffer allocation.
+   Getting Metal to work required <code>--iree-metal-compile-to-metallib=false</code> (embed MSL source
+   instead of pre-compiled metallib, avoids Xcode dependency). This led to a contribution
+   upstream: <a href="https://github.com/iree-org/iree/pull/23433">IREE PR #23433</a>, adding graceful
+   fallback when Metal SDK tools are absent — so <code>iree-compile</code> works on any Mac, not just
+   those with Xcode installed.</li>
+<li><strong>Device tensor passthrough</strong>: output buffers from one dispatch retained on GPU for the
+   next dispatch's input. Eliminates H2D re-upload for activation tensors passed between
+   transformer layers. Buffers: 386ms → 72ms (5.4×), misses: 637 → 98 (−85%).</li>
+<li><strong>QKV fusion experiment</strong>: the GPU trap — why it doesn't help on CPU</li>
+<li><strong>Auto-download toolchain</strong>: Zig-style — download iree-compile from PyPI on first need,
+    zero configuration, version-pinned to match runtime</li>
+<li><strong>Closing perspective</strong>: from 90s to 2.82s (32× speedup). Still 3.4× from PyTorch (0.83s).
+    The remaining gap is architectural: 600 separate dispatches vs PyTorch's fused forward pass,
+    plus irreducible D2H transfers (we still need values on the CPU for the interpreter loop)</li>
+</ol>
+<hr />
+<hr />
+<h1 id="part-3-autodiff-compiling-the-backward-pass">Part 3 — Autodiff: compiling the backward pass</h1>
+<h2 id="context_2">Context</h2>
+<p>Part 2 ended with inference at 2.82s (Metal) for 100 tokens. But inference is only half
+the story — training requires gradients. NanoGPT's training loop uses <code>value-and-grad</code>:
+compute the loss and its gradient w.r.t. all parameters in one call.</p>
+<p>Without compilation, <code>value-and-grad</code> falls back to the interpreter, which computes
+numeric gradients by finite differences: perturb each of the 10.65M parameters by ε,
+re-run the full forward pass, measure Δloss/ε. That's 10.65 million forward passes per
+training step. Result: ~10.9 seconds per step — and that's already optimized, because the
+forward pass itself is JIT-compiled.</p>
+<p>PyTorch does the same step in 86ms. The gap: <strong>127×</strong>.</p>
+<p>The goal: compile <code>value-and-grad</code> into a single VMFB — forward + backward in one dispatch,
+no interpreter in the loop.</p>
+<h2 id="sheafs-symbolic-ad">Sheaf's symbolic AD</h2>
+<p>Sheaf already has a symbolic automatic differentiation engine (<code>grad_simplified</code>). Given a
+<code>CompiledExpr</code> and a variable name, it returns a new <code>CompiledExpr</code> representing the
+derivative. It knows the chain rule, product rule, and the derivatives of all StableHLO ops
+(matmul, softmax, exp, etc.).</p>
+<p>For a simple function like:</p>
+<div class="language-clojure highlight"><pre><span></span><code><span class="p">(</span><span class="kd">defn </span><span class="nv">f</span><span class="w"> </span><span class="p">[</span><span class="nv">x</span><span class="p">]</span><span class="w"> </span><span class="p">(</span><span class="nb">* </span><span class="nv">x</span><span class="w"> </span><span class="p">(</span><span class="nf">sin</span><span class="w"> </span><span class="nv">x</span><span class="p">)))</span>
+<span class="c1">;; grad_simplified(body, &quot;x&quot;) produces:</span>
+<span class="c1">;; (+ (* 1 (sin x)) (* x (cos x)))</span>
+</code></pre></div>
+<p>This is textbook symbolic differentiation. It works well for small expressions.</p>
+<h2 id="the-plan-compile-value-and-grad-end-to-end">The plan: compile value-and-grad end-to-end</h2>
+<p>The pipeline we needed:</p>
+<div class="language-text highlight"><pre><span></span><code>1. Extract the closure passed to value-and-grad
+2. Inline all function calls (gpt-forward, transformer-block, etc.)
+3. Lower dict access to tuple indices (params[:transformer][:h] → GetTupleElement(p, [0,1]))
+4. Apply symbolic AD to get the gradient expression
+5. Codegen both forward and backward into one MLIR module
+6. iree-compile → VMFB → cache
+</code></pre></div>
+<p>Steps 1-3 already worked (from the JIT infrastructure in Part 2). Step 5-6 are the
+existing codegen. The hard part was step 4: making symbolic AD work on a GPT-scale expression.</p>
+<h2 id="obstacle-1-reduce-blocks-ad">Obstacle 1: reduce blocks AD</h2>
+<p>GPT-forward stacks 6 transformer blocks with <code>reduce</code>:</p>
+<div class="language-clojure highlight"><pre><span></span><code><span class="p">(</span><span class="nb">reduce </span><span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">h</span><span class="w"> </span><span class="nv">bp</span><span class="p">]</span><span class="w"> </span><span class="p">(</span><span class="nf">transformer-block</span><span class="w"> </span><span class="nv">h</span><span class="w"> </span><span class="nv">bp</span><span class="w"> </span><span class="nv">config</span><span class="p">))</span>
+<span class="w">        </span><span class="nv">x</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">get-in</span><span class="w"> </span><span class="nv">params</span><span class="w"> </span><span class="p">[</span><span class="ss">:transformer</span><span class="w"> </span><span class="ss">:h</span><span class="p">]))</span>
+</code></pre></div>
+<p><code>grad_simplified</code> returned zero — it didn't know how to differentiate through <code>reduce</code>.</p>
+<p>The fix: <strong>symbolic unrolling</strong>. Before AD, transform the <code>reduce</code> into an explicit Let chain:</p>
+<div class="language-text highlight"><pre><span></span><code>let __r_0 = transformer-block(x, params.transformer.h[0], config)
+let __r_1 = transformer-block(__r_0, params.transformer.h[1], config)
+...
+let __r_5 = transformer-block(__r_4, params.transformer.h[5], config)
+result = __r_5
+</code></pre></div>
+<p>This works because <code>n</code> (the number of layers) is known at compile time from the parameter
+type — it's a tuple of 6 elements. After unrolling, the expression is a plain Let chain
+that <code>grad_simplified</code> can handle.</p>
+<p>Implementation: ~140 lines in <code>transforms.rs</code>. The unroller resolves the collection's
+StableHLO type, determines n, and generates n iterations with proper symbol substitution.</p>
+<h2 id="obstacle-2-alias-propagation">Obstacle 2: alias propagation</h2>
+<p>After function inlining, the code contained:</p>
+<div class="language-text highlight"><pre><span></span><code>let params = p    ;; inlined binding
+(get-in params [:transformer :h])  ;; uses the alias
+</code></pre></div>
+<p>The dict-lowering pass (<code>lower_inlined_gets</code>) didn't recognize <code>params</code> as an alias for the
+root parameter <code>p</code>. It only resolved <code>(get p :key)</code>, not <code>(get params :key)</code> where <code>params</code>
+is bound to <code>p</code> via Let.</p>
+<p>Fix: propagate Symbol aliases through Let bindings. When a Let binding maps a name to a
+bare Symbol that's either a known parameter or an existing alias, register the new name
+as an alias too. 5 lines, but it took a while to diagnose.</p>
+<h2 id="obstacle-3-dynamic-shapes-from-cons">Obstacle 3: dynamic shapes from <code>cons</code></h2>
+<p>The loss function (<code>cross-entropy-loss</code> in <code>nn.shf</code>) builds reshape dimensions dynamically:</p>
+<div class="language-clojure highlight"><pre><span></span><code><span class="p">(</span><span class="nf">reshape</span><span class="w"> </span><span class="nv">logits</span><span class="w"> </span><span class="p">(</span><span class="nb">cons </span><span class="mi">-1</span><span class="w"> </span><span class="p">(</span><span class="nb">cons </span><span class="nv">V</span><span class="w"> </span><span class="o">&#39;</span><span class="p">[])))</span>
+<span class="c1">;; builds the shape [-1, V] at runtime</span>
+</code></pre></div>
+<p>The codegen expected a literal <code>Vector</code> for the shape argument. <code>cons</code> chains weren't
+resolved during constant folding.</p>
+<p>Fix: teach <code>resolve_static_constants</code> to flatten <code>(cons head tail)</code> chains into Vectors.
+Also handle <code>(int expr)</code> casts and <code>-1</code> dimension inference (infer the missing dimension
+from the input tensor's total size, like NumPy).</p>
+<h2 id="obstacle-4-missing-gradient-rules">Obstacle 4: missing gradient rules</h2>
+<p>The initial AD engine only knew derivatives for basic arithmetic and matmul. GPT-forward
+uses many more ops. Added gradient rules for:</p>
+<ul>
+<li><code>sqrt</code> → <code>1/(2√f) · df/dx</code></li>
+<li><code>tanh</code> → <code>(1 - tanh²(f)) · df/dx</code></li>
+<li><code>gelu</code> → approximate derivative using tanh formulation</li>
+<li><code>reshape</code>, <code>swapaxes</code> → pass-through (shape manipulation, no data transformation)</li>
+<li><code>where(cond, a, b)</code> → route gradient to <code>a</code> or <code>b</code> based on condition</li>
+<li><code>slice</code> → pass-through</li>
+<li><code>neg</code> → negate the gradient</li>
+<li><code>abs</code> → <code>sign(f) · df/dx</code></li>
+<li><code>log-softmax</code> → specialized Jacobian</li>
+</ul>
+<p>About 80 lines of gradient rules total.</p>
+<h2 id="it-compiles-then-crashes">It compiles! ... then crashes</h2>
+<p>After all these fixes, the pipeline ran to completion for the first time. The VMFB compiled
+(154 KB). The forward pass produced correct loss values.</p>
+<p>But the gradients were all zero. Then, after fixing the gradient rules, a new problem:
+the process consumed <strong>165 GB of RAM</strong> and nearly crashed the machine (60 GB swap on a
+MacBook with 36 GB physical memory).</p>
+<h2 id="the-wall-exponential-expression-growth">The wall: exponential expression growth</h2>
+<p>This was the fundamental problem, and it took us a session of debugging to understand it.</p>
+<p>Sheaf's <code>CompiledExpr</code> is a <strong>tree</strong> — an algebraic data type where each node owns its
+children. When the chain rule produces:</p>
+<div class="language-text highlight"><pre><span></span><code>d/dx (f * g) = f&#39; * g + f * g&#39;
+</code></pre></div>
+<p>It <strong>clones</strong> the entire subtrees <code>f</code> and <code>g</code> into the result. If <code>f</code> is itself a deep
+expression (say, 6 layers of transformer computations), every application of the chain rule
+duplicates the entire subtree.</p>
+<p>For GPT with 6 unrolled transformer blocks and 58 parameter leaves, the gradient expression
+grows exponentially. A back-of-the-envelope calculation:</p>
+<ul>
+<li>Forward expression after unrolling: ~3000 nodes</li>
+<li>Each chain rule application at depth d duplicates ~3000/d nodes</li>
+<li>58 parameters × 6 layers of nesting → gradient expression with billions of nodes</li>
+<li>Each node is a heap-allocated enum → 165 GB</li>
+</ul>
+<p>This is not a bug — it's an architectural limitation. <strong>Symbolic AD on trees cannot work
+for deep computation graphs.</strong></p>
+<h2 id="how-pytorch-and-jax-solve-this">How PyTorch and JAX solve this</h2>
+<p>Both frameworks avoid this problem by operating on <strong>graphs with sharing</strong>, not trees.</p>
+<p><strong>PyTorch</strong> uses a runtime tape. During the forward pass, each operation records itself and
+its backward function on a tape. <code>loss.backward()</code> walks the tape in reverse, computing
+concrete gradient tensors (not expressions). Each intermediate value exists once in memory.
+This is reverse-mode AD at execution time.</p>
+<p><strong>JAX</strong> uses a compiled IR called <strong>jaxpr</strong> — essentially SSA form (Static Single
+Assignment: each variable defined exactly once). <code>jax.grad</code> transforms a forward jaxpr
+into a backward jaxpr. Variables are names (like SSA registers), not trees — referencing
+a variable doesn't copy anything.</p>
+<p>The key insight: in both systems, <strong>sub-expressions are shared by reference</strong>. When the
+chain rule needs <code>f</code> in both <code>f' * g</code> and <code>f * g'</code>, it references the same node/register
+in both places. The gradient is the same size as the forward pass — O(n), not O(2^n).</p>
+<h2 id="the-solution-anf-reverse-mode-ad">The solution: ANF + reverse-mode AD</h2>
+<p>We had three options:</p>
+<p><strong>Option A — Quick fix</strong>: transform the expression tree to ANF (Administrative Normal Form)
+before AD. ANF names every sub-expression in a Let binding. The existing forward-mode AD
+then operates on Symbols (names) instead of trees — no duplication. This fixes the OOM but
+computes gradients one parameter at a time (58 passes for 58 parameters).</p>
+<p><strong>Option B — Proper solution</strong>: transform to ANF, then implement <strong>reverse-mode AD</strong>. Walk
+the bindings in reverse order, accumulate adjoint contributions for all parameters in a
+single pass. One backward pass regardless of parameter count. This is what JAX does.</p>
+<p><strong>Option C — Codegen-level AD</strong>: emit the backward pass directly in MLIR during code
+generation, building a tape of SSA registers during forward emission. This is closer to
+what PyTorch does. But it couples AD logic with codegen — two concerns that should be
+separate.</p>
+<p><strong>We chose B.</strong> The reasoning:</p>
+<ol>
+<li>
+<p><strong>Separation of concerns</strong>: AD is a transformation from IR to IR. Codegen translates IR
+   to MLIR. Mixing them (option C) creates a monolith that's harder to test, debug, and
+   evolve independently.</p>
+</li>
+<li>
+<p><strong>Same output</strong>: B and C produce identical MLIR. The backward pass is the same set of
+   operations regardless of which stage generates them. There's no performance difference
+   in the compiled output.</p>
+</li>
+<li>
+<p><strong>Natural fit</strong>: Sheaf already has an IR (<code>CompiledExpr</code>) and a transform pipeline
+   (inline → lower → unroll → resolve). Adding ANF conversion and reverse-mode AD is
+   another transform in the same pipeline. The codegen stays unchanged.</p>
+</li>
+<li>
+<p><strong>JAX validates this architecture</strong>: JAX's <code>jax.grad</code> operates on jaxpr (their IR),
+   not on the XLA backend. The separation has scaled to production use at Google.
+   PyTorch's approach (tape at runtime) makes sense for an eager-execution framework
+   without a compilation phase — but Sheaf is a compiler.</p>
+</li>
+</ol>
+<h2 id="what-anf-looks-like">What ANF looks like</h2>
+<p>Before ANF (tree):</p>
+<div class="language-text highlight"><pre><span></span><code>(* (+ a b) (- (+ a b) c))
+;;        *
+;;       / \
+;;      +   -
+;;     / \ / \
+;;    a  b +  c    ← (+ a b) duplicated!
+;;        / \
+;;       a   b
+</code></pre></div>
+<p>After ANF (flat Let chain):</p>
+<div class="language-text highlight"><pre><span></span><code>(let [t0 (+ a b)
+      t1 (- t0 c)
+      t2 (* t0 t1)]
+  t2)
+;; t0 appears twice, but it&#39;s just a name — no tree duplication
+</code></pre></div>
+<p>The ANF form is structurally identical to SSA / MLIR registers. Each binding computes
+one operation. The gradient pass walks these bindings in reverse:</p>
+<div class="language-text highlight"><pre><span></span><code>;; Forward bindings:
+;;   t0 = a + b
+;;   t1 = t0 - c
+;;   t2 = t0 * t1     (the output)
+;;
+;; Reverse-mode AD (adjoint accumulation):
+;;   dt2 = 1.0                        (seed)
+;;   dt1 += dt2 * t0                  (from t2 = t0 * t1, ∂/∂t1)
+;;   dt0 += dt2 * t1                  (from t2 = t0 * t1, ∂/∂t0)
+;;   dt0 += dt1 * 1                   (from t1 = t0 - c, ∂/∂t0)
+;;   dc  += dt1 * (-1)                (from t1 = t0 - c, ∂/∂c)
+;;   da  += dt0 * 1                   (from t0 = a + b, ∂/∂a)
+;;   db  += dt0 * 1                   (from t0 = a + b, ∂/∂b)
+</code></pre></div>
+<p>One pass, all gradients computed, O(n) expression size. This is the algorithm we're
+implementing next.</p>
+<h2 id="implementing-reverse-mode-ad">Implementing reverse-mode AD</h2>
+<h3 id="to_anf-flattening-the-tree"><code>to_anf</code>: flattening the tree</h3>
+<p>The ANF transform is a recursive descent that "names" every non-trivial sub-expression.
+The implementation (<code>autodiff/reverse.rs</code>, ~80 lines) walks the <code>CompiledExpr</code> tree and
+lifts operations out into a flat Let:</p>
+<div class="language-rust highlight"><pre><span></span><code><span class="k">fn</span><span class="w"> </span><span class="nf">anf_rec</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span><span class="w"> </span><span class="n">bindings</span><span class="p">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="nc">CompiledExpr</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">match</span><span class="w"> </span><span class="n">expr</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">FunctionCall</span><span class="p">(</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">args</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="c1">// First, ANF-convert each argument</span>
+<span class="w">            </span><span class="kd">let</span><span class="w"> </span><span class="n">flat_args</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">args</span><span class="p">.</span><span class="n">map</span><span class="p">(</span><span class="o">|</span><span class="n">a</span><span class="o">|</span><span class="w"> </span><span class="n">anf_rec</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">bindings</span><span class="p">));</span>
+<span class="w">            </span><span class="c1">// Then bind the call itself to a fresh name</span>
+<span class="w">            </span><span class="kd">let</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fresh_anf_name</span><span class="p">();</span><span class="w">  </span><span class="c1">// __a_0, __a_1, ...</span>
+<span class="w">            </span><span class="n">bindings</span><span class="p">.</span><span class="n">push</span><span class="p">((</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">FunctionCall</span><span class="p">(</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">flat_args</span><span class="p">)));</span>
+<span class="w">            </span><span class="n">Symbol</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="n">Let</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">bindings</span><span class="p">:</span><span class="w"> </span><span class="nc">inner</span><span class="p">,</span><span class="w"> </span><span class="n">body</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="c1">// Flatten nested Lets into the same level</span>
+<span class="w">            </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">val</span><span class="p">)</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">inner</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="n">bindings</span><span class="p">.</span><span class="n">push</span><span class="p">((</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">anf_rec</span><span class="p">(</span><span class="n">val</span><span class="p">,</span><span class="w"> </span><span class="n">bindings</span><span class="p">)));</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="n">anf_rec</span><span class="p">(</span><span class="n">body</span><span class="p">,</span><span class="w"> </span><span class="n">bindings</span><span class="p">)</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="c1">// Leaves (Symbol, Float, Integer...) stay as-is</span>
+<span class="w">        </span><span class="n">_</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">expr</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>For GPT, this produces <strong>556 forward bindings</strong> — one per operation. The tree that was
+thousands of nodes deep (with duplicated subtrees) becomes a flat sequence where each
+sub-expression appears exactly once.</p>
+<h3 id="reverse_grad-walking-backward"><code>reverse_grad</code>: walking backward</h3>
+<p>The reverse-mode pass (<code>autodiff/reverse.rs</code>, ~500 lines) takes the ANF bindings and
+produces new bindings for the backward pass:</p>
+<div class="language-rust highlight"><pre><span></span><code><span class="k">pub</span><span class="w"> </span><span class="k">fn</span><span class="w"> </span><span class="nf">reverse_grad</span><span class="p">(</span><span class="n">bindings</span><span class="p">,</span><span class="w"> </span><span class="n">result_sym</span><span class="p">,</span><span class="w"> </span><span class="n">wrt_symbols</span><span class="p">,</span><span class="w"> </span><span class="n">shapes</span><span class="p">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="nb">Vec</span><span class="o">&lt;</span><span class="p">(</span><span class="nb">String</span><span class="p">,</span><span class="w"> </span><span class="n">CompiledExpr</span><span class="p">)</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="k">mut</span><span class="w"> </span><span class="n">adjoints</span><span class="p">:</span><span class="w"> </span><span class="nc">HashMap</span><span class="o">&lt;</span><span class="nb">String</span><span class="p">,</span><span class="w"> </span><span class="n">CompiledExpr</span><span class="o">&gt;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">HashMap</span><span class="p">::</span><span class="n">new</span><span class="p">();</span>
+<span class="w">    </span><span class="n">adjoints</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="n">result_sym</span><span class="p">,</span><span class="w"> </span><span class="n">Float</span><span class="p">(</span><span class="mf">1.0</span><span class="p">));</span><span class="w">  </span><span class="c1">// seed</span>
+
+<span class="w">    </span><span class="c1">// Walk bindings in reverse order</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">expr</span><span class="p">)</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">bindings</span><span class="p">.</span><span class="n">iter</span><span class="p">().</span><span class="n">rev</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">adj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">adjoints</span><span class="p">.</span><span class="n">remove</span><span class="p">(</span><span class="n">name</span><span class="p">).</span><span class="n">unwrap_or</span><span class="p">(</span><span class="n">Float</span><span class="p">(</span><span class="mf">0.0</span><span class="p">));</span>
+<span class="w">        </span><span class="c1">// Distribute adj to this binding&#39;s inputs</span>
+<span class="w">        </span><span class="n">distribute_adjoint</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span><span class="w"> </span><span class="n">adj</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="n">adjoints</span><span class="p">,</span><span class="w"> </span><span class="n">shapes</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// Collect the adjoints for the requested parameters</span>
+<span class="w">    </span><span class="n">wrt_symbols</span><span class="p">.</span><span class="n">map</span><span class="p">(</span><span class="o">|</span><span class="n">s</span><span class="o">|</span><span class="w"> </span><span class="n">adjoints</span><span class="p">.</span><span class="n">remove</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>The core complexity is in <code>distribute_adjoint</code> — it needs a gradient rule for every
+operation Sheaf supports. For GPT, that means:</p>
+<table>
+<thead>
+<tr>
+<th>Operation</th>
+<th>Gradient rule</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>+</code>, <code>-</code></td>
+<td>pass adj through</td>
+<td>with unbroadcast</td>
+</tr>
+<tr>
+<td><code>*</code></td>
+<td><code>adj * other_operand</code></td>
+<td>with unbroadcast</td>
+</tr>
+<tr>
+<td><code>/</code></td>
+<td><code>adj / y</code>, <code>-adj * x / y²</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>@</code> (matmul)</td>
+<td><code>adj @ B^T</code>, <code>A^T @ adj</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>reshape</code></td>
+<td><code>reshape(adj, original_shape)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>slice</code></td>
+<td><code>pad(adj, zeros, offsets)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>transpose</code></td>
+<td><code>transpose(adj)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>softmax</code></td>
+<td><code>adj * s - s * sum(adj * s)</code></td>
+<td>Jacobian-vector product</td>
+</tr>
+<tr>
+<td><code>log-softmax</code></td>
+<td><code>adj - softmax * sum(adj)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>gelu</code></td>
+<td>full tanh-approximation derivative</td>
+<td>6 intermediate ops</td>
+</tr>
+<tr>
+<td><code>mean(x, :axis)</code></td>
+<td><code>adj / axis_size</code> (broadcast back)</td>
+<td></td>
+</tr>
+<tr>
+<td><code>var(x, :axis)</code></td>
+<td><code>adj * 2 * (x - mean) / n</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>sum(x, :axis)</code></td>
+<td>broadcast adj back to input shape</td>
+<td></td>
+</tr>
+<tr>
+<td><code>exp</code>, <code>log</code>, <code>sqrt</code></td>
+<td>standard calculus</td>
+<td></td>
+</tr>
+<tr>
+<td><code>layer-norm</code></td>
+<td>pass through (macro-expanded before AD)</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>For GPT, <code>reverse_grad</code> produces <strong>1639 backward bindings</strong> from the 556 forward ones.
+Combined with the forward pass, that's ~2200 named operations compiled into a single MLIR
+module.</p>
+<h3 id="the-unbroadcast-problem">The unbroadcast problem</h3>
+<p>This was the subtlest bug. In the forward pass, <code>+</code> silently broadcasts:</p>
+<div class="language-text highlight"><pre><span></span><code>pos_embedding[1, 256, 384] + token_embedding[4, 256, 384]
+→ result[4, 256, 384]    (pos_embedding broadcast along dim 0)
+</code></pre></div>
+<p>In the backward pass, the adjoint of <code>result</code> has shape <code>[4, 256, 384]</code>. If we pass it
+directly as the gradient for <code>pos_embedding</code>, we get a shape mismatch — the gradient is
+<code>[4, 256, 384]</code> but the parameter is <code>[1, 256, 384]</code>.</p>
+<p>The fix: <strong><code>sum_to_shape</code></strong>. After computing each gradient contribution, check if the
+adjoint's shape differs from the operand's shape. If so, sum over the broadcast dimensions:</p>
+<div class="language-rust highlight"><pre><span></span><code><span class="k">fn</span><span class="w"> </span><span class="nf">maybe_unbroadcast</span><span class="p">(</span><span class="n">adj</span><span class="p">,</span><span class="w"> </span><span class="n">target_shape</span><span class="p">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="nc">CompiledExpr</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="n">adj</span><span class="p">.</span><span class="n">shape</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">target_shape</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">sum_to_shape</span><span class="p">(</span><span class="n">adj</span><span class="p">,</span><span class="w"> </span><span class="n">target_shape</span><span class="p">)</span><span class="w">  </span><span class="c1">// reduce broadcast dims</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">adj</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><code>sum_to_shape</code> is implemented as a codegen builtin that emits <code>stablehlo.reduce</code> ops:
+first reducing extra leading dimensions, then reducing dimensions where the target has size 1
+(with keepdims). This mirrors what JAX's <code>_unbroadcast</code> does internally.</p>
+<p>Every binary op (<code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>@</code>) wraps its gradient contributions with
+<code>maybe_unbroadcast</code>. Without this, roughly half the backward ops would produce
+shape-mismatched MLIR.</p>
+<h3 id="the-slice-gradient">The slice gradient</h3>
+<p>The forward pass slices into the embedding table: <code>slice(embedding_matrix, [token_ids, :])</code>.
+The gradient of a slice is a <strong>sparse update</strong>: the adjoint goes at the slice's offset,
+padded with zeros everywhere else.</p>
+<p>We implement this with <code>stablehlo.pad</code>:</p>
+<div class="language-text highlight"><pre><span></span><code>slice_grad(adj[4,256,384], target_shape=[65,384], start=[3,0])
+→ pad(adj, 0.0, low=[3,0], high=[58,0])
+→ tensor[65,384]   // zeros except rows 3..7 which contain adj
+</code></pre></div>
+<p>This avoids scatter operations (which IREE handles poorly for small slices) and keeps the
+computation purely functional.</p>
+<h3 id="the-gelu-gradient">The GELU gradient</h3>
+<p>GELU uses the tanh approximation:</p>
+<div class="language-text highlight"><pre><span></span><code>gelu(x) = 0.5 * x * (1 + tanh(√(2/π) * (x + 0.044715 * x³)))
+</code></pre></div>
+<p>Its derivative is not trivial. The gradient rule emits 6 intermediate operations:</p>
+<div class="language-text highlight"><pre><span></span><code>let k = 0.0356774                           // 3 * 0.044715 * √(2/π)
+let inner = √(2/π) * (x + 0.044715 * x³)
+let t = tanh(inner)
+let sech2 = 1 - t²                          // sech²(inner)
+let dinner = √(2/π) * (1 + k * x²)         // d(inner)/dx
+gelu_grad = adj * 0.5 * ((1 + t) + x * sech2 * dinner)
+</code></pre></div>
+<p>Getting this wrong produces gradient explosion — the loss goes to 10²⁰ within a single step.
+We caught this by checking gradient magnitudes: correct gradients for GPT should be in the
+1e-4 to 1e-5 range.</p>
+<h2 id="the-full-pipeline">The full pipeline</h2>
+<p>After all the fixes, the complete VAG compilation pipeline:</p>
+<div class="language-text highlight"><pre><span></span><code>1.  Extract closure (loss-fn + captures)
+2.  Type inference (Value → StableHLOType for each param)
+3.  lower_get_calls (dict access → tuple indices)
+4.  inline_function_calls (expand transformer-block, attention, etc.)
+5.  lower_inlined_gets (resolve get on inlined expressions)
+6.  unroll_reduces (reduce over 6 blocks → 6 explicit Let bindings)
+7.  re-lower gets (resolve new get calls from unrolling)
+8.  resolve_static_constants (evaluate compile-time constants)
+9.  to_anf (tree → flat Let chain: 556 bindings)
+10. reverse_grad (forward bindings → 1639 backward bindings)
+11. Codegen forward + backward into one MLIR module (~2500 lines)
+12. iree-compile → VMFB (cached to __sheaf__/)
+13. Dispatch: (loss, grad_tuple) in a single GPU call
+14. tuple_to_dict / tuple_to_list: reconstruct Sheaf&#39;s Dict/List structure
+</code></pre></div>
+<p>Steps 6, 9, 10, and 14 are new in this session. Steps 1-5, 7-8, 11-12 existed from the
+forward-only JIT. The backward pass reuses the exact same codegen — <code>reverse_grad</code> produces
+<code>CompiledExpr</code> nodes like <code>FunctionCall("matmul", [...])</code>, and the existing codegen knows
+how to emit those as StableHLO ops. No new MLIR emission code was needed for any standard op.</p>
+<p>The new codegen builtins (<code>sum_to_shape</code>, <code>slice_grad</code>) are backward-specific operations
+that don't exist in the forward vocabulary. They emit 5-10 lines of StableHLO each.</p>
+<h2 id="results_1">Results</h2>
+<div class="language-text highlight"><pre><span></span><code>$ sheaf bench-vag.shf --blame
+Step 1 | Loss: 1.2661
+Step 2 | Loss: 1.5674
+Step 3 | Loss: 1.5263
+
+Profiler: 3.08s wall (3 steps, all cached)
+</code></pre></div>
+<p><strong>~1.03s per training step</strong> (forward + backward + clip-by-global-norm + adam), down from
+10.9s with the interpreter. A <strong>10× speedup</strong>.</p>
+<p>The time breakdown:</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Time</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>value-and-grad (JIT)</td>
+<td>~0.1s</td>
+<td>Single Metal dispatch</td>
+</tr>
+<tr>
+<td>clip-by-global-norm</td>
+<td>~0.3s</td>
+<td>Still interpreted (tree-map over 58 params)</td>
+</tr>
+<tr>
+<td>adam-step</td>
+<td>~0.6s</td>
+<td>Still interpreted (tree-map over 58 params)</td>
+</tr>
+</tbody>
+</table>
+<p>The forward+backward computation itself is fast — it's a single compiled GPU dispatch.
+The remaining time is in the optimizer (Adam) and gradient clipping, which still use the
+interpreter's <code>tree-map</code> to iterate over 58 parameter tensors. These are the next
+compilation targets.</p>
+<h3 id="comparison-with-pytorch">Comparison with PyTorch</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Per step</th>
+<th>vs PyTorch</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Before (interpreter)</td>
+<td>10.9s</td>
+<td>127× slower</td>
+</tr>
+<tr>
+<td>After (JIT VAG)</td>
+<td>1.03s</td>
+<td>12× slower</td>
+</tr>
+<tr>
+<td>PyTorch (eager, CPU)</td>
+<td>86ms</td>
+<td>baseline</td>
+</tr>
+</tbody>
+</table>
+<p>The 12× gap is almost entirely in the un-compiled optimizer loop. The compiled
+forward+backward is competitive — the same mathematical operations, compiled to the same
+Metal GPU by IREE vs Apple's MPS.</p>
+<h3 id="whats-still-on-the-table">What's still on the table</h3>
+<ol>
+<li>
+<p><strong>JIT-compile Adam</strong>: <code>adam-step</code> with <code>tree-map</code> over 58 params → single VMFB dispatch.
+   This would eliminate the ~0.6s interpreter overhead.</p>
+</li>
+<li>
+<p><strong>JIT-compile gradient clipping</strong>: <code>clip-by-global-norm</code> with <code>tree-map</code> → single dispatch.
+   Eliminates ~0.3s.</p>
+</li>
+<li>
+<p><strong>Fuse everything</strong>: the ultimate goal is <code>train-step</code> as a single VMFB — forward,
+   backward, clip, Adam update, all in one GPU dispatch. The infrastructure now exists
+   to get there.</p>
+</li>
+</ol>
+<h3 id="update-jit-compilation-of-adam-and-clip-separate-dispatches">Update: JIT compilation of Adam and clip (separate dispatches)</h3>
+<p>After Part 3, <code>adam-step</code> and <code>clip-by-global-norm</code> were also JIT-compiled as separate
+VMFB dispatches. Combined with the <code>pow</code> optimization (replacing interpreted <code>pow</code> with a
+compiled binary op) and zero-clone (<code>Arc&lt;ArrayD&gt;</code> eliminating deep copies in <code>tree-map</code>):</p>
+<div class="language-text highlight"><pre><span></span><code>$ sheaf bench-vag.shf --blame
+Step 1 | Loss: 1.2661
+Step 2 | Loss: 1.5674
+Step 3 | Loss: 1.5263
+
+Profiler: 0.45s wall (3 steps, all cached)
+
+IREE dispatch profile (9 calls, 275.7ms total):
+  value-and-grad:  75.7ms/call  (3 calls)
+  adam-step:       11.9ms/call  (3 calls)
+  clip-by-global-norm: 4.1ms/call (3 calls)
+</code></pre></div>
+<p><strong>~149ms per training step</strong> — down from 1.03s. A further <strong>7× speedup</strong>.</p>
+<p>The breakdown:</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Time/step</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>value-and-grad (JIT)</td>
+<td>91ms</td>
+<td>IREE kernel 75.7ms + marshalling 15ms</td>
+</tr>
+<tr>
+<td>adam-step (JIT)</td>
+<td>35ms</td>
+<td>IREE kernel 11.9ms + 125 buffer misses</td>
+</tr>
+<tr>
+<td>clip-by-global-norm</td>
+<td>4.4ms</td>
+<td>IREE kernel 4.1ms</td>
+</tr>
+<tr>
+<td>Interpreter overhead</td>
+<td>~18ms</td>
+<td>eval, assoc, get between dispatches</td>
+</tr>
+</tbody>
+</table>
+<p>Three separate IREE dispatches, three separate VMFB files. The overhead is now dominated
+by buffer cache misses (Adam step 1 copies 125 host tensors to GPU) and interpreter
+bookkeeping between dispatches.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Per step</th>
+<th>vs PyTorch MPS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Before (interpreter)</td>
+<td>10.9s</td>
+<td>272×</td>
+</tr>
+<tr>
+<td>After (JIT VAG only)</td>
+<td>1.03s</td>
+<td>26×</td>
+</tr>
+<tr>
+<td>After (JIT VAG+adam+clip)</td>
+<td>149ms</td>
+<td>3.7×</td>
+</tr>
+<tr>
+<td>PyTorch (eager, MPS)</td>
+<td>40ms</td>
+<td>baseline</td>
+</tr>
+</tbody>
+</table>
+<p>The 3.7× gap is split between the IREE kernel itself (92ms vs PyTorch's ~35ms GPU time)
+and runtime overhead (57ms of marshalling, buffer copies, and interpreter eval). The kernel
+gap is IREE Metal vs Apple MPS — outside our control. But the 57ms overhead? That's Sheaf's
+problem, and it's fixable.</p>
+<h1 id="part-4-fusing-the-training-step">Part 4 — Fusing the training step</h1>
+<h2 id="context_3">Context</h2>
+<p>Part 3 ended with three separate GPU dispatches per training step:</p>
+<div class="language-text highlight"><pre><span></span><code>value-and-grad  →  clip-by-global-norm  →  adam-step
+   (91ms)              (4.4ms)               (35ms)
+</code></pre></div>
+<p>Each dispatch means: flatten Sheaf dicts to IREE buffers, call into Metal, unflatten back
+to Sheaf dicts. Between dispatches, the interpreter runs — evaluating <code>let</code> bindings,
+calling <code>assoc</code>, extracting values with <code>get</code>. That's 57ms of overhead per step, on top of
+the 92ms of actual GPU work.</p>
+<p>The question: can we compile the entire <code>train-step</code> function — forward, backward, gradient
+clipping, and Adam update — into a single VMFB?</p>
+<div class="language-clojure highlight"><pre><span></span><code><span class="p">(</span><span class="kd">defn </span><span class="nv">train-step</span><span class="w"> </span><span class="p">[</span><span class="nv">state</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">y</span><span class="w"> </span><span class="nv">config</span><span class="p">]</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">loss-fn</span><span class="w">   </span><span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">p</span><span class="p">]</span><span class="w"> </span><span class="p">(</span><span class="nf">cross-entropy-loss</span><span class="w"> </span><span class="p">(</span><span class="nf">gpt-forward</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">p</span><span class="w"> </span><span class="nv">config</span><span class="p">)</span><span class="w"> </span><span class="nv">y</span><span class="p">))</span>
+<span class="w">        </span><span class="p">[</span><span class="nv">loss</span><span class="w"> </span><span class="nv">g</span><span class="p">]</span><span class="w">  </span><span class="p">((</span><span class="nf">value-and-grad</span><span class="w"> </span><span class="nv">loss-fn</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">get </span><span class="nv">state</span><span class="w"> </span><span class="ss">:params</span><span class="p">))</span>
+<span class="w">        </span><span class="nv">g</span><span class="w">         </span><span class="p">(</span><span class="nf">clip-by-global-norm</span><span class="w"> </span><span class="nv">g</span><span class="w"> </span><span class="mf">1.0</span><span class="p">)</span>
+<span class="w">        </span><span class="p">[</span><span class="nv">p</span><span class="w"> </span><span class="nv">m</span><span class="w"> </span><span class="nv">v</span><span class="w"> </span><span class="nv">t</span><span class="p">]</span><span class="w"> </span><span class="p">(</span><span class="nf">adam-step</span><span class="w"> </span><span class="p">(</span><span class="nb">get </span><span class="nv">state</span><span class="w"> </span><span class="ss">:params</span><span class="p">)</span><span class="w"> </span><span class="nv">g</span>
+<span class="w">                             </span><span class="p">(</span><span class="nb">get </span><span class="nv">state</span><span class="w"> </span><span class="ss">:m</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">get </span><span class="nv">state</span><span class="w"> </span><span class="ss">:v</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">get </span><span class="nv">state</span><span class="w"> </span><span class="ss">:t</span><span class="p">)</span>
+<span class="w">                             </span><span class="mi">6</span><span class="nv">e-4</span><span class="w"> </span><span class="mf">0.9</span><span class="w"> </span><span class="mf">0.95</span><span class="w"> </span><span class="mi">1</span><span class="nv">e-8</span><span class="p">)]</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">assoc </span><span class="nv">state</span><span class="w"> </span><span class="ss">:params</span><span class="w"> </span><span class="nv">p</span><span class="w"> </span><span class="ss">:m</span><span class="w"> </span><span class="nv">m</span><span class="w"> </span><span class="ss">:v</span><span class="w"> </span><span class="nv">v</span><span class="w"> </span><span class="ss">:t</span><span class="w"> </span><span class="nv">t</span><span class="w"> </span><span class="ss">:loss</span><span class="w"> </span><span class="nv">loss</span><span class="p">)))</span>
+</code></pre></div>
+<p>One function, one GPU dispatch, zero intermediate marshalling.</p>
+<h2 id="why-it-didnt-compile-before">Why it didn't compile before</h2>
+<p>The JIT compiler has a purity check: it rejects functions that contain higher-order
+function calls (HOFs) like <code>map</code>, <code>filter</code>, <code>grad</code>, <code>value-and-grad</code>. These depend on
+runtime closures that can't be statically compiled.</p>
+<p><code>train-step</code> contains <code>(value-and-grad loss-fn)</code> — an HOF call. So the JIT skips it
+entirely. The three sub-functions compile individually (VAG, clip, adam), but the outer
+function stays interpreted.</p>
+<p>Even if we lift the HOF restriction, there's a deeper problem. The compiler's
+<code>InlineValueAndGrad</code> form uses <code>grad_simplified</code> — a symbolic differentiation engine.
+<code>grad_simplified</code> can differentiate simple expressions (matmul, add, exp), but it can't
+handle the full GPT forward pass: <code>get</code> on nested dicts, <code>reduce</code> over transformer blocks,
+<code>LambdaCall</code> for attention sublayers. All marked "undiffable."</p>
+<p>The pipeline that <em>works</em> for VAG is <code>reverse_grad</code> — the ANF-based reverse-mode AD
+from Part 3. But that pipeline lives in <code>jit.rs</code>, wired up specifically for standalone
+VAG compilation. It's not available inside the codegen that processes <code>InlineValueAndGrad</code>.</p>
+<h2 id="the-approach-reverse-mode-ad-inside-codegen">The approach: reverse-mode AD inside codegen</h2>
+<p>The fix: when the codegen encounters <code>InlineValueAndGrad</code> and the lambda body contains
+ops that <code>grad_simplified</code> can't handle, switch to the <code>reverse_grad</code> pipeline instead.</p>
+<p>The key insight is that everything needed already exists — it just needs to be wired up
+in a different place. <code>to_anf</code>, <code>reverse_grad</code>, <code>generate_binding</code> are all available.
+The difference is that instead of emitting a <em>separate</em> MLIR module (like standalone VAG
+does), we emit the forward and backward passes <em>inline</em> in the same module as the rest
+of <code>train-step</code>. The gradients become registers in the same scope — clip and adam operate
+on them directly, no marshalling.</p>
+<h2 id="the-lowering-pipeline-problem">The lowering pipeline problem</h2>
+<p>The first attempt immediately failed. The lambda body inside <code>InlineValueAndGrad</code> needs
+the same lowering passes as any top-level function:</p>
+<div class="language-text highlight"><pre><span></span><code>inline_function_calls  →  lower_get_calls  →  unroll_reduces  →  resolve_static_constants
+</code></pre></div>
+<p>But none of these passes recurse into <code>InlineValueAndGrad</code> nodes. They all have an
+<code>other =&gt; other.clone()</code> catch-all that copies the node verbatim. The lambda body was
+raw, unlowered — full of <code>FunctionCall("get", ...)</code> nodes instead of <code>GetTupleElement</code>,
+unresolved constants like <code>(static (get config :n_embd))</code>, and un-unrolled reduces.</p>
+<p>The fix: replicate the full lowering pipeline inside <code>generate_inline_value_and_grad</code>,
+after inlining but before the ANF conversion:</p>
+<div class="language-text highlight"><pre><span></span><code>1. Build index maps for lambda params from the outer scope&#39;s tuple_key_layouts
+2. lower_get_calls + lower_inlined_gets (dict access → tuple indices)
+3. unroll_reduces (reduce over 6 transformer blocks → 6 explicit Let bindings)
+4. Re-lower gets (resolve new get calls introduced by unrolling)
+5. resolve_static_constants (config values → integer literals)
+6. to_anf → reverse_grad → generate forward + backward bindings
+</code></pre></div>
+<p>Each step uncovered a new failure mode. <code>lower_get_calls</code> needs index maps for the lambda
+param <code>p</code>, which maps to the <code>params</code> subtree of <code>state</code> — those maps had to be derived
+from the outer scope's layout info. <code>unroll_reduces</code> needs type information for the
+accumulator. <code>resolve_static_constants</code> needs shapes for tuple leaves that only exist after
+get-lowering. Five iterations of "fix one, hit the next wall."</p>
+<h2 id="new-codegen-assoc">New codegen: <code>assoc</code></h2>
+<p><code>train-step</code> returns <code>(assoc state :params p :m m :v v :t t :loss loss)</code> — a dict update.
+The codegen had never seen <code>assoc</code> before, because no previously-compiled function modified
+a dict.</p>
+<p>In MLIR, a dict is a tuple. <code>assoc</code> becomes tuple surgery: extract each element from the
+input tuple, replace the ones being updated, and construct a new tuple. The codegen resolves
+key names to tuple indices via <code>tuple_key_layouts</code>, generates the replacement values, and
+emits a single <code>stablehlo.tuple</code> with the right mix of originals and replacements.</p>
+<h2 id="the-random-key-problem">The random key problem</h2>
+<p>After all the codegen fixes, <code>train-step</code> compiled to MLIR and IREE successfully. But at
+runtime:</p>
+<div class="language-text highlight"><pre><span></span><code>warning: &#39;train-step&#39; compiled for 132 tensors but called with 133
+</code></pre></div>
+<p>Off by one. The culprit: <code>(random-key 42)</code> in the training state. Sheaf represents RNG keys
+as <code>Value::List([Int(lo), Int(hi)])</code> — a list of two integers. The type inference sees this
+as <code>f32_tensor([2])</code> (one tensor), but the runtime flattener counts each integer separately
+(two values). A mismatch baked into the Value representation.</p>
+<p>The fix was structural: RNG keys are effects, not computation. They shouldn't flow through
+the compiled VMFB at all. We moved the key out of the <code>state</code> dict and into the
+(interpreted) reduce loop that calls <code>train-step</code>. The compiled function sees only tensors
+and scalars — no lists of integers.</p>
+<h2 id="return-value-reconstruction">Return value reconstruction</h2>
+<p>One more issue: the compiled <code>train-step</code> returns a tuple, but the caller expects a dict.
+The JIT has a layout reconstruction system that maps tuple types back to their dict
+structure. But <code>train-step</code>'s return type doesn't exactly match its input type — Adam
+promotes <code>state.t</code> from <code>ScalarI64</code> to <code>scalar_f32</code>. The type-based layout lookup failed
+silently.</p>
+<p>The fix: when the return type is a tuple with the same number of elements as a known
+parameter layout, register that layout for the return type too. Structure-based matching
+instead of exact type matching.</p>
+<h2 id="results_2">Results</h2>
+<div class="language-text highlight"><pre><span></span><code>$ sheaf bench-vag.shf --blame
+Step 1 | Loss: 1.2661
+Step 2 | Loss: 1.5674
+Step 3 | Loss: 1.5762
+
+Profiler: 2.03s wall
+
+IREE dispatch profile (3 calls, 321.9ms total):
+  flatten:      0.0ms ( 0.0%)
+  buffers:     79.8ms (24.8%)  [hits: 258, misses: 135]
+  call:       242.1ms (75.2%)
+  output:       0.0ms ( 0.0%)
+</code></pre></div>
+<p><strong>3 IREE calls for 3 steps — one dispatch per step.</strong> The fusion works.</p>
+<p><strong>114ms per training step</strong>, down from 149ms with three separate dispatches.</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Before (3 dispatches)</th>
+<th>After (1 dispatch)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>IREE kernel</td>
+<td>92ms</td>
+<td>80.7ms</td>
+</tr>
+<tr>
+<td>Buffer marshalling</td>
+<td>23ms</td>
+<td>26.6ms</td>
+</tr>
+<tr>
+<td>Interpreter overhead</td>
+<td>~18ms</td>
+<td>~7ms</td>
+</tr>
+<tr>
+<td><strong>Total per step</strong></td>
+<td><strong>149ms</strong></td>
+<td><strong>114ms</strong></td>
+</tr>
+</tbody>
+</table>
+<p>The IREE kernel itself is 12% faster fused — IREE can optimize across the forward/backward/
+clip/adam boundary when they're in the same module. The interpreter overhead drops from 18ms
+to 7ms (one dispatch instead of three, no intermediate dict packing/unpacking).</p>
+<p>The 135 buffer misses on step 1 are expected — the optimizer state (m, v) starts as host
+tensors and must be copied to GPU on first use. Steps 2 and 3 hit the cache.</p>
+<h3 id="the-full-journey">The full journey</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Per step</th>
+<th>vs PyTorch MPS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Interpreter only</td>
+<td>10.9s</td>
+<td>272×</td>
+</tr>
+<tr>
+<td>JIT VAG only</td>
+<td>1.03s</td>
+<td>26×</td>
+</tr>
+<tr>
+<td>JIT VAG + adam + clip</td>
+<td>149ms</td>
+<td>3.7×</td>
+</tr>
+<tr>
+<td><strong>Fused train-step</strong></td>
+<td><strong>114ms</strong></td>
+<td><strong>2.85×</strong></td>
+</tr>
+<tr>
+<td>PyTorch (eager, MPS)</td>
+<td>40ms</td>
+<td>baseline</td>
+</tr>
+</tbody>
+</table>
+<p>From 10.9 seconds to 114 milliseconds. <strong>95× faster</strong> than where we started. The remaining
+2.85× gap is almost entirely in the IREE Metal kernel (80.7ms vs PyTorch's ~35ms) — the
+runtime overhead is down to 33ms, within striking distance.</p>
+<h3 id="what-the-fusion-changed">What the fusion changed</h3>
+<p>The MLIR module for the fused <code>train-step</code> contains everything: the full GPT forward pass
+(6 transformer blocks, each with attention + MLP), the reverse-mode backward pass (1639 ANF
+bindings), gradient clipping (global norm + rescale), and the Adam optimizer update (for all
+58 parameter tensors). One function, one <code>func.func</code>, one GPU dispatch.</p>
+<p>What it eliminated:
+- 6 interpreter-to-IREE transitions per step (3 dispatches × flatten + unflatten)
+- ~18ms of interpreter overhead (eval, assoc, get between dispatches)
+- Intermediate dict reconstruction (tuple → dict → tuple between VAG and clip)
+- Buffer cache pressure from re-flattening the same tensors</p>
+<h3 id="whats-left">What's left</h3>
+<p>The 2.85× gap with PyTorch is now dominated by the GPU kernel itself. IREE's Metal backend
+vs Apple's MPS — different compilers targeting the same hardware. This is outside Sheaf's
+control, but IREE is actively improving its Metal support.</p>
+<p>On Sheaf's side:
+- <strong>Buffer cache misses on step 1</strong>: 135 misses = 26.6ms. A warm-up call or lazy GPU
+  migration would eliminate this.
+- <strong>CUDA benchmarks</strong>: Metal is Apple-only. The real comparison is on NVIDIA hardware,
+  where IREE targets CUDA/Vulkan and PyTorch uses cuDNN.</p>
+<hr />
+<h1 id="part-5-f32-interpreter-devicebuffer-fast-path">Part 5: f32 interpreter + DeviceBuffer fast path</h1>
+<h2 id="context_4">Context</h2>
+<p>Two changes, measured on GPT-2 124M (batch=1, block=64, Metal GPU):</p>
+<ol>
+<li><strong>f32 interpreter</strong>: <code>Value::Float</code> changed from f64 to f32. Eliminates f64-to-f32
+   conversion at the IREE boundary. Every tensor was being cast on every call.</li>
+<li><strong>DeviceBuffer fast path</strong>: when all inputs to an IREE call are already DeviceBuffers,
+   skip the buffer cache entirely (no mutex lock, no fingerprint check). Just retain + push.</li>
+</ol>
+<h2 id="f32-results">f32 results</h2>
+<h3 id="inference-100-tokens-shakespeare-char-1065m-metal-gpu">Inference (100 tokens, Shakespeare char 10.65M, Metal GPU)</h3>
+<div class="language-text highlight"><pre><span></span><code>IREE dispatch profile (100 calls, 691.6ms total):
+  flatten:      0.1ms ( 0.0%)
+  buffers:     41.6ms ( 6.0%)  [hits: 4653, misses: 147]
+  call:       649.9ms (94.0%)
+  output:       0.0ms ( 0.0%)
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Wall time</th>
+<th>ms/token</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Before (f64)</td>
+<td>1080ms</td>
+<td>10.8</td>
+</tr>
+<tr>
+<td>After (f32)</td>
+<td>746ms</td>
+<td>7.0</td>
+</tr>
+<tr>
+<td>PyTorch MPS</td>
+<td>390ms</td>
+<td>3.9</td>
+</tr>
+</tbody>
+</table>
+<p><strong>31% faster.</strong> Inference is now GPU-bound (94% in call). The remaining 2x gap with
+PyTorch is IREE Metal kernel quality vs Apple MPS native kernels.</p>
+<h3 id="training-1-step-gpt-2-124m-metal-gpu">Training (1 step, GPT-2 124M, Metal GPU)</h3>
+<div class="language-text highlight"><pre><span></span><code>IREE dispatch profile (1 calls, 670.5ms total):
+  flatten:      0.0ms ( 0.0%)
+  buffers:    404.0ms (60.2%)  [hits: 0, misses: 454]
+  call:       266.5ms (39.7%)
+  output:       0.0ms ( 0.0%)
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Wall time</th>
+<th>vs PyTorch</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Before (f64)</td>
+<td>1.26s</td>
+<td>10x</td>
+</tr>
+<tr>
+<td>After (f32)</td>
+<td>~670ms</td>
+<td>5x</td>
+</tr>
+<tr>
+<td>PyTorch MPS</td>
+<td>128ms</td>
+<td>baseline</td>
+</tr>
+</tbody>
+</table>
+<p>GPU kernel: 270ms (was ~937ms). Buffer setup still dominates at 400ms (454 cold misses).</p>
+<h2 id="devicebuffer-fast-path-results">DeviceBuffer fast path results</h2>
+<h3 id="training-3-steps-gpt-2-124m-metal-gpu">Training (3 steps, GPT-2 124M, Metal GPU)</h3>
+<div class="language-text highlight"><pre><span></span><code>IREE dispatch profile (3 calls, 1461.5ms total):
+  flatten:      0.0ms ( 0.0%)
+  buffers:    416.7ms (28.5%)  [hits: 908, misses: 454]
+  call:      1044.7ms (71.5%)
+  output:       0.0ms ( 0.0%)
+</code></pre></div>
+<p>Wall time: 1.60s / 3 steps = <strong>533ms/step</strong> (warm).</p>
+<p>All 454 misses are on step 1 (cold). Steps 2-3 hit the fast path: all inputs are
+DeviceBuffers from the previous step's output, so the cache is bypassed entirely.</p>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Per step (warm)</th>
+<th>vs PyTorch</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Before f32</td>
+<td>1.26s</td>
+<td>10x</td>
+</tr>
+<tr>
+<td>f32 only</td>
+<td>~670ms</td>
+<td>5x</td>
+</tr>
+<tr>
+<td><strong>f32 + fast path</strong></td>
+<td><strong>533ms</strong></td>
+<td><strong>4.2x</strong></td>
+</tr>
+<tr>
+<td>PyTorch MPS</td>
+<td>128ms</td>
+<td>baseline</td>
+</tr>
+</tbody>
+</table>
+<h3 id="what-the-fast-path-changed">What the fast path changed</h3>
+<p>Step 1: still ~670ms (all misses, same as before).
+Steps 2+: DeviceBuffers from adam-step output flow back as inputs. The fast path
+skips the mutex lock and fingerprint scan for all 454 tensors. Buffer setup drops
+from ~200ms/step to ~8ms/step.</p>
+<h3 id="whats-left_1">What's left</h3>
+<p>The 4.2x gap is now dominated by the GPU kernel (71.5%). The buffer overhead is
+essentially solved for multi-step training. Remaining opportunities:
+- IREE Metal kernel quality (vs Apple MPS native)
+- Step 1 cold start: 454 tensors marshalled from host. A warm-up dispatch or
+  lazy device migration of safetensors would help.</p>
 
 
 
@@ -1561,13 +3304,8 @@ checkpoint_step_500.pt<span class="w">   </span>checkpoint_step_1000.pt
 
 
 
-  
-  
 
 
-
-
-  
 
 
 

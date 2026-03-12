@@ -2,62 +2,70 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://sheaf-lang.org/</loc>
-         <lastmod>2026-03-02</lastmod>
+         <lastmod>2026-03-12</lastmod>
     </url>
     <url>
          <loc>https://sheaf-lang.org/changelog/</loc>
-         <lastmod>2026-03-02</lastmod>
+         <lastmod>2026-03-12</lastmod>
     </url>
     <url>
-         <loc>https://sheaf-lang.org/distributed-strategies/</loc>
-         <lastmod>2026-03-02</lastmod>
+         <loc>https://sheaf-lang.org/index-v2/</loc>
+         <lastmod>2026-03-12</lastmod>
     </url>
     <url>
          <loc>https://sheaf-lang.org/python/</loc>
-         <lastmod>2026-03-02</lastmod>
+         <lastmod>2026-03-12</lastmod>
     </url>
     <url>
          <loc>https://sheaf-lang.org/quickstart/</loc>
-         <lastmod>2026-03-02</lastmod>
+         <lastmod>2026-03-12</lastmod>
     </url>
     <url>
          <loc>https://sheaf-lang.org/rationale/</loc>
-         <lastmod>2026-03-02</lastmod>
+         <lastmod>2026-03-12</lastmod>
     </url>
     <url>
          <loc>https://sheaf-lang.org/reference/</loc>
-         <lastmod>2026-03-02</lastmod>
+         <lastmod>2026-03-12</lastmod>
     </url>
     <url>
          <loc>https://sheaf-lang.org/roadmap/</loc>
-         <lastmod>2026-03-02</lastmod>
+         <lastmod>2026-03-12</lastmod>
     </url>
     <url>
          <loc>https://sheaf-lang.org/starting/</loc>
-         <lastmod>2026-03-02</lastmod>
+         <lastmod>2026-03-12</lastmod>
     </url>
     <url>
          <loc>https://sheaf-lang.org/types/</loc>
-         <lastmod>2026-03-02</lastmod>
+         <lastmod>2026-03-12</lastmod>
     </url>
     <url>
          <loc>https://sheaf-lang.org/blog/1/</loc>
-         <lastmod>2026-03-02</lastmod>
+         <lastmod>2026-03-12</lastmod>
     </url>
     <url>
          <loc>https://sheaf-lang.org/blog/2/</loc>
-         <lastmod>2026-03-02</lastmod>
+         <lastmod>2026-03-12</lastmod>
     </url>
     <url>
          <loc>https://sheaf-lang.org/blog/3/</loc>
-         <lastmod>2026-03-02</lastmod>
+         <lastmod>2026-03-12</lastmod>
     </url>
     <url>
          <loc>https://sheaf-lang.org/blog/4/</loc>
-         <lastmod>2026-03-02</lastmod>
+         <lastmod>2026-03-12</lastmod>
     </url>
     <url>
          <loc>https://sheaf-lang.org/blog/5-draft/</loc>
-         <lastmod>2026-03-02</lastmod>
+         <lastmod>2026-03-12</lastmod>
+    </url>
+    <url>
+         <loc>https://sheaf-lang.org/blog/5/</loc>
+         <lastmod>2026-03-12</lastmod>
+    </url>
+    <url>
+         <loc>https://sheaf-lang.org/blog/6-draft/</loc>
+         <lastmod>2026-03-12</lastmod>
     </url>
 </urlset>
