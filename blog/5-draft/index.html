@@ -650,26 +650,6 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
 
       
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../5/" class="md-tabs__link">
-          
-  
-  
-  Blog
-
-        </a>
-      </li>
-    
-  
-
-      
     </ul>
   </div>
 </nav>
@@ -1039,203 +1019,6 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     
   
     Builtins
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
-        
-          
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Blog
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Blog
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../5/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Catching PyTorch's Performance
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../4/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    A Single Binary ML Framework
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../3/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Ditching Enzyme: A Case for Symbolic Autodiff in Sheaf V2
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../2/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Rust vs C++ vs Go for Sheaf's Compiler
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../1/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    On the future of Sheaf
   
 
     
@@ -3150,20 +2933,24 @@ runtime overhead is down to 33ms, within striking distance.</p>
 (6 transformer blocks, each with attention + MLP), the reverse-mode backward pass (1639 ANF
 bindings), gradient clipping (global norm + rescale), and the Adam optimizer update (for all
 58 parameter tensors). One function, one <code>func.func</code>, one GPU dispatch.</p>
-<p>What it eliminated:
-- 6 interpreter-to-IREE transitions per step (3 dispatches × flatten + unflatten)
-- ~18ms of interpreter overhead (eval, assoc, get between dispatches)
-- Intermediate dict reconstruction (tuple → dict → tuple between VAG and clip)
-- Buffer cache pressure from re-flattening the same tensors</p>
+<p>What it eliminated:</p>
+<ul>
+<li>6 interpreter-to-IREE transitions per step (3 dispatches × flatten + unflatten)</li>
+<li>~18ms of interpreter overhead (eval, assoc, get between dispatches)</li>
+<li>Intermediate dict reconstruction (tuple → dict → tuple between VAG and clip)</li>
+<li>Buffer cache pressure from re-flattening the same tensors</li>
+</ul>
 <h3 id="whats-left">What's left</h3>
 <p>The 2.85× gap with PyTorch is now dominated by the GPU kernel itself. IREE's Metal backend
 vs Apple's MPS — different compilers targeting the same hardware. This is outside Sheaf's
 control, but IREE is actively improving its Metal support.</p>
-<p>On Sheaf's side:
-- <strong>Buffer cache misses on step 1</strong>: 135 misses = 26.6ms. A warm-up call or lazy GPU
-  migration would eliminate this.
-- <strong>CUDA benchmarks</strong>: Metal is Apple-only. The real comparison is on NVIDIA hardware,
-  where IREE targets CUDA/Vulkan and PyTorch uses cuDNN.</p>
+<p>On Sheaf's side:</p>
+<ul>
+<li><strong>Buffer cache misses on step 1</strong>: 135 misses = 26.6ms. A warm-up call or lazy GPU
+  migration would eliminate this.</li>
+<li><strong>CUDA benchmarks</strong>: Metal is Apple-only. The real comparison is on NVIDIA hardware,
+  where IREE targets CUDA/Vulkan and PyTorch uses cuDNN.</li>
+</ul>
 <hr />
 <h1 id="part-5-f32-interpreter-devicebuffer-fast-path">Part 5: f32 interpreter + DeviceBuffer fast path</h1>
 <h2 id="context_4">Context</h2>
@@ -3293,10 +3080,13 @@ skips the mutex lock and fingerprint scan for all 454 tensors. Buffer setup drop
 from ~200ms/step to ~8ms/step.</p>
 <h3 id="whats-left_1">What's left</h3>
 <p>The 4.2x gap is now dominated by the GPU kernel (71.5%). The buffer overhead is
-essentially solved for multi-step training. Remaining opportunities:
-- IREE Metal kernel quality (vs Apple MPS native)
-- Step 1 cold start: 454 tensors marshalled from host. A warm-up dispatch or
-  lazy device migration of safetensors would help.</p>
+essentially solved for multi-step training. Remaining opportunities:</p>
+<ul>
+<li>IREE Metal kernel quality (vs Apple MPS native)</li>
+<li>Step 1 cold start: 454 tensors marshalled from host. A warm-up dispatch or
+  lazy device migration of safetensors would help.</li>
+</ul>
+<p>Mentionner virtual-tuples pour compatibilité StableHLO 17.</p>
 
 
 

@@ -11,10 +11,6 @@
         <link rel="canonical" href="https://sheaf-lang.org/blog/5/">
       
       
-        <link rel="prev" href="../../reference/">
-      
-      
-        <link rel="next" href="../4/">
       
       
         
@@ -26,7 +22,7 @@
     
 
       
-        <title>Catching PyTorch's Performance - Sheaf</title>
+        <title>5 - Sheaf</title>
       
     
 <link rel="icon" type="image/png" href="../../images/favicon.png">
@@ -541,7 +537,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Catching PyTorch's Performance
+              5
             
           </span>
         </div>
@@ -647,28 +643,6 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
   Reference
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-    
-  
-  
-    
-    
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="./" class="md-tabs__link">
-          
-  
-  
-  Blog
 
         </a>
       </li>
@@ -1065,339 +1039,6 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
 
     
-      
-      
-  
-  
-    
-  
-  
-  
-    
-    
-    
-    
-      
-        
-        
-      
-      
-    
-    
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
-        
-          
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Blog
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_3">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Blog
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-    
-  
-  
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Catching PyTorch's Performance
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Catching PyTorch's Performance
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#new-tooling" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        New tooling
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#how-sheafs-compiler-works" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        How Sheaf's compiler works
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#the-marshalling-wall" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        The marshalling wall
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#deep-copies-in-the-interpreter" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Deep copies in the interpreter
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#jit-compilation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        JIT compilation
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#f32-everywhere" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        f32 everywhere
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#devicebuffer-and-the-fast-path" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        DeviceBuffer and the fast path
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#where-things-stand" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Where things stand
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../4/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    A Single Binary ML Framework
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../3/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Ditching Enzyme: A Case for Symbolic Autodiff in Sheaf V2
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../2/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Rust vs C++ vs Go for Sheaf's Compiler
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../1/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    On the future of Sheaf
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
   </ul>
 </nav>
                   </div>
@@ -1530,7 +1171,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
 
 
-  <h1>Catching PyTorch's Performance</h1>
+  <h1>5</h1>
 
 <p><em>Mar 11st 2026</em></p>
 <p>As Sheaf V2 moves closer to release, it's time to test it on larger models than BareGPT, my toy generative transformer.</p>

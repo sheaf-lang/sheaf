@@ -650,26 +650,6 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
 
       
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../blog/5/" class="md-tabs__link">
-          
-  
-  
-  Blog
-
-        </a>
-      </li>
-    
-  
-
-      
     </ul>
   </div>
 </nav>
@@ -1061,203 +1041,6 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
 
     
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
-        
-          
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Blog
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Blog
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../blog/5/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Catching PyTorch's Performance
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../blog/4/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    A Single Binary ML Framework
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../blog/3/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Ditching Enzyme: A Case for Symbolic Autodiff in Sheaf V2
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../blog/2/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Rust vs C++ vs Go for Sheaf's Compiler
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../blog/1/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    On the future of Sheaf
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
   </ul>
 </nav>
                   </div>
@@ -1329,10 +1112,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
       
         <li class="md-nav__item">
-  <a href="#differentiable-logic" class="md-nav__link">
+  <a href="#observability" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Differentiable Logic
+        Observability
       
     </span>
   </a>
@@ -1340,10 +1123,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
       
         <li class="md-nav__item">
-  <a href="#macros-as-architecture" class="md-nav__link">
+  <a href="#benchmarks" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Macros as Architecture
+        Benchmarks
       
     </span>
   </a>
@@ -1351,32 +1134,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
       
         <li class="md-nav__item">
-  <a href="#built-in-observability" class="md-nav__link">
+  <a href="#clean-implementation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Built-in Observability
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#runtime-guards" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Runtime Guards
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#python-interoperability" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Python Interoperability
+        Clean Implementation
       
     </span>
   </a>
@@ -1412,10 +1173,9 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   <h1 style="margin: 0; font-size: 4.5rem; font-weight: 500; color: black;">Sheaf</h1>
 </div>
 
-<h2>A Functional Language for Differentiable Programs</h2>
+<h2>A Functional Language for Differentiable Computation</h2>
 
-<p>Sheaf is a functional language for describing differentiable computation as topology rather than execution.<br>
-It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Python ecosystem.</p>
+<p>Inspired by Clojure. Designed from the ground up for machine learning. Compiles to native GPU code.</p>
 
 </div>
 
@@ -1423,18 +1183,17 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 <div>
 <h2 id="for-ml-researchers">For ML Researchers</h2>
 <ul>
-<li><strong>Low Boilerplate</strong> — Functional parameter handling and lean syntax</li>
-<li><strong>Ecosystem Integration</strong> — Seamless interoperability with Python and JAX</li>
-<li><strong>Interactive REPL</strong> — Live evaluation and rapid architectural iteration</li>
+<li><strong>Single binary framework</strong> — Models train and run on GPU with no environment to configure</li>
+<li><strong>Functional parameters</strong> — Models are data structures that can be inspected, transformed, and composed</li>
 <li><strong>Runtime Observability</strong> — Guards and traces expose tensor stability and failure modes</li>
 </ul>
 </div>
 <div>
 <h2 id="for-agentic-ai">For Agentic AI</h2>
 <ul>
-<li><strong>Context Density</strong> — High logic-to-token ratio allows agents to fit complex architectures and reasoning chains within tight context limits</li>
+<li><strong>Context Density</strong> — 60–75% fewer tokens than equivalent Python for the same architecture, fitting more logic within tight context limits</li>
 <li><strong>Uniform Syntax</strong> — Single syntactic form for all operations reduces ambiguity and generation errors</li>
-<li><strong>Context Setup</strong> — A dedicated context generator aligns agents with Sheaf semantics from the first prompt</li>
+<li><strong>Immediate Onboarding</strong> — Built-in context generator for Claude Code, Cursor, and Copilot</li>
 </ul>
 </div>
 </div>
@@ -1443,6 +1202,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 <div>
 <p>Neural networks in Sheaf are written as mathematical transformations.</p>
 <p>Layers, activations, and parameter bindings form explicit data flow, without imperative state management.</p>
+<p>Because the language is functionally pure, compilation and differentiation require no decorators or annotations. <code>value-and-grad</code> differentiates any pure function; the JIT resolves shapes and compiles to GPU code automatically.</p>
 </div>
 <div>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Atomic</label><label for="__tabbed_1_2">Composite</label></div>
@@ -1457,16 +1217,16 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 <div class="tabbed-block">
 <div class="language-clojure highlight"><pre><span></span><code><span class="p">(</span><span class="kd">defn </span><span class="nv">transformer-block</span><span class="w"> </span><span class="p">[</span><span class="nv">x</span><span class="w"> </span><span class="nv">layer-p</span><span class="w"> </span><span class="nv">config</span><span class="p">]</span>
 <span class="w">  </span><span class="p">(</span><span class="nf">as-&gt;</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">h</span>
-<span class="w">    </span><span class="p">(</span><span class="nb">-&gt; </span><span class="nv">h</span><span class="w">        </span><span class="c1">;; Self-Attention</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">-&gt; </span><span class="nv">h</span>
 <span class="w">        </span><span class="p">(</span><span class="nf">layer-norm</span><span class="w"> </span><span class="p">(</span><span class="nb">get </span><span class="nv">layer-p</span><span class="w"> </span><span class="ss">:ln1</span><span class="p">)</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span>
 <span class="w">        </span><span class="p">(</span><span class="nf">multi-head-attention</span><span class="w"> </span><span class="nv">layer-p</span><span class="w"> </span><span class="nv">config</span><span class="p">)</span>
-<span class="w">        </span><span class="p">(</span><span class="nf">first</span><span class="p">)</span><span class="w">  </span><span class="c1">;; output</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">first</span><span class="p">)</span>
 <span class="w">        </span><span class="p">(</span><span class="nb">+ </span><span class="nv">h</span><span class="p">))</span><span class="w">   </span><span class="c1">;; residual</span>
 
-<span class="w">    </span><span class="p">(</span><span class="nb">-&gt; </span><span class="nv">h</span><span class="w">        </span><span class="c1">;; MLP</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">-&gt; </span><span class="nv">h</span>
 <span class="w">        </span><span class="p">(</span><span class="nf">layer-norm</span><span class="w"> </span><span class="p">(</span><span class="nb">get </span><span class="nv">layer-p</span><span class="w"> </span><span class="ss">:ln2</span><span class="p">)</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span>
 <span class="w">        </span><span class="p">(</span><span class="nf">mlp</span><span class="w"> </span><span class="p">(</span><span class="nb">get </span><span class="nv">layer-p</span><span class="w"> </span><span class="ss">:mlp</span><span class="p">))</span>
-<span class="w">        </span><span class="p">(</span><span class="nb">+ </span><span class="nv">h</span><span class="p">))))</span><span class="w"> </span><span class="c1">;; residual</span>
+<span class="w">        </span><span class="p">(</span><span class="nb">+ </span><span class="nv">h</span><span class="p">))))</span>
 </code></pre></div>
 </div>
 </div>
@@ -1476,143 +1236,164 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 <h2 id="models-as-data"><strong>Models as Data</strong></h2>
 <div class="flex-section">
 <div>
-<p>In PyTorch or JAX, changing a model's structure live requires careful orchestration of recompilation and parameter trees.</p>
-<p>In Sheaf, model transformations like pruning, expansion or specialization are expressed as regular data operations. The model rebuilds itself through JIT-compiled functions that manipulate the parameter tree directly.</p>
+<p>In Sheaf, model parameters are nested dictionaries.</p>
+<p>There are no module classes, or registration, or parameter groups. Structural operations like pruning, freezing, or weight sharing are expressed as regular data transformations.</p>
+<p>Compile-time macros generate architecture variants from a single template. The same primitives extend to neuro-symbolic pipelines where logic and learning are jointly differentiable.</p>
 </div>
 <div>
-<div class="language-clojure highlight"><pre><span></span><code><span class="c1">;; Model transformations are just data operations</span>
+<div class="language-clojure highlight"><pre><span></span><code><span class="c1">;; Freeze a layer: zero out its gradients</span>
+<span class="p">(</span><span class="kd">defn </span><span class="nv">freeze</span><span class="w"> </span><span class="p">[</span><span class="nv">grad</span><span class="w"> </span><span class="nv">layer-key</span><span class="p">]</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">assoc </span><span class="nv">grad</span><span class="w"> </span><span class="nv">layer-key</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">tree-map</span><span class="w"> </span><span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">g</span><span class="p">]</span><span class="w"> </span><span class="p">(</span><span class="nf">zeros</span><span class="w"> </span><span class="p">(</span><span class="nf">shape</span><span class="w"> </span><span class="nv">g</span><span class="p">)))</span>
+<span class="w">              </span><span class="p">(</span><span class="nb">get </span><span class="nv">grad</span><span class="w"> </span><span class="nv">layer-key</span><span class="p">))))</span>
 
-<span class="p">(</span><span class="kd">defn </span><span class="nv">append-layer</span><span class="w"> </span><span class="p">[</span><span class="nv">params</span><span class="w"> </span><span class="nv">new-layer</span><span class="p">]</span><span class="w"> </span><span class="ss">:jit</span>
-<span class="w">  </span><span class="p">(</span><span class="nb">-&gt; </span><span class="nv">params</span>
-<span class="w">    </span><span class="p">(</span><span class="nb">get </span><span class="ss">:layers</span><span class="p">)</span>
-<span class="w">    </span><span class="p">(</span><span class="nf">append</span><span class="w"> </span><span class="nv">new-layer</span><span class="p">)</span>
-<span class="w">    </span><span class="p">(</span><span class="nf">as-&gt;</span><span class="w"> </span><span class="nv">new-layers</span><span class="w"> </span><span class="p">(</span><span class="nb">assoc </span><span class="nv">params</span><span class="w"> </span><span class="ss">:layers</span><span class="w"> </span><span class="nv">new-layers</span><span class="p">))))</span>
-
-
-<span class="p">(</span><span class="kd">defn </span><span class="nv">hot-swap-head</span><span class="w"> </span><span class="p">[</span><span class="nv">model</span><span class="w"> </span><span class="nv">task-id</span><span class="w"> </span><span class="nv">heads</span><span class="p">]</span><span class="w"> </span><span class="ss">:jit</span>
-<span class="w">  </span><span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">new-head</span><span class="w"> </span><span class="p">(</span><span class="nb">get </span><span class="nv">heads</span><span class="w"> </span><span class="nv">task-id</span><span class="p">)]</span>
-<span class="w">    </span><span class="p">(</span><span class="nb">assoc </span><span class="nv">model</span><span class="w"> </span><span class="ss">:head</span><span class="w"> </span><span class="nv">new-head</span><span class="p">)))</span>
+<span class="c1">;; Apply weight decay to all parameters at once</span>
+<span class="p">(</span><span class="kd">defn </span><span class="nv">weight-decay</span><span class="w"> </span><span class="p">[</span><span class="nv">params</span><span class="w"> </span><span class="nv">rate</span><span class="p">]</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">tree-map</span><span class="w"> </span><span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">w</span><span class="p">]</span><span class="w"> </span><span class="p">(</span><span class="nb">* </span><span class="nv">w</span><span class="w"> </span><span class="p">(</span><span class="nb">- </span><span class="mf">1.0</span><span class="w"> </span><span class="nv">rate</span><span class="p">)))</span><span class="w"> </span><span class="nv">params</span><span class="p">))</span>
 </code></pre></div>
 </div>
 </div>
-<h2 id="differentiable-logic"><strong>Differentiable Logic</strong></h2>
+<h2 id="observability"><strong>Observability</strong></h2>
 <div class="flex-section">
 <div>
-<p>Sheaf expresses logical rules as pure functional transformations, so the logical pipeline remains JIT-compatible and fully differentiable.</p>
+<p>Every function call, tensor shape, and numerical statistic is observable at runtime.</p>
+<p>Three modes expose different aspects of execution: a tracer reconstructs the full call hierarchy with tensor statistics, guards halt on numerical invariants like NaN or range violations, and a profiler attributes wall time to each function in the call tree.</p>
 </div>
 <div>
-<div class="language-clojure highlight"><pre><span></span><code><span class="c1">;; Symbolic filtering: find elements matching P AND Q</span>
-<span class="c1">;; Logic is expressed as a continuous mask</span>
-
-<span class="p">(</span><span class="kd">defn </span><span class="nv">neuro-unify</span><span class="w"> </span><span class="p">[</span><span class="nv">embeddings</span><span class="w"> </span><span class="nv">queries</span><span class="w"> </span><span class="nv">temp</span><span class="p">]</span><span class="w"> </span><span class="ss">:jit</span>
-<span class="w">  </span><span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">scores</span><span class="w"> </span><span class="p">(</span><span class="nb">+ </span><span class="p">(</span><span class="o">@</span><span class="w"> </span><span class="nv">embeddings</span><span class="w"> </span><span class="p">(</span><span class="nb">get </span><span class="nv">queries</span><span class="w"> </span><span class="ss">:P</span><span class="p">))</span>
-<span class="w">                  </span><span class="p">(</span><span class="o">@</span><span class="w"> </span><span class="nv">embeddings</span><span class="w"> </span><span class="p">(</span><span class="nb">get </span><span class="nv">queries</span><span class="w"> </span><span class="ss">:Q</span><span class="p">)))</span>
-<span class="w">        </span><span class="nv">mask</span><span class="w"> </span><span class="p">(</span><span class="nf">softmax</span><span class="w"> </span><span class="p">(</span><span class="nb">/ </span><span class="nv">scores</span><span class="w"> </span><span class="nv">temp</span><span class="p">)</span><span class="w"> </span><span class="ss">:axis</span><span class="w"> </span><span class="mi">0</span><span class="p">)]</span>
-<span class="w">    </span><span class="p">(</span><span class="nb">-&gt; </span><span class="nv">embeddings</span>
-<span class="w">      </span><span class="p">(</span><span class="nb">* </span><span class="p">(</span><span class="nf">reshape</span><span class="w"> </span><span class="nv">mask</span><span class="w"> </span><span class="o">&#39;</span><span class="p">[</span><span class="mi">-1</span><span class="w"> </span><span class="mi">1</span><span class="p">]))</span>
-<span class="w">      </span><span class="p">(</span><span class="nf">sum</span><span class="w"> </span><span class="ss">:axis</span><span class="w"> </span><span class="mi">0</span><span class="p">))))</span>
+<div class="tabbed-set tabbed-alternate" data-tabs="2:3"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><input id="__tabbed_2_3" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">Tracer</label><label for="__tabbed_2_2">Guards</label><label for="__tabbed_2_3">Profiler</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="language-css highlight"><pre><span></span><code><span class="err">├─</span><span class="w"> </span><span class="o">[</span><span class="nt">train-step</span><span class="o">]</span><span class="w"> </span><span class="nt">dict</span><span class="o">(</span><span class="nt">keys</span><span class="o">:[</span><span class="s2">&quot;l1&quot;</span><span class="o">,</span><span class="w"> </span><span class="s2">&quot;l2&quot;</span><span class="o">]),</span><span class="w"> </span><span class="nt">f32</span><span class="o">[</span><span class="nt">4x2</span><span class="o">]</span><span class="w"> </span><span class="o">[</span><span class="nt">min</span><span class="p">:</span><span class="nd">0</span><span class="p">.</span><span class="nc">00e0</span><span class="w"> </span><span class="nt">max</span><span class="p">:</span><span class="nd">1</span><span class="p">.</span><span class="nc">00e0</span><span class="o">]</span><span class="w"> </span><span class="o">(</span><span class="nt">32B</span><span class="o">),</span><span class="w"> </span><span class="nt">f32</span><span class="o">[</span><span class="nt">4x1</span><span class="o">]</span><span class="w"> </span><span class="o">[</span><span class="nt">min</span><span class="p">:</span><span class="nd">0</span><span class="p">.</span><span class="nc">00e0</span><span class="w"> </span><span class="nt">max</span><span class="p">:</span><span class="nd">1</span><span class="p">.</span><span class="nc">00e0</span><span class="o">]</span><span class="w"> </span><span class="o">(</span><span class="nt">16B</span><span class="o">),</span><span class="w"> </span><span class="nt">0</span><span class="p">.</span><span class="nc">700000</span>
+<span class="err">│</span><span class="w"> </span><span class="err">├─</span><span class="w"> </span><span class="o">[</span><span class="nt">forward</span><span class="o">]</span><span class="w"> </span><span class="nt">f32</span><span class="o">[</span><span class="nt">4x2</span><span class="o">]</span><span class="w"> </span><span class="o">[</span><span class="nt">min</span><span class="p">:</span><span class="nd">0</span><span class="p">.</span><span class="nc">00e0</span><span class="w"> </span><span class="nt">max</span><span class="p">:</span><span class="nd">1</span><span class="p">.</span><span class="nc">00e0</span><span class="o">]</span><span class="w"> </span><span class="o">(</span><span class="nt">32B</span><span class="o">),</span><span class="w"> </span><span class="nt">dict</span><span class="o">(</span><span class="nt">keys</span><span class="o">:[</span><span class="s2">&quot;l1&quot;</span><span class="o">,</span><span class="w"> </span><span class="s2">&quot;l2&quot;</span><span class="o">])</span>
+<span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">├─</span><span class="w"> </span><span class="o">[</span><span class="nt">relu</span><span class="o">]</span><span class="w"> </span><span class="nt">f32</span><span class="o">[</span><span class="nt">4x8</span><span class="o">]</span><span class="w"> </span><span class="o">[</span><span class="nt">min</span><span class="p">:</span><span class="nd">-1</span><span class="p">.</span><span class="nc">37e0</span><span class="w"> </span><span class="nt">max</span><span class="p">:</span><span class="nd">2</span><span class="p">.</span><span class="nc">33e0</span><span class="o">]</span><span class="w"> </span><span class="o">(</span><span class="nt">128B</span><span class="o">)</span>
+<span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">└─</span><span class="w"> </span><span class="err">←</span><span class="w"> </span><span class="nt">f32</span><span class="o">[</span><span class="nt">4x8</span><span class="o">]</span><span class="w"> </span><span class="o">[</span><span class="nt">min</span><span class="p">:</span><span class="nd">0</span><span class="p">.</span><span class="nc">00e0</span><span class="w"> </span><span class="nt">max</span><span class="p">:</span><span class="nd">2</span><span class="p">.</span><span class="nc">33e0</span><span class="o">]</span><span class="w"> </span><span class="o">(</span><span class="nt">128B</span><span class="o">)</span><span class="w"> </span><span class="o">(</span><span class="nt">0</span><span class="p">.</span><span class="nc">8μs</span><span class="o">)</span>
+<span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">├─</span><span class="w"> </span><span class="o">[</span><span class="nt">sigmoid</span><span class="o">]</span><span class="w"> </span><span class="nt">f32</span><span class="o">[</span><span class="nt">4x1</span><span class="o">]</span><span class="w"> </span><span class="o">[</span><span class="nt">min</span><span class="p">:</span><span class="nd">-5</span><span class="p">.</span><span class="nc">48e-2</span><span class="w"> </span><span class="nt">max</span><span class="p">:</span><span class="nd">1</span><span class="p">.</span><span class="nc">18e0</span><span class="o">]</span><span class="w"> </span><span class="o">(</span><span class="nt">16B</span><span class="o">)</span>
+<span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">└─</span><span class="w"> </span><span class="err">←</span><span class="w"> </span><span class="nt">f32</span><span class="o">[</span><span class="nt">4x1</span><span class="o">]</span><span class="w"> </span><span class="o">[</span><span class="nt">min</span><span class="p">:</span><span class="nd">4</span><span class="p">.</span><span class="nc">86e-1</span><span class="w"> </span><span class="nt">max</span><span class="p">:</span><span class="nd">7</span><span class="p">.</span><span class="nc">66e-1</span><span class="o">]</span><span class="w"> </span><span class="o">(</span><span class="nt">16B</span><span class="o">)</span><span class="w"> </span><span class="o">(</span><span class="nt">1</span><span class="p">.</span><span class="nc">8μs</span><span class="o">)</span>
+<span class="err">│</span><span class="w"> </span><span class="err">└─</span><span class="w"> </span><span class="err">←</span><span class="w"> </span><span class="nt">f32</span><span class="o">[</span><span class="nt">4x1</span><span class="o">]</span><span class="w"> </span><span class="o">[</span><span class="nt">min</span><span class="p">:</span><span class="nd">4</span><span class="p">.</span><span class="nc">86e-1</span><span class="w"> </span><span class="nt">max</span><span class="p">:</span><span class="nd">7</span><span class="p">.</span><span class="nc">66e-1</span><span class="o">]</span><span class="w"> </span><span class="o">(</span><span class="nt">16B</span><span class="o">)</span><span class="w"> </span><span class="o">(</span><span class="nt">0</span><span class="p">.</span><span class="nc">0μs</span><span class="o">)</span>
+<span class="err">│</span><span class="w"> </span><span class="err">├─</span><span class="w"> </span><span class="o">[</span><span class="nt">sgd-step</span><span class="o">]</span><span class="w"> </span><span class="nt">dict</span><span class="o">(</span><span class="nt">keys</span><span class="o">:[</span><span class="s2">&quot;l1&quot;</span><span class="o">,</span><span class="w"> </span><span class="s2">&quot;l2&quot;</span><span class="o">]),</span><span class="w"> </span><span class="nt">dict</span><span class="o">(</span><span class="nt">keys</span><span class="o">:[</span><span class="s2">&quot;l1&quot;</span><span class="o">,</span><span class="w"> </span><span class="s2">&quot;l2&quot;</span><span class="o">]),</span><span class="w"> </span><span class="nt">0</span><span class="p">.</span><span class="nc">700000</span>
+<span class="err">│</span><span class="w"> </span><span class="err">└─</span><span class="w"> </span><span class="err">←</span><span class="w"> </span><span class="nt">dict</span><span class="o">(</span><span class="nt">keys</span><span class="o">:[</span><span class="s2">&quot;l1&quot;</span><span class="o">,</span><span class="w"> </span><span class="s2">&quot;l2&quot;</span><span class="o">])</span><span class="w"> </span><span class="o">(</span><span class="nt">8</span><span class="p">.</span><span class="nc">9μs</span><span class="o">)</span>
+<span class="err">└─</span><span class="w"> </span><span class="err">←</span><span class="w"> </span><span class="nt">dict</span><span class="o">(</span><span class="nt">keys</span><span class="o">:[</span><span class="s2">&quot;loss&quot;</span><span class="o">,</span><span class="w"> </span><span class="s2">&quot;p&quot;</span><span class="o">])</span><span class="w"> </span><span class="o">(</span><span class="nt">0</span><span class="p">.</span><span class="nc">0μs</span><span class="o">)</span>
 </code></pre></div>
 </div>
-</div>
-<h2 id="macros-as-architecture"><strong>Macros as Architecture</strong></h2>
-<div class="flex-section">
-<div>
-<p>Macros allow architectural patterns to be abstracted once and expanded at compile-time.
-They operate on code as data, generating computation graphs before evaluation.</p>
-<p>Meta-architectures can be defined without encoding complex structural logic through Python loops or classes.</p>
-</div>
-<div>
-<div class="language-clojure highlight"><pre><span></span><code><span class="c1">;; Define a macro to templatize a model</span>
+<div class="tabbed-block">
+<div class="language-css highlight"><pre><span></span><code><span class="o">$</span><span class="w"> </span><span class="nt">sheaf</span><span class="w"> </span><span class="nt">train</span><span class="p">.</span><span class="nc">shf</span><span class="w"> </span><span class="nt">--guard</span><span class="w"> </span><span class="nt">no-nan</span>
+<span class="nt">Step</span><span class="w"> </span><span class="nt">1</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="nt">Loss</span><span class="o">:</span><span class="w"> </span><span class="nt">0</span><span class="p">.</span><span class="nc">306990</span>
+<span class="nt">Step</span><span class="w"> </span><span class="nt">2</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="nt">Loss</span><span class="o">:</span><span class="w"> </span><span class="nt">0</span><span class="p">.</span><span class="nc">500000</span>
 
-<span class="p">(</span><span class="kd">defmacro </span><span class="nv">defmodel</span><span class="w"> </span><span class="p">[</span><span class="nb">name </span><span class="nv">input-params</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="nv">layers</span><span class="p">]</span>
-<span class="w">  </span><span class="o">`</span><span class="p">(</span><span class="kd">defn </span><span class="o">~</span><span class="nb">name </span><span class="p">[</span><span class="o">~</span><span class="p">(</span><span class="nb">first </span><span class="nv">input-params</span><span class="p">)</span><span class="w"> </span><span class="nv">p</span><span class="p">]</span>
-<span class="w">     </span><span class="p">(</span><span class="nf">as-&gt;</span><span class="w"> </span><span class="o">~</span><span class="p">(</span><span class="nb">first </span><span class="nv">input-params</span><span class="p">)</span><span class="w"> </span><span class="nv">_</span>
-<span class="w">       </span><span class="o">~@</span><span class="p">(</span><span class="nb">map </span><span class="nv">transform-layer</span><span class="w"> </span><span class="nv">layers</span><span class="p">))))</span>
+<span class="o">/!</span><span class="err">\</span><span class="w"> </span><span class="nt">Guard</span><span class="w"> </span><span class="nt">Breached</span><span class="o">:</span><span class="w"> </span><span class="nt">NoNan</span>
+<span class="nt">Function</span><span class="o">:</span><span class="w"> </span><span class="nt">sigmoid</span>
+<span class="nt">Tensor</span><span class="w"> </span><span class="nt">contains</span><span class="w"> </span><span class="nt">NaN</span><span class="w"> </span><span class="nt">or</span><span class="w"> </span><span class="nt">Inf</span><span class="w"> </span><span class="nt">values</span><span class="o">:</span><span class="w"> </span><span class="nt">f32</span><span class="o">[</span><span class="nt">4x1</span><span class="o">]</span><span class="w"> </span><span class="o">[</span><span class="nt">min</span><span class="p">:</span><span class="nd">inf</span><span class="w"> </span><span class="nt">max</span><span class="p">:</span><span class="nd">-inf</span><span class="o">]</span>
 
+<span class="nt">Backtrace</span><span class="w"> </span><span class="o">(</span><span class="nt">last</span><span class="w"> </span><span class="nt">26</span><span class="w"> </span><span class="nt">operations</span><span class="o">):</span>
 
-<span class="c1">;; Derive a new model from it</span>
-
-<span class="p">(</span><span class="nf">defmodel</span><span class="w"> </span><span class="nv">new-mlp</span><span class="w"> </span><span class="p">[</span><span class="nv">x</span><span class="p">]</span>
-<span class="w">  </span><span class="p">(</span><span class="nf">layer</span><span class="w"> </span><span class="ss">:l1</span><span class="w"> </span><span class="p">(</span><span class="nf">linear</span><span class="w"> </span><span class="mi">128</span><span class="p">)</span><span class="w"> </span><span class="ss">:relu</span><span class="p">)</span>
-<span class="w">  </span><span class="p">(</span><span class="nf">layer</span><span class="w"> </span><span class="ss">:l2</span><span class="w"> </span><span class="p">(</span><span class="nf">linear</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w">  </span><span class="ss">:softmax</span><span class="p">))</span>
-</code></pre></div>
-</div>
-</div>
-<h2 id="built-in-observability"><strong>Built-in Observability</strong></h2>
-<div class="flex-section">
-<div>
-<p>Sheaf provides a tracer that exposes the computation graph as it executes.</p>
-<p>In tracing mode, each function call records its inputs and outputs, including shapes, statistics, memory footprint, and execution time.</p>
-<p>Tracing reflects the logical hierarchy of the program.
-Data flow, intermediate transformations, and numerical behavior are directly observable.</p>
-</div>
-<div>
-<div class="language-css highlight"><pre><span></span><code><span class="err">│</span><span class="w"> </span><span class="err">├─</span><span class="w"> </span><span class="o">[</span><span class="nt">get-in</span><span class="o">]</span>
-<span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">├─</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="nt">dict</span><span class="o">(</span><span class="nt">keys</span><span class="o">:[</span><span class="s1">&#39;emb&#39;</span><span class="o">,</span><span class="w"> </span><span class="s1">&#39;final_ln&#39;</span><span class="o">,</span><span class="w"> </span><span class="s1">&#39;head&#39;</span><span class="o">,</span><span class="w"> </span><span class="s1">&#39;layers&#39;</span><span class="o">])</span>
-<span class="err">│</span><span class="w"> </span><span class="err">└─</span><span class="w"> </span><span class="err">←</span><span class="w"> </span><span class="nt">f32</span><span class="o">[</span><span class="nt">65x256</span><span class="o">]</span><span class="w"> </span><span class="o">[</span><span class="nt">μ</span><span class="p">:</span><span class="nd">-2</span><span class="p">.</span><span class="nc">44e-04</span><span class="w"> </span><span class="nt">min</span><span class="p">:</span><span class="nd">-2</span><span class="p">.</span><span class="nc">08e-01</span><span class="w"> </span><span class="nt">max</span><span class="p">:</span><span class="nd">1</span><span class="p">.</span><span class="nc">66e-01</span><span class="o">]</span><span class="w"> </span><span class="o">(</span><span class="nt">65</span><span class="p">.</span><span class="nc">00KB</span><span class="o">)</span><span class="w"> </span><span class="o">(</span><span class="nt">1</span><span class="p">.</span><span class="nc">0μs</span><span class="o">)</span>
+<span class="err">├─</span><span class="w"> </span><span class="o">[</span><span class="nt">train-step</span><span class="o">]</span><span class="w"> </span><span class="nt">dict</span><span class="o">(</span><span class="nt">keys</span><span class="o">:[</span><span class="s2">&quot;l1&quot;</span><span class="o">,</span><span class="w"> </span><span class="s2">&quot;l2&quot;</span><span class="o">]),</span><span class="w"> </span><span class="nt">f32</span><span class="o">[</span><span class="nt">4x2</span><span class="o">],</span><span class="w"> </span><span class="nt">f32</span><span class="o">[</span><span class="nt">4x1</span><span class="o">],</span><span class="w"> </span><span class="nt">1000</span><span class="p">.</span><span class="nc">0</span>
+<span class="err">│</span><span class="w"> </span><span class="err">├─</span><span class="w"> </span><span class="o">[</span><span class="nt">forward</span><span class="o">]</span><span class="w"> </span><span class="nt">f32</span><span class="o">[</span><span class="nt">4x2</span><span class="o">],</span><span class="w"> </span><span class="nt">dict</span><span class="o">(</span><span class="nt">keys</span><span class="o">:[</span><span class="s2">&quot;l1&quot;</span><span class="o">,</span><span class="w"> </span><span class="s2">&quot;l2&quot;</span><span class="o">])</span>
+<span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">├─</span><span class="w"> </span><span class="o">[</span><span class="nt">relu</span><span class="o">]</span><span class="w"> </span><span class="nt">f32</span><span class="o">[</span><span class="nt">4x8</span><span class="o">]</span><span class="w"> </span><span class="o">[</span><span class="nt">min</span><span class="p">:</span><span class="nd">-2</span><span class="p">.</span><span class="nc">67e0</span><span class="w"> </span><span class="nt">max</span><span class="p">:</span><span class="nd">1</span><span class="p">.</span><span class="nc">73e0</span><span class="o">]</span>
+<span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">└─</span><span class="w"> </span><span class="err">←</span><span class="w"> </span><span class="nt">f32</span><span class="o">[</span><span class="nt">4x8</span><span class="o">]</span><span class="w"> </span><span class="o">[</span><span class="nt">min</span><span class="p">:</span><span class="nd">0</span><span class="p">.</span><span class="nc">00e0</span><span class="w"> </span><span class="nt">max</span><span class="p">:</span><span class="nd">1</span><span class="p">.</span><span class="nc">73e0</span><span class="o">]</span><span class="w"> </span><span class="o">(</span><span class="nt">0</span><span class="p">.</span><span class="nc">6μs</span><span class="o">)</span>
+<span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">├─</span><span class="w"> </span><span class="o">[</span><span class="nt">sigmoid</span><span class="o">]</span><span class="w"> </span><span class="nt">f32</span><span class="o">[</span><span class="nt">4x1</span><span class="o">]</span><span class="w"> </span><span class="o">[</span><span class="nt">min</span><span class="p">:</span><span class="nd">inf</span><span class="w"> </span><span class="nt">max</span><span class="p">:</span><span class="nd">-inf</span><span class="o">]</span><span class="w"> </span><span class="o">[</span><span class="nt">NaN</span><span class="w"> </span><span class="nt">DETECTED</span><span class="o">]</span>
 <span class="o">...</span>
-<span class="err">│</span><span class="w"> </span><span class="err">├─</span><span class="w"> </span><span class="o">[</span><span class="nt">reduce</span><span class="o">]</span>
-<span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">├─</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="nt">f32</span><span class="o">[</span><span class="nt">1x128x256</span><span class="o">]</span><span class="w"> </span><span class="o">[</span><span class="nt">μ</span><span class="p">:</span><span class="nd">8</span><span class="p">.</span><span class="nc">72e-04</span><span class="w"> </span><span class="nt">min</span><span class="p">:</span><span class="nd">-1</span><span class="p">.</span><span class="nc">82e-01</span><span class="w"> </span><span class="nt">max</span><span class="p">:</span><span class="nd">2</span><span class="p">.</span><span class="nc">05e-01</span><span class="o">]</span><span class="w"> </span><span class="o">(</span><span class="nt">128</span><span class="p">.</span><span class="nc">00KB</span><span class="o">)</span>
-<span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">├─</span><span class="w"> </span><span class="o">[</span><span class="nt">transformer-block</span><span class="o">]</span>
-<span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">├─</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="nt">f32</span><span class="o">[</span><span class="nt">1x128x256</span><span class="o">]</span><span class="w"> </span><span class="o">[</span><span class="nt">μ</span><span class="p">:</span><span class="nd">8</span><span class="p">.</span><span class="nc">72e-04</span><span class="w"> </span><span class="nt">min</span><span class="p">:</span><span class="nd">-1</span><span class="p">.</span><span class="nc">82e-01</span><span class="w"> </span><span class="nt">max</span><span class="p">:</span><span class="nd">2</span><span class="p">.</span><span class="nc">05e-01</span><span class="o">]</span><span class="w"> </span><span class="o">(</span><span class="nt">128</span><span class="p">.</span><span class="nc">00KB</span><span class="o">)</span>
-<span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">├─</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="nt">dict</span><span class="o">(</span><span class="nt">keys</span><span class="o">:[</span><span class="s1">&#39;attn&#39;</span><span class="o">,</span><span class="w"> </span><span class="s1">&#39;ln1&#39;</span><span class="o">,</span><span class="w"> </span><span class="s1">&#39;ln2&#39;</span><span class="o">,</span><span class="w"> </span><span class="s1">&#39;mlp&#39;</span><span class="o">])</span>
-<span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">├─</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="nt">dict</span><span class="o">(</span><span class="nt">keys</span><span class="o">:[</span><span class="s1">&#39;d_model&#39;</span><span class="o">,</span><span class="w"> </span><span class="s1">&#39;n_layers&#39;</span><span class="o">,</span><span class="w"> </span><span class="s1">&#39;n_heads&#39;</span><span class="o">,</span><span class="w"> </span><span class="s1">&#39;batch_size&#39;</span><span class="o">,</span><span class="w"> </span><span class="s1">&#39;block_size&#39;</span><span class="o">,</span><span class="w"> </span><span class="s1">&#39;vocab_size&#39;</span><span class="o">,</span><span class="w"> </span><span class="s1">&#39;lr&#39;</span><span class="o">])</span>
-<span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">├─</span><span class="w"> </span><span class="o">[</span><span class="nt">layer-norm</span><span class="o">]</span>
-<span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">├─</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="nt">f32</span><span class="o">[</span><span class="nt">1x128x256</span><span class="o">]</span><span class="w"> </span><span class="o">[</span><span class="nt">μ</span><span class="p">:</span><span class="nd">8</span><span class="p">.</span><span class="nc">72e-04</span><span class="w"> </span><span class="nt">min</span><span class="p">:</span><span class="nd">-1</span><span class="p">.</span><span class="nc">82e-01</span><span class="w"> </span><span class="nt">max</span><span class="p">:</span><span class="nd">2</span><span class="p">.</span><span class="nc">05e-01</span><span class="o">]</span><span class="w"> </span><span class="o">(</span><span class="nt">128</span><span class="p">.</span><span class="nc">00KB</span><span class="o">)</span>
-<span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">├─</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="nt">2</span>
-<span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">├─</span><span class="w"> </span><span class="o">[</span><span class="nt">mean</span><span class="o">]</span>
-<span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">├─</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="nt">f32</span><span class="o">[</span><span class="nt">1x128x256</span><span class="o">]</span><span class="w"> </span><span class="o">[</span><span class="nt">μ</span><span class="p">:</span><span class="nd">8</span><span class="p">.</span><span class="nc">72e-04</span><span class="w"> </span><span class="nt">min</span><span class="p">:</span><span class="nd">-1</span><span class="p">.</span><span class="nc">82e-01</span><span class="w"> </span><span class="nt">max</span><span class="p">:</span><span class="nd">2</span><span class="p">.</span><span class="nc">05e-01</span><span class="o">]</span><span class="w"> </span><span class="o">(</span><span class="nt">128</span><span class="p">.</span><span class="nc">00KB</span><span class="o">)</span>
-<span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">├─</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="nt">axis</span><span class="o">:</span><span class="w"> </span><span class="nt">2</span>
-<span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">├─</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="nt">keepdims</span><span class="o">:</span><span class="w"> </span><span class="nt">True</span>
-<span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">└─</span><span class="w"> </span><span class="err">←</span><span class="w"> </span><span class="nt">f32</span><span class="o">[</span><span class="nt">1x128x1</span><span class="o">]</span><span class="w"> </span><span class="o">[</span><span class="nt">μ</span><span class="p">:</span><span class="nd">8</span><span class="p">.</span><span class="nc">72e-04</span><span class="w"> </span><span class="nt">min</span><span class="p">:</span><span class="nd">-2</span><span class="p">.</span><span class="nc">32e-03</span><span class="w"> </span><span class="nt">max</span><span class="p">:</span><span class="nd">2</span><span class="p">.</span><span class="nc">57e-03</span><span class="o">]</span><span class="w"> </span><span class="o">(</span><span class="nt">512B</span><span class="o">)</span><span class="w"> </span><span class="o">(</span><span class="nt">0</span><span class="p">.</span><span class="nc">7μs</span><span class="o">)</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-css highlight"><pre><span></span><code><span class="nt">Profiler</span><span class="o">:</span><span class="w"> </span><span class="nt">5</span><span class="p">.</span><span class="nc">63s</span><span class="w"> </span><span class="nt">wall</span>
+
+<span class="w">  </span><span class="nt">Function</span><span class="w">                          </span><span class="nt">Calls</span><span class="w">      </span><span class="nt">Total</span><span class="w">       </span><span class="nt">Self</span><span class="w">   </span><span class="nt">Avg</span><span class="o">/</span><span class="nt">call</span>
+<span class="w">  </span><span class="nt">------------------------------------------------------------------------</span>
+<span class="w">  </span><span class="nt">gpt-forward</span><span class="w">                         </span><span class="nt">100</span><span class="w">      </span><span class="nt">3</span><span class="p">.</span><span class="nc">72s</span><span class="w">      </span><span class="nt">3</span><span class="p">.</span><span class="nc">72s</span><span class="w">    </span><span class="nt">37</span><span class="p">.</span><span class="nc">23ms</span>
+<span class="w">  </span><span class="nt">reshape</span><span class="w">                             </span><span class="nt">301</span><span class="w">   </span><span class="nt">900</span><span class="p">.</span><span class="nc">57ms</span><span class="w">   </span><span class="nt">900</span><span class="p">.</span><span class="nc">57ms</span><span class="w">     </span><span class="nt">2</span><span class="p">.</span><span class="nc">99ms</span>
+<span class="w">  </span><span class="nt">choice</span><span class="w">                              </span><span class="nt">100</span><span class="w">   </span><span class="nt">622</span><span class="p">.</span><span class="nc">85ms</span><span class="w">   </span><span class="nt">622</span><span class="p">.</span><span class="nc">85ms</span><span class="w">     </span><span class="nt">6</span><span class="p">.</span><span class="nc">23ms</span>
+<span class="w">  </span><span class="nt">softmax</span><span class="w">                             </span><span class="nt">100</span><span class="w">   </span><span class="nt">158</span><span class="p">.</span><span class="nc">67ms</span><span class="w">   </span><span class="nt">158</span><span class="p">.</span><span class="nc">67ms</span><span class="w">     </span><span class="nt">1</span><span class="p">.</span><span class="nc">59ms</span>
+<span class="w">  </span><span class="nt">generate-token</span><span class="w">                      </span><span class="nt">100</span><span class="w">      </span><span class="nt">5</span><span class="p">.</span><span class="nc">56s</span><span class="w">   </span><span class="nt">158</span><span class="p">.</span><span class="nc">37ms</span><span class="w">    </span><span class="nt">55</span><span class="p">.</span><span class="nc">65ms</span>
+<span class="w">  </span><span class="nt">io</span><span class="w">                                    </span><span class="nt">4</span><span class="w">    </span><span class="nt">45</span><span class="p">.</span><span class="nc">11ms</span><span class="w">    </span><span class="nt">45</span><span class="p">.</span><span class="nc">11ms</span><span class="w">    </span><span class="nt">11</span><span class="p">.</span><span class="nc">28ms</span>
+<span class="w">  </span><span class="o">&lt;</span><span class="nt">lambda</span><span class="o">&gt;</span><span class="w">                            </span><span class="nt">102</span><span class="w">      </span><span class="nt">5</span><span class="p">.</span><span class="nc">58s</span><span class="w">    </span><span class="nt">12</span><span class="p">.</span><span class="nc">88ms</span><span class="w">    </span><span class="nt">54</span><span class="p">.</span><span class="nc">71ms</span>
+<span class="w">  </span><span class="o">...</span><span class="w"> </span><span class="nt">23</span><span class="w"> </span><span class="nt">others</span><span class="w">                      </span><span class="nt">1728</span><span class="w">                </span><span class="nt">5</span><span class="p">.</span><span class="nc">42ms</span>
+
+<span class="w">  </span><span class="nt">Call</span><span class="w"> </span><span class="nt">tree</span><span class="o">:</span>
+
+<span class="w">  </span><span class="err">├──</span><span class="w"> </span><span class="nt">generate</span><span class="w"> </span><span class="o">(</span><span class="nt">5</span><span class="p">.</span><span class="nc">58s</span><span class="o">,</span><span class="w"> </span><span class="nt">1</span><span class="w"> </span><span class="nt">call</span><span class="o">)</span>
+<span class="w">  </span><span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="nt">reduce</span><span class="w"> </span><span class="o">(</span><span class="nt">5</span><span class="p">.</span><span class="nc">58s</span><span class="o">,</span><span class="w"> </span><span class="nt">1</span><span class="w"> </span><span class="nt">call</span><span class="o">)</span>
+<span class="w">  </span><span class="err">│</span><span class="w">   </span><span class="err">│</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="o">&lt;</span><span class="nt">lambda</span><span class="o">&gt;</span><span class="w"> </span><span class="o">(</span><span class="nt">5</span><span class="p">.</span><span class="nc">58s</span><span class="o">,</span><span class="w"> </span><span class="nt">101</span><span class="w"> </span><span class="nt">calls</span><span class="o">)</span>
+<span class="w">  </span><span class="err">│</span><span class="w">   </span><span class="err">│</span><span class="w">       </span><span class="err">├──</span><span class="w"> </span><span class="nt">generate-token</span><span class="w"> </span><span class="o">(</span><span class="nt">5</span><span class="p">.</span><span class="nc">56s</span><span class="o">,</span><span class="w"> </span><span class="nt">100</span><span class="w"> </span><span class="nt">calls</span><span class="o">)</span>
+<span class="w">  </span><span class="err">│</span><span class="w">   </span><span class="err">│</span><span class="w">       </span><span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="nt">gpt-forward</span><span class="w"> </span><span class="o">(</span><span class="nt">3</span><span class="p">.</span><span class="nc">72s</span><span class="o">,</span><span class="w"> </span><span class="nt">100</span><span class="w"> </span><span class="nt">calls</span><span class="o">)</span>
+<span class="w">  </span><span class="err">│</span><span class="w">   </span><span class="err">│</span><span class="w">       </span><span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="nt">reshape</span><span class="w"> </span><span class="o">(</span><span class="nt">900</span><span class="p">.</span><span class="nc">16ms</span><span class="o">,</span><span class="w"> </span><span class="nt">100</span><span class="w"> </span><span class="nt">calls</span><span class="o">)</span>
+<span class="w">  </span><span class="err">│</span><span class="w">   </span><span class="err">│</span><span class="w">       </span><span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="nt">choice</span><span class="w"> </span><span class="o">(</span><span class="nt">622</span><span class="p">.</span><span class="nc">85ms</span><span class="o">,</span><span class="w"> </span><span class="nt">100</span><span class="w"> </span><span class="nt">calls</span><span class="o">)</span>
+<span class="w">  </span><span class="err">│</span><span class="w">   </span><span class="err">│</span><span class="w">       </span><span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="nt">softmax</span><span class="w"> </span><span class="o">(</span><span class="nt">158</span><span class="p">.</span><span class="nc">67ms</span><span class="o">,</span><span class="w"> </span><span class="nt">100</span><span class="w"> </span><span class="nt">calls</span><span class="o">)</span>
+<span class="w">  </span><span class="err">│</span><span class="w">   </span><span class="err">│</span><span class="w">       </span><span class="err">│</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="o">...</span><span class="w"> </span><span class="nt">8</span><span class="w"> </span><span class="nt">others</span><span class="w"> </span><span class="o">(</span><span class="nt">1</span><span class="p">.</span><span class="nc">47ms</span><span class="o">,</span><span class="w"> </span><span class="nt">900</span><span class="w"> </span><span class="nt">calls</span><span class="o">)</span>
+<span class="w">  </span><span class="err">│</span><span class="w">   </span><span class="err">│</span><span class="w">       </span><span class="err">└──</span><span class="w"> </span><span class="o">...</span><span class="w"> </span><span class="nt">5</span><span class="w"> </span><span class="nt">others</span><span class="w"> </span><span class="o">(</span><span class="nt">3</span><span class="p">.</span><span class="nc">37ms</span><span class="o">,</span><span class="w"> </span><span class="nt">1002</span><span class="w"> </span><span class="nt">calls</span><span class="o">)</span>
+<span class="w">  </span><span class="err">│</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="o">...</span><span class="w"> </span><span class="nt">2</span><span class="w"> </span><span class="nt">others</span><span class="w"> </span><span class="o">(</span><span class="nt">1</span><span class="p">.</span><span class="nc">9μs</span><span class="o">,</span><span class="w"> </span><span class="nt">2</span><span class="w"> </span><span class="nt">calls</span><span class="o">)</span>
+<span class="w">  </span><span class="err">└──</span><span class="w"> </span><span class="o">...</span><span class="w"> </span><span class="nt">7</span><span class="w"> </span><span class="nt">others</span><span class="w"> </span><span class="o">(</span><span class="nt">45</span><span class="p">.</span><span class="nc">64ms</span><span class="o">,</span><span class="w"> </span><span class="nt">19</span><span class="w"> </span><span class="nt">calls</span><span class="o">)</span>
 </code></pre></div>
 </div>
 </div>
-<h2 id="runtime-guards"><strong>Runtime Guards</strong></h2>
+</div>
+</div>
+</div>
+<h2 id="benchmarks"><strong>Benchmarks</strong></h2>
+<div class="flex-section">
+<div markdown="1">
+
+Comparative measurements on GPT-2 124M (from Karpathy's NanoGPT), implementing the same architecture with identical weights on Sheaf 2.0 and PyTorch 2.10.
+<br/><br/>
+
+Context usage counts GPT-4 tokens (tiktoken) across model, training, and sampling code. Deploy size is the minimal runtime required to train and run a model on GPU.
+
+</div>
+<div>
+<div>
+<div style="margin-bottom: 1.5rem;">
+  <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.4rem;"><span><strong>Context usage</strong> (GPT-4 tokens)</span></div>
+  <div style="display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.2rem;">
+    <span style="font-size: 0.78rem; width: 80px; color: #666;">Sheaf</span>
+    <div style="flex: 1; background: #e8e8e8; border-radius: 6px; height: 10px; overflow: hidden;"><div style="background: linear-gradient(90deg, #612156, #8a3a7a); width: 25%; height: 100%; border-radius: 6px;"></div></div>
+    <span style="font-size: 0.78rem; width: 80px; text-align: right;">1,908</span>
+  </div>
+  <div style="display: flex; align-items: center; gap: 0.8rem;">
+    <span style="font-size: 0.78rem; width: 80px; color: #666;">PyTorch</span>
+    <div style="flex: 1; background: #e8e8e8; border-radius: 6px; height: 10px; overflow: hidden;"><div style="background: #c0c0c0; width: 100%; height: 100%; border-radius: 6px;"></div></div>
+    <span style="font-size: 0.78rem; width: 80px; text-align: right;">7,486</span>
+  </div>
+</div>
+<div style="margin-bottom: 1.5rem;">
+  <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.4rem;"><span><strong>Deploy size</strong></span></div>
+  <div style="display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.2rem;">
+    <span style="font-size: 0.78rem; width: 80px; color: #666;">Sheaf</span>
+    <div style="flex: 1; background: #e8e8e8; border-radius: 6px; height: 10px; overflow: hidden;"><div style="background: linear-gradient(90deg, #612156, #8a3a7a); width: 2%; height: 100%; border-radius: 6px; min-width: 6px;"></div></div>
+    <span style="font-size: 0.78rem; width: 80px; text-align: right;">3.5 MB</span>
+  </div>
+  <div style="display: flex; align-items: center; gap: 0.8rem;">
+    <span style="font-size: 0.78rem; width: 80px; color: #666;">PyTorch</span>
+    <div style="flex: 1; background: #e8e8e8; border-radius: 6px; height: 10px; overflow: hidden;"><div style="background: #c0c0c0; width: 100%; height: 100%; border-radius: 6px;"></div></div>
+    <span style="font-size: 0.78rem; width: 80px; text-align: right;">~2.4 GB</span>
+  </div>
+</div>
+<div style="font-size: 0.7rem; color: #888; margin-top: 0.5rem;">GPT-2 124M · model + train + sample · CUDA and Metal GPU backends. PyTorch with CUDA. Sheaf binary includes GPU runtime.</div>
+</div>
+</div>
+</div>
+
+<h2 id="clean-implementation"><strong>Clean Implementation</strong></h2>
 <div class="flex-section">
 <div>
-<p>Sheaf includes guard primitives to assert numerical and structural invariants during execution.</p>
-<p>Guards halt execution the moment a tensor deviates from its expected bounds. They can detect NaNs, range violations or shape mismatches.</p>
-<p>When a guard fails, Sheaf provides a traceback of the specific operations that induced the failure.</p>
+<p>Sheaf is written in Rust. The complete runtime with GPU backends ships
+as a single 4 MB executable.</p>
+<p>Sheaf code is JIT-compiled to optimized GPU kernels for CUDA and MPS through StableHLO and IREE.</p>
+<p>The compiler toolchain is downloaded on first use and is not required to run a compiled model.</p>
 </div>
 <div>
-<div class="language-clojure highlight"><pre><span></span><code><span class="p">(</span><span class="kd">defn </span><span class="nv">train-step</span><span class="w"> </span><span class="p">[</span><span class="nv">p</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">y</span><span class="w"> </span><span class="nv">lr</span><span class="p">]</span>
-<span class="w">  </span><span class="p">(</span><span class="k">let </span><span class="p">([</span><span class="nv">loss</span><span class="w"> </span><span class="nv">grads</span><span class="p">]</span><span class="w"> </span><span class="p">((</span><span class="nf">value-and-grad</span><span class="w"> </span><span class="nv">loss-fn</span><span class="p">)</span><span class="w"> </span><span class="nv">p</span><span class="p">))</span>
-<span class="w">    </span><span class="p">(</span><span class="nf">guard</span><span class="w"> </span><span class="ss">:no-nan</span><span class="w"> </span><span class="nv">grads</span><span class="p">)</span>
-</code></pre></div>
-<div class="language-css highlight"><pre><span></span><code><span class="o">/!</span><span class="err">\</span><span class="w"> </span><span class="nt">Guard</span><span class="w"> </span><span class="nt">Breached</span><span class="o">:</span><span class="w"> </span><span class="p">:</span><span class="nd">no-nan</span>
-<span class="nt">Value</span><span class="w"> </span><span class="nt">stats</span><span class="o">:</span><span class="w"> </span><span class="nt">f32</span><span class="o">[</span><span class="nt">3</span><span class="o">]</span><span class="w"> </span><span class="o">[</span><span class="nt">μ</span><span class="p">:</span><span class="nd">inf</span><span class="w"> </span><span class="nt">min</span><span class="p">:</span><span class="nd">inf</span><span class="w"> </span><span class="nt">max</span><span class="p">:</span><span class="nd">inf</span><span class="o">]</span><span class="w"> </span><span class="o">[</span><span class="nt">NaN</span><span class="w"> </span><span class="nt">DETECTED</span><span class="o">]</span><span class="w"> </span><span class="o">(</span><span class="nt">12B</span><span class="o">)</span>
+<div class="language-text highlight"><pre><span></span><code>$ du -h * # Self-contained folder
+128K	__sheaf__
+3.2M	data/shakespeare_char
+3.2M	data
+164M	out-shakespeare-char
+3.3M	sheaf
+4.0K	train.shf
 
-<span class="nt">Backtrace</span><span class="w"> </span><span class="o">(</span><span class="nt">last</span><span class="w"> </span><span class="nt">100</span><span class="w"> </span><span class="nt">operations</span><span class="o">):</span>
-
-<span class="err">├─</span><span class="w"> </span><span class="o">[</span><span class="nt">value-and-grad</span><span class="o">]</span>
-<span class="err">│</span><span class="w"> </span><span class="err">├─</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="o">&lt;</span><span class="nt">function</span><span class="w"> </span><span class="nt">LambdaForm</span><span class="p">.</span><span class="nc">compile</span><span class="o">.&lt;</span><span class="nt">locals</span><span class="o">&gt;</span><span class="p">.</span><span class="nc">anonymous_func</span><span class="w"> </span><span class="nt">at</span><span class="w"> </span><span class="nt">0x10d06bce0</span><span class="o">&gt;</span>
-<span class="o">....</span>
-<span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">├─</span><span class="w"> </span><span class="o">[</span><span class="nt">loss-fn</span><span class="o">]</span>
-<span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">├─</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="nt">0</span><span class="p">.</span><span class="nc">0</span>
-<span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">├─</span><span class="w"> </span><span class="o">[/]</span>
-<span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">├─</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="nt">1</span><span class="p">.</span><span class="nc">0</span>
-<span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">├─</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="nt">f32</span><span class="o">[]</span><span class="w"> </span><span class="o">[</span><span class="nt">μ</span><span class="p">:</span><span class="nd">0</span><span class="p">.</span><span class="nc">00e</span><span class="o">+</span><span class="nt">00</span><span class="w"> </span><span class="nt">min</span><span class="p">:</span><span class="nd">0</span><span class="p">.</span><span class="nc">00e</span><span class="o">+</span><span class="nt">00</span><span class="w"> </span><span class="nt">max</span><span class="p">:</span><span class="nd">0</span><span class="p">.</span><span class="nc">00e</span><span class="o">+</span><span class="nt">00</span><span class="o">]</span><span class="w"> </span><span class="o">(</span><span class="nt">4B</span><span class="o">)</span>
-<span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">└─</span><span class="w"> </span><span class="err">←</span><span class="w"> </span><span class="nt">f32</span><span class="o">[]</span><span class="w"> </span><span class="o">(</span><span class="nt">4B</span><span class="o">)</span><span class="w"> </span><span class="o">(</span><span class="nt">2</span><span class="p">.</span><span class="nc">3μs</span><span class="o">)</span>
-<span class="err">│</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">└─</span><span class="w"> </span><span class="err">←</span><span class="w"> </span><span class="nt">tuple</span><span class="o">(</span><span class="nt">len</span><span class="p">:</span><span class="nd">2</span><span class="o">)</span><span class="w"> </span><span class="o">(</span><span class="nt">0</span><span class="p">.</span><span class="nc">9μs</span><span class="o">)</span>
-</code></pre></div>
-</div>
-</div>
-<h2 id="python-interoperability"><strong>Python Interoperability</strong></h2>
-<div class="flex-section">
-<div>
-<p>Sheaf functions compile to pure JAX functions natively callable from Python.</p>
-<p>Python provides data, execution context, and tooling, while Sheaf defines structure.</p>
-</div>
-<div>
-<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">sheaf</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sheaf</span>
-
-<span class="n">shf</span> <span class="o">=</span> <span class="n">Sheaf</span><span class="p">()</span>
-
-<span class="c1"># Load Sheaf code from a string or a file object</span>
-
-<span class="n">shf</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;(defn add-five [x] (+ 5 x))&quot;</span><span class="p">)</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">shf</span><span class="o">.</span><span class="n">add_five</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+$ ./sheaf train.shf
+Loading model...
+Loaded: 6 layers, 384 dim, 65 vocab
+Training data: 1115394 tokens
+Training for 100 steps (batch_size=4 block_size=256)...
+Step 100 | Loss: 1.4573
 </code></pre></div>
 </div>
 </div>

@@ -14,8 +14,6 @@
         <link rel="prev" href="../roadmap/">
       
       
-        <link rel="next" href="../blog/5/">
-      
       
         
       
@@ -656,26 +654,6 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
 
       
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../blog/5/" class="md-tabs__link">
-          
-  
-  
-  Blog
-
-        </a>
-      </li>
-    
-  
-
-      
     </ul>
   </div>
 </nav>
@@ -1202,6 +1180,17 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
         
           <li class="md-nav__item">
+  <a href="#ash" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ash
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#exp" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1827,10 +1816,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#init-zeros-init-ones" class="md-nav__link">
+  <a href="#xavier-uniform-xavier-normal" class="md-nav__link">
     <span class="md-ellipsis">
       
-        init-zeros, init-ones
+        xavier-uniform, xavier-normal
       
     </span>
   </a>
@@ -1838,10 +1827,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
         
           <li class="md-nav__item">
-  <a href="#init-xavier-normal-init-xavier-uniform" class="md-nav__link">
+  <a href="#kaiming-uniform-kaiming-normal" class="md-nav__link">
     <span class="md-ellipsis">
       
-        init-xavier-normal, init-xavier-uniform
+        kaiming-uniform, kaiming-normal
       
     </span>
   </a>
@@ -1849,32 +1838,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
         
           <li class="md-nav__item">
-  <a href="#init-kaiming-normal-init-kaiming-uniform" class="md-nav__link">
+  <a href="#lecun-normal-lecun-uniform" class="md-nav__link">
     <span class="md-ellipsis">
       
-        init-kaiming-normal, init-kaiming-uniform
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#init-lecun-normal-init-lecun-uniform" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        init-lecun-normal, init-lecun-uniform
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#init-orthogonal" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        init-orthogonal
+        lecun-normal, lecun-uniform
       
     </span>
   </a>
@@ -2491,15 +2458,15 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
       
         <li class="md-nav__item">
-  <a href="#jax-transforms" class="md-nav__link">
+  <a href="#transforms" class="md-nav__link">
     <span class="md-ellipsis">
       
-        JAX Transforms
+        Transforms
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="JAX Transforms">
+    <nav class="md-nav" aria-label="Transforms">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -2858,17 +2825,6 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#static" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        static
-      
-    </span>
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
   
@@ -3015,10 +2971,21 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
         
           <li class="md-nav__item">
-  <a href="#xavier-init" class="md-nav__link">
+  <a href="#clamp" class="md-nav__link">
     <span class="md-ellipsis">
       
-        xavier-init
+        clamp
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#xavier-uniform" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        xavier-uniform
       
     </span>
   </a>
@@ -3184,203 +3151,6 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
 
     
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
-        
-          
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Blog
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Blog
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../blog/5/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Catching PyTorch's Performance
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../blog/4/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    A Single Binary ML Framework
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../blog/3/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Ditching Enzyme: A Case for Symbolic Autodiff in Sheaf V2
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../blog/2/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Rust vs C++ vs Go for Sheaf's Compiler
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../blog/1/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    On the future of Sheaf
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
   </ul>
 </nav>
                   </div>
@@ -3501,6 +3271,17 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     <span class="md-ellipsis">
       
         abs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ash" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ash
       
     </span>
   </a>
@@ -4133,10 +3914,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#init-zeros-init-ones" class="md-nav__link">
+  <a href="#xavier-uniform-xavier-normal" class="md-nav__link">
     <span class="md-ellipsis">
       
-        init-zeros, init-ones
+        xavier-uniform, xavier-normal
       
     </span>
   </a>
@@ -4144,10 +3925,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
         
           <li class="md-nav__item">
-  <a href="#init-xavier-normal-init-xavier-uniform" class="md-nav__link">
+  <a href="#kaiming-uniform-kaiming-normal" class="md-nav__link">
     <span class="md-ellipsis">
       
-        init-xavier-normal, init-xavier-uniform
+        kaiming-uniform, kaiming-normal
       
     </span>
   </a>
@@ -4155,32 +3936,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
         
           <li class="md-nav__item">
-  <a href="#init-kaiming-normal-init-kaiming-uniform" class="md-nav__link">
+  <a href="#lecun-normal-lecun-uniform" class="md-nav__link">
     <span class="md-ellipsis">
       
-        init-kaiming-normal, init-kaiming-uniform
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#init-lecun-normal-init-lecun-uniform" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        init-lecun-normal, init-lecun-uniform
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#init-orthogonal" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        init-orthogonal
+        lecun-normal, lecun-uniform
       
     </span>
   </a>
@@ -4797,15 +4556,15 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
       
         <li class="md-nav__item">
-  <a href="#jax-transforms" class="md-nav__link">
+  <a href="#transforms" class="md-nav__link">
     <span class="md-ellipsis">
       
-        JAX Transforms
+        Transforms
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="JAX Transforms">
+    <nav class="md-nav" aria-label="Transforms">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -5164,17 +4923,6 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#static" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        static
-      
-    </span>
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
   
@@ -5321,10 +5069,21 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
         
           <li class="md-nav__item">
-  <a href="#xavier-init" class="md-nav__link">
+  <a href="#clamp" class="md-nav__link">
     <span class="md-ellipsis">
       
-        xavier-init
+        clamp
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#xavier-uniform" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        xavier-uniform
       
     </span>
   </a>
@@ -5564,6 +5323,15 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 <p>Computes the element-wise absolute value of the input. For complex inputs, this returns the magnitude.</p>
 <div class="language-text highlight"><pre><span></span><code>(abs -5.0)           ; =&gt; 5.0
 (abs [-3 2 -1])      ; =&gt; [3. 2. 1.]
+</code></pre></div>
+<hr />
+<h3 id="ash">ash</h3>
+<p><strong>Type:</strong> function
+<strong>Signature:</strong> <code>(ash value shift)</code></p>
+<p>Arithmetic shift. Positive shift means left shift (multiply by 2^n), negative shift means right shift (divide by 2^n, floor toward negative infinity). Matches Common Lisp <code>ash</code> semantics. Works element-wise on tensors.</p>
+<div class="language-text highlight"><pre><span></span><code>(ash 1 8)            ; =&gt; 256
+(ash 256 -3)         ; =&gt; 32
+(ash [512 1024] -8)  ; =&gt; [2 4]
 </code></pre></div>
 <hr />
 <h3 id="exp">exp</h3>
@@ -5863,8 +5631,9 @@ nil                  ; Null/None value
 </code></pre></div>
 <hr />
 <h3 id="transpose">transpose</h3>
-<p><strong>Type:</strong> function<br />
-<strong>Signature:</strong> <code>(transpose x [perm])</code></p>
+<p><strong>Type:</strong> function
+<strong>Signature:</strong> <code>(transpose x [perm])</code>
+<strong>Alias:</strong> <code>tr</code></p>
 <p>Permutes the dimensions of a tensor according to the sequence of axes provided. This is a zero-copy operation in XLA that is critical for reordering dimensions (e.g., swapping batch and sequence axes or head dimensions).</p>
 <div class="language-text highlight"><pre><span></span><code>;; Default transpose (reverse axes): (2 3 2) -&gt; (2 3 2)
 (shape (transpose [[[1 2]
@@ -5875,12 +5644,12 @@ nil                  ; Null/None value
                     [11 12]]])) ; =&gt; (2 3 2)
 
 ;; Custom permutation &#39;[2 0 1]: (2 3 2) -&gt; (2 2 3)
-(shape (transpose [[[1 2]
-                    [3 4]
-                    [5 6]]
-                   [[7 8]
-                    [9 10]
-                    [11 12]]] &#39;[2 0 1])) ; =&gt; (2 2 3)
+(shape (tr [[[1 2]
+             [3 4]
+             [5 6]]
+             [[7 8]
+             [9 10]
+             [11 12]]] &#39;[2 0 1])) ; =&gt; (2 2 3)
 </code></pre></div>
 <hr />
 <h3 id="swapaxes">swapaxes</h3>
@@ -5908,7 +5677,7 @@ nil                  ; Null/None value
 <h3 id="concat">concat</h3>
 <p><strong>Type:</strong> function<br />
 <strong>Signature:</strong> <code>(concat x1 x2 [...] [:axis axis])</code></p>
-<p>Concatenate sequences (lists or JAX arrays). Returns a list for list inputs, JAX array for array inputs. Supports <code>:axis</code> for array concatenation (default 0).</p>
+<p>Concatenate sequences (lists or arrays). Returns a list for list inputs, tensor for array inputs. Supports <code>:axis</code> for array concatenation (default 0).</p>
 <div class="language-text highlight"><pre><span></span><code>;; Concatenate lists
 (concat &#39;[1 2] &#39;[3 4])          ; =&gt; [1, 2, 3, 4]
 
@@ -5981,7 +5750,7 @@ nil                  ; Null/None value
 <h3 id="index-update">index-update</h3>
 <p><strong>Type:</strong> function<br />
 <strong>Signature:</strong> <code>(index-update tensor idx value)</code></p>
-<p>Returns a new tensor identical to <code>tensor</code> except that the slice at position <code>idx</code> is replaced by <code>value</code>. The index must be a scalar integer — not a single-element vector. This is the standard way to perform functional (out-of-place) updates on tensors, compatible with JAX JIT.</p>
+<p>Returns a new tensor identical to <code>tensor</code> except that the slice at position <code>idx</code> is replaced by <code>value</code>. The index must be a scalar integer — not a single-element vector. This is the standard way to perform functional (out-of-place) updates on tensors.</p>
 <div class="language-text highlight"><pre><span></span><code>;; Replace one element in a 1D vector
 (index-update [1 2 3 4 5] 2 99)     ; =&gt; [ 1.  2. 99.  4.  5.]
 
@@ -5993,7 +5762,7 @@ nil                  ; Null/None value
 <h3 id="tensor">tensor</h3>
 <p><strong>Type:</strong> function<br />
 <strong>Signature:</strong> <code>(tensor data)</code></p>
-<p>Converts a literal list or a dynamically-generated list into a JAX tensor. This function is required when a sequence is built at runtime (via <code>cons</code>, <code>append</code>, etc.) and needs to enter the computational pipeline. It ensures that host-side structures are explicitly moved to the device for JIT execution.</p>
+<p>Converts a literal list or a dynamically-generated list into a tensor. This function is required when a sequence is built at runtime (via <code>cons</code>, <code>append</code>, etc.) and needs to enter the computational pipeline.</p>
 <div class="language-text highlight"><pre><span></span><code>;; Conversion from a literal list
 (tensor &#39;[1 2 3])             ; =&gt; Tensor i32[3] = [1 2 3]
 (tensor &#39;[1. 2. 3.])          ; =&gt; Tensor f32[3] = [1. 2. 3.]
@@ -6007,7 +5776,7 @@ nil                  ; Null/None value
 <h3 id="int-float">int, float</h3>
 <p><strong>Type:</strong> function<br />
 <strong>Signature:</strong> <code>(int x)</code>, <code>(float x)</code></p>
-<p>Cast a scalar tensor or a Python number to a 32-bit integer or 32-bit float, respectively. The result is a scalar JAX array. These are the primary way to extract a concrete numeric value from a tensor for use in indexing or list operations.</p>
+<p>Cast a scalar tensor or number to a 32-bit integer or 32-bit float, respectively. The result is a scalar tensor. These are the primary way to extract a concrete numeric value from a tensor for use in indexing or list operations.</p>
 <div class="language-text highlight"><pre><span></span><code>(int 3.7)                ; =&gt; 3
 (int [1. 2. 3.] :f32)    ; =&gt; i32[3] = [1 2 3]
 
@@ -6016,44 +5785,30 @@ nil                  ; Null/None value
 </code></pre></div>
 <hr />
 <h2 id="initializers">Initializers</h2>
-<h3 id="init-zeros-init-ones">init-zeros, init-ones</h3>
-<p><strong>Type:</strong> function<br />
-<strong>Signature:</strong> <code>(init-zeros key shape)</code>, <code>(init-ones key shape)</code></p>
-<p>Initialize a tensor of the specified shape filled entirely with <code>0.0</code> or <code>1.0</code>. While a PRNG <code>key</code> is required for signature consistency, the output of these functions is deterministic.</p>
-<div class="language-text highlight"><pre><span></span><code>(init-zeros (random-key 0) &#39;[128])  ; =&gt; f32[128] (μ=0.000 min=0.000 max=0.000)
-(init-ones (random-key 0) &#39;[128])   ; =&gt; f32[128] (μ=1.000 min=1.000 max=1.000)
+<p>Provided by <code>(use nn)</code>. All follow the <code>(init key shape)</code> convention, matching PyTorch naming.
+Use a quoted vector for the shape (e.g., <code>'[256 128]</code>) to ensure it is treated as static data.</p>
+<p>For zero/one initialization, use the builtins <code>zeros</code> and <code>ones</code> directly (no key needed).</p>
+<h3 id="xavier-uniform-xavier-normal">xavier-uniform, xavier-normal</h3>
+<p><strong>Type:</strong> function (<code>nn</code> module)
+<strong>Signature:</strong> <code>(xavier-uniform key shape)</code>, <code>(xavier-normal key shape)</code></p>
+<p>Xavier (Glorot) initialization. Scales weights so variance stays constant across layers. Effective with symmetric activations (<code>tanh</code>, <code>sigmoid</code>).</p>
+<div class="language-text highlight"><pre><span></span><code>(use nn)
+(xavier-uniform (random-key 42) &#39;[256 128])  ; U(-limit, limit), limit = sqrt(6/(fan_in+fan_out))
+(xavier-normal  (random-key 42) &#39;[256 128])  ; N(0, sqrt(2/(fan_in+fan_out)))
 </code></pre></div>
 <hr />
-<h3 id="init-xavier-normal-init-xavier-uniform">init-xavier-normal, init-xavier-uniform</h3>
-<p><strong>Type:</strong> function<br />
-<strong>Signature:</strong> <code>(init-xavier-* key shape)</code></p>
-<p>Implements Xavier (also known as Glorot) initialization. It scales the weights such that the variance of the activations remains constant across layers. This is highly effective for networks using symmetric activation functions like <code>tanh</code> or <code>sigmoid</code>.</p>
-<p><strong>Note:</strong> Use a quoted vector (e.g., <code>'[256 256]</code>) for the shape to ensure it is treated as static data and not as a tensor.</p>
-<div class="language-text highlight"><pre><span></span><code>(let [key (random-key 42)]
-  (init-xavier-normal key &#39;[256 256]))
-
-; =&gt; f32[256x256]
+<h3 id="kaiming-uniform-kaiming-normal">kaiming-uniform, kaiming-normal</h3>
+<p><strong>Type:</strong> function (<code>nn</code> module)
+<strong>Signature:</strong> <code>(kaiming-uniform key shape)</code>, <code>(kaiming-normal key shape)</code></p>
+<p>Kaiming (He) initialization. Accounts for ReLU non-linearity by scaling variance by <code>2/fan_in</code>.</p>
+<div class="language-text highlight"><pre><span></span><code>(kaiming-normal (random-key 42) &#39;[512 256])
 </code></pre></div>
 <hr />
-<h3 id="init-kaiming-normal-init-kaiming-uniform">init-kaiming-normal, init-kaiming-uniform</h3>
-<p><strong>Type:</strong> function<br />
-<strong>Signature:</strong> <code>(init-kaiming-* key shape)</code></p>
-<p>Implements Kaiming (also known as He) initialization. This method accounts for the non-linearity of ReLU-based activations by doubling the variance of the weights, preventing the signal from vanishing in deep architectures.</p>
-<div class="language-text highlight"><pre><span></span><code>(init-kaiming-normal (random-key 0) [512 512])
-</code></pre></div>
-<hr />
-<h3 id="init-lecun-normal-init-lecun-uniform">init-lecun-normal, init-lecun-uniform</h3>
-<p><strong>Type:</strong> function<br />
-<strong>Signature:</strong> <code>(init-lecun-* key shape)</code></p>
-<p>Implements LeCun initialization. It draws weights from a distribution scaled by the inverse square root of the fan-in. This is the default initialization for many classic neural network architectures and is particularly effective when using the SELU activation.</p>
-<div class="language-text highlight"><pre><span></span><code>(init-lecun-normal (random-key 0) [256 256])
-</code></pre></div>
-<hr />
-<h3 id="init-orthogonal">init-orthogonal</h3>
-<p><strong>Type:</strong> function<br />
-<strong>Signature:</strong> <code>(init-orthogonal key shape)</code></p>
-<p>Initializes a square or rectangular matrix as an orthogonal (or semi-orthogonal) matrix. Orthogonal initialization is particularly useful in recurrent networks (RNNs) and deep transformers to preserve the norm of the gradient and prevent explosion or vanishing.</p>
-<div class="language-text highlight"><pre><span></span><code>(init-orthogonal (random-key 0) [128 128])
+<h3 id="lecun-normal-lecun-uniform">lecun-normal, lecun-uniform</h3>
+<p><strong>Type:</strong> function (<code>nn</code> module)
+<strong>Signature:</strong> <code>(lecun-normal key shape)</code>, <code>(lecun-uniform key shape)</code></p>
+<p>LeCun initialization. Scales by <code>1/fan_in</code>. Default for SELU networks.</p>
+<div class="language-text highlight"><pre><span></span><code>(lecun-normal (random-key 42) &#39;[256 128])
 </code></pre></div>
 <hr />
 <h2 id="random-sampling">Random Sampling</h2>
@@ -6253,7 +6008,7 @@ To access elements in a tensor, use <code>nth</code> or <code>slice</code>.</p>
 <h3 id="index-of">index-of</h3>
 <p><strong>Type:</strong> function<br />
 <strong>Signature:</strong> <code>(index-of seq val)</code></p>
-<p>Returns the zero-based index of the first occurrence of <code>val</code> in <code>seq</code>, or <code>-1</code> if <code>val</code> is not present. Uses Python equality semantics, so it works on both numbers and strings.</p>
+<p>Returns the zero-based index of the first occurrence of <code>val</code> in <code>seq</code>, or <code>-1</code> if <code>val</code> is not present. Works on both numbers and strings.</p>
 <div class="language-text highlight"><pre><span></span><code>(index-of &#39;[10 20 30 40] 30)                           ; =&gt; 2
 (index-of &#39;[10 20 30] 99)                              ; =&gt; -1
 
@@ -6623,16 +6378,18 @@ If it does not exist:</p>
 <hr />
 <h2 id="function-definition">Function Definition</h2>
 <h3 id="defn">defn</h3>
-<p><strong>Type:</strong> special-form<br />
-<strong>Signature:</strong> <code>(defn name [params] [:jit] body)</code></p>
-<p>Binds a global name to a function defined by a parameter vector and a body expression. The optional <code>:jit</code> keyword enables XLA compilation for the function, optimizing it for accelerated backends.</p>
+<p><strong>Type:</strong> special-form
+<strong>Signature:</strong> <code>(defn name [params] body ...)</code></p>
+<p>Binds a global name to a function. Multiple body expressions are allowed (implicit <code>do</code>): all are evaluated in order, and the last value is returned.</p>
 <div class="language-text highlight"><pre><span></span><code>(defn square [x]
   (* x x))
 
 (square 5)            ; =&gt; 25
 
-(defn fast-predict [x w b] :jit
-  (sigmoid (+ (@ x w) b)))
+;; Multiple body forms with implicit do
+(defn train-step [model lr]
+  (print &quot;training...&quot;)
+  (sgd-update model lr))
 </code></pre></div>
 <hr />
 <h3 id="fn">fn</h3>
@@ -6739,7 +6496,7 @@ If it does not exist:</p>
     (relu (+ (@ x W) b))))
 </code></pre></div>
 <hr />
-<h2 id="jax-transforms">JAX Transforms</h2>
+<h2 id="transforms">Transforms</h2>
 <h3 id="vmap">vmap</h3>
 <p><strong>Type:</strong> special-form<br />
 <strong>Signature:</strong> <code>(vmap func)</code> or <code>(vmap func in-axes)</code></p>
@@ -6840,7 +6597,7 @@ If it does not exist:</p>
 <p><strong>Type:</strong> function
 <strong>Signature:</strong> <code>(sparse-cross-entropy logits targets :i32)</code></p>
 <p>Computes the categorical cross-entropy loss between logits (unnormalized predictions) and targets (integer class indices). This function internally applies a softmax to the logits, making it more numerically stable than manual computation.</p>
-<p>Note: <code>targets</code> must be integers. Specify the <code>:i32</code> type to avoid JAX type errors.</p>
+<p>Note: <code>targets</code> must be integers. Specify the <code>:i32</code> type to avoid type errors.</p>
 <div class="language-text highlight"><pre><span></span><code>(sparse-cross-entropy [[0.9 0.1] [0.2 0.8]] [0 1] :i32) ; =&gt; 0.40429434
 </code></pre></div>
 <hr />
@@ -6881,7 +6638,7 @@ If it does not exist:</p>
 <h3 id="dynamic-slice">dynamic-slice</h3>
 <p><strong>Type:</strong> function<br />
 <strong>Signature:</strong> <code>(dynamic-slice x start length)</code></p>
-<p>Extracts a slice of a fixed <code>length</code> starting from a dynamic <code>start</code> index. Unlike standard Lisp slicing, this operation is compatible with JAX JIT-compilation because the output shape (length) remains constant even when the starting position is a computed value.</p>
+<p>Extracts a slice of a fixed <code>length</code> starting from a dynamic <code>start</code> index. The output shape (length) remains constant even when the starting position is a computed value.</p>
 <div class="language-text highlight"><pre><span></span><code>(dynamic-slice (arange 5) 1 3)  ; =&gt; [1 2 3]
 </code></pre></div>
 <hr />
@@ -6906,7 +6663,7 @@ If it does not exist:</p>
 <hr />
 <h2 id="strings">Strings</h2>
 <h3 id="escape-sequences">Escape sequences</h3>
-<p>Sheaf strings support Python-style escape sequences. The backslash <code>\</code> triggers interpretation of the following character:</p>
+<p>Sheaf strings support standard escape sequences. The backslash <code>\</code> triggers interpretation of the following character:</p>
 <table>
 <thead>
 <tr>
@@ -6945,7 +6702,7 @@ If it does not exist:</p>
 <h3 id="str-call">str-call</h3>
 <p><strong>Type:</strong> function<br />
 <strong>Signature:</strong> <code>(str-call method target [args ...])</code></p>
-<p>Calls a Python string method on <code>target</code>. This is the primary way to manipulate strings in Sheaf. The method name is passed as a string; subsequent arguments are forwarded directly.</p>
+<p>Calls a string method on <code>target</code>. This is the primary way to manipulate strings in Sheaf. The method name is passed as a string; subsequent arguments are forwarded directly.</p>
 <div class="language-text highlight"><pre><span></span><code>(str-call &quot;replace&quot; &quot;hello world&quot; &quot;world&quot; &quot;sheaf&quot;)   ; =&gt; &quot;hello sheaf&quot;
 (str-call &quot;splitlines&quot; &quot;a\nb\nc&quot;)                    ; =&gt; [&quot;a&quot; &quot;b&quot; &quot;c&quot;]
 (str-call &quot;join&quot; &quot;, &quot; &#39;(&quot;a&quot; &quot;b&quot; &quot;c&quot;))                ; =&gt; &quot;a, b, c&quot;
@@ -6953,13 +6710,16 @@ If it does not exist:</p>
 </code></pre></div>
 <hr />
 <h3 id="print">print</h3>
-<p><strong>Type:</strong> function<br />
-<strong>Signature:</strong> <code>(print msg)</code>, <code>(print fmt arg1 arg2 ...)</code></p>
-<p>Prints a value to stdout. When the first argument is a string containing <code>{}</code> placeholders and additional arguments are provided, <code>print</code> performs automatic format-string interpolation — equivalent to Python's <code>str.format()</code>. This is the idiomatic way to display computed values without an explicit <code>str-call</code>.</p>
+<p><strong>Type:</strong> function
+<strong>Signature:</strong> <code>(print arg ...)</code>, <code>(print fmt arg1 arg2 ...)</code></p>
+<p>Prints values to stdout. With multiple arguments, values are space-separated. If the first argument is a format string (contains <code>{}</code> or <code>{:</code>), uses format-string interpolation instead.</p>
 <div class="language-text highlight"><pre><span></span><code>(print &quot;hello&quot;)                        ; prints: hello
 (print 42)                             ; prints: 42
 
-;; F-string style: placeholders filled by subsequent arguments
+;; Variadic: space-separated
+(print &quot;x=&quot; x &quot;y=&quot; y)                 ; prints: x= 42 y= 7
+
+;; Format string: placeholders filled by subsequent arguments
 (print &quot;x={} y={}&quot; 10 20)             ; prints: x=10 y=20
 (print &quot;loss={:.4f} step={}&quot; 0.0532 100)  ; prints: loss=0.0532 step=100
 </code></pre></div>
@@ -7088,10 +6848,10 @@ If it does not exist:</p>
 <strong>Signature:</strong> <code>'expr</code> or <code>(quote expr)</code></p>
 <p>Prevents evaluation of <code>expr</code>. It treats the expression as raw data (S-expression) instead of code to be executed.</p>
 <ul>
-<li><code>[1 2 3]</code> -&gt; Evaluates immediately into a JAX Tensor.</li>
+<li><code>[1 2 3]</code> -&gt; Evaluates immediately into a Tensor.</li>
 <li><code>'[1 2 3]</code> -&gt; Remains a List/Vector of constants.</li>
 </ul>
-<p>Quotes are used to pass arguments like shapes to functions like <code>reshape</code> or <code>ones</code>, which do not accept JAX Tensors as inputs.</p>
+<p>Quotes are used to pass arguments like shapes to functions like <code>reshape</code> or <code>ones</code>, which do not accept Tensors as inputs.</p>
 <div class="language-text highlight"><pre><span></span><code>&#39;symbol              ; =&gt; symbol (not evaluated)
 &#39;[1 2 3]             ; =&gt; (1, 2, 3)
 (ones [2 2])         ; Will fail as [2 2] is seen as a dynamic tensor
@@ -7112,16 +6872,6 @@ If it does not exist:</p>
 
 ;; Unquote-splicing:
 `(list ~@(range 3))  ; =&gt; (list 0 1 2)
-</code></pre></div>
-<hr />
-<h3 id="static">static</h3>
-<p><strong>Type:</strong> special-form<br />
-<strong>Signature:</strong> <code>(static expr)</code></p>
-<p>Forces the evaluation of an expression at compile-time. The result is embedded into the code as a literal constant. This is essential for JIT backends (like XLA) that require tensor shapes and axis indices to be fixed and known before execution starts.</p>
-<div class="language-text highlight"><pre><span></span><code>;; Example: 128 is computed once at compile time, not at every forward pass.
-(let [x (arange 128)]
-  (reshape x (static (* 4 32)) -1))  ; 128 computed at compile time
-                                     ; =&gt; reshaped to [ 4. 32.]
 </code></pre></div>
 <hr />
 <h2 id="additional">Additional</h2>
@@ -7209,12 +6959,19 @@ If it does not exist:</p>
 
 ; =&gt; [0.36514837 0.73029673 1.095445   1.4605935 ]
 </code></pre></div>
-<h4 id="xavier-init">xavier-init</h4>
-<p><strong>Type:</strong> function<br />
-<strong>Signature:</strong> <code>(xavier-init key shape)</code></p>
-<p>Xavier (Glorot) initialization for weight matrices. Draws from uniform distribution with bounds based on fan-in/fan-out. This is a pure Sheaf implementation of <code>init-xavier</code>.</p>
+<h4 id="clamp">clamp</h4>
+<p><strong>Type:</strong> function
+<strong>Signature:</strong> <code>(clamp x lo hi)</code></p>
+<p>Clamps values element-wise to the range [lo, hi]. Supports broadcasting between scalars and tensors.</p>
+<div class="language-text highlight"><pre><span></span><code>(clamp 300 0 255)           ; =&gt; 255
+(clamp [-50 100 300] 0 255) ; =&gt; [0. 100. 255.]
+</code></pre></div>
+<h4 id="xavier-uniform">xavier-uniform</h4>
+<p><strong>Type:</strong> function
+<strong>Signature:</strong> <code>(xavier-uniform key shape)</code></p>
+<p>Xavier (Glorot) uniform initialization for weight matrices. Draws from <code>U(-limit, limit)</code> where <code>limit = sqrt(6 / (fan_in + fan_out))</code>. See also <code>xavier-normal</code>, <code>kaiming-uniform</code>, <code>kaiming-normal</code>, <code>lecun-normal</code>, <code>lecun-uniform</code>.</p>
 <div class="language-text highlight"><pre><span></span><code>(let [key (random-key 42)]
-  (xavier-init key &#39;[256 256]))
+  (xavier-uniform key &#39;[256 256]))
 
 ; =&gt; f32[256x256]  (suitable for dense layer weights)
 </code></pre></div>
@@ -7276,12 +7033,12 @@ Adam optimizer step. Maintains first moment <code>m</code> (mean) and second mom
 <h4 id="unless">unless</h4>
 <p><strong>Type:</strong> macro<br />
 <strong>Signature:</strong> <code>(unless condition body)</code></p>
-<p>Negated conditional. Expands to <code>(if (not condition) body nil)</code>.</p>
+<p>Negated conditional. Expands to <code>(if condition nil body)</code>.</p>
 <div class="language-text highlight"><pre><span></span><code>(unless (zero? x)
   (/ 1 x))
 
 ;; Expands to:
-(if (not (zero? x)) (/ 1 x) nil)
+(if (zero? x) nil (/ 1 x))
 </code></pre></div>
 <h4 id="comment">comment</h4>
 <p><strong>Type:</strong> macro<br />
@@ -7295,24 +7052,29 @@ Adam optimizer step. Maintains first moment <code>m</code> (mean) and second mom
 ; =&gt; nil
 </code></pre></div>
 <h4 id="defmodel">defmodel</h4>
-<p><strong>Type:</strong> macro<br />
-<strong>Signature:</strong> <code>(defmodel name params body)</code></p>
-<p>Convenience macro for defining model functions with parameter destructuring.</p>
-<div class="language-text highlight"><pre><span></span><code>(defmodel forward [x params]
-  (with-params [params :layers]
-    (-&gt; x
-      (linear W1 b1)
-      (relu)
-      (linear W2 b2))))
+<p><strong>Type:</strong> macro
+<strong>Signature:</strong> <code>(defmodel name [input-params] (layer :name) (layer :name :activation) ...)</code></p>
+<p>Defines a neural network as a sequence of named layers with optional activations. Each layer spec generates a <code>with-params</code> block that binds <code>W</code> and <code>b</code> from the parameter dictionary, applies <code>(+ (@ _ W) b)</code>, and optionally wraps it in an activation function. The input is threaded through layers via <code>as-&gt;</code>.</p>
+<div class="language-text highlight"><pre><span></span><code>(defmodel forward [x]
+  (layer :hidden1 relu)
+  (layer :output))
+
+;; Expands to:
+(defn forward [x p]
+  (as-&gt; x _
+    (with-params [p :hidden1] (relu (+ (@ _ W) b)))
+    (with-params [p :output] (+ (@ _ W) b))))
 </code></pre></div>
 <h4 id="defbatch">defbatch</h4>
-<p><strong>Type:</strong> macro<br />
-<strong>Signature:</strong> <code>(defbatch name func)</code></p>
-<p>Wraps a function with automatic batching via <code>vmap</code> over the first dimension.</p>
-<div class="language-text highlight"><pre><span></span><code>(defbatch process-batch process-single-item)
+<p><strong>Type:</strong> macro
+<strong>Signature:</strong> <code>(defbatch name [params] [axes] &amp; body)</code></p>
+<p>Defines a function that auto-vectorizes over batch dimensions via <code>vmap</code>. The axes spec indicates which arguments are batched (<code>0</code>) vs shared (<code>nil</code>).</p>
+<div class="language-text highlight"><pre><span></span><code>(defbatch linear-layer [x w b] [0 nil nil]
+  (+ (@ x w) b))
 
-;; Now process-batch can handle batches of items
-(process-batch [[1 2] [3 4] [5 6]])
+;; Expands to:
+(defn linear-layer [x w b]
+  ((vmap (lambda [x w b] (+ (@ x w) b)) [0 nil nil]) x w b))
 </code></pre></div>
 <hr />
 
