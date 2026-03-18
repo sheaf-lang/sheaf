@@ -11,10 +11,10 @@
         <link rel="canonical" href="https://sheaf-lang.org/types/">
       
       
-        <link rel="prev" href="../starting/">
+        <link rel="prev" href="../key-concepts/">
       
       
-        <link rel="next" href="../python/">
+        <link rel="next" href="../changelog/">
       
       
         
@@ -118,6 +118,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   .md-nav__link--active {
     color: var(--sheaf-primary) !important;
     border-color: var(--sheaf-primary) !important;
+  }
+
+  .md-typeset a {
+    color: rgb(255, 110, 66) !important;
   }
 
   a:hover {
@@ -850,6 +854,34 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
                 
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../key-concepts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Key Concepts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
@@ -1071,34 +1103,6 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
 </nav>
       
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../python/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Python Interoperability
-  
-
-    
-  </span>
-  
-  
-
-      </a>
     </li>
   
 
@@ -1454,7 +1458,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 
 
 <h1 id="sheaf-data-types">Sheaf Data Types</h1>
-<p>Sheaf is <strong>tensor-first</strong>: all numeric values are JAX tensors by default, with <code>f32</code> (32-bit float) as the default dtype.</p>
+<p>Sheaf is <strong>tensor-first</strong>: all numeric values are tensors by default, with <code>f32</code> (32-bit float) as the default dtype.</p>
 <h2 id="summary-table">Summary Table</h2>
 <table>
 <thead>
@@ -1470,7 +1474,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 <td>Tensor</td>
 <td><code>[...]</code></td>
 <td><code>[1 2 3]</code></td>
-<td>JAX array, default f32</td>
+<td>N-dimensional array, default f32</td>
 </tr>
 <tr>
 <td>Tensor (typed)</td>
@@ -1512,7 +1516,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </table>
 <hr />
 <h2 id="tensors">Tensors</h2>
-<p>Tensors are the primary data type in Sheaf. All numeric literals and vectors become JAX tensors.</p>
+<p>Tensors are the primary data type in Sheaf. All numeric literals and vectors become tensors.</p>
 <div class="admonition note">
 <p class="admonition-title"><strong>Note: Syntactic Context Matters</strong></p>
 <p>Brackets <code>[]</code> become tensors in <em>expression</em> context. In <em>syntactic</em> positions, they serve other purposes:</p>
@@ -1529,8 +1533,8 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </ul>
 </div>
 <h3 id="basic-tensors">Basic Tensors</h3>
-<div class="language-clojure highlight"><pre><span></span><code><span class="mi">42</span><span class="w">                    </span><span class="c1">; Scalar tensor (f32)</span>
-<span class="mf">3.14</span><span class="w">                  </span><span class="c1">; Scalar tensor (f32)</span>
+<div class="language-clojure highlight"><pre><span></span><code><span class="mi">42</span><span class="w">                    </span><span class="c1">; Scalar value (f32)</span>
+<span class="mf">3.14</span><span class="w">                  </span><span class="c1">; Scalar value (f32)</span>
 <span class="p">[</span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="p">]</span><span class="w">               </span><span class="c1">; 1D tensor, shape (3,)</span>
 <span class="p">[[</span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="p">[</span><span class="mi">3</span><span class="w"> </span><span class="mi">4</span><span class="p">]]</span><span class="w">         </span><span class="c1">; 2D tensor, shape (2, 2)</span>
 </code></pre></div>
@@ -1539,15 +1543,13 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 <div class="language-clojure highlight"><pre><span></span><code><span class="p">[</span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="p">]</span><span class="w">               </span><span class="c1">; Default f32</span>
 <span class="p">[</span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="p">]</span><span class="w"> </span><span class="ss">:f32</span><span class="w">          </span><span class="c1">; Explicit f32</span>
 <span class="p">[</span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="p">]</span><span class="w"> </span><span class="ss">:bf16</span><span class="w">         </span><span class="c1">; BFloat16</span>
-<span class="p">[</span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="p">]</span><span class="w"> </span><span class="ss">:f16</span><span class="w">          </span><span class="c1">; Float16</span>
 <span class="p">[</span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="p">]</span><span class="w"> </span><span class="ss">:i32</span><span class="w">          </span><span class="c1">; 32-bit integer</span>
-<span class="p">[</span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="p">]</span><span class="w"> </span><span class="ss">:u32</span><span class="w">          </span><span class="c1">; 32-bit unsigned integer</span>
 <span class="p">[</span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="p">]</span><span class="w"> </span><span class="ss">:bool</span><span class="w">         </span><span class="c1">; Boolean</span>
 </code></pre></div>
 <h3 id="literal-lists">Literal Lists</h3>
 <p>The quote <code>'</code> prevents evaluation, treating the following form as literal data rather than code or a numerical tensor. It is typically used to pass structural metadata, such as shapes for tensor creation functions:</p>
 <div class="language-clojure highlight"><pre><span></span><code><span class="c1">;; Without the quote, [2 3] is evaluated as a tensor</span>
-<span class="p">(</span><span class="nb">nth </span><span class="p">[</span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="p">]</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w">  </span><span class="c1">; =&gt; Tensor f32[] = 2.0</span>
+<span class="p">(</span><span class="nb">nth </span><span class="p">[</span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="p">]</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w">  </span><span class="c1">; =&gt; tensor f32[] = 2.0</span>
 
 <span class="c1">;; With the quote, &#39;[2 3] is passed as a literal list</span>
 <span class="p">(</span><span class="nb">nth </span><span class="o">&#39;</span><span class="p">[</span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="p">]</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="c1">; =&gt; 2</span>
@@ -1562,19 +1564,27 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 <h3 id="list-to-tensor-conversion">List to Tensor Conversion</h3>
 <p>The <code>tensor</code> function converts a quoted list or dynamically-generated list into a tensor:</p>
 <div class="language-clojure highlight"><pre><span></span><code><span class="c1">;; From quoted list</span>
-<span class="p">(</span><span class="nf">tensor</span><span class="w"> </span><span class="o">&#39;</span><span class="p">[</span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="mi">4</span><span class="w"> </span><span class="mi">5</span><span class="w"> </span><span class="mi">6</span><span class="p">])</span><span class="w">                    </span><span class="c1">; =&gt; Tensor i32[6] = [1 2 3 4 5 6]</span>
+<span class="p">(</span><span class="nf">tensor</span><span class="w"> </span><span class="o">&#39;</span><span class="p">[</span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="mi">4</span><span class="w"> </span><span class="mi">5</span><span class="w"> </span><span class="mi">6</span><span class="p">])</span><span class="w">                    </span><span class="c1">; =&gt; tensor i32[6] = [1 2 3 4 5 6]</span>
 
 <span class="c1">;; From dynamically-generated list</span>
 <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">lst</span><span class="w"> </span><span class="p">(</span><span class="nb">cons </span><span class="mi">1</span><span class="w"> </span><span class="o">&#39;</span><span class="p">[</span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="p">])]</span><span class="w">                  </span><span class="c1">; cons returns a list</span>
 <span class="w">  </span><span class="p">(</span><span class="nf">tensor</span><span class="w"> </span><span class="nv">lst</span><span class="p">))</span><span class="w">                             </span><span class="c1">; Convert to tensor</span>
-<span class="c1">; =&gt; Tensor i32[3] = [1 2 3]</span>
+<span class="c1">; =&gt; tensor i32[3] = [1 2 3]</span>
 
 <span class="c1">;; Chaining with tensor operations</span>
-<span class="p">(</span><span class="nf">reshape</span><span class="w"> </span><span class="p">(</span><span class="nf">tensor</span><span class="w"> </span><span class="o">&#39;</span><span class="p">[</span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="mi">4</span><span class="w"> </span><span class="mi">5</span><span class="w"> </span><span class="mi">6</span><span class="p">])</span><span class="w"> </span><span class="o">&#39;</span><span class="p">[</span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="p">])</span><span class="w">   </span><span class="c1">; =&gt; Tensor i32[2x3] = [[1 2 3] [4 5 6]]</span>
+<span class="p">(</span><span class="nf">reshape</span><span class="w"> </span><span class="p">(</span><span class="nf">tensor</span><span class="w"> </span><span class="o">&#39;</span><span class="p">[</span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="mi">4</span><span class="w"> </span><span class="mi">5</span><span class="w"> </span><span class="mi">6</span><span class="p">])</span><span class="w"> </span><span class="o">&#39;</span><span class="p">[</span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="p">])</span><span class="w">   </span><span class="c1">; =&gt; tensor i32[2x3] = [[1 2 3] [4 5 6]]</span>
 </code></pre></div>
 <h3 id="type-conversion">Type Conversion</h3>
-<p>Sheaf does not perform implicit type conversions. All changes between static and dynamic representations must be explicit in the source code.</p>
-<p><code>int</code> and <code>float</code> cast a tensor to a different numeric type. Shape is preserved and the result remains a tensor.</p>
+<p>Sheaf does not perform implicit type conversions. All dtype changes must be explicit.</p>
+<p><code>cast</code> converts a tensor to a different dtype. Shape is preserved.</p>
+<div class="language-clojure highlight"><pre><span></span><code><span class="c1">;; Direct annotation on vector literals</span>
+<span class="p">[</span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="p">]</span><span class="w"> </span><span class="ss">:bf16</span><span class="w">                </span><span class="c1">; bf16 tensor</span>
+
+<span class="c1">;; cast converts an existing tensor</span>
+<span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">x</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="p">]</span><span class="w"> </span><span class="ss">:bf16</span><span class="p">]</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">cast </span><span class="nv">x</span><span class="w"> </span><span class="ss">:f32</span><span class="p">))</span><span class="w">             </span><span class="c1">; bf16 -&gt; f32</span>
+</code></pre></div>
+<p><code>int</code> and <code>float</code> convert a scalar to a 32-bit integer or float respectively.</p>
 <hr />
 <h2 id="dictionaries">Dictionaries</h2>
 <p>Key-value structures using curly braces. Keys are typically keywords.</p>
@@ -1591,7 +1601,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 <span class="p">(</span><span class="nb">vals </span><span class="p">{</span><span class="ss">:x</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="ss">:y</span><span class="w"> </span><span class="mi">2</span><span class="p">})</span><span class="w">                </span><span class="c1">; =&gt; &#39;[1 2] (literal list)</span>
 <span class="p">(</span><span class="nb">merge </span><span class="p">{</span><span class="ss">:x</span><span class="w"> </span><span class="mi">1</span><span class="p">}</span><span class="w"> </span><span class="p">{</span><span class="ss">:y</span><span class="w"> </span><span class="mi">2</span><span class="p">})</span><span class="w">             </span><span class="c1">; =&gt; {:x 1 :y 2}</span>
 </code></pre></div>
-<p>Dictionaries are <strong>pytree nodes</strong>: JAX can differentiate through them and apply transformations like <code>vmap</code> to their contents.</p>
+<p>Dictionaries are pytree nodes: Sheaf can differentiate through them and apply transformations like <code>vmap</code> to their contents.</p>
 <hr />
 <h2 id="keywords">Keywords</h2>
 <p>Identifiers prefixed with <code>:</code>. Self-evaluating and used as dictionary keys.</p>
@@ -1606,30 +1616,24 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </code></pre></div>
 <p>Comparison operations return boolean tensors:</p>
 <div class="language-clojure highlight"><pre><span></span><code><span class="p">(</span><span class="nb">&gt; </span><span class="p">[</span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="p">]</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w">         </span><span class="c1">; =&gt; [false false true]</span>
-<span class="p">(</span><span class="nb">= </span><span class="p">[</span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w">         </span><span class="c1">; =&gt; [true false true]</span>
+<span class="p">(</span><span class="nb">== </span><span class="p">[</span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w">        </span><span class="c1">; =&gt; [true false true]  (element-wise)</span>
+<span class="p">(</span><span class="nb">= </span><span class="p">[</span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w">         </span><span class="c1">; =&gt; false              (structural equality)</span>
 </code></pre></div>
 <hr />
 <h2 id="strings">Strings</h2>
 <div class="language-clojure highlight"><pre><span></span><code><span class="s">&quot;hello&quot;</span><span class="w">               </span><span class="c1">; String literal</span>
 </code></pre></div>
-<p>String operations use <code>str-call</code> which dispatches to Python string methods.
-Methods called through <code>str-call</code> return strings, literal lists, or booleans—never tensors.</p>
-<div class="language-clojure highlight"><pre><span></span><code><span class="p">(</span><span class="nf">str-call</span><span class="w"> </span><span class="s">&quot;upper&quot;</span><span class="w"> </span><span class="s">&quot;hello&quot;</span><span class="p">)</span><span class="w">           </span><span class="c1">; =&gt; &quot;HELLO&quot; (string)</span>
-<span class="p">(</span><span class="nf">str-call</span><span class="w"> </span><span class="s">&quot;split&quot;</span><span class="w"> </span><span class="s">&quot;a,b,c&quot;</span><span class="w"> </span><span class="s">&quot;,&quot;</span><span class="p">)</span><span class="w">       </span><span class="c1">; =&gt; &#39;[&quot;a&quot; &quot;b&quot; &quot;c&quot;] (literal list)</span>
-<span class="p">(</span><span class="nf">str-call</span><span class="w"> </span><span class="s">&quot;replace&quot;</span><span class="w"> </span><span class="s">&quot;foo&quot;</span><span class="w"> </span><span class="s">&quot;o&quot;</span><span class="w"> </span><span class="s">&quot;a&quot;</span><span class="p">)</span><span class="w">   </span><span class="c1">; =&gt; &quot;faa&quot; (string)</span>
-<span class="p">(</span><span class="nf">str-call</span><span class="w"> </span><span class="s">&quot;startswith&quot;</span><span class="w"> </span><span class="s">&quot;hello&quot;</span><span class="w"> </span><span class="s">&quot;he&quot;</span><span class="p">)</span><span class="w"> </span><span class="c1">; =&gt; true (boolean)</span>
-</code></pre></div>
-<p>Note: <code>str-call</code> is evaluated at compile time before JIT compilation. The result is then embedded in the compiled function, so string operations don't impact runtime performance.</p>
+<p>String operations are available through builtin functions. Strings are not tensors and cannot be JIT-compiled.</p>
 <hr />
 <h2 id="pytrees">PyTrees</h2>
-<p>Nested structures of dictionaries and tensors that JAX understands natively. Used for neural network parameters:</p>
+<p>PyTrees are nested structures of dictionaries and tensors. They are mostly used for neural network parameters:</p>
 <div class="language-clojure highlight"><pre><span></span><code><span class="p">{</span><span class="ss">:layer1</span><span class="w"> </span><span class="p">{</span><span class="ss">:W</span><span class="w"> </span><span class="p">(</span><span class="nf">random-normal</span><span class="w"> </span><span class="p">(</span><span class="nf">random-key</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&#39;</span><span class="p">[</span><span class="mi">4</span><span class="w"> </span><span class="mi">8</span><span class="p">])</span><span class="w"> </span><span class="ss">:b</span><span class="w"> </span><span class="p">(</span><span class="nf">zeros</span><span class="w"> </span><span class="o">&#39;</span><span class="p">[</span><span class="mi">8</span><span class="p">])}</span>
 <span class="w"> </span><span class="ss">:layer2</span><span class="w"> </span><span class="p">{</span><span class="ss">:W</span><span class="w"> </span><span class="p">(</span><span class="nf">random-normal</span><span class="w"> </span><span class="p">(</span><span class="nf">random-key</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">&#39;</span><span class="p">[</span><span class="mi">8</span><span class="w"> </span><span class="mi">1</span><span class="p">])</span><span class="w"> </span><span class="ss">:b</span><span class="w"> </span><span class="p">(</span><span class="nf">zeros</span><span class="w"> </span><span class="o">&#39;</span><span class="p">[</span><span class="mi">1</span><span class="p">])}}</span>
 </code></pre></div>
 <p>PyTrees enable:</p>
 <ul>
 <li>Gradient computation through nested structures via <code>value-and-grad</code></li>
-<li>Batch operations via <code>vmap</code></li>
+<li>Batch operations via <code>vmap</code> (planned feature)</li>
 <li>Efficient iteration via <code>scan</code></li>
 </ul>
 <div class="language-clojure highlight"><pre><span></span><code><span class="p">(</span><span class="nf">flatten</span><span class="w"> </span><span class="nv">params</span><span class="p">)</span><span class="w">           </span><span class="c1">; Get all tensor leaves</span>

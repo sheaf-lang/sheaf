@@ -11,10 +11,6 @@
         <link rel="canonical" href="https://sheaf-lang.org/python/">
       
       
-        <link rel="prev" href="../types/">
-      
-      
-        <link rel="next" href="../changelog/">
       
       
         
@@ -118,6 +114,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   .md-nav__link--active {
     color: var(--sheaf-primary) !important;
     border-color: var(--sheaf-primary) !important;
+  }
+
+  .md-typeset a {
+    color: rgb(255, 110, 66) !important;
   }
 
   a:hover {
@@ -618,12 +618,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
+      <li class="md-tabs__item">
         <a href="../quickstart/" class="md-tabs__link">
           
   
@@ -711,29 +709,24 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
       
   
   
-    
   
   
-  
     
     
     
     
       
-        
-        
-      
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" >
         
           
-          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="">
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
             
   
   
@@ -751,7 +744,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_1">
             <span class="md-nav__icon md-icon"></span>
             
@@ -853,14 +846,14 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../types/" class="md-nav__link">
+      <a href="../key-concepts/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Data types
+    Key Concepts
   
 
     
@@ -878,44 +871,17 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Python Interoperability
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../types/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Python Interoperability
+    Data types
   
 
     
@@ -924,293 +890,6 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#basic-usage-inline-code" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Basic Usage: Inline Code
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Basic Usage: Inline Code">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#python-naming-convention" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Python Naming Convention
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#file-based-code" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        File-Based Code
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="File-Based Code">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#loading-a-single-file" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Loading a Single File
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#relative-path-resolution" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Relative Path Resolution
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#accessing-the-registry" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Accessing the Registry
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Accessing the Registry">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#getting-registry-metadata" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Getting Registry Metadata
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#common-registry-tasks" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Common Registry Tasks
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#accessing-the-environment" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Accessing the Environment
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Accessing the Environment">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#viewing-environment-contents" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Viewing Environment Contents
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#working-with-tensors" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Working with Tensors
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#pytree-conversion" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        PyTree Conversion
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="PyTree Conversion">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#converting-sheaf-values-to-pytrees" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Converting Sheaf Values to PyTrees
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#converting-pytrees-back-to-sheaf" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Converting PyTrees Back to Sheaf
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#introspecting-language-features" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Introspecting Language Features
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Introspecting Language Features">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#available-special-forms" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Available Special Forms
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#function-inspection" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Function Inspection
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#mixing-python-and-sheaf-code" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Mixing Python and Sheaf Code
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#error-handling" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Error Handling
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#type-safety-and-jax-integration" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Type Safety and JAX Integration
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#summary" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Summary
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 

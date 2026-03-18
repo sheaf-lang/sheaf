@@ -118,6 +118,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     border-color: var(--sheaf-primary) !important;
   }
 
+  .md-typeset a {
+    color: rgb(255, 110, 66) !important;
+  }
+
   a:hover {
     opacity: 0.8;
   }
@@ -846,14 +850,14 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../types/" class="md-nav__link">
+      <a href="../key-concepts/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Data types
+    Key Concepts
   
 
     
@@ -874,14 +878,14 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../python/" class="md-nav__link">
+      <a href="../types/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Python Interoperability
+    Data types
   
 
     
@@ -1792,6 +1796,17 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     <span class="md-ellipsis">
       
         int, float
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cast" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        cast
       
     </span>
   </a>
@@ -3896,6 +3911,17 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#cast" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        cast
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5450,11 +5476,11 @@ nil                  ; Null/None value
 </code></pre></div>
 <hr />
 <h3 id="leaky-relu">leaky-relu</h3>
-<p><strong>Type:</strong> function<br />
-<strong>Signature:</strong> <code>(leaky-relu x [:alpha a])</code></p>
-<p>Computes the Leaky Rectified Linear Unit activation function. Unlike standard ReLU, it allows a small non-zero gradient when the input is negative, defined as <code>alpha * x</code>. This prevents "dead" neurons during training.</p>
-<div class="language-text highlight"><pre><span></span><code>(leaky-relu -1.0)    ; =&gt; -0.01 (default negative_slope=0.01)
-(leaky-relu [-1.0 2.0] :negative_slope 0.1) ; =&gt; [-0.1  2. ]
+<p><strong>Type:</strong> function
+<strong>Signature:</strong> <code>(leaky-relu x slope)</code></p>
+<p>Computes the Leaky Rectified Linear Unit activation function. Unlike standard ReLU, it allows a small non-zero gradient when the input is negative, defined as <code>slope * x</code>. This prevents "dead" neurons during training.</p>
+<div class="language-text highlight"><pre><span></span><code>(leaky-relu -1.0 0.01)          ; =&gt; -0.01
+(leaky-relu [-1.0 2.0] 0.1)     ; =&gt; [-0.1  2. ]
 </code></pre></div>
 <hr />
 <h3 id="sigmoid">sigmoid</h3>
@@ -5782,6 +5808,25 @@ nil                  ; Null/None value
 
 (float 42)               ; =&gt; 42.0
 (float [1 2 3] :i32)     ; =&gt; f32[3] = [1. 2. 3.]
+</code></pre></div>
+<hr />
+<h3 id="cast">cast</h3>
+<p><strong>Type:</strong> function
+<strong>Signature:</strong> <code>(cast expr :dtype)</code></p>
+<p>Converts a tensor, scalar, or DeviceBuffer to the specified dtype. Supported dtypes: <code>:f32</code>, <code>:bf16</code>, <code>:i32</code>. Sheaf never converts dtypes implicitly.</p>
+<p>The <code>[vec] :dtype</code> syntax is syntactic sugar that desugars to <code>cast</code> at parse time.</p>
+<div class="language-text highlight"><pre><span></span><code>(cast [1 2 3] :bf16)         ; =&gt; tensor bf16[3] = [1. 2. 3.]
+(cast [1 2 3] :f32)          ; =&gt; tensor f32[3] = [1. 2. 3.]
+
+;; Equivalent shorthand via type annotation
+[1 2 3] :bf16                ; =&gt; tensor bf16[3] = [1. 2. 3.]
+
+;; Cast an existing tensor
+(def x [1 2 3])
+(cast x :bf16)               ; =&gt; tensor bf16[3] = [1. 2. 3.]
+
+;; Cast scalars
+(cast 3.14 :bf16)            ; =&gt; tensor bf16[] = 3.14
 </code></pre></div>
 <hr />
 <h2 id="initializers">Initializers</h2>

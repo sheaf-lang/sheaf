@@ -11,7 +11,7 @@
         <link rel="canonical" href="https://sheaf-lang.org/changelog/">
       
       
-        <link rel="prev" href="../python/">
+        <link rel="prev" href="../types/">
       
       
         <link rel="next" href="../roadmap/">
@@ -118,6 +118,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   .md-nav__link--active {
     color: var(--sheaf-primary) !important;
     border-color: var(--sheaf-primary) !important;
+  }
+
+  .md-typeset a {
+    color: rgb(255, 110, 66) !important;
   }
 
   a:hover {
@@ -853,14 +857,14 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../types/" class="md-nav__link">
+      <a href="../key-concepts/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Data types
+    Key Concepts
   
 
     
@@ -881,14 +885,14 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../python/" class="md-nav__link">
+      <a href="../types/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Python Interoperability
+    Data types
   
 
     
@@ -1162,6 +1166,16 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   <h1>Version history</h1>
 
 <h2 id="version-history">Version history</h2>
+<p>v2.0.0 — 2026-03-18</p>
+<p>Complete rewrite in Rust. The language semantics remain unchanged. All V1 code runs in V2.</p>
+<ul>
+<li>Compiler rewritten in Rust: Sheaf source compiles directly to StableHLO MLIR, with no Python in the execution path</li>
+<li>IREE runtime statically linked</li>
+<li>Transparent JIT compilation: pure functions compile automatically on first call, with content-hash caching in <code>__sheaf__/</code></li>
+<li>Symbolic reverse-mode autodiff: differentiation operates on the AST before codegen</li>
+<li>DeviceBuffer: compiled functions pass tensors between IREE calls without host round-trips</li>
+<li>Multiple dtype support: f32 (default), bf16, i32 via <code>cast</code> or literal annotation</li>
+</ul>
 <p>v1.2.0 — 2026-02-06</p>
 <ul>
 <li>Sheaf programs are now mostly independent from Python, most missing primitives for imperative control have been added.</li>
@@ -1174,7 +1188,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 <li>REPL has <code>--trace</code> and <code>--guard</code> modes for standalone tracing and debugging</li>
 <li>All examples are now standalone and do not require Python</li>
 </ul>
-<p>v1.1.0 — 2026-01-24 (Current)</p>
+<p>v1.1.0 — 2026-01-24</p>
 <ul>
 <li>Syntax cleanup: quoted arrays (<code>'[]</code>) are now the canonical way to distinguish lists from tensors. Legacy <code>list</code> form is deprecated.</li>
 <li>More syntax purity: also deprecate <code>lambda</code> (alias for <code>fn</code>) and <code>dict</code></li>

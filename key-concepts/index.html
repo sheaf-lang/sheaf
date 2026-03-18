@@ -11,6 +11,10 @@
         <link rel="canonical" href="https://sheaf-lang.org/key-concepts/">
       
       
+        <link rel="prev" href="../starting/">
+      
+      
+        <link rel="next" href="../types/">
       
       
         
@@ -22,7 +26,7 @@
     
 
       
-        <title>Architecture - Sheaf</title>
+        <title>Key Concepts - Sheaf</title>
       
     
 <link rel="icon" type="image/png" href="../images/favicon.png">
@@ -114,6 +118,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   .md-nav__link--active {
     color: var(--sheaf-primary) !important;
     border-color: var(--sheaf-primary) !important;
+  }
+
+  .md-typeset a {
+    color: rgb(255, 110, 66) !important;
   }
 
   a:hover {
@@ -501,7 +509,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     <div data-md-component="skip">
       
         
-        <a href="#architecture" class="md-skip">
+        <a href="#key-concepts" class="md-skip">
           Skip to content
         </a>
       
@@ -537,7 +545,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Architecture
+              Key Concepts
             
           </span>
         </div>
@@ -614,10 +622,12 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
+      <li class="md-tabs__item md-tabs__item--active">
         <a href="../quickstart/" class="md-tabs__link">
           
   
@@ -705,24 +715,29 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
       
   
   
+    
   
   
+  
     
     
     
     
-      
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" >
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
         
           
-          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="">
             
   
   
@@ -740,7 +755,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_1">
             <span class="md-nav__icon md-icon"></span>
             
@@ -839,17 +854,44 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../types/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Key Concepts
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
   <span class="md-ellipsis">
     
   
-    Data types
+    Key Concepts
   
 
     
@@ -858,6 +900,259 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#design-principles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Design Principles
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#parameter-trees" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameter Trees
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#automatic-differentiation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Automatic Differentiation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Automatic Differentiation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Works
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#differentiable-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Differentiable Operations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#structural-lowering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Structural Lowering
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#compilation-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compilation Pipeline
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Compilation Pipeline">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#jit-compilation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        JIT Compilation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#backend-selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Backend Selection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cache-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cache Layout
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stablehlo-code-generation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        StableHLO Code Generation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#observability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Observability
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Observability">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#profiling-blame" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Profiling (--blame)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#call-tracing-trace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Call Tracing (--trace)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#runtime-guards-guard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Runtime Guards (--guard)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#iree-runtime" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IREE Runtime
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="IREE Runtime">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#device-memory-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Device Memory Management
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#buffer-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Buffer Cache
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#known-limitations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Known Limitations
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -870,14 +1165,14 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../python/" class="md-nav__link">
+      <a href="../types/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Python Interoperability
+    Data types
   
 
     
@@ -1066,22 +1361,44 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#compilation-pipeline" class="md-nav__link">
+  <a href="#design-principles" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Compilation Pipeline
+        Design Principles
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Compilation Pipeline">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#parameter-trees" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameter Trees
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#automatic-differentiation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Automatic Differentiation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Automatic Differentiation">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#from-source-to-ast" class="md-nav__link">
+  <a href="#how-it-works" class="md-nav__link">
     <span class="md-ellipsis">
       
-        From Source to AST
+        How It Works
       
     </span>
   </a>
@@ -1089,10 +1406,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
         
           <li class="md-nav__item">
-  <a href="#from-ast-to-compiledexpr" class="md-nav__link">
+  <a href="#differentiable-operations" class="md-nav__link">
     <span class="md-ellipsis">
       
-        From AST to CompiledExpr
+        Differentiable Operations
       
     </span>
   </a>
@@ -1100,21 +1417,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
         
           <li class="md-nav__item">
-  <a href="#from-compiledexpr-to-stablehlo" class="md-nav__link">
+  <a href="#structural-lowering" class="md-nav__link">
     <span class="md-ellipsis">
       
-        From CompiledExpr to StableHLO
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#from-mlir-to-machine-code" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        From MLIR to Machine Code
+        Structural Lowering
       
     </span>
   </a>
@@ -1127,6 +1433,18 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
       
         <li class="md-nav__item">
+  <a href="#compilation-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compilation Pipeline
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Compilation Pipeline">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#jit-compilation" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1135,8 +1453,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="JIT Compilation">
-      <ul class="md-nav__list">
+</li>
         
           <li class="md-nav__item">
   <a href="#backend-selection" class="md-nav__link">
@@ -1160,84 +1477,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
 </li>
         
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#automatic-differentiation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Automatic Differentiation
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Automatic Differentiation">
-      <ul class="md-nav__list">
-        
           <li class="md-nav__item">
-  <a href="#the-differentiation-pipeline" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        The Differentiation Pipeline
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#anf-conversion" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ANF Conversion
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#reverse-mode-differentiation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Reverse-Mode Differentiation
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#supported-operations" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Supported Operations
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#lowering-structural-operations" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Lowering Structural Operations
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#stablehlo-code-generation" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1246,14 +1486,30 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="StableHLO Code Generation">
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#observability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Observability
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Observability">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#virtual-tuples" class="md-nav__link">
+  <a href="#profiling-blame" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Virtual Tuples
+        Profiling (--blame)
       
     </span>
   </a>
@@ -1261,10 +1517,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
         
           <li class="md-nav__item">
-  <a href="#broadcasting" class="md-nav__link">
+  <a href="#call-tracing-trace" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Broadcasting
+        Call Tracing (--trace)
       
     </span>
   </a>
@@ -1272,10 +1528,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
         
           <li class="md-nav__item">
-  <a href="#constant-propagation" class="md-nav__link">
+  <a href="#runtime-guards-guard" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Constant Propagation
+        Runtime Guards (--guard)
       
     </span>
   </a>
@@ -1300,21 +1556,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#ireesession" class="md-nav__link">
+  <a href="#device-memory-management" class="md-nav__link">
     <span class="md-ellipsis">
       
-        IreeSession
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#devicebuffer" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        DeviceBuffer
+        Device Memory Management
       
     </span>
   </a>
@@ -1338,71 +1583,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
       
         <li class="md-nav__item">
-  <a href="#optimizations" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Optimizations
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#performance-characteristics" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Performance Characteristics
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Performance Characteristics">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#profiling" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Profiling
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#source-organization" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Source Organization
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#known-limitations" class="md-nav__link">
     <span class="md-ellipsis">
       
         Known Limitations
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#roadmap" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Roadmap
       
     </span>
   </a>
@@ -1429,185 +1613,51 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
 
 
-<h1 id="architecture">Architecture</h1>
-<p>Sheaf is a Lisp dialect for machine learning that compiles to native code. Programs are lowered to <a href="https://openxla.org/stablehlo">StableHLO</a>, the same intermediate representation used by JAX and TensorFlow, then compiled and executed via <a href="https://iree.dev">IREE</a>. The result is a standalone binary (~3MB) that runs training loops without Python, without a framework runtime, and without JIT warm-up after the first call.</p>
-<p>This document describes the compilation pipeline, the automatic differentiation system, and the runtime architecture. It is intended both as a reference for users who want to understand what happens when they run <code>sheaf run model.shf</code>, and as a map for contributors working on the compiler.</p>
-<h2 id="compilation-pipeline">Compilation Pipeline</h2>
-<p>When you call a function in Sheaf, the compiler transforms your source code through several intermediate representations before generating machine code. Understanding this pipeline helps explain both the capabilities and limitations of the system.</p>
-<div class="language-text highlight"><pre><span></span><code>Source (.shf)
-    │
-    ▼
-┌─────────┐
-│  Parse  │  -&gt; SheafValue AST
-└────┬────┘
-     ▼
-┌──────────┐
-│ Compile  │  -&gt; CompiledExpr IR
-└────┬─────┘
-     ▼
-┌─────────┐
-│ Codegen │  -&gt; StableHLO MLIR
-└────┬────┘
-     ▼
-┌──────────────┐
-│ iree-compile │  -&gt; VMFB bytecode
-└──────┬───────┘
-       ▼
-┌──────────────┐
-│ IREE Runtime │  -&gt; Metal / CUDA / CPU
-└──────────────┘
+<h1 id="key-concepts">Key Concepts</h1>
+<p>Sheaf is a Lisp dialect for machine learning that compiles to native code. Programs are lowered to <a href="https://openxla.org/stablehlo">StableHLO</a>, the same intermediate representation used by JAX and TensorFlow, then compiled and executed via <a href="https://iree.dev">IREE</a>. The entire framework ships as a standalone lightweight binary that runs training and inference on GPU.</p>
+<p>This page describes the concepts behind the system: what happens when you run a program, how differentiation works, and how the runtime manages GPU execution.</p>
+<h2 id="design-principles">Design Principles</h2>
+<p>Sheaf follows a small set of principles that inform every design decision:</p>
+<p><strong>Pure functions compile automatically.</strong> Any function that takes tensors and returns tensors, without side effects, is eligible for GPU compilation. There are no <code>@jit</code> decorator nor <code>torch.compile()</code>. The compiler decides what to compile based on purity analysis. Functions that perform I/O or print are interpreted; everything else is compiled.</p>
+<p><strong>No Python in the execution path.</strong> The compiler, runtime, and IREE execution engine are statically linked into a single binary. Models ship as <code>.shf</code> source files alongside cached <code>.vmfb</code> compiled artifacts. A standalone deployment consists of the Sheaf binary, the model files (code and data), and its compiled artefacts.</p>
+<p><strong>Functional PRNG.</strong> Random number generation follows the JAX model: keys are explicit values, not implicit global state. <code>(random-key 42)</code> produces a key; <code>(random-split key n)</code> derives sub-keys deterministically. This makes random operations pure (key in, result out), which means they compile to GPU code like any other operation.</p>
+<h2 id="parameter-trees">Parameter Trees</h2>
+<p>Neural network parameters in Sheaf are plain nested dicts:</p>
+<div class="language-clojure highlight"><pre><span></span><code><span class="p">(</span><span class="kd">defn </span><span class="nv">init-params</span><span class="w"> </span><span class="p">[</span><span class="nv">key</span><span class="p">]</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let </span><span class="p">[[</span><span class="nv">k1</span><span class="w"> </span><span class="nv">k2</span><span class="p">]</span><span class="w"> </span><span class="p">(</span><span class="nf">random-split</span><span class="w"> </span><span class="nb">key </span><span class="mi">2</span><span class="p">)]</span>
+<span class="w">    </span><span class="p">{</span><span class="ss">:layer1</span><span class="w"> </span><span class="p">{</span><span class="ss">:W</span><span class="w"> </span><span class="p">(</span><span class="nb">/ </span><span class="p">(</span><span class="nf">random-normal</span><span class="w"> </span><span class="nv">k1</span><span class="w"> </span><span class="o">&#39;</span><span class="p">[</span><span class="mi">784</span><span class="w"> </span><span class="mi">256</span><span class="p">])</span><span class="w"> </span><span class="p">(</span><span class="nf">sqrt</span><span class="w"> </span><span class="mi">784</span><span class="p">))</span>
+<span class="w">              </span><span class="ss">:b</span><span class="w"> </span><span class="p">(</span><span class="nf">zeros</span><span class="w"> </span><span class="o">&#39;</span><span class="p">[</span><span class="mi">256</span><span class="p">])}</span>
+<span class="w">     </span><span class="ss">:layer2</span><span class="w"> </span><span class="p">{</span><span class="ss">:W</span><span class="w"> </span><span class="p">(</span><span class="nb">/ </span><span class="p">(</span><span class="nf">random-normal</span><span class="w"> </span><span class="nv">k2</span><span class="w"> </span><span class="o">&#39;</span><span class="p">[</span><span class="mi">256</span><span class="w"> </span><span class="mi">10</span><span class="p">])</span><span class="w"> </span><span class="p">(</span><span class="nf">sqrt</span><span class="w"> </span><span class="mi">256</span><span class="p">))</span>
+<span class="w">              </span><span class="ss">:b</span><span class="w"> </span><span class="p">(</span><span class="nf">zeros</span><span class="w"> </span><span class="o">&#39;</span><span class="p">[</span><span class="mi">10</span><span class="p">])}}))</span>
 </code></pre></div>
-<h3 id="from-source-to-ast">From Source to AST</h3>
-<p>The parser reads Sheaf source and produces a <code>SheafValue</code> AST, a tree of s-expressions with source location tracking for error messages. At this stage, the code is still in its original form:</p>
-<div class="language-clojure highlight"><pre><span></span><code><span class="c1">;; Source</span>
-<span class="p">(</span><span class="kd">defn </span><span class="nv">linear</span><span class="w"> </span><span class="p">[</span><span class="nv">params</span><span class="w"> </span><span class="nv">x</span><span class="p">]</span>
-<span class="w">  </span><span class="p">(</span><span class="nb">+ </span><span class="p">(</span><span class="o">@</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="p">(</span><span class="nb">get </span><span class="nv">params</span><span class="w"> </span><span class="ss">:W</span><span class="p">))</span>
-<span class="w">     </span><span class="p">(</span><span class="nb">get </span><span class="nv">params</span><span class="w"> </span><span class="ss">:b</span><span class="p">)))</span>
-</code></pre></div>
-<h3 id="from-ast-to-compiledexpr">From AST to CompiledExpr</h3>
-<p>The compiler transforms the AST into <code>CompiledExpr</code>, an intermediate representation that resolves macros, expands special forms, and performs basic validation. Dict accesses like <code>(get params :W)</code> are lowered to tuple element extraction with stable field ordering:</p>
-<div class="language-text highlight"><pre><span></span><code>;; CompiledExpr (simplified)
-Let {
-  bindings: [],
-  body: FunctionCall {
-    name: &quot;+&quot;,
-    args: [
-      FunctionCall { name: &quot;@&quot;, args: [Symbol(&quot;x&quot;), GetTupleElement { param: &quot;params&quot;, indices: [0] }] },
-      GetTupleElement { param: &quot;params&quot;, indices: [1] }
-    ]
-  }
-}
-</code></pre></div>
-<p>The field ordering (<code>:W</code> -&gt; index 0, <code>:b</code> -&gt; index 1) is determined at compile time from the runtime dict structure. This ordering is stable across calls with the same dict layout.</p>
-<h3 id="from-compiledexpr-to-stablehlo">From CompiledExpr to StableHLO</h3>
-<p>The code generator translates <code>CompiledExpr</code> to StableHLO MLIR. Type information flows from runtime arguments: when you first call <code>linear</code> with concrete tensors, the JIT infers shapes and generates typed MLIR:</p>
-<div class="language-text highlight"><pre><span></span><code>func.func @linear(%arg0: tensor&lt;768x768xf32&gt;, %arg1: tensor&lt;768xf32&gt;,
-                  %arg2: tensor&lt;4x768xf32&gt;) -&gt; tensor&lt;4x768xf32&gt; {
-  %0 = stablehlo.dot_general %arg2, %arg0,
-       contracting_dims = [1] x [0] : (tensor&lt;4x768xf32&gt;, tensor&lt;768x768xf32&gt;) -&gt; tensor&lt;4x768xf32&gt;
-  %1 = stablehlo.broadcast_in_dim %arg1, dims = [1] : (tensor&lt;768xf32&gt;) -&gt; tensor&lt;4x768xf32&gt;
-  %2 = stablehlo.add %0, %1 : tensor&lt;4x768xf32&gt;
-  return %2 : tensor&lt;4x768xf32&gt;
-}
-</code></pre></div>
-<p>Note how the dict parameter <code>params</code> has been flattened to two separate tensor arguments (<code>%arg0</code>, <code>%arg1</code>), and the bias addition includes an explicit broadcast.</p>
-<h3 id="from-mlir-to-machine-code">From MLIR to Machine Code</h3>
-<p>The final stage invokes <code>iree-compile</code> to lower StableHLO to device-specific code. IREE performs fusion, memory planning, and kernel selection for the target backend. The output is a VMFB (Virtual Machine FlatBuffer) containing the compiled kernels.</p>
-<p>The IREE toolchain is downloaded automatically on first compilation (~300MB, cached in <code>~/.sheaf/toolchain</code>). Once cached, subsequent compilations are fast, typically under a second for individual functions.</p>
-<h2 id="jit-compilation">JIT Compilation</h2>
-<p>Functions are compiled transparently on first call. This means you never explicitly invoke the compiler; instead, the runtime detects when a function lacks compiled code and triggers compilation automatically.</p>
-<p>The JIT performs the following steps:</p>
-<ol>
-<li><strong>Type inference</strong>: Examines runtime arguments to determine tensor shapes and dtypes</li>
-<li><strong>Dict lowering</strong>: Converts dict parameters to tuples with stable field ordering</li>
-<li><strong>Inlining</strong>: Expands calls to user-defined functions into the caller's body</li>
-<li><strong>Codegen</strong>: Generates StableHLO MLIR from the inlined expression</li>
-<li><strong>Compilation</strong>: Invokes <code>iree-compile</code> with the appropriate backend flags</li>
-<li><strong>Caching</strong>: Stores the resulting VMFB by content hash for future calls</li>
-</ol>
-<p>Subsequent calls with the same argument shapes dispatch directly to the cached VMFB. Cache invalidation is automatic: if the source code changes, the content hash changes, and the function is recompiled.</p>
-<h3 id="backend-selection">Backend Selection</h3>
-<p>Sheaf selects the compilation backend based on available hardware:</p>
-<table>
-<thead>
-<tr>
-<th>Platform</th>
-<th>Primary Backend</th>
-<th>Fallback</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>macOS</td>
-<td>Metal</td>
-<td>CPU</td>
-</tr>
-<tr>
-<td>Linux</td>
-<td>CUDA</td>
-<td>CPU</td>
-</tr>
-<tr>
-<td>Other</td>
-<td>CPU</td>
-<td>-</td>
-</tr>
-</tbody>
-</table>
-<p>If the primary backend fails (missing drivers, unsupported operations), Sheaf automatically falls back to CPU compilation. You can override backend selection with the <code>SHEAF_DEVICE</code> environment variable:</p>
-<div class="language-bash highlight"><pre><span></span><code><span class="nv">SHEAF_DEVICE</span><span class="o">=</span>cpu<span class="w"> </span>sheaf<span class="w"> </span>run<span class="w"> </span>model.shf<span class="w">    </span><span class="c1"># Force CPU backend</span>
-<span class="nv">SHEAF_DEVICE</span><span class="o">=</span>metal<span class="w"> </span>sheaf<span class="w"> </span>run<span class="w"> </span>model.shf<span class="w">  </span><span class="c1"># Force Metal backend</span>
-</code></pre></div>
-<h3 id="cache-layout">Cache Layout</h3>
-<p>Compiled functions are cached in the <code>__sheaf__</code> directory alongside your source files:</p>
-<div class="language-text highlight"><pre><span></span><code>__sheaf__/
-├── manifest.json     # Maps function names to content hashes
-├── forward.vmfb      # Compiled forward pass
-├── loss.vmfb         # Compiled loss function
-└── loss-vag.vmfb     # Compiled value-and-gradient closure
-</code></pre></div>
-<p>The manifest tracks content hashes to detect staleness. You can safely delete the entire <code>__sheaf__</code> directory to force recompilation.</p>
+<p>When a dict is passed to a compiled function, the compiler flattens it to positional tensor arguments with a stable field ordering. A dict <code>{:W tensor&lt;768x768xf32&gt;, :b tensor&lt;768xf32&gt;}</code> becomes two MLIR arguments <code>(%arg0: tensor&lt;768x768xf32&gt;, %arg1: tensor&lt;768xf32&gt;)</code>. The field-to-index mapping is recorded in a manifest so the runtime can reconstruct the dict on output.</p>
+<p>This flattening is recursive: nested dicts like <code>{:transformer {:h [{:attn ...} {:attn ...}]}}</code> produce a flat sequence of tensor arguments ordered by depth-first traversal. The user never sees this. <code>(get params :W)</code> and <code>(get-in params [:transformer :h])</code> work identically whether the function is interpreted or compiled.</p>
+<p>For a complete reference on dict operations, see <a href="../reference/#dictionary-operations">Dictionary operations</a>.</p>
 <h2 id="automatic-differentiation">Automatic Differentiation</h2>
-<p>Sheaf implements automatic differentiation through a system called VAG (Value And Gradient). When you call <code>(value-and-grad f)</code>, the compiler generates a single function that computes both the forward pass and the gradients in one execution. There is no separate backward pass, no tape.</p>
-<h3 id="the-differentiation-pipeline">The Differentiation Pipeline</h3>
-<p>The autodiff system transforms expressions through several stages:</p>
-<div class="language-text highlight"><pre><span></span><code>CompiledExpr (forward only)
-    │
-    ▼
-┌────────┐
-│ to_anf │  -&gt; Flat Let chain (every subexpr named)
-└───┬────┘
-    ▼
-┌──────────────┐
-│ reverse_grad │  -&gt; Forward bindings + backward bindings
-└──────┬───────┘
-       ▼
-┌─────────┐
-│ Codegen │  -&gt; Single MLIR function computing (loss, gradients)
-└─────────┘
-</code></pre></div>
-<h3 id="anf-conversion">ANF Conversion</h3>
-<p>Before differentiation, expressions are converted to Administrative Normal Form (ANF). In ANF, every intermediate computation is bound to a name, producing a flat sequence of let-bindings:</p>
-<div class="language-clojure highlight"><pre><span></span><code><span class="c1">;; Original expression</span>
-<span class="p">(</span><span class="nb">+ </span><span class="p">(</span><span class="nb">* </span><span class="nv">x</span><span class="w"> </span><span class="nv">y</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">* </span><span class="nv">y</span><span class="w"> </span><span class="nv">z</span><span class="p">))</span>
+<p>Sheaf implements reverse-mode automatic differentiation at the expression level. When you write <code>(value-and-grad f)</code>, the compiler generates a single function that computes both the forward pass and the parameter gradients in one execution:</p>
+<div class="language-clojure highlight"><pre><span></span><code><span class="p">(</span><span class="kd">defn </span><span class="nv">loss</span><span class="w"> </span><span class="p">[</span><span class="nv">params</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">y</span><span class="p">]</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">mean</span><span class="w"> </span><span class="p">(</span><span class="nf">**</span><span class="w"> </span><span class="p">(</span><span class="nb">- </span><span class="p">(</span><span class="o">@</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="p">(</span><span class="nb">get </span><span class="nv">params</span><span class="w"> </span><span class="ss">:W</span><span class="p">))</span><span class="w"> </span><span class="nv">y</span><span class="p">)</span><span class="w"> </span><span class="mi">2</span><span class="p">)))</span>
 
-<span class="c1">;; After ANF conversion</span>
-<span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">__anf_0</span><span class="w"> </span><span class="p">(</span><span class="nb">* </span><span class="nv">x</span><span class="w"> </span><span class="nv">y</span><span class="p">)</span>
-<span class="w">      </span><span class="nv">__anf_1</span><span class="w"> </span><span class="p">(</span><span class="nb">* </span><span class="nv">y</span><span class="w"> </span><span class="nv">z</span><span class="p">)</span>
-<span class="w">      </span><span class="nv">__anf_2</span><span class="w"> </span><span class="p">(</span><span class="nb">+ </span><span class="nv">__anf_0</span><span class="w"> </span><span class="nv">__anf_1</span><span class="p">)]</span>
-<span class="w">  </span><span class="nv">__anf_2</span><span class="p">)</span>
+<span class="c1">;; Compute loss and gradients in a single call</span>
+<span class="p">(</span><span class="k">let </span><span class="p">[[</span><span class="nv">loss</span><span class="w"> </span><span class="nv">grads</span><span class="p">]</span><span class="w"> </span><span class="p">((</span><span class="nf">value-and-grad</span><span class="w"> </span><span class="nv">loss</span><span class="p">)</span><span class="w"> </span><span class="nv">params</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">y</span><span class="p">)]</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">println </span><span class="s">&quot;loss:&quot;</span><span class="w"> </span><span class="nv">loss</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">println </span><span class="s">&quot;dW shape:&quot;</span><span class="w"> </span><span class="p">(</span><span class="nf">shape</span><span class="w"> </span><span class="p">(</span><span class="nb">get </span><span class="nv">grads</span><span class="w"> </span><span class="ss">:W</span><span class="p">))))</span>
 </code></pre></div>
-<p>This transformation is crucial for efficient gradient computation. In the original tree form, computing gradients would require duplicating subexpressions: the gradient of <code>(+ a a)</code> naively expands to <code>(+ (grad a) (grad a))</code>, which doubles the work. With ANF, each subexpression is computed exactly once, and gradients accumulate into named adjoint variables.</p>
-<h3 id="reverse-mode-differentiation">Reverse-Mode Differentiation</h3>
-<p>The <code>reverse_grad</code> pass walks the ANF bindings in reverse order, emitting adjoint contributions for each operation. For a binding <code>v = f(a, b)</code>, the pass computes:</p>
-<ul>
-<li><code>dL/da += dL/dv * df/da</code> (contribution to <code>a</code>'s gradient)</li>
-<li><code>dL/db += dL/dv * df/db</code> (contribution to <code>b</code>'s gradient)</li>
-</ul>
-<p>The adjoint of the final output (the loss) is seeded with 1.0. Gradients accumulate as the pass works backward through the bindings.</p>
-<p>Here is a concrete example. Given this forward pass:</p>
-<div class="language-clojure highlight"><pre><span></span><code><span class="p">(</span><span class="kd">defn </span><span class="nv">loss</span><span class="w"> </span><span class="p">[</span><span class="nv">W</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">y</span><span class="p">]</span>
-<span class="w">  </span><span class="p">(</span><span class="nf">mean</span><span class="w"> </span><span class="p">(</span><span class="nf">**</span><span class="w"> </span><span class="p">(</span><span class="nb">- </span><span class="p">(</span><span class="o">@</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">W</span><span class="p">)</span><span class="w"> </span><span class="nv">y</span><span class="p">)</span><span class="w"> </span><span class="mi">2</span><span class="p">)))</span>
-</code></pre></div>
-<p>The VAG system generates code equivalent to:</p>
-<div class="language-clojure highlight"><pre><span></span><code><span class="c1">;; Forward pass (ANF)</span>
-<span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">__anf_0</span><span class="w"> </span><span class="p">(</span><span class="o">@</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">W</span><span class="p">)</span><span class="w">           </span><span class="c1">; prediction</span>
-<span class="w">      </span><span class="nv">__anf_1</span><span class="w"> </span><span class="p">(</span><span class="nb">- </span><span class="nv">__anf_0</span><span class="w"> </span><span class="nv">y</span><span class="p">)</span><span class="w">      </span><span class="c1">; error</span>
-<span class="w">      </span><span class="nv">__anf_2</span><span class="w"> </span><span class="p">(</span><span class="nf">**</span><span class="w"> </span><span class="nv">__anf_1</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w">     </span><span class="c1">; squared error</span>
-<span class="w">      </span><span class="nv">__anf_3</span><span class="w"> </span><span class="p">(</span><span class="nf">mean</span><span class="w"> </span><span class="nv">__anf_2</span><span class="p">)]</span><span class="w">    </span><span class="c1">; loss</span>
+<p>The gradients have the same structure as the input parameters: if <code>params</code> is a nested dict, <code>grads</code> is a nested dict with identical keys and shapes.</p>
+<h3 id="how-it-works">How It Works</h3>
+<p>Before differentiation, the forward expression is converted to Administrative Normal Form (ANF), where every intermediate computation is bound to a name:</p>
+<div class="language-clojure highlight"><pre><span></span><code><span class="c1">;; Original</span>
+<span class="p">(</span><span class="nf">mean</span><span class="w"> </span><span class="p">(</span><span class="nf">**</span><span class="w"> </span><span class="p">(</span><span class="nb">- </span><span class="p">(</span><span class="o">@</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">W</span><span class="p">)</span><span class="w"> </span><span class="nv">y</span><span class="p">)</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span>
 
-<span class="w">  </span><span class="c1">;; Backward pass</span>
-<span class="w">  </span><span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">__grad_3</span><span class="w"> </span><span class="mf">1.0</span><span class="w">                                    </span><span class="c1">; dL/d(loss) = 1</span>
-<span class="w">        </span><span class="nv">__grad_2</span><span class="w"> </span><span class="p">(</span><span class="nb">/ </span><span class="nv">__grad_3</span><span class="w"> </span><span class="nv">N</span><span class="p">)</span><span class="w">                         </span><span class="c1">; dL/d(squared) = 1/N</span>
-<span class="w">        </span><span class="nv">__grad_1</span><span class="w"> </span><span class="p">(</span><span class="nb">* </span><span class="nv">__grad_2</span><span class="w"> </span><span class="p">(</span><span class="nb">* </span><span class="mi">2</span><span class="w"> </span><span class="nv">__anf_1</span><span class="p">))</span><span class="w">             </span><span class="c1">; dL/d(error) = 2*error/N</span>
-<span class="w">        </span><span class="nv">__grad_0</span><span class="w"> </span><span class="nv">__grad_1</span><span class="w">                               </span><span class="c1">; dL/d(pred) = dL/d(error)</span>
-<span class="w">        </span><span class="nv">__grad_W</span><span class="w"> </span><span class="p">(</span><span class="o">@</span><span class="w"> </span><span class="p">(</span><span class="nf">transpose</span><span class="w"> </span><span class="nv">x</span><span class="p">)</span><span class="w"> </span><span class="nv">__grad_0</span><span class="p">)]</span><span class="w">            </span><span class="c1">; dL/dW = x^T @ dL/d(pred)</span>
-
-<span class="w">    </span><span class="p">[</span><span class="nv">__anf_3</span><span class="w"> </span><span class="nv">__grad_W</span><span class="p">]))</span><span class="w">  </span><span class="c1">; return (loss, gradient)</span>
+<span class="c1">;; ANF: flat sequence of named bindings</span>
+<span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">a0</span><span class="w"> </span><span class="p">(</span><span class="o">@</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">W</span><span class="p">)</span>
+<span class="w">      </span><span class="nv">a1</span><span class="w"> </span><span class="p">(</span><span class="nb">- </span><span class="nv">a0</span><span class="w"> </span><span class="nv">y</span><span class="p">)</span>
+<span class="w">      </span><span class="nv">a2</span><span class="w"> </span><span class="p">(</span><span class="nf">**</span><span class="w"> </span><span class="nv">a1</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span>
+<span class="w">      </span><span class="nv">a3</span><span class="w"> </span><span class="p">(</span><span class="nf">mean</span><span class="w"> </span><span class="nv">a2</span><span class="p">)]</span>
+<span class="w">  </span><span class="nv">a3</span><span class="p">)</span>
 </code></pre></div>
-<p>Both passes are fused into a single MLIR function, so intermediate values computed in the forward pass are directly available for the backward pass without recomputation.</p>
-<h3 id="supported-operations">Supported Operations</h3>
-<p>Gradient rules are implemented for most tensor operations. The following categories are fully differentiable:</p>
+<p>The reverse-mode pass then walks these bindings backward, accumulating adjoint contributions. For each binding <code>v = f(a, b)</code>, it computes <code>dL/da += dL/dv * df/da</code>. Both forward and backward bindings are fused into a single MLIR function. Intermediate activations computed in the forward pass are directly available for the backward pass without recomputation.</p>
+<h3 id="differentiable-operations">Differentiable Operations</h3>
 <table>
 <thead>
 <tr>
@@ -1646,220 +1696,140 @@ Let {
 </tr>
 <tr>
 <td>Iteration</td>
-<td><code>reduce</code>, <code>scan</code>, <code>first</code></td>
+<td><code>reduce</code>, <code>scan</code></td>
 </tr>
 </tbody>
 </table>
-<p><code>reduce</code> and <code>scan</code> are unrolled before differentiation when the collection size is statically known. Higher-order functions with dynamic closures (<code>map</code>, <code>filter</code>) are not differentiable.</p>
-<h3 id="lowering-structural-operations">Lowering Structural Operations</h3>
-<p>Some Sheaf constructs (<code>get</code>, <code>reduce</code>, <code>scan</code>) are structural rather than numerical. They manipulate collections or extract fields, operations that don't map directly to StableHLO. Before differentiation, these are lowered to pure tensor operations:</p>
-<p><strong>Dict access (<code>get</code>)</strong> is lowered by <code>lower_get_calls</code>, which transforms <code>(get params :key)</code> into <code>GetTupleElement</code> nodes with static indices:</p>
-<div class="language-clojure highlight"><pre><span></span><code><span class="c1">;; Before lowering</span>
-<span class="p">(</span><span class="nb">get </span><span class="nv">params</span><span class="w"> </span><span class="ss">:W</span><span class="p">)</span>
-
-<span class="c1">;; After lowering (assuming :W is at index 0)</span>
-<span class="nv">GetTupleElement</span><span class="p">(</span><span class="nf">params</span>,<span class="w"> </span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<p><code>reduce</code> and <code>scan</code> are unrolled before differentiation when the collection size is statically known. This enables differentiating through transformer layers expressed as <code>(reduce block x layers)</code>.</p>
+<h3 id="structural-lowering">Structural Lowering</h3>
+<p>Some operations are structural rather than numerical. Before differentiation, they are lowered to pure tensor operations:</p>
+<ul>
+<li><strong>Dict access</strong>: <code>(get params :W)</code> becomes <code>GetTupleElement(params, [0])</code> with a static index</li>
+<li><strong>Iteration</strong>: <code>(reduce f init items)</code> is unrolled to a chain of let-bindings when the number of items is known at compile time</li>
+</ul>
+<p>After lowering, the expression contains only tensor operations that the reverse-mode pass can differentiate.</p>
+<h2 id="compilation-pipeline">Compilation Pipeline</h2>
+<p>When you call a function, the compiler transforms it through several intermediate representations:</p>
+<div class="language-text highlight"><pre><span></span><code>Source (.shf)
+    |
+ [Parse]        -&gt;  SheafValue AST
+    |
+ [Compile]      -&gt;  CompiledExpr IR (macros expanded, symbols resolved)
+    |
+ [Codegen]      -&gt;  StableHLO MLIR (typed, shape-inferred)
+    |
+ [iree-compile] -&gt;  VMFB bytecode (fused kernels, memory planned)
+    |
+ [IREE Runtime] -&gt;  CUDA / Metal / Vulkan / CPU execution
 </code></pre></div>
-<p><strong>Iteration (<code>reduce</code>, <code>scan</code>)</strong> is unrolled by <code>unroll_reduces</code> when the collection size is statically known:</p>
-<div class="language-clojure highlight"><pre><span></span><code><span class="c1">;; Before unrolling</span>
-<span class="p">(</span><span class="nb">reduce </span><span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">h</span><span class="w"> </span><span class="nv">bp</span><span class="p">]</span><span class="w"> </span><span class="p">(</span><span class="nf">transformer-block</span><span class="w"> </span><span class="nv">h</span><span class="w"> </span><span class="nv">bp</span><span class="w"> </span><span class="nv">config</span><span class="p">))</span>
-<span class="w">        </span><span class="nv">x</span>
-<span class="w">        </span><span class="p">(</span><span class="nf">get-in</span><span class="w"> </span><span class="nv">params</span><span class="w"> </span><span class="p">[</span><span class="ss">:transformer</span><span class="w"> </span><span class="ss">:h</span><span class="p">]))</span><span class="w">  </span><span class="c1">;; 6 layers</span>
-
-<span class="c1">;; After unrolling</span>
-<span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">__r_0</span><span class="w"> </span><span class="p">(</span><span class="nf">transformer-block</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">layer0</span><span class="w"> </span><span class="nv">config</span><span class="p">)</span>
-<span class="w">      </span><span class="nv">__r_1</span><span class="w"> </span><span class="p">(</span><span class="nf">transformer-block</span><span class="w"> </span><span class="nv">__r_0</span><span class="w"> </span><span class="nv">layer1</span><span class="w"> </span><span class="nv">config</span><span class="p">)</span>
-<span class="w">      </span><span class="nv">...</span>
-<span class="w">      </span><span class="nv">__r_5</span><span class="w"> </span><span class="p">(</span><span class="nf">transformer-block</span><span class="w"> </span><span class="nv">__r_4</span><span class="w"> </span><span class="nv">layer5</span><span class="w"> </span><span class="nv">config</span><span class="p">)]</span>
-<span class="w">  </span><span class="nv">__r_5</span><span class="p">)</span>
+<h3 id="jit-compilation">JIT Compilation</h3>
+<p>Functions are compiled transparently on first call. The runtime detects when a function lacks compiled code and triggers compilation automatically:</p>
+<ol>
+<li><strong>Type inference</strong> - examines runtime arguments to determine tensor shapes</li>
+<li><strong>Dict lowering</strong> - converts dict parameters to tuples with stable field ordering</li>
+<li><strong>Inlining</strong> - expands calls to user-defined functions into the caller's body</li>
+<li><strong>Codegen</strong> - generates StableHLO MLIR from the inlined expression</li>
+<li><strong>Compilation</strong> - invokes <code>iree-compile</code> with the appropriate backend flags</li>
+<li><strong>Caching</strong> - stores the resulting VMFB by content hash</li>
+</ol>
+<p>Subsequent calls with the same argument shapes dispatch directly to the cached VMFB. If the source code changes, the content hash changes, and the function is recompiled automatically.</p>
+<h3 id="backend-selection">Backend Selection</h3>
+<p>Sheaf selects the compilation backend based on available hardware:</p>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Primary Backend</th>
+<th>Fallback</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Linux</td>
+<td>CUDA</td>
+<td>Vulkan, CPU</td>
+</tr>
+<tr>
+<td>macOS</td>
+<td>Metal</td>
+<td>CPU</td>
+</tr>
+<tr>
+<td>Other</td>
+<td>CPU</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p>You can override this with the <code>--device</code> flag:</p>
+<div class="language-bash highlight"><pre><span></span><code>sheaf<span class="w"> </span>model.shf<span class="w"> </span>--device<span class="w"> </span>cuda<span class="w">     </span><span class="c1"># Force CUDA backend</span>
+sheaf<span class="w"> </span>model.shf<span class="w"> </span>--device<span class="w"> </span>metal<span class="w">    </span><span class="c1"># Force Metal backend</span>
 </code></pre></div>
-<p>After lowering and unrolling, the expression contains only tensor operations that the reverse-mode AD can differentiate.</p>
-<h2 id="stablehlo-code-generation">StableHLO Code Generation</h2>
-<p>The code generator translates <code>CompiledExpr</code> into StableHLO MLIR, the portable IR used by the XLA ecosystem. This section covers the key transformations.</p>
-<h3 id="virtual-tuples">Virtual Tuples</h3>
-<p>Sheaf dicts and tuples are conceptually single values, but StableHLO represents them as multiple tensor arguments. The codegen maintains "virtual tuples", internal bookkeeping that tracks which MLIR arguments correspond to which dict fields.</p>
-<div class="language-clojure highlight"><pre><span></span><code><span class="c1">;; Sheaf function with dict parameter</span>
-<span class="p">(</span><span class="kd">defn </span><span class="nv">forward</span><span class="w"> </span><span class="p">[</span><span class="nv">params</span><span class="w"> </span><span class="nv">x</span><span class="p">]</span>
+<h3 id="cache-layout">Cache Layout</h3>
+<p>Compiled artifacts are cached in the <code>__sheaf__</code> directory alongside your source files:</p>
+<div class="language-text highlight"><pre><span></span><code>__sheaf__/
+  manifest.json           # Maps function names to content hashes
+  forward.cuda.vmfb       # Compiled forward pass (CUDA backend)
+  loss-vag.cuda.vmfb      # Compiled value-and-gradient closure
+</code></pre></div>
+<p>The manifest tracks content hashes to detect staleness. Delete the <code>__sheaf__</code> directory to force recompilation.</p>
+<p>A model can be distributed as <code>.shf</code> source files alongside its <code>__sheaf__/</code> cache. The recipient runs training or inference with the Sheaf binary alone; the JIT compiler toolchain is only needed if the source changes. This makes on-device deployment a file copy.</p>
+<h3 id="stablehlo-code-generation">StableHLO Code Generation</h3>
+<p>The code generator translates the internal IR to StableHLO MLIR. A Sheaf function:</p>
+<div class="language-clojure highlight"><pre><span></span><code><span class="p">(</span><span class="kd">defn </span><span class="nv">forward</span><span class="w"> </span><span class="p">[</span><span class="nv">params</span><span class="w"> </span><span class="nv">x</span><span class="p">]</span>
 <span class="w">  </span><span class="p">(</span><span class="nb">+ </span><span class="p">(</span><span class="o">@</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="p">(</span><span class="nb">get </span><span class="nv">params</span><span class="w"> </span><span class="ss">:W</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nb">get </span><span class="nv">params</span><span class="w"> </span><span class="ss">:b</span><span class="p">)))</span>
 </code></pre></div>
-<div class="language-text highlight"><pre><span></span><code>// Generated MLIR: dict flattened to separate arguments
-func.func @forward(%arg0: tensor&lt;768x768xf32&gt;,  // params[:W]
+<p>produces typed MLIR with explicit broadcasting and flattened dict arguments:</p>
+<div class="language-text highlight"><pre><span></span><code>func.func @forward(%arg0: tensor&lt;768x768xf32&gt;,   // params[:W]
                    %arg1: tensor&lt;768xf32&gt;,       // params[:b]
                    %arg2: tensor&lt;4x768xf32&gt;)     // x
     -&gt; tensor&lt;4x768xf32&gt; {
-  // ...
+  %0 = stablehlo.dot_general %arg2, %arg0,
+       contracting_dims = [1] x [0]
+       : (tensor&lt;4x768xf32&gt;, tensor&lt;768x768xf32&gt;) -&gt; tensor&lt;4x768xf32&gt;
+  %1 = stablehlo.broadcast_in_dim %arg1, dims = [1]
+       : (tensor&lt;768xf32&gt;) -&gt; tensor&lt;4x768xf32&gt;
+  %2 = stablehlo.add %0, %1 : tensor&lt;4x768xf32&gt;
+  return %2 : tensor&lt;4x768xf32&gt;
 }
 </code></pre></div>
-<p>The field-to-index mapping is recorded in a manifest, allowing the runtime to correctly pass dict fields as positional arguments.</p>
-<h3 id="broadcasting">Broadcasting</h3>
-<p>Binary operations follow NumPy broadcasting semantics. When operand shapes differ, the codegen emits explicit <code>stablehlo.broadcast_in_dim</code> operations to align shapes before the computation:</p>
-<div class="language-clojure highlight"><pre><span></span><code><span class="c1">;; Sheaf: add bias (768,) to activations (4, 768)</span>
-<span class="p">(</span><span class="nb">+ </span><span class="nv">activations</span><span class="w"> </span><span class="nv">bias</span><span class="p">)</span>
+<p>Scalar values and dict fields known at compile time are propagated through the expression. Shape-dependent operations like <code>reshape</code> and <code>slice</code> require static dimensions. If a value cannot be resolved at compile time, compilation fails with an explicit error.</p>
+<p>Dict and tuple parameters use virtual tuples: internal bookkeeping that tracks which MLIR arguments correspond to which fields, without materializing <code>stablehlo.tuple</code> operations (which are being phased out of StableHLO).</p>
+<h2 id="observability">Observability</h2>
+<p>Sheaf includes built-in instrumentation for understanding program behavior. These tools are available as CLI flags with zero overhead when not enabled.</p>
+<h3 id="profiling-blame">Profiling (<code>--blame</code>)</h3>
+<div class="language-bash highlight"><pre><span></span><code>sheaf<span class="w"> </span>train.shf<span class="w"> </span>--blame
 </code></pre></div>
-<div class="language-text highlight"><pre><span></span><code>// Generated MLIR: explicit broadcast
-%0 = stablehlo.broadcast_in_dim %bias, dims = [1]
-     : (tensor&lt;768xf32&gt;) -&gt; tensor&lt;4x768xf32&gt;
-%1 = stablehlo.add %activations, %0 : tensor&lt;4x768xf32&gt;
+<p>Prints a hierarchical timing report showing wall time, per-function self time, call counts, and a call tree. This is useful for identifying which functions dominate execution time and whether they are compiled or interpreted.</p>
+<h3 id="call-tracing-trace">Call Tracing (<code>--trace</code>)</h3>
+<div class="language-bash highlight"><pre><span></span><code>sheaf<span class="w"> </span>train.shf<span class="w"> </span>--trace<span class="w">                 </span><span class="c1"># Trace all functions</span>
+sheaf<span class="w"> </span>train.shf<span class="w"> </span>--trace<span class="w"> </span>forward,loss<span class="w">    </span><span class="c1"># Trace specific functions</span>
 </code></pre></div>
-<h3 id="constant-propagation">Constant Propagation</h3>
-<p>Scalar values and dict fields known at compile time are propagated through the expression. This is essential for shape-dependent operations like <code>reshape</code> and <code>slice</code>, which require static dimensions in StableHLO:</p>
-<div class="language-clojure highlight"><pre><span></span><code><span class="c1">;; config is a dict with {:n_embd 768, :n_head 12}</span>
-<span class="p">(</span><span class="nf">reshape</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="p">[(</span><span class="nb">get </span><span class="nv">config</span><span class="w"> </span><span class="ss">:batch</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">get </span><span class="nv">config</span><span class="w"> </span><span class="ss">:n_head</span><span class="p">)</span><span class="w"> </span><span class="mi">-1</span><span class="p">])</span>
+<p>The tracer logs every function call with argument shapes, return shapes, tensor statistics, and timing.</p>
+<h3 id="runtime-guards-guard">Runtime Guards (<code>--guard</code>)</h3>
+<div class="language-bash highlight"><pre><span></span><code>sheaf<span class="w"> </span>train.shf<span class="w"> </span>--guard<span class="w"> </span>no-nan<span class="w">      </span><span class="c1"># Halt on any NaN or Inf</span>
 </code></pre></div>
-<p>If <code>config</code> is available at compile time, the codegen resolves the shape to concrete integers. If not, compilation fails with an error indicating which values couldn't be resolved.</p>
+<p>Guards check tensor values at function boundaries without modifying the program. When a guard triggers, Sheaf reports the function, the tensor, and a backtrace of the call hierarchy.</p>
 <h2 id="iree-runtime">IREE Runtime</h2>
-<p>The runtime interfaces with <a href="https://iree.dev">IREE</a> (Intermediate Representation Execution Environment) via FFI. IREE provides the actual execution engine: it loads compiled VMFBs and dispatches them to the appropriate hardware backend.</p>
-<h3 id="ireesession">IreeSession</h3>
-<p>Each compiled function runs within an <code>IreeSession</code>, which manages:</p>
-<ul>
-<li>The IREE runtime instance</li>
-<li>The HAL (Hardware Abstraction Layer) device (CUDA, Metal, Vulkan or CPU)</li>
-<li>Loaded VMFB modules</li>
-<li>Buffer allocation and caching</li>
-</ul>
-<p>Sessions are created automatically when needed and reused across function calls.</p>
-<h3 id="devicebuffer">DeviceBuffer</h3>
-<p>By default, tensor data lives on the host (CPU memory). When a tensor is passed to a JIT-compiled function, it's transferred to device memory. The <code>DeviceBuffer</code> type represents tensors that remain on device between calls, avoiding repeated host-device transfers in training loops:</p>
+<p>The runtime interfaces with <a href="https://iree.dev">IREE</a> via FFI. IREE loads compiled VMFBs and dispatches them to the appropriate hardware backend (CUDA, Metal, Vulkan, or CPU).</p>
+<h3 id="device-memory-management">Device Memory Management</h3>
+<p>Tensor data lives on the host by default. When a tensor is passed to a compiled function, it is transferred to device memory. The <code>DeviceBuffer</code> type represents tensors that remain on device between calls, avoiding repeated host-to-device transfers in training loops:</p>
 <div class="language-text highlight"><pre><span></span><code>Step 1: params (host) -&gt; DeviceBuffer (H2D transfer)
 Step 2: DeviceBuffer -&gt; forward -&gt; DeviceBuffer (no transfer)
 Step 3: DeviceBuffer -&gt; backward -&gt; DeviceBuffer (no transfer)
 ...
 Step N: DeviceBuffer -&gt; host (D2H transfer, only for checkpointing)
 </code></pre></div>
-<p>This optimization is automatic. The runtime tracks which tensors are already on device and skips redundant transfers.</p>
+<p>This process is automatic: the runtime tracks which tensors are already on device and skips redundant transfers.</p>
 <h3 id="buffer-cache">Buffer Cache</h3>
-<p>Input tensors are cached by identity: if the same tensor Arc is passed to the same function argument position, the runtime reuses the existing device buffer. This handles the common case where model parameters don't change between training steps.</p>
-<p>The cache maintains multiple entries per position to handle weight sharing (e.g., transformer layers that share embedding matrices) without thrashing.</p>
-<h2 id="optimizations">Optimizations</h2>
-<p>Sheaf is routinely benchmarked against PyTorch on identical architectures with shared weights. The following optimizations are implemented:</p>
-<p><strong>Runtime optimizations:</strong></p>
-<ul>
-<li>
-<p><strong>Arc tensor refcounting</strong>: Tensors use <code>Arc&lt;ArrayD&lt;f32&gt;&gt;</code> instead of owned arrays. Cloning a tensor is O(1) regardless of size. This eliminates 24GB of redundant memory copies per 1000 inference tokens during benchmarks on GPT-2.</p>
-</li>
-<li>
-<p><strong>Fingerprint-based buffer cache</strong>: Input tensors are fingerprinted (shape + 4 sample values) and cached by position. Unchanged tensors reuse existing device buffers across calls.</p>
-</li>
-<li>
-<p><strong>Multi-entry MRU cache</strong>: Each argument position holds up to 8 cached buffers with most-recently-used ordering. This prevents thrashing when transformer layers share a compiled function but use different weights.</p>
-</li>
-<li>
-<p><strong>DeviceBuffer passthrough</strong>: Output buffers from one dispatch are retained on GPU. When passed as input to the next dispatch, no host-device transfer occurs.</p>
-</li>
-<li>
-<p><strong>f32 native</strong>: The interpreter operates in f32 throughout. No f64-to-f32 conversion at the IREE boundary.</p>
-</li>
-</ul>
-<p><strong>Codegen optimizations:</strong></p>
-<ul>
-<li>
-<p><strong>Virtual tuples</strong>: Dict and tuple parameters are flattened to individual MLIR arguments. No <code>stablehlo.tuple</code> ops are materialized; tuples complicate compiler passes and are being phased out of StableHLO.</p>
-</li>
-<li>
-<p><strong>Mean CSE</strong>: Common subexpression elimination for <code>reduce_mean</code>. When <code>var(x)</code> internally computes <code>mean(x)</code>, it reuses any existing mean computation on the same tensor.</p>
-</li>
-<li>
-<p><strong>Fused value-and-grad</strong>: Forward and backward passes compile to a single MLIR function. Intermediate activations flow directly to the backward pass without rematerialization.</p>
-</li>
-<li>
-<p><strong>Fused train-step</strong>: When possible, the entire training step (forward, backward, gradient clipping, optimizer update) compiles to a single GPU dispatch.</p>
-</li>
-</ul>
-<h2 id="performance-characteristics">Performance Characteristics</h2>
-<p>Sheaf is benchmarked against PyTorch on GPT-2 124M with identical weights. Current measurements on Apple M5 Pro:</p>
-<p><strong>Training (forward + backward + Adam):</strong></p>
-<table>
-<thead>
-<tr>
-<th>Configuration</th>
-<th>Time per step</th>
-<th>vs PyTorch</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Interpreter</td>
-<td>10.9s</td>
-<td>272x</td>
-</tr>
-<tr>
-<td>JIT (Metal)</td>
-<td>533ms</td>
-<td>4.2x</td>
-</tr>
-<tr>
-<td>PyTorch (MPS)</td>
-<td>127ms</td>
-<td>baseline</td>
-</tr>
-</tbody>
-</table>
-<p><strong>Inference (100 tokens autoregressive):</strong></p>
-<table>
-<thead>
-<tr>
-<th>Configuration</th>
-<th>Time</th>
-<th>ms/token</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>JIT (Metal)</td>
-<td>746ms</td>
-<td>7.0</td>
-</tr>
-<tr>
-<td>PyTorch (MPS)</td>
-<td>390ms</td>
-<td>3.9</td>
-</tr>
-</tbody>
-</table>
-<p>The remaining gap is primarily in IREE's Metal backend maturity versus Apple's MPS. We track this upstream and contribute fixes where possible (see <a href="https://github.com/iree-org/iree/issues/19698">IREE #19Due</a>, <a href="https://github.com/iree-org/iree/pull/20117">PR #20117</a>).</p>
-<h3 id="profiling">Profiling</h3>
-<p>To understand where time is spent, run with <code>--blame</code>:</p>
-<div class="language-bash highlight"><pre><span></span><code>sheaf<span class="w"> </span>--blame<span class="w"> </span>train.shf
-</code></pre></div>
-<p>This prints a timing report showing time spent in each function, both total and self time, plus a call tree. See the profiler example on the <a href="../">home page</a> for sample output.</p>
-<h2 id="source-organization">Source Organization</h2>
-<div class="language-text highlight"><pre><span></span><code>sheaf/src/
-├── autodiff/
-│   ├── mod.rs        # Symbolic gradient rules for each operation
-│   ├── reverse.rs    # ANF conversion and reverse-mode AD
-│   └── trace.rs      # Partial evaluation for structural operations
-├── compiler/
-│   ├── codegen/      # CompiledExpr -&gt; StableHLO translation
-│   ├── stablehlo/    # MLIR emission utilities
-│   └── transforms.rs # Dict lowering, inlining, constant propagation
-├── runtime/
-│   ├── jit.rs        # Transparent compilation orchestration
-│   ├── iree_session.rs # IREE FFI wrapper and session management
-│   └── iree_ffi.rs   # Raw C bindings to IREE
-└── interpreter/      # Fallback execution for non-JIT paths
-</code></pre></div>
+<p>Input tensors are cached by pointer identity (<code>Arc::ptr_eq</code>): if the same tensor is passed to the same argument position, the runtime reuses the existing device buffer. This is O(1) with no false positives, and handles the common case where model parameters do not change between training steps.</p>
+<p>Each argument position holds up to 8 cached buffers with most-recently-used ordering. This prevents thrashing when transformer layers share a compiled function but pass different weight tensors.</p>
 <h2 id="known-limitations">Known Limitations</h2>
 <ul>
-<li>
-<p><strong>Control flow in JIT</strong>: <code>if</code> and <code>while</code> expressions inside JIT-compiled functions cause fallback to the interpreter. Conditional logic must currently live outside the hot path.</p>
-</li>
-<li>
-<p><strong>Static shapes</strong>: All tensor shapes must be known at compile time. Dynamic batch sizes require recompilation when the batch size changes.</p>
-</li>
-<li>
-<p><strong>Metal backend maturity</strong>: IREE's Metal backend is less optimized than CUDA. Some operations may be significantly slower on Apple GPUs than on NVIDIA hardware.</p>
-</li>
-<li>
-<p><strong>Memory management</strong>: Large models may exceed device memory. There is no automatic model sharding or gradient checkpointing yet.</p>
-</li>
-</ul>
-<h2 id="roadmap">Roadmap</h2>
-<p>Current development priorities:</p>
-<ul>
-<li>[ ] <code>pmap</code> for data parallelism across multiple devices</li>
-<li>[ ] <code>scan</code> primitive compilation (currently unrolled, limiting sequence length)</li>
-<li>[ ] Custom kernel injection for performance-critical operations</li>
-<li>[ ] ONNX export for deployment to other runtimes</li>
+<li><strong>Static shapes.</strong> All tensor shapes must be known at compile time. Dynamic batch sizes trigger recompilation.</li>
+<li><strong>Control flow.</strong> <code>if</code> expressions inside compiled functions cause fallback to the interpreter. Conditional logic must live outside the hot path, or use <code>where</code>, which compiles to <code>stablehlo.select</code>.</li>
+<li><strong>Metal backend.</strong> IREE's Metal/SPIR-V backend is less optimized than CUDA. Some operations are slower on Apple GPUs than on equivalent NVIDIA hardware.</li>
+<li><strong>Memory management.</strong> No automatic model sharding or gradient checkpointing. Large models may exceed device memory.</li>
 </ul>
 
 

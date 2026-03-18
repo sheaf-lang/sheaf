@@ -14,7 +14,7 @@
         <link rel="prev" href="../rationale/">
       
       
-        <link rel="next" href="../types/">
+        <link rel="next" href="../key-concepts/">
       
       
         
@@ -118,6 +118,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   .md-nav__link--active {
     color: var(--sheaf-primary) !important;
     border-color: var(--sheaf-primary) !important;
+  }
+
+  .md-typeset a {
+    color: rgb(255, 110, 66) !important;
   }
 
   a:hover {
@@ -995,10 +999,21 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
       
         <li class="md-nav__item">
-  <a href="#some-quick-exercices" class="md-nav__link">
+  <a href="#some-quick-exercises" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Some quick exercices
+        Some quick exercises
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bracket-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bracket reference
       
     </span>
   </a>
@@ -1032,14 +1047,14 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../types/" class="md-nav__link">
+      <a href="../key-concepts/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Data types
+    Key Concepts
   
 
     
@@ -1060,14 +1075,14 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../python/" class="md-nav__link">
+      <a href="../types/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Python Interoperability
+    Data types
   
 
     
@@ -1366,10 +1381,21 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
       
         <li class="md-nav__item">
-  <a href="#some-quick-exercices" class="md-nav__link">
+  <a href="#some-quick-exercises" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Some quick exercices
+        Some quick exercises
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bracket-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bracket reference
       
     </span>
   </a>
@@ -1416,80 +1442,53 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 <p>In Sheaf, as in all Lisp dialects, the fundamental unit of computation is the <em>expression</em>. There is no structural difference between a mathematical operator, a control flow structure, or a complex neural layer: they all follow the same notation.</p>
 <p>For this reason, a global "variable" is effectively a nullary function (a function with no arguments) that returns a constant.</p>
 <p>To define a function, we use the <code>defn</code> form, followed by the function name and its arguments enclosed in square brackets <code>[]</code> rather than parentheses <code>()</code>. This is borrowed from Clojure to differentiate the parameter list from the function calls.</p>
-<p>Let's see what this example would look like in Sheaf's REPL:</p>
-<div class="language-text highlight"><pre><span></span><code>$ sheaf
-Welcome to Sheaf Console v1.0.0
-Type :help or :h for help, :quit or :q to exit
-
-sheaf&gt; ;; &quot;Define a function `val` which takes no args and returns 2&quot;:
-sheaf&gt; (defn val [] 2)
-⇒ &lt;function DefnForm.compile.&lt;locals&gt;.generated_func at 0x10acf8ae0&gt;
-sheaf&gt; (val) ; Call that function
-⇒ 2
+<p>In the REPL:</p>
+<div class="language-text highlight"><pre><span></span><code>sheaf&gt; (defn val [] 2)
+=&gt; &lt;fn:val&gt;
+sheaf&gt; (val)
+=&gt; 2
 </code></pre></div>
-<p>Now let's try adding <code>2</code> to it. Sheaf uses the prefix notation, which we'll talk about later. For now, we'll just write <code>(+ 2 val)</code> instead of <code>(2 + val)</code>.</p>
-<div class="language-clojure highlight"><pre><span></span><code><span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="nb">+ </span><span class="mi">2</span><span class="w"> </span><span class="nv">val</span><span class="p">)</span><span class="w"> </span><span class="c1">; This actually won&#39;t work: `val` is a function, not a scalar</span>
+<p>Adding <code>2</code> to it (Sheaf uses prefix notation, covered below):</p>
+<div class="language-text highlight"><pre><span></span><code>sheaf&gt; (+ 2 val)     ;; This won&#39;t work: val is a function, not a value
+error: Expected numeric values, got int and function
+ --&gt; &lt;repl&gt;:1
 
-<span class="nv">error</span><span class="err">:</span><span class="w"> </span><span class="nv">add</span><span class="w"> </span><span class="nv">requires</span><span class="w"> </span><span class="nv">ndarray</span><span class="w"> </span><span class="nb">or </span><span class="nv">scalar</span><span class="w"> </span><span class="nv">arguments</span>,<span class="w"> </span><span class="nv">got</span><span class="w"> </span><span class="nv">&lt;class</span><span class="w"> </span><span class="ss">&#39;function&#39;&gt;</span><span class="w"> </span><span class="nv">at</span><span class="w"> </span><span class="nv">position</span><span class="w"> </span><span class="mi">1</span><span class="nv">.</span>
-<span class="w"> </span><span class="nv">--&gt;</span><span class="w"> </span><span class="nv">&lt;repl&gt;</span><span class="ss">:1</span>
-<span class="w">    </span><span class="nv">|</span>
-<span class="w">  </span><span class="mi">1</span><span class="w"> </span><span class="nv">|</span><span class="w"> </span><span class="p">(</span><span class="nb">+ </span><span class="mi">2</span><span class="w"> </span><span class="nv">val</span><span class="p">)</span>
-<span class="w">    </span><span class="nv">|</span><span class="w">  </span><span class="o">^</span>
-<span class="w">    </span><span class="nv">|</span>
-<span class="w">  </span><span class="nb">= </span><span class="nv">note</span><span class="err">:</span><span class="w"> </span><span class="nv">Check</span><span class="w"> </span><span class="nv">the</span><span class="w"> </span><span class="nv">number</span><span class="w"> </span><span class="nv">of</span><span class="w"> </span><span class="nv">arguments</span><span class="w"> </span><span class="nv">you</span><span class="ss">&#39;re</span><span class="w"> </span><span class="nv">passing</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="nv">the</span><span class="w"> </span><span class="nv">function.</span>
+sheaf&gt; (+ 2 (val))
+=&gt; 4
 
-<span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="nb">+ </span><span class="mi">2</span><span class="w"> </span><span class="p">(</span><span class="nf">val</span><span class="p">))</span><span class="w"> </span><span class="c1">; We use parens to call `val` as a function</span>
-<span class="err">⇒</span><span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[]</span><span class="w"> </span><span class="nb">= </span><span class="mi">4</span><span class="w"> </span><span class="c1">; Now it works!</span>
-<span class="nv">sheaf&gt;</span>
-<span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="kd">defn </span><span class="nb">val </span><span class="p">[]</span><span class="w"> </span><span class="mi">4</span><span class="p">)</span><span class="w"> </span><span class="c1">; Let&#39;s try to redefine our function to 4</span>
-
-<span class="nv">Error</span><span class="err">:</span>
-<span class="nv">Function</span><span class="w"> </span><span class="ss">&#39;val</span><span class="o">&#39;</span><span class="w"> </span><span class="nv">is</span><span class="w"> </span><span class="nv">already</span><span class="w"> </span><span class="nv">defined</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">user</span><span class="w"> </span><span class="nv">code.</span><span class="w"> </span><span class="nv">Redefinition</span><span class="w"> </span><span class="nv">is</span><span class="w"> </span><span class="nb">not </span><span class="nv">allowed</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="nv">prevent</span><span class="w"> </span><span class="nv">shadowing</span><span class="w"> </span><span class="nv">bugs.</span>
+sheaf&gt; (defn val [] 4)
+error: Redefinition of &#39;val&#39; is not allowed.
 </code></pre></div>
-<p>The inability to change the value of <code>val</code> may come as surprise.</p>
-<p>In Sheaf, every value is immutable by default: once a function is defined, it becomes stateless and cannot be changed. This is required both for predictability and performance reasons in the JIT engine.</p>
+<p>The inability to change the value of <code>val</code> may come as surprise. In Sheaf, every value is immutable: once a function is defined, it cannot be changed. This is required both for predictability and for the JIT compiler.</p>
 <h3 id="expressions-and-lambdas">Expressions and Lambdas</h3>
-<p>Remember that in Lisp, everything is an expression.</p>
-<p>When an expression like <code>(+ 1 2)</code> is evaluated, the interpreter does not simply perform an addition. It evaluates a <em>form</em> where the symbol <code>+</code> refers to a sum function, and <code>1</code> <code>2</code> are its arguments, much like <code>np.add(1,2)</code> in NumPy.</p>
+<p>When an expression like <code>(+ 1 2)</code> is evaluated, the interpreter evaluates a <em>form</em> where the symbol <code>+</code> refers to a function, and <code>1</code> <code>2</code> are its arguments.</p>
 <p>Conceptually, a Sheaf program is not a sequence of instructions, but a single, nested tree of expressions.</p>
 <p>While <code>(+ 1 2)</code> will execute immediately, it can also be explicitly defined as a lambda with <code>(fn [] (+ 1 2))</code>.
 When defined with <code>fn</code>, the logic won't be executed immediately but will return an anonymous function that can be called from within the parent function.
 This is used when a small transformation is needed just once, without giving the function a permanent name.</p>
-<p>Let's see this in action:</p>
-<div class="language-clojure highlight"><pre><span></span><code><span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="nb">* </span><span class="mi">5</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span>
-<span class="err">⇒</span><span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[]</span><span class="w"> </span><span class="nb">= </span><span class="mi">50</span>
-<span class="nv">sheaf&gt;</span><span class="w"> </span><span class="c1">;; Now let&#39;s use a variable</span>
-<span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="nb">* </span><span class="nv">x</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="c1">;; Won&#39;t work: `x` is not defined in the current scope</span>
+<div class="language-text highlight"><pre><span></span><code>sheaf&gt; (* 5 10)
+=&gt; 50
+sheaf&gt; (* x 10)
+error: Undefined symbol: x
+ --&gt; &lt;repl&gt;:1
 
-<span class="nv">error</span><span class="err">:</span><span class="w"> </span><span class="nv">Symbol</span><span class="w"> </span><span class="nb">not </span><span class="nv">found</span><span class="w"> </span><span class="p">(</span><span class="nf">line</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="err">:</span><span class="w"> </span><span class="ss">&#39;x</span><span class="o">&#39;</span>
-<span class="w"> </span><span class="nv">--&gt;</span><span class="w"> </span><span class="nv">&lt;repl&gt;</span><span class="ss">:1</span>
-<span class="w">    </span><span class="nv">|</span>
-<span class="w">  </span><span class="mi">1</span><span class="w"> </span><span class="nv">|</span><span class="w"> </span><span class="p">(</span><span class="nb">+ </span><span class="nv">x</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span>
-<span class="w">    </span><span class="nv">|</span><span class="w">    </span><span class="o">^</span>
-<span class="w">    </span><span class="nv">|</span>
-<span class="w">  </span><span class="nb">= </span><span class="nv">note</span><span class="err">:</span><span class="w"> </span><span class="nv">Check</span><span class="w"> </span><span class="nb">for </span><span class="nv">typos</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">function</span><span class="w"> </span><span class="nb">or </span><span class="nv">variable</span><span class="w"> </span><span class="nv">names.</span>
-
-<span class="nv">sheaf&gt;</span><span class="w"> </span><span class="c1">;; Instead, define it as a lambda and pass it the value `5`</span>
-<span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">((</span><span class="k">fn </span><span class="p">[</span><span class="nv">x</span><span class="p">]</span><span class="w"> </span><span class="p">(</span><span class="nb">* </span><span class="nv">x</span><span class="w"> </span><span class="mi">10</span><span class="p">))</span><span class="w"> </span><span class="mi">5</span><span class="p">)</span>
-<span class="err">⇒</span><span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[]</span><span class="w"> </span><span class="nb">= </span><span class="mi">50</span>
-<span class="nv">sheaf&gt;</span><span class="w"> </span><span class="c1">;; Notice the double (( )) to call the lambda immediately</span>
-<span class="nv">sheaf&gt;</span><span class="w"> </span><span class="c1">;; Without them, this defines the function but does not apply it</span>
-<span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">x</span><span class="p">]</span><span class="w"> </span><span class="p">(</span><span class="nb">* </span><span class="nv">x</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="mi">5</span><span class="p">)</span>
-<span class="err">⇒</span><span class="w"> </span><span class="nv">&lt;function</span><span class="w"> </span><span class="nv">LambdaForm.compile.&lt;locals&gt;.anonymous_func</span><span class="w"> </span><span class="nv">at</span><span class="w"> </span><span class="mi">0</span><span class="nv">x10e4949a0&gt;</span>
+sheaf&gt; ((fn [x] (* x 10)) 5)
+=&gt; 50
+</code></pre></div>
+<p>Note the double <code>(( ))</code> to call the lambda immediately. Without them, the expression defines the function but does not apply it:</p>
+<div class="language-text highlight"><pre><span></span><code>sheaf&gt; (fn [x] (* x 10))
+=&gt; &lt;function&gt;
 </code></pre></div>
 <h3 id="local-bindings">Local bindings</h3>
 <p>Defining a function to return a scalar value isn't very helpful. Usually, Sheaf functions apply transformations to tensors and pass them to other functions.
 Sheaf doesn't <em>assign variables</em>; it <em>binds local symbols</em> with the form <code>let</code>. Variables exist within the function's scope and disappear after the evaluation is complete.</p>
-<p>Let's try binding values:</p>
-<div class="language-text highlight"><pre><span></span><code>sheaf&gt; ;; Binding a tensor [1 2 3] to x, then returning x
-sheaf&gt; (let [x [1 2 3]]
-...    x)
-⇒ Tensor f32[3] = [1. 2. 3.]
+<div class="language-text highlight"><pre><span></span><code>sheaf&gt; (let [x [1 2 3]]
+     &gt;   x)
+=&gt; [1. 2. 3.]
 
-sheaf&gt; ;; Automatic broadcasting: adding 2 to the tensor
-sheaf&gt; (let (x [1 2 3])
-...    (+ x 2))
-⇒ Tensor f32[3] = [3. 4. 5.]
+sheaf&gt; (let [x [1 2 3]]
+     &gt;   (+ x 2))
+=&gt; [3. 4. 5.]
 </code></pre></div>
 <p>Because of immutability, <code>x</code> is also not modified in the second example. Instead, a new tensor is created and returned. Once the command ends, it is no longer accessible.</p>
 <h3 id="prefix-notation-polish-notation">Prefix Notation (Polish Notation)</h3>
@@ -1504,38 +1503,31 @@ sheaf&gt; (let (x [1 2 3])
 <p>Consistency: Since everything between parens is a function, mathematical operators, built-in functions, and user-defined functions all follow the exact same structure: <code>(function argument1 argument2 ...)</code>. This uniformity is what allows the language to treat code as data.</p>
 </li>
 </ul>
-<p>To make this simpler, let's just remember that the first <em>symbol</em> after a parenthesis is always a function.</p>
+<p>The first symbol after an opening parenthesis is always a function.</p>
 <h3 id="conditionals-if-and-where">Conditionals: <code>if</code> and <code>where</code></h3>
 <p>Most programming languages have an <code>if</code> statement for branching logic. Sheaf has two distinct forms for conditional evaluation, and understanding when to use each is important.</p>
 <p>The <code>if</code> form works like a traditional conditional: it evaluates a condition, then returns either the "then" branch or the "else" branch:</p>
-<div class="language-clojure highlight"><pre><span></span><code><span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="k">if </span><span class="p">(</span><span class="nb">&gt; </span><span class="mi">5</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="ss">:yes</span><span class="w"> </span><span class="ss">:no</span><span class="p">)</span>
-<span class="err">⇒</span><span class="w"> </span><span class="ss">:yes</span>
-<span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="k">if </span><span class="nv">false</span><span class="w"> </span><span class="s">&quot;not returned&quot;</span><span class="w"> </span><span class="s">&quot;returned&quot;</span><span class="p">)</span>
-<span class="err">⇒</span><span class="w"> </span><span class="ss">&#39;returned</span><span class="o">&#39;</span>
+<div class="language-text highlight"><pre><span></span><code>sheaf&gt; (if (&gt; 5 3) :yes :no)
+=&gt; :yes
+sheaf&gt; (if false &quot;not returned&quot; &quot;returned&quot;)
+=&gt; &quot;returned&quot;
 </code></pre></div>
-<p>This works well for decisions based on configuration values or scalars. However, <code>if</code> cannot be used with tensor values inside JIT-compiled functions. JAX needs to know the control flow at compile time, and tensor values are only known at runtime.</p>
-<div class="language-clojure highlight"><pre><span></span><code><span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="kd">defn </span><span class="nv">broken</span><span class="w"> </span><span class="p">[</span><span class="nv">x</span><span class="p">]</span>
-<span class="nv">...</span><span class="w">      </span><span class="p">(</span><span class="k">if </span><span class="p">(</span><span class="nb">&gt; </span><span class="nv">x</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span><span class="w">  </span><span class="c1">;; This will fail in JIT context</span>
+<p>This works for decisions based on configuration values or scalars. However, <code>if</code> cannot be used with tensor values inside JIT-compiled functions. The compiler needs to know the control flow at compile time, and tensor values are only known at runtime.</p>
+<div class="language-clojure highlight"><pre><span></span><code><span class="p">(</span><span class="kd">defn </span><span class="nv">broken</span><span class="w"> </span><span class="p">[</span><span class="nv">x</span><span class="p">]</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if </span><span class="p">(</span><span class="nb">&gt; </span><span class="nv">x</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span><span class="w">  </span><span class="c1">;; This will fail in JIT context</span>
 </code></pre></div>
 <p>For element-wise conditionals on tensors, <code>where</code> is used instead. It evaluates both branches and selects values based on a boolean mask:</p>
-<div class="language-clojure highlight"><pre><span></span><code><span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="nf">where</span><span class="w"> </span><span class="p">(</span><span class="nb">&gt; </span><span class="mi">5</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="mi">100</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
-<span class="err">⇒</span><span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[]</span><span class="w"> </span><span class="nb">= </span><span class="mi">100</span>
-<span class="nv">sheaf&gt;</span><span class="w"> </span><span class="c1">;; Element-wise on tensors:</span>
-<span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="nf">where</span><span class="w"> </span><span class="p">(</span><span class="nb">&gt; </span><span class="p">[</span><span class="mi">1</span><span class="w"> </span><span class="mi">5</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="mi">8</span><span class="p">]</span><span class="w"> </span><span class="mi">4</span><span class="p">)</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="w"> </span><span class="mi">5</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="mi">8</span><span class="p">]</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
-<span class="err">⇒</span><span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="w"> </span><span class="nb">= </span><span class="p">[</span><span class="mi">0</span><span class="w"> </span><span class="mi">5</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">8</span><span class="p">]</span>
+<div class="language-text highlight"><pre><span></span><code>sheaf&gt; (where (&gt; [1 5 3 8] 4) [1 5 3 8] 0)
+=&gt; [0. 5. 0. 8.]
 </code></pre></div>
-<p>The last example replaces all values less than or equal to 4 with zero, keeping the others. This is the functional equivalent of NumPy's <code>np.where</code>.</p>
-<p>Let's see another example. Common pattern is implementing ReLU (Rectified Linear Unit), which returns <code>x</code> if positive, else <code>0</code>:</p>
-<div class="language-clojure highlight"><pre><span></span><code><span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="kd">defn </span><span class="nv">my-relu</span><span class="w"> </span><span class="p">[</span><span class="nv">x</span><span class="p">]</span>
-<span class="nv">...</span><span class="w">      </span><span class="p">(</span><span class="nf">where</span><span class="w"> </span><span class="p">(</span><span class="nb">&gt; </span><span class="nv">x</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span>
-<span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="nf">my-relu</span><span class="w"> </span><span class="p">[</span><span class="mi">-2</span><span class="w"> </span><span class="mi">-1</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="p">])</span>
-<span class="err">⇒</span><span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="w"> </span><span class="nb">= </span><span class="p">[</span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="p">]</span>
+<p>A common pattern is implementing ReLU (Rectified Linear Unit), which returns <code>x</code> if positive, else <code>0</code>:</p>
+<div class="language-clojure highlight"><pre><span></span><code><span class="p">(</span><span class="kd">defn </span><span class="nv">my-relu</span><span class="w"> </span><span class="p">[</span><span class="nv">x</span><span class="p">]</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">where</span><span class="w"> </span><span class="p">(</span><span class="nb">&gt; </span><span class="nv">x</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span>
 </code></pre></div>
 <p>In summary: use <code>if</code> for static branching (configs, flags), and <code>where</code> for tensor operations.</p>
 <h3 id="recursion">Recursion</h3>
-<p>When reading Sheaf code, the lack of imperative loops (<code>for</code> and <code>while</code> loops) may come as another surprise.</p>
-<p>In Sheaf, iteration is handled through recursion rather than imperative loops. Since data is immutable, a process is not described by updating a counter, but by repeatedly applying a transformation to a value.</p>
-<p>Let's take a look at a typical loop in Python:</p>
+<p>Sheaf does not have imperative loops. Iteration is handled through higher-order functions.</p>
+<p>A typical loop in Python:</p>
 <div class="language-python highlight"><pre><span></span><code><span class="c1"># Imperative loop</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">total</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
@@ -1548,46 +1540,42 @@ sheaf&gt; (let (x [1 2 3])
 <span class="o">&gt;&gt;&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>
 <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">(</span><span class="mi">45</span><span class="p">)</span>
 </code></pre></div>
-<p>As a functional language, Sheaf typically uses <em>functions</em> over imperative loops to achieve this. Such iterations are generally handled by higher-order abstractions like <code>reduce</code>:</p>
-<div class="language-clojure highlight"><pre><span></span><code><span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="nb">reduce + </span><span class="mi">0</span><span class="w"> </span><span class="p">(</span><span class="nb">range </span><span class="mi">10</span><span class="p">))</span>
-<span class="err">⇒</span><span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[]</span><span class="w"> </span><span class="nb">= </span><span class="mi">45</span>
+<p>In Sheaf, use <code>reduce</code>:</p>
+<div class="language-text highlight"><pre><span></span><code>sheaf&gt; (reduce + 0 (range 10))
+=&gt; 45.0
 </code></pre></div>
 <p><code>reduce</code> takes a function (here, <code>+</code>), a starting number (<code>0</code>), and a sequence on which to apply the function. For instance, <code>(reduce + 0 [1 2 3 4])</code> will result in adding <code>0 + 1 + 2 + 3 + 4</code>.</p>
 <p>Other popular higher order functions are <code>map</code>, <code>vmap</code> and <code>scan</code>.</p>
 <p>Unlike <code>reduce</code> which returns a single combined value, <code>map</code> applies a transformation to every element of an array and returns another array.</p>
-<p>For instance, let's square all values from an array of integers ranging from 1 to 10. We will generate a sequence using <code>range(1 11)</code>, then use <code>map</code> with a lambda function to square the results.</p>
-<div class="language-clojure highlight"><pre><span></span><code><span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="nb">range </span><span class="mi">1</span><span class="w"> </span><span class="mi">11</span><span class="p">)</span>
-<span class="err">⇒</span><span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span><span class="w"> </span><span class="nb">= </span><span class="p">[</span><span class="w"> </span><span class="mi">1</span><span class="w">  </span><span class="mi">2</span><span class="w">  </span><span class="mi">3</span><span class="w">  </span><span class="mi">4</span><span class="w">  </span><span class="mi">5</span><span class="w">  </span><span class="mi">6</span><span class="w">  </span><span class="mi">7</span><span class="w">  </span><span class="mi">8</span><span class="w">  </span><span class="mi">9</span><span class="w"> </span><span class="mi">10</span><span class="p">]</span>
-<span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="nb">map </span><span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">i</span><span class="p">]</span><span class="w"> </span><span class="p">(</span><span class="nb">* </span><span class="nv">i</span><span class="w"> </span><span class="nv">i</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nb">range </span><span class="mi">1</span><span class="w"> </span><span class="mi">11</span><span class="p">))</span>
-<span class="err">⇒</span><span class="w"> </span><span class="o">&#39;</span><span class="p">[</span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[]</span><span class="w"> </span><span class="nb">= </span><span class="mi">1</span>,<span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[]</span><span class="w"> </span><span class="nb">= </span><span class="mi">4</span>,<span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[]</span><span class="w"> </span><span class="nb">= </span><span class="mi">9</span>,<span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[]</span><span class="w"> </span><span class="nb">= </span><span class="mi">16</span>,<span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[]</span><span class="w"> </span><span class="nb">= </span><span class="mi">25</span>,<span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[]</span><span class="w"> </span><span class="nb">= </span><span class="mi">36</span>,<span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[]</span><span class="w"> </span><span class="nb">= </span><span class="mi">49</span>,<span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[]</span><span class="w"> </span><span class="nb">= </span><span class="mi">64</span>,<span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[]</span><span class="w"> </span><span class="nb">= </span><span class="mi">81</span>,<span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[]</span><span class="w"> </span><span class="nb">= </span><span class="mi">100</span><span class="p">]</span>
+<p>Squaring all values from 1 to 10:</p>
+<div class="language-text highlight"><pre><span></span><code>sheaf&gt; (map (fn [i] (* i i)) (range 1 11))
+=&gt; [1.0, 4.0, 9.0, 16.0, 25.0, 36.0, 49.0, 64.0, 81.0, 100.0]
 </code></pre></div>
-<p><em>Note: Sheaf is "tensor-first" by design and only returns arrays, even for scalar values. This ensures any operation is compilable into an XLA kernel running on a GPU or TPU.</em></p>
-<p><code>vmap</code> is very similar to <code>map</code>, but will vectorize the operation over the entire array:</p>
-<div class="language-clojure highlight"><pre><span></span><code><span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">((</span><span class="nf">vmap</span><span class="w"> </span><span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">i</span><span class="p">]</span><span class="w"> </span><span class="p">(</span><span class="nb">* </span><span class="nv">i</span><span class="w"> </span><span class="nv">i</span><span class="p">))</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">range </span><span class="mi">1</span><span class="w"> </span><span class="mi">11</span><span class="p">))</span>
-<span class="err">⇒</span><span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span><span class="w"> </span><span class="nb">= </span><span class="p">[</span><span class="w">  </span><span class="mi">1</span><span class="w">   </span><span class="mi">4</span><span class="w">   </span><span class="mi">9</span><span class="w">  </span><span class="mi">16</span><span class="w">  </span><span class="mi">25</span><span class="w">  </span><span class="mi">36</span><span class="w">  </span><span class="mi">49</span><span class="w">  </span><span class="mi">64</span><span class="w">  </span><span class="mi">81</span><span class="w"> </span><span class="mi">100</span><span class="p">]</span>
+<p><code>vmap</code> is similar to <code>map</code>, but vectorizes the operation over the entire array:</p>
+<div class="language-text highlight"><pre><span></span><code>sheaf&gt; ((vmap (fn [i] (* i i)) 0) (range 1 11))
+=&gt; tensor i32[10] = [  1   4   9  16  25  36  49  64  81 100]
 </code></pre></div>
-<p>Finally, <code>scan</code> is a specialized iteration primitive that carries a state across a sequence (like <code>reduce</code>) but also returns all intermediate results.
-In differentiable programming, <code>scan</code> is the preferred way to implement recurrent structures or deep loops, as it allows the XLA compiler to optimize the backpropagation through time more efficiently than raw recursion.</p>
+<p><code>scan</code> carries a state across a sequence (like <code>reduce</code>) but also returns all intermediate results. In differentiable programming, <code>scan</code> is the preferred way to implement recurrent structures or deep loops, as it allows the compiler to optimize backpropagation through time.</p>
 <h3 id="working-with-parameters">Working with Parameters</h3>
 <p>In neural networks, parameters (weights and biases) are typically stored in nested dictionaries. Sheaf provides several tools to work with these structures elegantly.</p>
 <p>The <code>get</code> function retrieves a value from a dictionary by key:</p>
-<div class="language-clojure highlight"><pre><span></span><code><span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="nb">get </span><span class="p">{</span><span class="ss">:learning-rate</span><span class="w"> </span><span class="mf">0.001</span><span class="w"> </span><span class="ss">:epochs</span><span class="w"> </span><span class="mi">10</span><span class="p">}</span><span class="w"> </span><span class="ss">:learning-rate</span><span class="p">)</span>
-<span class="err">⇒</span><span class="w"> </span><span class="mf">0.001</span>
+<div class="language-text highlight"><pre><span></span><code>sheaf&gt; (get {:learning-rate 0.001 :epochs 10} :learning-rate)
+=&gt; 0.001
 </code></pre></div>
 <p>For deeply nested structures, <code>get-in</code> navigates through multiple levels using a path vector:</p>
-<div class="language-clojure highlight"><pre><span></span><code><span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="nf">get-in</span><span class="w"> </span><span class="p">{</span><span class="ss">:model</span><span class="w"> </span><span class="p">{</span><span class="ss">:layer1</span><span class="w"> </span><span class="p">{</span><span class="ss">:W</span><span class="w"> </span><span class="p">[[</span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="p">[</span><span class="mi">3</span><span class="w"> </span><span class="mi">4</span><span class="p">]]</span><span class="w"> </span><span class="ss">:b</span><span class="w"> </span><span class="p">[</span><span class="mf">0.1</span><span class="w"> </span><span class="mf">0.2</span><span class="p">]}}}</span><span class="w"> </span><span class="p">[</span><span class="ss">:model</span><span class="w"> </span><span class="ss">:layer1</span><span class="w"> </span><span class="ss">:b</span><span class="p">])</span>
-<span class="err">⇒</span><span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">f32</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="nb">= </span><span class="p">[</span><span class="mf">0.1</span><span class="w"> </span><span class="mf">0.2</span><span class="p">]</span>
+<div class="language-text highlight"><pre><span></span><code>sheaf&gt; (get-in {:model {:layer1 {:W [[1 2] [3 4]] :b [0.1 0.2]}}} &#39;[:model :layer1 :b])
+=&gt; [0.1 0.2]
 </code></pre></div>
 <p>A default value can be provided if the path does not exist:</p>
-<div class="language-clojure highlight"><pre><span></span><code><span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="nf">get-in</span><span class="w"> </span><span class="p">{</span><span class="ss">:a</span><span class="w"> </span><span class="mi">1</span><span class="p">}</span><span class="w"> </span><span class="p">[</span><span class="ss">:missing</span><span class="w"> </span><span class="ss">:path</span><span class="p">]</span><span class="w"> </span><span class="mi">42</span><span class="p">)</span>
-<span class="err">⇒</span><span class="w"> </span><span class="mi">42</span>
+<div class="language-text highlight"><pre><span></span><code>sheaf&gt; (get-in {:a 1} &#39;[:missing :path] 42)
+=&gt; 42
 </code></pre></div>
 <p>When writing neural network layers, repeatedly calling <code>get</code> becomes tedious. The <code>with-params</code> form unpacks dictionary keys directly into the local scope. This is called <em>parameters destructuring</em>:</p>
-<div class="language-clojure highlight"><pre><span></span><code><span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">params</span><span class="w"> </span><span class="p">{</span><span class="ss">:W</span><span class="w"> </span><span class="p">[[</span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="p">[</span><span class="mi">3</span><span class="w"> </span><span class="mi">4</span><span class="p">]]</span><span class="w"> </span><span class="ss">:b</span><span class="w"> </span><span class="p">[</span><span class="mf">0.5</span><span class="w"> </span><span class="mf">0.5</span><span class="p">]}</span>
-<span class="nv">...</span><span class="w">          </span><span class="nv">x</span><span class="w"> </span><span class="p">[</span><span class="mf">1.0</span><span class="w"> </span><span class="mf">1.0</span><span class="p">]]</span>
-<span class="nv">...</span><span class="w">      </span><span class="p">(</span><span class="nf">with-params</span><span class="w"> </span><span class="p">[</span><span class="nv">params</span><span class="p">]</span>
-<span class="nv">...</span><span class="w">        </span><span class="p">(</span><span class="nb">+ </span><span class="p">(</span><span class="o">@</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">W</span><span class="p">)</span><span class="w"> </span><span class="nv">b</span><span class="p">)))</span>
-<span class="err">⇒</span><span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">f32</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="nb">= </span><span class="p">[</span><span class="mf">4.5</span><span class="w"> </span><span class="mf">6.5</span><span class="p">]</span>
+<div class="language-text highlight"><pre><span></span><code>sheaf&gt; (let [params {:W [[1 2] [3 4]] :b [0.5 0.5]}
+     &gt;       x [1.0 1.0]]
+     &gt;   (with-params [params]
+     &gt;     (+ (@ x W) b)))
+=&gt; [4.5 6.5]
 </code></pre></div>
 <p>Without <code>with-params</code>, the equivalent code would require explicit <code>get</code> calls:</p>
 <div class="language-clojure highlight"><pre><span></span><code><span class="c1">;; More verbose alternative</span>
@@ -1596,24 +1584,24 @@ In differentiable programming, <code>scan</code> is the preferred way to impleme
 <span class="w">  </span><span class="p">(</span><span class="nb">+ </span><span class="p">(</span><span class="o">@</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="p">(</span><span class="nb">get </span><span class="nv">params</span><span class="w"> </span><span class="ss">:W</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nb">get </span><span class="nv">params</span><span class="w"> </span><span class="ss">:b</span><span class="p">)))</span>
 </code></pre></div>
 <p>For nested parameter structures, a key can be specified to destructure a sub-dictionary:</p>
-<div class="language-clojure highlight"><pre><span></span><code><span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">model</span><span class="w"> </span><span class="p">{</span><span class="ss">:layer1</span><span class="w"> </span><span class="p">{</span><span class="ss">:W</span><span class="w"> </span><span class="p">[[</span><span class="mi">1</span><span class="w"> </span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="p">[</span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="p">]]</span><span class="w"> </span><span class="ss">:b</span><span class="w"> </span><span class="p">[</span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="p">]}</span>
-<span class="nv">...</span><span class="w">                 </span><span class="ss">:layer2</span><span class="w"> </span><span class="p">{</span><span class="ss">:W</span><span class="w"> </span><span class="p">[[</span><span class="mi">2</span><span class="w"> </span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="p">[</span><span class="mi">2</span><span class="w"> </span><span class="mi">2</span><span class="p">]]</span><span class="w"> </span><span class="ss">:b</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="w"> </span><span class="mi">1</span><span class="p">]}}</span>
-<span class="nv">...</span><span class="w">          </span><span class="nv">x</span><span class="w"> </span><span class="p">[</span><span class="mf">1.0</span><span class="w"> </span><span class="mf">2.0</span><span class="p">]]</span>
-<span class="nv">...</span><span class="w">      </span><span class="p">(</span><span class="nf">with-params</span><span class="w"> </span><span class="p">[</span><span class="nv">model</span><span class="w"> </span><span class="ss">:layer1</span><span class="p">]</span>
-<span class="nv">...</span><span class="w">        </span><span class="p">(</span><span class="nb">+ </span><span class="p">(</span><span class="o">@</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">W</span><span class="p">)</span><span class="w"> </span><span class="nv">b</span><span class="p">)))</span>
-<span class="err">⇒</span><span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">f32</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="nb">= </span><span class="p">[</span><span class="mi">1</span><span class="k">. </span><span class="mi">2</span><span class="nv">.</span><span class="p">]</span>
+<div class="language-text highlight"><pre><span></span><code>sheaf&gt; (let [model {:layer1 {:W [[1 0] [0 1]] :b [0 0]}
+     &gt;             :layer2 {:W [[2 2] [2 2]] :b [1 1]}}
+     &gt;       x [1.0 2.0]]
+     &gt;   (with-params [model :layer1]
+     &gt;     (+ (@ x W) b)))
+=&gt; [1. 2.]
 </code></pre></div>
 <p>Since all values are immutable, dictionaries are updated by creating new ones. The <code>assoc</code> form adds or updates keys:</p>
-<div class="language-clojure highlight"><pre><span></span><code><span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="nb">assoc </span><span class="p">{</span><span class="ss">:a</span><span class="w"> </span><span class="mi">1</span><span class="p">}</span><span class="w"> </span><span class="ss">:b</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="ss">:c</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span>
-<span class="err">⇒</span><span class="w"> </span><span class="p">{</span><span class="ss">:a</span><span class="w"> </span><span class="mi">1</span>,<span class="w"> </span><span class="ss">:b</span><span class="w"> </span><span class="mi">2</span>,<span class="w"> </span><span class="ss">:c</span><span class="w"> </span><span class="mi">3</span><span class="p">}</span>
+<div class="language-text highlight"><pre><span></span><code>sheaf&gt; (assoc {:a 1} :b 2 :c 3)
+=&gt; {:a 1, :b 2, :c 3}
 </code></pre></div>
 <p>The <code>merge</code> function combines multiple dictionaries (later values override earlier ones):</p>
-<div class="language-clojure highlight"><pre><span></span><code><span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="nb">merge </span><span class="p">{</span><span class="ss">:lr</span><span class="w"> </span><span class="mf">0.001</span><span class="w"> </span><span class="ss">:epochs</span><span class="w"> </span><span class="mi">10</span><span class="p">}</span><span class="w"> </span><span class="p">{</span><span class="ss">:lr</span><span class="w"> </span><span class="mf">0.0001</span><span class="p">})</span>
-<span class="err">⇒</span><span class="w"> </span><span class="p">{</span><span class="ss">:lr</span><span class="w"> </span><span class="mf">0.0001</span>,<span class="w"> </span><span class="ss">:epochs</span><span class="w"> </span><span class="mi">10</span><span class="p">}</span>
+<div class="language-text highlight"><pre><span></span><code>sheaf&gt; (merge {:lr 0.001 :epochs 10} {:lr 0.0001})
+=&gt; {:lr 0.0001, :epochs 10}
 </code></pre></div>
 <p>And <code>dissoc</code> removes keys:</p>
-<div class="language-clojure highlight"><pre><span></span><code><span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="nb">dissoc </span><span class="p">{</span><span class="ss">:a</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="ss">:b</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="ss">:c</span><span class="w"> </span><span class="mi">3</span><span class="p">}</span><span class="w"> </span><span class="p">[</span><span class="ss">:a</span><span class="w"> </span><span class="ss">:c</span><span class="p">])</span>
-<span class="err">⇒</span><span class="w"> </span><span class="p">{</span><span class="ss">:b</span><span class="w"> </span><span class="mi">2</span><span class="p">}</span>
+<div class="language-text highlight"><pre><span></span><code>sheaf&gt; (dissoc {:a 1 :b 2 :c 3} [:a :c])
+=&gt; {:b 2}
 </code></pre></div>
 <p>These operations are essential for managing optimizer state, where parameters, momentum, and velocity are all stored in nested dictionaries that must be updated at each training step.</p>
 <h3 id="the-threading-operators">The threading operators</h3>
@@ -1621,19 +1609,19 @@ In differentiable programming, <code>scan</code> is the preferred way to impleme
 <p>These operators "thread" a value through a sequence of functions, making the code read like a pipeline from top to bottom.</p>
 <p><code>-&gt;</code> (<em>Thread-first</em>) automatically injects the result of the previous expression as the first argument of the next function call. It is ideal for linear transformations.</p>
 <p><code>as-&gt;</code> (<em>Thread-as</em>) binds the result to a specific symbol (a variable, in imperative talk), allowing us to place it anywhere in the next expressions. This is more typically used for operations where the input must be reused.</p>
-<p>Let's compare them to the traditional nesting:</p>
-<div class="language-clojure highlight"><pre><span></span><code><span class="nv">sheaf&gt;</span><span class="w"> </span><span class="c1">;; Traditionnal nesting - dense, but hard to read</span>
-<span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">((</span><span class="k">fn </span><span class="p">[</span><span class="nv">x</span><span class="p">]</span><span class="w"> </span><span class="p">(</span><span class="nb">* </span><span class="nv">x</span><span class="w"> </span><span class="nv">x</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nb">* </span><span class="p">(</span><span class="nb">+ </span><span class="mi">10</span><span class="w"> </span><span class="mi">5</span><span class="p">)</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span>
-<span class="err">⇒</span><span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[]</span><span class="w"> </span><span class="nb">= </span><span class="mi">900</span>
-<span class="nv">sheaf&gt;</span><span class="w"> </span><span class="c1">;; Threaded nesting</span>
-<span class="nv">sheaf&gt;</span><span class="w"> </span><span class="p">(</span><span class="nf">as-&gt;</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="nv">x</span><span class="w">                </span><span class="c1">;; Send 10 to x</span>
-<span class="nv">...</span><span class="w">      </span><span class="p">(</span><span class="nb">+ </span><span class="nv">x</span><span class="w"> </span><span class="mi">5</span><span class="p">)</span><span class="w">                 </span><span class="c1">;; Add 5 to it</span>
-<span class="nv">...</span><span class="w">      </span><span class="p">(</span><span class="nb">* </span><span class="nv">x</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w">                 </span><span class="c1">;; Multiply it by two</span>
-<span class="nv">...</span><span class="w">      </span><span class="p">((</span><span class="k">fn </span><span class="p">[</span><span class="nv">n</span><span class="p">]</span><span class="w"> </span><span class="p">(</span><span class="nb">* </span><span class="nv">n</span><span class="w"> </span><span class="nv">n</span><span class="p">))</span><span class="w"> </span><span class="nv">x</span><span class="p">))</span><span class="w">   </span><span class="c1">;; Square it with a lambda</span>
-<span class="err">⇒</span><span class="w"> </span><span class="nv">Tensor</span><span class="w"> </span><span class="nv">i32</span><span class="p">[]</span><span class="w"> </span><span class="nb">= </span><span class="mi">900</span>
+<div class="language-text highlight"><pre><span></span><code>;; Traditional nesting
+((fn [x] (* x x)) (* (+ 10 5) 2))
+;; =&gt; 900
+
+;; Threaded version
+(as-&gt; 10 x
+  (+ x 5)
+  (* x 2)
+  (* x x))
+;; =&gt; 900
 </code></pre></div>
-<p>In neural networks such as BareGPT in the examples folder, both threading operators are used to describe the flow of a tensor through layers. It makes the forward function look like an actual architecture diagram rather than a "soup" of parentheses:</p>
-<div class="language-clojure highlight"><pre><span></span><code><span class="p">(</span><span class="kd">defn </span><span class="nv">transformer-block</span><span class="w"> </span><span class="p">(</span><span class="nf">x</span><span class="w"> </span><span class="nv">layer-p</span><span class="w"> </span><span class="nv">config</span><span class="p">)</span>
+<p>In the NanoGPT example, both threading operators describe the flow of a tensor through layers:</p>
+<div class="language-clojure highlight"><pre><span></span><code><span class="p">(</span><span class="kd">defn </span><span class="nv">transformer-block</span><span class="w"> </span><span class="p">[</span><span class="nv">x</span><span class="w"> </span><span class="nv">layer-p</span><span class="w"> </span><span class="nv">config</span><span class="p">]</span>
 <span class="w">  </span><span class="c1">;; as-&gt; binds the initial &#39;x&#39; to the name &#39;h&#39;</span>
 <span class="w">  </span><span class="c1">;; This allows us to reuse &#39;h&#39; multiple times within the block,</span>
 <span class="w">  </span><span class="c1">;; specifically for the residual connection at the end</span>
@@ -1642,7 +1630,7 @@ In differentiable programming, <code>scan</code> is the preferred way to impleme
 <span class="w">    </span><span class="c1">;; We now switch to &#39;-&gt;&#39; because each function takes the output of the</span>
 <span class="w">    </span><span class="c1">;; previous one as its first argument, somewhat like with a shell pipe</span>
 <span class="w">    </span><span class="p">(</span><span class="nb">-&gt; </span><span class="nv">h</span>
-<span class="w">        </span><span class="p">(</span><span class="nf">local-layer-norm</span><span class="w"> </span><span class="p">(</span><span class="nb">get </span><span class="nv">layer-p</span><span class="w"> </span><span class="ss">:ln1</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">layer-norm</span><span class="w"> </span><span class="p">(</span><span class="nb">get </span><span class="nv">layer-p</span><span class="w"> </span><span class="ss">:ln1</span><span class="p">))</span>
 <span class="w">        </span><span class="p">(</span><span class="nf">multi-head-attention</span><span class="w"> </span><span class="nv">layer-p</span><span class="w"> </span><span class="nv">config</span><span class="p">)</span>
 <span class="w">        </span><span class="p">(</span><span class="nf">first</span><span class="p">)</span><span class="w"> </span><span class="c1">;; Get the attention output, ignore weights</span>
 <span class="w">        </span><span class="p">(</span><span class="nb">+ </span><span class="nv">h</span><span class="p">))</span><span class="w">  </span><span class="c1">;; Residual 1: we explicitly reference &#39;h&#39; named above</span>
@@ -1650,7 +1638,7 @@ In differentiable programming, <code>scan</code> is the preferred way to impleme
 <span class="w">    </span><span class="c1">;; We re-bind the result of the previous block to &#39;h&#39;</span>
 <span class="w">    </span><span class="p">(</span><span class="nf">as-&gt;</span><span class="w"> </span><span class="nv">h</span>
 <span class="w">        </span><span class="p">(</span><span class="nb">-&gt; </span><span class="nv">h</span>
-<span class="w">            </span><span class="p">(</span><span class="nf">local-layer-norm</span><span class="w"> </span><span class="p">(</span><span class="nb">get </span><span class="nv">layer-p</span><span class="w"> </span><span class="ss">:ln2</span><span class="p">))</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">layer-norm</span><span class="w"> </span><span class="p">(</span><span class="nb">get </span><span class="nv">layer-p</span><span class="w"> </span><span class="ss">:ln2</span><span class="p">))</span>
 <span class="w">            </span><span class="p">(</span><span class="nf">mlp</span><span class="w"> </span><span class="p">(</span><span class="nb">get </span><span class="nv">layer-p</span><span class="w"> </span><span class="ss">:mlp</span><span class="p">))</span>
 <span class="w">            </span><span class="p">(</span><span class="nb">+ </span><span class="nv">h</span><span class="p">)))))</span><span class="w"> </span><span class="c1">;; Residual 2</span>
 </code></pre></div>
@@ -1666,7 +1654,8 @@ In differentiable programming, <code>scan</code> is the preferred way to impleme
 <span class="w">  </span><span class="p">(</span><span class="nb">print </span><span class="p">(</span><span class="nb">get </span><span class="nv">config</span><span class="w"> </span><span class="ss">:layers</span><span class="p">)))</span>
 
 <span class="c1">;; Reading a dataset as a raw string</span>
-<span class="p">(</span><span class="k">def </span><span class="nv">corpus</span><span class="w"> </span><span class="p">(</span><span class="nf">io</span><span class="w"> </span><span class="s">&quot;read&quot;</span><span class="w"> </span><span class="s">&quot;data/shakespeare.txt&quot;</span><span class="p">))</span>
+<span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">corpus</span><span class="w"> </span><span class="p">(</span><span class="nf">io</span><span class="w"> </span><span class="s">&quot;read&quot;</span><span class="w"> </span><span class="s">&quot;data/shakespeare.txt&quot;</span><span class="p">)]</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">print </span><span class="s">&quot;Length:&quot;</span><span class="w"> </span><span class="p">(</span><span class="nf">len</span><span class="w"> </span><span class="nv">corpus</span><span class="p">)))</span>
 </code></pre></div>
 <p>Depending on the verb and the file format, <code>io</code> may return an in-memory value or a lazy view over the underlying data.</p>
 <p><strong>Large Files and Handles</strong></p>
@@ -1709,8 +1698,7 @@ In differentiable programming, <code>scan</code> is the preferred way to impleme
 <p>Sharding, file boundaries, and memory mapping are handled by the runtime. From the program’s point of view, the dataset is just another collection.</p>
 <p><strong>Summary</strong></p>
 <p>The <code>io</code> form isolates side effects while still allowing efficient access to large, persistent datasets. This keeps most Sheaf code focused on data transformation, while I/O remains explicit and localized.</p>
-<h3 id="some-quick-exercices">Some quick exercices</h3>
-<p>Let's try some quick exercises to become more familiar with Sheaf.</p>
+<h3 id="some-quick-exercises">Some quick exercises</h3>
 <p><strong>Exercise 1</strong>:</p>
 <ul>
 <li>What is the result of <code>(1 + 2) * 3</code> ?</li>
@@ -1732,9 +1720,40 @@ In differentiable programming, <code>scan</code> is the preferred way to impleme
 <li>Write a function that sums all elements of an array, without using <code>sum</code>.</li>
 </ul>
 <p><em>Hint: To see the documentation and signature of a form, use <code>:help &lt;form&gt;</code>.</em></p>
+<h3 id="bracket-reference">Bracket reference</h3>
+<table>
+<thead>
+<tr>
+<th>Syntax</th>
+<th>Name</th>
+<th>Usage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>(...)</code></td>
+<td>Parentheses</td>
+<td>Function calls: <code>(+ 1 2)</code>, <code>(defn f [x] ...)</code></td>
+</tr>
+<tr>
+<td><code>[...]</code></td>
+<td>Brackets</td>
+<td>Tensors: <code>[1 2 3]</code>, parameter lists: <code>(defn f [x y] ...)</code>, let bindings: <code>(let [x 1] ...)</code></td>
+</tr>
+<tr>
+<td><code>'[...]</code></td>
+<td>Quoted brackets</td>
+<td>Literal lists (shapes, paths): <code>'[3 4]</code>, <code>'[:a :b]</code></td>
+</tr>
+<tr>
+<td><code>{...}</code></td>
+<td>Braces</td>
+<td>Dictionaries: <code>{:x 1 :y 2}</code></td>
+</tr>
+</tbody>
+</table>
 <h3 id="glossary">Glossary</h3>
-<p>Sheaf, like Clojure and other Lisp dialects, use its own terminology.
-This list summarizes the "technical jargon" for developers used to imperative languages like Python.</p>
+<p>Sheaf, like Clojure and other Lisp dialects, uses its own terminology.</p>
 <ul>
 <li><strong>Application</strong>: A function call (applying arguments to a function).</li>
 <li><strong>Binding</strong>: The association of a value to a symbol within a specific scope (<em>assigning a variable</em> in imperative talk).</li>

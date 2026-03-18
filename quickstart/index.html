@@ -118,6 +118,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     border-color: var(--sheaf-primary) !important;
   }
 
+  .md-typeset a {
+    color: rgb(255, 110, 66) !important;
+  }
+
   a:hover {
     opacity: 0.8;
   }
@@ -503,7 +507,7 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     <div data-md-component="skip">
       
         
-        <a href="#quick-start-guide" class="md-skip">
+        <a href="#quick-start" class="md-skip">
           Skip to content
         </a>
       
@@ -827,10 +831,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#getting-the-examples" class="md-nav__link">
+  <a href="#installation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Getting the Examples
+        Installation
       
     </span>
   </a>
@@ -838,10 +842,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
       
         <li class="md-nav__item">
-  <a href="#sheaf-console" class="md-nav__link">
+  <a href="#repl" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Sheaf Console
+        REPL
       
     </span>
   </a>
@@ -849,10 +853,43 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
       
         <li class="md-nav__item">
-  <a href="#ai-bootstrap" class="md-nav__link">
+  <a href="#running-a-file" class="md-nav__link">
     <span class="md-ellipsis">
       
-        AI bootstrap
+        Running a file
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ai-assistant-bootstrap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AI assistant bootstrap
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next steps
       
     </span>
   </a>
@@ -931,14 +968,14 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../types/" class="md-nav__link">
+      <a href="../key-concepts/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Data types
+    Key Concepts
   
 
     
@@ -959,14 +996,14 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
   
     <li class="md-nav__item">
-      <a href="../python/" class="md-nav__link">
+      <a href="../types/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Python Interoperability
+    Data types
   
 
     
@@ -1155,10 +1192,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#getting-the-examples" class="md-nav__link">
+  <a href="#installation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Getting the Examples
+        Installation
       
     </span>
   </a>
@@ -1166,10 +1203,10 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
       
         <li class="md-nav__item">
-  <a href="#sheaf-console" class="md-nav__link">
+  <a href="#repl" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Sheaf Console
+        REPL
       
     </span>
   </a>
@@ -1177,10 +1214,43 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
       
         <li class="md-nav__item">
-  <a href="#ai-bootstrap" class="md-nav__link">
+  <a href="#running-a-file" class="md-nav__link">
     <span class="md-ellipsis">
       
-        AI bootstrap
+        Running a file
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ai-assistant-bootstrap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AI assistant bootstrap
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next steps
       
     </span>
   </a>
@@ -1207,39 +1277,68 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
 
 
-<h1 id="quick-start-guide">Quick Start Guide</h1>
-<p>Sheaf is designed to integrate closely with the Python ecosystem, and is distributed as a Python package.
-To get started quickly, install it via <code>pip</code>:</p>
-<div class="language-bash highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>sheaf-lang
+<h1 id="quick-start">Quick Start</h1>
+<p>Sheaf ships as a single native binary with no runtime dependencies.</p>
+<h2 id="installation">Installation</h2>
+<p>Download the binary for your platform from the <a href="https://github.com/sheaf-lang/sheaf/releases">releases page</a>:</p>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Binary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>macOS (Apple Silicon)</td>
+<td><code>sheaf-macos-aarch64</code></td>
+</tr>
+<tr>
+<td>Linux x86_64</td>
+<td><code>sheaf-linux-x86_64</code></td>
+</tr>
+<tr>
+<td>Linux aarch64</td>
+<td><code>sheaf-linux-aarch64</code></td>
+</tr>
+</tbody>
+</table>
+<p>Make the binary executable and move it to your PATH:</p>
+<div class="language-bash highlight"><pre><span></span><code>chmod<span class="w"> </span>+x<span class="w"> </span>sheaf-macos-aarch64
+mv<span class="w"> </span>sheaf-macos-aarch64<span class="w"> </span>/usr/local/bin/sheaf
 </code></pre></div>
-<h3 id="getting-the-examples">Getting the Examples</h3>
-<p>After installation, clone the repository to access example projects:</p>
-<div class="language-bash highlight"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/sheaf-lang/sheaf
-<span class="nb">cd</span><span class="w"> </span>sheaf/examples
+<h2 id="repl">REPL</h2>
+<p>Run <code>sheaf</code> with no arguments to start the interactive console:</p>
+<div class="language-text highlight"><pre><span></span><code>Sheaf 2.0.0 (:h for help)
+sheaf&gt; (+ 1 2)
+=&gt; 3
+sheaf&gt; (map (fn [x] (* x x)) [1 2 3 4])
+=&gt; [1.0, 4.0, 9.0, 16.0]
 </code></pre></div>
-<p>The repository includes four reference implementations in the <code>examples/</code> directory:</p>
+<p>Tab completion is available. Inline help: <code>:help &lt;name&gt;</code> (e.g., <code>:help let</code>).</p>
+<h2 id="running-a-file">Running a file</h2>
+<p>To run a program, pass the source file to <code>sheaf</code>:</p>
+<div class="language-bash highlight"><pre><span></span><code>sheaf<span class="w"> </span>run.shf
+</code></pre></div>
+<h2 id="examples">Examples</h2>
+<p>Download the examples archive from the <a href="https://github.com/sheaf-lang/sheaf/releases">releases page</a> (<a href="https://github.com/sheaf-lang/sheaf/releases/download/v2.0.0-rc1/sheaf-examples.tar.gz">direct link</a>). Each example is self-contained:</p>
+<div class="language-bash highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>examples/mlp
+sheaf<span class="w"> </span>run.shf
+</code></pre></div>
+<p>Available examples:</p>
 <ul>
-<li><strong>BareGPT</strong> - A generative Transformer trained on Shakespeare</li>
-<li><strong>Clevr</strong> - A neuro-symbolic model for visual question answering</li>
-<li><strong>Hydra</strong> - A self-evolving model that grows during training</li>
-<li><strong>XOR MLP</strong> - The "Hello World" of Sheaf, solving XOR with a tiny neural network</li>
+<li><strong>CLEVR</strong>: A neuro-symbolic model for visual question answering</li>
+<li><strong>Hydra</strong>: A self-modifying model that grows during training</li>
+<li><strong>MLP</strong>: "Hello World" example of a small multi-layer network to solve XOR</li>
+<li><strong>NanoGPT</strong>: A port of Karpathy's nanoGPT in Sheaf</li>
 </ul>
-<p>The examples have additional dependencies. Make sure they are installed:</p>
-<div class="language-bash highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>matplotlib<span class="w"> </span>numpy<span class="w"> </span>streamlit
+<h2 id="ai-assistant-bootstrap">AI assistant bootstrap</h2>
+<p><code>sheaf init-ai</code> generates a context file in the current directory. Provide this file to Claude Code, Cursor, Copilot, or any other assistant to get code generation, code completion, and debugging help.</p>
+<div class="language-bash highlight"><pre><span></span><code>sheaf<span class="w"> </span>init-ai
+<span class="c1"># Generates sheaf-context.md</span>
 </code></pre></div>
-<hr />
-<h3 id="sheaf-console">Sheaf Console</h3>
-<p>Type <code>sheaf</code> to start the Sheaf console and experiment with code:</p>
-<div class="language-bash highlight"><pre><span></span><code>Welcome<span class="w"> </span>to<span class="w"> </span>Sheaf<span class="w"> </span>Console<span class="w"> </span>v1.1.0
-Type<span class="w"> </span>:help<span class="w"> </span>or<span class="w"> </span>:h<span class="w"> </span><span class="k">for</span><span class="w"> </span>help,<span class="w"> </span>:quit<span class="w"> </span>or<span class="w"> </span>:q<span class="w"> </span>to<span class="w"> </span><span class="nb">exit</span>
-
-sheaf&gt;
-</code></pre></div>
-<p>The Sheaf console comes with autocompletion (<code>[Tab]</code> key), and inline help is available with <code>:help &lt;function-name&gt;</code> (e.g., <code>:help let</code>).</p>
-<p>From there, follow the <a href="../starting/">tutorial</a> to get familiar with the functional approach.</p>
-<h3 id="ai-bootstrap">AI bootstrap</h3>
-<p>If you are using an AI assistant like Claude Code, Devstral or other LLM-based tools, Sheaf includes a dedicated bootstrap feature.</p>
-<p>Running <code>sheaf init-ai</code> generates a context file in the current directory. Provide this file to your assistant to help with learning Sheaf, debugging code, or building models.</p>
+<h2 id="next-steps">Next steps</h2>
+<p>Follow the <a href="../starting/">tutorial</a> to learn the language fundamentals.</p>
 
 
 
