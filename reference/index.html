@@ -1925,6 +1925,17 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
         
           <li class="md-nav__item">
+  <a href="#random-range" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        random-range
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#random-randint" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3134,6 +3145,34 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
     <span class="md-ellipsis">
       
         defbatch
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#utilities-miscshf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Utilities (misc.shf)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Utilities (misc.shf)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#random-range_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        random-range
       
     </span>
   </a>
@@ -4034,6 +4073,17 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
 </li>
         
           <li class="md-nav__item">
+  <a href="#random-range" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        random-range
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#random-randint" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5254,6 +5304,34 @@ It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Pyt
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#utilities-miscshf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Utilities (misc.shf)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Utilities (misc.shf)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#random-range_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        random-range
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5815,10 +5893,7 @@ nil                  ; Null/None value
 <strong>Signature:</strong> <code>(cast expr :dtype)</code></p>
 <p>Converts a tensor, scalar, or DeviceBuffer to the specified dtype. Supported dtypes: <code>:f32</code>, <code>:bf16</code>, <code>:i32</code>. Sheaf never converts dtypes implicitly.</p>
 <p>The <code>[vec] :dtype</code> syntax is syntactic sugar that desugars to <code>cast</code> at parse time.</p>
-<div class="language-text highlight"><pre><span></span><code>(cast [1 2 3] :bf16)         ; =&gt; tensor bf16[3] = [1. 2. 3.]
-(cast [1 2 3] :f32)          ; =&gt; tensor f32[3] = [1. 2. 3.]
-
-;; Equivalent shorthand via type annotation
+<div class="language-text highlight"><pre><span></span><code>;; Equivalent shorthand via type annotation
 [1 2 3] :bf16                ; =&gt; tensor bf16[3] = [1. 2. 3.]
 
 ;; Cast an existing tensor
@@ -5889,6 +5964,14 @@ Use a quoted vector for the shape (e.g., <code>'[256 128]</code>) to ensure it i
 <strong>Signature:</strong> <code>(random-uniform key [shape])</code></p>
 <p>Samples random values from a uniform distribution over the semi-open interval <code>[0.0, 1.0)</code>. This is often used as a base for custom probability transforms or simple noise injection.</p>
 <div class="language-text highlight"><pre><span></span><code>(random-uniform (random-key 0) &#39;[10 10])  ; =&gt; Tensor i32[10x10]
+</code></pre></div>
+<hr />
+<h3 id="random-range">random-range</h3>
+<p><strong>Type:</strong> stdlib function (misc.shf)
+<strong>Signature:</strong> <code>(random-range key shape lo hi)</code></p>
+<p>Samples uniform random values in the range <code>[lo, hi)</code>. Built on <code>random-uniform</code>.</p>
+<div class="language-text highlight"><pre><span></span><code>(random-range (random-key 42) &#39;[3] 0.1 0.9)
+;; =&gt; tensor f32[3] with values in [0.1, 0.9)
 </code></pre></div>
 <hr />
 <h3 id="random-randint">random-randint</h3>
@@ -7120,6 +7203,16 @@ Adam optimizer step. Maintains first moment <code>m</code> (mean) and second mom
 ;; Expands to:
 (defn linear-layer [x w b]
   ((vmap (lambda [x w b] (+ (@ x w) b)) [0 nil nil]) x w b))
+</code></pre></div>
+<hr />
+<h3 id="utilities-miscshf">Utilities (misc.shf)</h3>
+<p>General-purpose helpers loaded in the prelude.</p>
+<h4 id="random-range_1">random-range</h4>
+<p><strong>Type:</strong> function
+<strong>Signature:</strong> <code>(random-range key shape lo hi)</code></p>
+<p>Uniform random values in <code>[lo, hi)</code>. Equivalent to <code>(+ lo (* (- hi lo) (random-uniform key shape)))</code>.</p>
+<div class="language-text highlight"><pre><span></span><code>(random-range (random-key 0) &#39;[] 0.1 0.9)  ; =&gt; scalar in [0.1, 0.9)
+(random-range (random-key 0) &#39;[2 3] -1.0 1.0)  ; =&gt; 2x3 tensor in [-1, 1)
 </code></pre></div>
 <hr />
 
