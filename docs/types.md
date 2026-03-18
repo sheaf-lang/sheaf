@@ -1,24 +1,24 @@
 # Sheaf Data Types
 
-Sheaf is **tensor-first**: all numeric values are JAX tensors by default, with `f32` (32-bit float) as the default dtype.
+Sheaf is **tensor-first**: all numeric values are tensors by default, with `f32` (32-bit float) as the default dtype.
 
 ## Summary Table
 
-| Type           | Notation       | Example         | Description                   |
-| -------------- | -------------- | --------------- | ----------------------------- |
-| Tensor         | `[...]`        | `[1 2 3]`       | JAX array, default f32        |
-| Tensor (typed) | `[...] :dtype` | `[1 2] :bf16`   | Explicit dtype                |
-| Literal List   | `'[...]`       | `'[3 4]`        | List of static data           |
-| Dictionary     | `{...}`        | `{:x 1}`        | Key-value pairs (pytree node) |
-| Keyword        | `:name`        | `:weight`       | Dictionary keys, options      |
-| Boolean        | Literal        | `true`, `false` | Boolean values                |
-| String         | `"..."`        | `"hello"`       | Text strings                  |
+| Type           | Notation       | Example         | Description                      |
+| -------------- | -------------- | --------------- | -------------------------------- |
+| Tensor         | `[...]`        | `[1 2 3]`       | N-dimensional array, default f32 |
+| Tensor (typed) | `[...] :dtype` | `[1 2] :bf16`   | Explicit dtype                   |
+| Literal List   | `'[...]`       | `'[3 4]`        | List of static data              |
+| Dictionary     | `{...}`        | `{:x 1}`        | Key-value pairs (pytree node)    |
+| Keyword        | `:name`        | `:weight`       | Dictionary keys, options         |
+| Boolean        | Literal        | `true`, `false` | Boolean values                   |
+| String         | `"..."`        | `"hello"`       | Text strings                     |
 
 ---
 
 ## Tensors
 
-Tensors are the primary data type in Sheaf. All numeric literals and vectors become JAX tensors.
+Tensors are the primary data type in Sheaf. All numeric literals and vectors become tensors.
 
 !!! note "**Note: Syntactic Context Matters**"
 
@@ -33,8 +33,8 @@ Tensors are the primary data type in Sheaf. All numeric literals and vectors bec
 ### Basic Tensors
 
 ```clojure
-42                    ; Scalar tensor (f32)
-3.14                  ; Scalar tensor (f32)
+42                    ; Scalar value (f32)
+3.14                  ; Scalar value (f32)
 [1 2 3]               ; 1D tensor, shape (3,)
 [[1 2] [3 4]]         ; 2D tensor, shape (2, 2)
 ```
@@ -47,9 +47,7 @@ A dtype keyword may follow a vector literal to specify its precision:
 [1 2 3]               ; Default f32
 [1 2 3] :f32          ; Explicit f32
 [1 2 3] :bf16         ; BFloat16
-[1 2 3] :f16          ; Float16
 [1 2 3] :i32          ; 32-bit integer
-[1 2 3] :u32          ; 32-bit unsigned integer
 [1 2 3] :bool         ; Boolean
 ```
 
@@ -59,7 +57,7 @@ The quote `'` prevents evaluation, treating the following form as literal data r
 
 ```clojure
 ;; Without the quote, [2 3] is evaluated as a tensor
-(nth [2 3] 0)  ; => Tensor f32[] = 2.0
+(nth [2 3] 0)  ; => tensor f32[] = 2.0
 
 ;; With the quote, '[2 3] is passed as a literal list
 (nth '[2 3] 0) ; => 2
@@ -79,22 +77,33 @@ The `tensor` function converts a quoted list or dynamically-generated list into 
 
 ```clojure
 ;; From quoted list
-(tensor '[1 2 3 4 5 6])                    ; => Tensor i32[6] = [1 2 3 4 5 6]
+(tensor '[1 2 3 4 5 6])                    ; => tensor i32[6] = [1 2 3 4 5 6]
 
 ;; From dynamically-generated list
 (let [lst (cons 1 '[2 3])]                  ; cons returns a list
   (tensor lst))                             ; Convert to tensor
-; => Tensor i32[3] = [1 2 3]
+; => tensor i32[3] = [1 2 3]
 
 ;; Chaining with tensor operations
-(reshape (tensor '[1 2 3 4 5 6]) '[2 3])   ; => Tensor i32[2x3] = [[1 2 3] [4 5 6]]
+(reshape (tensor '[1 2 3 4 5 6]) '[2 3])   ; => tensor i32[2x3] = [[1 2 3] [4 5 6]]
 ```
 
 ### Type Conversion
 
-Sheaf does not perform implicit type conversions. All changes between static and dynamic representations must be explicit in the source code.
+Sheaf does not perform implicit type conversions. All dtype changes must be explicit.
 
-`int` and `float` cast a tensor to a different numeric type. Shape is preserved and the result remains a tensor.
+`cast` converts a tensor to a different dtype. Shape is preserved.
+
+```clojure
+;; Direct annotation on vector literals
+[1 2 3] :bf16                ; bf16 tensor
+
+;; cast converts an existing tensor
+(let [x [1 2 3] :bf16]
+  (cast x :f32))             ; bf16 -> f32
+```
+
+`int` and `float` convert a scalar to a 32-bit integer or float respectively.
 
 ---
 
@@ -120,7 +129,7 @@ Key-value structures using curly braces. Keys are typically keywords.
 (merge {:x 1} {:y 2})             ; => {:x 1 :y 2}
 ```
 
-Dictionaries are **pytree nodes**: JAX can differentiate through them and apply transformations like `vmap` to their contents.
+Dictionaries are pytree nodes: Sheaf can differentiate through them and apply transformations like `vmap` to their contents.
 
 ---
 
@@ -147,7 +156,8 @@ Comparison operations return boolean tensors:
 
 ```clojure
 (> [1 2 3] 2)         ; => [false false true]
-(= [1 2 1] 1)         ; => [true false true]
+(== [1 2 1] 1)        ; => [true false true]  (element-wise)
+(= [1 2 1] 1)         ; => false              (structural equality)
 ```
 
 ---
@@ -158,23 +168,13 @@ Comparison operations return boolean tensors:
 "hello"               ; String literal
 ```
 
-String operations use `str-call` which dispatches to Python string methods.
-Methods called through `str-call` return strings, literal lists, or booleans—never tensors.
-
-```clojure
-(str-call "upper" "hello")           ; => "HELLO" (string)
-(str-call "split" "a,b,c" ",")       ; => '["a" "b" "c"] (literal list)
-(str-call "replace" "foo" "o" "a")   ; => "faa" (string)
-(str-call "startswith" "hello" "he") ; => true (boolean)
-```
-
-Note: `str-call` is evaluated at compile time before JIT compilation. The result is then embedded in the compiled function, so string operations don't impact runtime performance.
+String operations are available through builtin functions. Strings are not tensors and cannot be JIT-compiled.
 
 ---
 
 ## PyTrees
 
-Nested structures of dictionaries and tensors that JAX understands natively. Used for neural network parameters:
+PyTrees are nested structures of dictionaries and tensors. They are mostly used for neural network parameters:
 
 ```clojure
 {:layer1 {:W (random-normal (random-key 0) '[4 8]) :b (zeros '[8])}
@@ -184,7 +184,7 @@ Nested structures of dictionaries and tensors that JAX understands natively. Use
 PyTrees enable:
 
 - Gradient computation through nested structures via `value-and-grad`
-- Batch operations via `vmap`
+- Batch operations via `vmap` (planned feature)
 - Efficient iteration via `scan`
 
 ```clojure

@@ -3,34 +3,26 @@ hide:
   - toc
 ---
 
-# Planned evolutions for Sheaf
+# Roadmap
 
-Sheaf currently compiles through JAX to XLA, inheriting Python's runtime overhead. The next major version will target StableHLO directly, eliminating the Python dependency for compiled programs.
+## Version 2.1 (planned features)
 
-**Upcoming architecture**:
+### Performance
 
-- Sheaf compiler rewritten in Rust
-- Direct StableHLO emission (bypassing JAX)
-- AOT compilation via [IREE](https://github.com/iree-org/iree)
-- Autodiff via [Enzyme](https://enzyme.mit.edu/) or IREE's gradient primitives
+- **KV cache**: Sheaf 2.0 currently doesn't have a KV cache, which is essential for competitive inference at scale. Without it, each generated token recomputes full O(n^2) attention over the entire context. With it, each step costs O(n) after the first pass.
 
-**Benefits**:
+- **Batch generation mode**: Currently, autoregressive generation calls the compiled model once per token. Batch mode would compile the full generation loop into a single dispatch, returning all tokens at once.
 
-- Runtime footprint: 1-2MB (vs 500-700MB with Python+JAX or PyTorch)
-- Compile-time footprint: 30-50MB
-- No Python runtime required for inference or training
-- Standalone executables for deployment
+### Distribution
 
-This will align the technical stack with the language: elegance and concision from syntax to runtime. The transition will also preserve Sheaf's homoiconic nature and functional purity yet eliminate accidental complexity inherited from Python.
+- **NCCL all-reduce**: Multi-GPU training via NCCL collective operations, for data-parallel training across multiple devices.
 
-### Parallelism and distribution
+### Developer experience
 
-Sheaf does not currently expose low-level sharding primitives like `pmap`. Instead, it relies on JAX's automatic partitioning, which works well for single-machine training but limits multi-node scaling.
+- **Jupyter integration**: A Sheaf kernel for Jupyter, allowing interactive notebook workflows with inline tensor visualization and training loops.
 
-In V2, distribution could be expressed through:
+- **`:trace` and `:blame` in the REPL**: These observability modes were tied to V1 semantics and temporarily removed. They will be re-introduced with behavior adapted to the V2 execution model.
 
-- StableHLO's native sharding annotations
-- Macro-based rewrites during compilation
-- IREE's multi-device runtime capabilities
+### Misc
 
-This would give explicit control over parallelization while keeping mathematical definitions clean from hardware concerns.
+- **`vmap` on dictionaries**: `vmap` currently only accepts tensor arguments. PyTree support (automatic flattening/unflattening of dicts) will be added to match the behavior of `value-and-grad`.

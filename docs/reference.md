@@ -121,6 +121,21 @@ Computes the element-wise absolute value of the input. For complex inputs, this 
 
 ---
 
+### ash
+
+**Type:** function
+**Signature:** `(ash value shift)`
+
+Arithmetic shift. Positive shift means left shift (multiply by 2^n), negative shift means right shift (divide by 2^n, floor toward negative infinity). Matches Common Lisp `ash` semantics. Works element-wise on tensors.
+
+```sheaf
+(ash 1 8)            ; => 256
+(ash 256 -3)         ; => 32
+(ash [512 1024] -8)  ; => [2 4]
+```
+
+---
+
 ### exp
 
 **Type:** function  
@@ -319,14 +334,14 @@ Computes the Rectified Linear Unit activation function. It returns the element-w
 
 ### leaky-relu
 
-**Type:** function  
-**Signature:** `(leaky-relu x [:alpha a])`
+**Type:** function
+**Signature:** `(leaky-relu x slope)`
 
-Computes the Leaky Rectified Linear Unit activation function. Unlike standard ReLU, it allows a small non-zero gradient when the input is negative, defined as `alpha * x`. This prevents "dead" neurons during training.
+Computes the Leaky Rectified Linear Unit activation function. Unlike standard ReLU, it allows a small non-zero gradient when the input is negative, defined as `slope * x`. This prevents "dead" neurons during training.
 
 ```sheaf
-(leaky-relu -1.0)    ; => -0.01 (default negative_slope=0.01)
-(leaky-relu [-1.0 2.0] :negative_slope 0.1) ; => [-0.1  2. ]
+(leaky-relu -1.0 0.01)          ; => -0.01
+(leaky-relu [-1.0 2.0] 0.1)     ; => [-0.1  2. ]
 ```
 
 ---
@@ -616,8 +631,9 @@ Gives a new shape to a tensor without changing its underlying data. The total nu
 
 ### transpose
 
-**Type:** function  
+**Type:** function
 **Signature:** `(transpose x [perm])`
+**Alias:** `tr`
 
 Permutes the dimensions of a tensor according to the sequence of axes provided. This is a zero-copy operation in XLA that is critical for reordering dimensions (e.g., swapping batch and sequence axes or head dimensions).
 
@@ -631,12 +647,12 @@ Permutes the dimensions of a tensor according to the sequence of axes provided. 
                     [11 12]]])) ; => (2 3 2)
 
 ;; Custom permutation '[2 0 1]: (2 3 2) -> (2 2 3)
-(shape (transpose [[[1 2]
-                    [3 4]
-                    [5 6]]
-                   [[7 8]
-                    [9 10]
-                    [11 12]]] '[2 0 1])) ; => (2 2 3)
+(shape (tr [[[1 2]
+             [3 4]
+             [5 6]]
+             [[7 8]
+             [9 10]
+             [11 12]]] '[2 0 1])) ; => (2 2 3)
 ```
 
 ---
@@ -686,7 +702,7 @@ Rolls tensor elements along the specified axis. Elements that roll off one end a
 **Type:** function  
 **Signature:** `(concat x1 x2 [...] [:axis axis])`
 
-Concatenate sequences (lists or JAX arrays). Returns a list for list inputs, JAX array for array inputs. Supports `:axis` for array concatenation (default 0).
+Concatenate sequences (lists or arrays). Returns a list for list inputs, tensor for array inputs. Supports `:axis` for array concatenation (default 0).
 
 ```sheaf
 ;; Concatenate lists
@@ -802,7 +818,7 @@ Converts integer indices into a one-hot representation. For an input of shape `(
 **Type:** function  
 **Signature:** `(index-update tensor idx value)`
 
-Returns a new tensor identical to `tensor` except that the slice at position `idx` is replaced by `value`. The index must be a scalar integer — not a single-element vector. This is the standard way to perform functional (out-of-place) updates on tensors, compatible with JAX JIT.
+Returns a new tensor identical to `tensor` except that the slice at position `idx` is replaced by `value`. The index must be a scalar integer — not a single-element vector. This is the standard way to perform functional (out-of-place) updates on tensors.
 
 ```sheaf
 ;; Replace one element in a 1D vector
@@ -820,7 +836,7 @@ Returns a new tensor identical to `tensor` except that the slice at position `id
 **Type:** function  
 **Signature:** `(tensor data)`
 
-Converts a literal list or a dynamically-generated list into a JAX tensor. This function is required when a sequence is built at runtime (via `cons`, `append`, etc.) and needs to enter the computational pipeline. It ensures that host-side structures are explicitly moved to the device for JIT execution.
+Converts a literal list or a dynamically-generated list into a tensor. This function is required when a sequence is built at runtime (via `cons`, `append`, etc.) and needs to enter the computational pipeline.
 
 ```sheaf
 ;; Conversion from a literal list
@@ -840,7 +856,7 @@ Converts a literal list or a dynamically-generated list into a JAX tensor. This 
 **Type:** function  
 **Signature:** `(int x)`, `(float x)`
 
-Cast a scalar tensor or a Python number to a 32-bit integer or 32-bit float, respectively. The result is a scalar JAX array. These are the primary way to extract a concrete numeric value from a tensor for use in indexing or list operations.
+Cast a scalar tensor or number to a 32-bit integer or 32-bit float, respectively. The result is a scalar tensor. These are the primary way to extract a concrete numeric value from a tensor for use in indexing or list operations.
 
 ```sheaf
 (int 3.7)                ; => 3
@@ -852,75 +868,76 @@ Cast a scalar tensor or a Python number to a 32-bit integer or 32-bit float, res
 
 ---
 
+### cast
+
+**Type:** function
+**Signature:** `(cast expr :dtype)`
+
+Converts a tensor, scalar, or DeviceBuffer to the specified dtype. Supported dtypes: `:f32`, `:bf16`, `:i32`. Sheaf never converts dtypes implicitly.
+
+The `[vec] :dtype` syntax is syntactic sugar that desugars to `cast` at parse time.
+
+```sheaf
+(cast [1 2 3] :bf16)         ; => tensor bf16[3] = [1. 2. 3.]
+(cast [1 2 3] :f32)          ; => tensor f32[3] = [1. 2. 3.]
+
+;; Equivalent shorthand via type annotation
+[1 2 3] :bf16                ; => tensor bf16[3] = [1. 2. 3.]
+
+;; Cast an existing tensor
+(def x [1 2 3])
+(cast x :bf16)               ; => tensor bf16[3] = [1. 2. 3.]
+
+;; Cast scalars
+(cast 3.14 :bf16)            ; => tensor bf16[] = 3.14
+```
+
+---
+
 ## Initializers
 
-### init-zeros, init-ones
+Provided by `(use nn)`. All follow the `(init key shape)` convention, matching PyTorch naming.
+Use a quoted vector for the shape (e.g., `'[256 128]`) to ensure it is treated as static data.
 
-**Type:** function  
-**Signature:** `(init-zeros key shape)`, `(init-ones key shape)`
+For zero/one initialization, use the builtins `zeros` and `ones` directly (no key needed).
 
-Initialize a tensor of the specified shape filled entirely with `0.0` or `1.0`. While a PRNG `key` is required for signature consistency, the output of these functions is deterministic.
+### xavier-uniform, xavier-normal
+
+**Type:** function (`nn` module)
+**Signature:** `(xavier-uniform key shape)`, `(xavier-normal key shape)`
+
+Xavier (Glorot) initialization. Scales weights so variance stays constant across layers. Effective with symmetric activations (`tanh`, `sigmoid`).
 
 ```sheaf
-(init-zeros (random-key 0) '[128])  ; => f32[128] (μ=0.000 min=0.000 max=0.000)
-(init-ones (random-key 0) '[128])   ; => f32[128] (μ=1.000 min=1.000 max=1.000)
+(use nn)
+(xavier-uniform (random-key 42) '[256 128])  ; U(-limit, limit), limit = sqrt(6/(fan_in+fan_out))
+(xavier-normal  (random-key 42) '[256 128])  ; N(0, sqrt(2/(fan_in+fan_out)))
 ```
 
 ---
 
-### init-xavier-normal, init-xavier-uniform
+### kaiming-uniform, kaiming-normal
 
-**Type:** function  
-**Signature:** `(init-xavier-* key shape)`
+**Type:** function (`nn` module)
+**Signature:** `(kaiming-uniform key shape)`, `(kaiming-normal key shape)`
 
-Implements Xavier (also known as Glorot) initialization. It scales the weights such that the variance of the activations remains constant across layers. This is highly effective for networks using symmetric activation functions like `tanh` or `sigmoid`.
-
-**Note:** Use a quoted vector (e.g., `'[256 256]`) for the shape to ensure it is treated as static data and not as a tensor.
+Kaiming (He) initialization. Accounts for ReLU non-linearity by scaling variance by `2/fan_in`.
 
 ```sheaf
-(let [key (random-key 42)]
-  (init-xavier-normal key '[256 256]))
-
-; => f32[256x256]
+(kaiming-normal (random-key 42) '[512 256])
 ```
 
 ---
 
-### init-kaiming-normal, init-kaiming-uniform
+### lecun-normal, lecun-uniform
 
-**Type:** function  
-**Signature:** `(init-kaiming-* key shape)`
+**Type:** function (`nn` module)
+**Signature:** `(lecun-normal key shape)`, `(lecun-uniform key shape)`
 
-Implements Kaiming (also known as He) initialization. This method accounts for the non-linearity of ReLU-based activations by doubling the variance of the weights, preventing the signal from vanishing in deep architectures.
-
-```sheaf
-(init-kaiming-normal (random-key 0) [512 512])
-```
-
----
-
-### init-lecun-normal, init-lecun-uniform
-
-**Type:** function  
-**Signature:** `(init-lecun-* key shape)`
-
-Implements LeCun initialization. It draws weights from a distribution scaled by the inverse square root of the fan-in. This is the default initialization for many classic neural network architectures and is particularly effective when using the SELU activation.
+LeCun initialization. Scales by `1/fan_in`. Default for SELU networks.
 
 ```sheaf
-(init-lecun-normal (random-key 0) [256 256])
-```
-
----
-
-### init-orthogonal
-
-**Type:** function  
-**Signature:** `(init-orthogonal key shape)`
-
-Initializes a square or rectangular matrix as an orthogonal (or semi-orthogonal) matrix. Orthogonal initialization is particularly useful in recurrent networks (RNNs) and deep transformers to preserve the norm of the gradient and prevent explosion or vanishing.
-
-```sheaf
-(init-orthogonal (random-key 0) [128 128])
+(lecun-normal (random-key 42) '[256 128])
 ```
 
 ---
@@ -1193,7 +1210,7 @@ Returns the first element of `seq` for which `pred` returns a truthy value, or `
 **Type:** function  
 **Signature:** `(index-of seq val)`
 
-Returns the zero-based index of the first occurrence of `val` in `seq`, or `-1` if `val` is not present. Uses Python equality semantics, so it works on both numbers and strings.
+Returns the zero-based index of the first occurrence of `val` in `seq`, or `-1` if `val` is not present. Works on both numbers and strings.
 
 ```sheaf
 (index-of '[10 20 30 40] 30)                           ; => 2
@@ -1689,10 +1706,10 @@ Evaluates expressions in a local scope where each variable name is bound to its 
 
 ### defn
 
-**Type:** special-form  
-**Signature:** `(defn name [params] [:jit] body)`
+**Type:** special-form
+**Signature:** `(defn name [params] body ...)`
 
-Binds a global name to a function defined by a parameter vector and a body expression. The optional `:jit` keyword enables XLA compilation for the function, optimizing it for accelerated backends.
+Binds a global name to a function. Multiple body expressions are allowed (implicit `do`): all are evaluated in order, and the last value is returned.
 
 ```sheaf
 (defn square [x]
@@ -1700,9 +1717,10 @@ Binds a global name to a function defined by a parameter vector and a body expre
 
 (square 5)            ; => 25
 
-(defn fast-predict [x w b] :jit
-  (sigmoid (+ (@ x w) b)))
-
+;; Multiple body forms with implicit do
+(defn train-step [model lr]
+  (print "training...")
+  (sgd-update model lr))
 ```
 
 ---
@@ -1846,7 +1864,7 @@ Unpacks the keys of a dictionary into the local scope as bound variables. If a `
 
 ---
 
-## JAX Transforms
+## Transforms
 
 ### vmap
 
@@ -1981,7 +1999,7 @@ A higher-order function that transforms a scalar-valued function `func` into a n
 
 Computes the categorical cross-entropy loss between logits (unnormalized predictions) and targets (integer class indices). This function internally applies a softmax to the logits, making it more numerically stable than manual computation.
 
-Note: `targets` must be integers. Specify the `:i32` type to avoid JAX type errors.
+Note: `targets` must be integers. Specify the `:i32` type to avoid type errors.
 
 ```sheaf
 (sparse-cross-entropy [[0.9 0.1] [0.2 0.8]] [0 1] :i32) ; => 0.40429434
@@ -2047,7 +2065,7 @@ Splits a tensor into `num-sections` sub-tensors along the specified axis. This f
 **Type:** function  
 **Signature:** `(dynamic-slice x start length)`
 
-Extracts a slice of a fixed `length` starting from a dynamic `start` index. Unlike standard Lisp slicing, this operation is compatible with JAX JIT-compilation because the output shape (length) remains constant even when the starting position is a computed value.
+Extracts a slice of a fixed `length` starting from a dynamic `start` index. The output shape (length) remains constant even when the starting position is a computed value.
 
 ```sheaf
 (dynamic-slice (arange 5) 1 3)  ; => [1 2 3]
@@ -2090,7 +2108,7 @@ Scales the elements of a tensor so they sum to 1.0. This is a common utility for
 
 ### Escape sequences
 
-Sheaf strings support Python-style escape sequences. The backslash `\` triggers interpretation of the following character:
+Sheaf strings support standard escape sequences. The backslash `\` triggers interpretation of the following character:
 
 | Sequence | Meaning              |
 | -------- | -------------------- |
@@ -2118,7 +2136,7 @@ The tricky case is `\\n`: the first `\\` resolves to a literal backslash, then `
 **Type:** function  
 **Signature:** `(str-call method target [args ...])`
 
-Calls a Python string method on `target`. This is the primary way to manipulate strings in Sheaf. The method name is passed as a string; subsequent arguments are forwarded directly.
+Calls a string method on `target`. This is the primary way to manipulate strings in Sheaf. The method name is passed as a string; subsequent arguments are forwarded directly.
 
 ```sheaf
 (str-call "replace" "hello world" "world" "sheaf")   ; => "hello sheaf"
@@ -2131,16 +2149,19 @@ Calls a Python string method on `target`. This is the primary way to manipulate 
 
 ### print
 
-**Type:** function  
-**Signature:** `(print msg)`, `(print fmt arg1 arg2 ...)`
+**Type:** function
+**Signature:** `(print arg ...)`, `(print fmt arg1 arg2 ...)`
 
-Prints a value to stdout. When the first argument is a string containing `{}` placeholders and additional arguments are provided, `print` performs automatic format-string interpolation — equivalent to Python's `str.format()`. This is the idiomatic way to display computed values without an explicit `str-call`.
+Prints values to stdout. With multiple arguments, values are space-separated. If the first argument is a format string (contains `{}` or `{:`), uses format-string interpolation instead.
 
 ```sheaf
 (print "hello")                        ; prints: hello
 (print 42)                             ; prints: 42
 
-;; F-string style: placeholders filled by subsequent arguments
+;; Variadic: space-separated
+(print "x=" x "y=" y)                 ; prints: x= 42 y= 7
+
+;; Format string: placeholders filled by subsequent arguments
 (print "x={} y={}" 10 20)             ; prints: x=10 y=20
 (print "loss={:.4f} step={}" 0.0532 100)  ; prints: loss=0.0532 step=100
 ```
@@ -2285,10 +2306,10 @@ Loads a library module and imports its public functions into the current global 
 
 Prevents evaluation of `expr`. It treats the expression as raw data (S-expression) instead of code to be executed.
 
-- `[1 2 3]` -> Evaluates immediately into a JAX Tensor.
+- `[1 2 3]` -> Evaluates immediately into a Tensor.
 - `'[1 2 3]` -> Remains a List/Vector of constants.
 
-Quotes are used to pass arguments like shapes to functions like `reshape` or `ones`, which do not accept JAX Tensors as inputs.
+Quotes are used to pass arguments like shapes to functions like `reshape` or `ones`, which do not accept Tensors as inputs.
 
 ```sheaf
 'symbol              ; => symbol (not evaluated)
@@ -2317,22 +2338,6 @@ Quote with selective evaluation using `~` and `~@`.
 
 ;; Unquote-splicing:
 `(list ~@(range 3))  ; => (list 0 1 2)
-```
-
----
-
-### static
-
-**Type:** special-form  
-**Signature:** `(static expr)`
-
-Forces the evaluation of an expression at compile-time. The result is embedded into the code as a literal constant. This is essential for JIT backends (like XLA) that require tensor shapes and axis indices to be fixed and known before execution starts.
-
-```sheaf
-;; Example: 128 is computed once at compile time, not at every forward pass.
-(let [x (arange 128)]
-  (reshape x (static (* 4 32)) -1))  ; 128 computed at compile time
-                                     ; => reshaped to [ 4. 32.]
 ```
 
 ---
@@ -2476,16 +2481,28 @@ Default epsilon is `1e-6`.
 ; => [0.36514837 0.73029673 1.095445   1.4605935 ]
 ```
 
-#### xavier-init
+#### clamp
 
-**Type:** function  
-**Signature:** `(xavier-init key shape)`
+**Type:** function
+**Signature:** `(clamp x lo hi)`
 
-Xavier (Glorot) initialization for weight matrices. Draws from uniform distribution with bounds based on fan-in/fan-out. This is a pure Sheaf implementation of `init-xavier`.
+Clamps values element-wise to the range [lo, hi]. Supports broadcasting between scalars and tensors.
+
+```sheaf
+(clamp 300 0 255)           ; => 255
+(clamp [-50 100 300] 0 255) ; => [0. 100. 255.]
+```
+
+#### xavier-uniform
+
+**Type:** function
+**Signature:** `(xavier-uniform key shape)`
+
+Xavier (Glorot) uniform initialization for weight matrices. Draws from `U(-limit, limit)` where `limit = sqrt(6 / (fan_in + fan_out))`. See also `xavier-normal`, `kaiming-uniform`, `kaiming-normal`, `lecun-normal`, `lecun-uniform`.
 
 ```sheaf
 (let [key (random-key 42)]
-  (xavier-init key '[256 256]))
+  (xavier-uniform key '[256 256]))
 
 ; => f32[256x256]  (suitable for dense layer weights)
 ```
@@ -2580,14 +2597,14 @@ Conditional execution without else branch. Expands to `(if condition body nil)`.
 **Type:** macro  
 **Signature:** `(unless condition body)`
 
-Negated conditional. Expands to `(if (not condition) body nil)`.
+Negated conditional. Expands to `(if condition nil body)`.
 
 ```sheaf
 (unless (zero? x)
   (/ 1 x))
 
 ;; Expands to:
-(if (not (zero? x)) (/ 1 x) nil)
+(if (zero? x) nil (/ 1 x))
 ```
 
 #### comment
@@ -2608,32 +2625,37 @@ Ignores expressions and returns nil. Useful for multi-line comments.
 
 #### defmodel
 
-**Type:** macro  
-**Signature:** `(defmodel name params body)`
+**Type:** macro
+**Signature:** `(defmodel name [input-params] (layer :name) (layer :name :activation) ...)`
 
-Convenience macro for defining model functions with parameter destructuring.
+Defines a neural network as a sequence of named layers with optional activations. Each layer spec generates a `with-params` block that binds `W` and `b` from the parameter dictionary, applies `(+ (@ _ W) b)`, and optionally wraps it in an activation function. The input is threaded through layers via `as->`.
 
 ```sheaf
-(defmodel forward [x params]
-  (with-params [params :layers]
-    (-> x
-      (linear W1 b1)
-      (relu)
-      (linear W2 b2))))
+(defmodel forward [x]
+  (layer :hidden1 relu)
+  (layer :output))
+
+;; Expands to:
+(defn forward [x p]
+  (as-> x _
+    (with-params [p :hidden1] (relu (+ (@ _ W) b)))
+    (with-params [p :output] (+ (@ _ W) b))))
 ```
 
 #### defbatch
 
-**Type:** macro  
-**Signature:** `(defbatch name func)`
+**Type:** macro
+**Signature:** `(defbatch name [params] [axes] & body)`
 
-Wraps a function with automatic batching via `vmap` over the first dimension.
+Defines a function that auto-vectorizes over batch dimensions via `vmap`. The axes spec indicates which arguments are batched (`0`) vs shared (`nil`).
 
 ```sheaf
-(defbatch process-batch process-single-item)
+(defbatch linear-layer [x w b] [0 nil nil]
+  (+ (@ x w) b))
 
-;; Now process-batch can handle batches of items
-(process-batch [[1 2] [3 4] [5 6]])
+;; Expands to:
+(defn linear-layer [x w b]
+  ((vmap (lambda [x w b] (+ (@ x w) b)) [0 nil nil]) x w b))
 ```
 
 ---

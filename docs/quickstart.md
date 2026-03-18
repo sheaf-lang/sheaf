@@ -1,54 +1,71 @@
-# Quick Start Guide
+# Quick Start
 
-Sheaf is designed to integrate closely with the Python ecosystem, and is distributed as a Python package.
-To get started quickly, install it via `pip`:
+Sheaf ships as a single native binary with no runtime dependencies.
 
-```bash
-pip install sheaf-lang
-```
+## Installation
 
-### Getting the Examples
+Download the binary for your platform from the [releases page](https://github.com/sheaf-lang/sheaf/releases):
 
-After installation, clone the repository to access example projects:
+| Platform              | Binary                |
+| --------------------- | --------------------- |
+| macOS (Apple Silicon) | `sheaf-macos-aarch64` |
+| Linux x86_64          | `sheaf-linux-x86_64`  |
+| Linux aarch64         | `sheaf-linux-aarch64` |
 
-```bash
-git clone https://github.com/sheaf-lang/sheaf
-cd sheaf/examples
-```
-
-The repository includes four reference implementations in the `examples/` directory:
-
-- **BareGPT** - A generative Transformer trained on Shakespeare
-- **Clevr** - A neuro-symbolic model for visual question answering
-- **Hydra** - A self-evolving model that grows during training
-- **XOR MLP** - The "Hello World" of Sheaf, solving XOR with a tiny neural network
-
-The examples have additional dependencies. Make sure they are installed:
+Make the binary executable and move it to your PATH:
 
 ```bash
-pip install matplotlib numpy streamlit
+chmod +x sheaf-macos-aarch64
+mv sheaf-macos-aarch64 /usr/local/bin/sheaf
 ```
 
----
+## REPL
 
-### Sheaf Console
+Run `sheaf` with no arguments to start the interactive console:
 
-Type `sheaf` to start the Sheaf console and experiment with code:
+```
+Sheaf 2.0.0 (:h for help)
+sheaf> (+ 1 2)
+=> 3
+sheaf> (map (fn [x] (* x x)) [1 2 3 4])
+=> [1.0, 4.0, 9.0, 16.0]
+```
+
+Tab completion is available. Inline help: `:help <name>` (e.g., `:help let`).
+
+## Running a file
+
+To run a program, pass the source file to `sheaf`:
 
 ```bash
-Welcome to Sheaf Console v1.1.0
-Type :help or :h for help, :quit or :q to exit
-
-sheaf>
-
+sheaf run.shf
 ```
 
-The Sheaf console comes with autocompletion (`[Tab]` key), and inline help is available with `:help <function-name>` (e.g., `:help let`).
+## Examples
 
-From there, follow the [tutorial](starting.md) to get familiar with the functional approach.
+Download the examples archive from the [releases page](https://github.com/sheaf-lang/sheaf/releases). Each example is self-contained:
 
-### AI bootstrap
+```bash
+cd examples/mlp
+sheaf run.shf
+```
 
-If you are using an AI assistant like Claude Code, Devstral or other LLM-based tools, Sheaf includes a dedicated bootstrap feature.
+Available examples:
 
-Running `sheaf init-ai` generates a context file in the current directory. Provide this file to your assistant to help with learning Sheaf, debugging code, or building models.
+- **CLEVR**: A neuro-symbolic model for visual question answering
+- **Hydra**: A self-modifying model that grows during training
+- **MLP**: "Hello World" example of a small multi-layer network to solve XOR
+- **NanoGPT**: A port of Karpathy's nanoGPT in Sheaf
+
+## AI assistant bootstrap
+
+`sheaf init-ai` generates a context file in the current directory. Provide this file to Claude Code, Cursor, Copilot, or any other assistant to get code generation, code completion, and debugging help.
+
+```bash
+sheaf init-ai
+# Generates sheaf-context.md
+```
+
+## Next steps
+
+Follow the [tutorial](starting.md) to learn the language fundamentals.
