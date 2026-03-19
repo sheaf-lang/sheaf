@@ -31,9 +31,8 @@
 <meta name="robots" content="index, follow">
 <meta property="og:image" content="../images/sheaf-dark.png">
 <meta name="twitter:card" content="summary_large_image">
-<meta property="og:title" content="Sheaf - A Functional Language for Differentiable Programs">
-<meta property="og:description" content="Sheaf is a functional language for describing differentiable computation as topology rather than execution.
-It is inspired by Clojure, JIT-compiles through XLA, and integrates with the Python ecosystem.">
+<meta property="og:title" content="Sheaf - A Functional Language for Differentiable Computation">
+<meta property="og:description" content="Inspired by Clojure. Designed from the ground up for machine learning. Compiles to native GPU code.">
 <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   /* Replace mkdocs logo with custom logo - header */
@@ -6678,9 +6677,9 @@ If it does not exist:</p>
               h0 X)]
     outputs))                                ; Return all hidden states
 
-; =&gt; [[0.09966799 0.36936549]
-;     [0.29131263 0.47375143]
-;     [0.36652097 0.52315444]]
+; =&gt; [[0.09966800 0.29131263]
+;     [0.27194715 0.46786020]
+;     [0.44845095 0.71373075]]
 </code></pre></div>
 <p><strong>Example 3: Multiple state components (like LSTM)</strong></p>
 <div class="language-text highlight"><pre><span></span><code>;; State is a dict: {:h hidden :c cell}
