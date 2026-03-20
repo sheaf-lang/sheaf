@@ -21,53 +21,59 @@
       <link rel="icon" href="../images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
-    
-
+     
       
         <title>Builtins - Sheaf</title>
       
     
-<link rel="icon" type="image/png" href="../images/favicon.png">
-<meta name="robots" content="index, follow">
-<meta property="og:image" content="../images/sheaf-dark.png">
-<meta name="twitter:card" content="summary_large_image">
-<meta property="og:title" content="Sheaf - A Functional Language for Differentiable Computation">
-<meta property="og:description" content="Inspired by Clojure. Designed from the ground up for machine learning. Compiles to native GPU code.">
-<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="../images/favicon.png" />
+<meta name="robots" content="index, follow" />
+<meta property="og:image" content="../images/sheaf-dark.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta
+    property="og:title"
+    content="Sheaf - A functional language for machine learning. Compiles to native GPU code. Inspired by Clojure."
+/>
+<meta
+    property="og:description"
+    content="Inspired by Clojure. Designed from the ground up for machine learning. Compiles to native GPU code."
+/>
+<link
+    href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&display=swap"
+    rel="stylesheet"
+/>
 <style>
-  /* Replace mkdocs logo with custom logo - header */
-  .md-header__button.md-logo {
-    background-image: url('../images/sheaf-light.png');
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-  }
+    /* Replace mkdocs logo with custom logo - header */
+    .md-header__button.md-logo {
+        background-image: url("../images/sheaf-light.png");
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+    }
 
+    .md-header__button.md-logo img,
+    .md-header__button.md-logo svg {
+        opacity: 0;
+    }
 
-  .md-header__button.md-logo img,
-  .md-header__button.md-logo svg {
-    opacity: 0;
-  }
+    /* Replace mkdocs logo with custom logo - sidebar (responsive menu) */
+    .md-nav__title {
+        background-image: url("../images/sheaf-light.png");
+        background-size: 64px 64px;
+        background-repeat: no-repeat;
+        background-position: center;
+        padding-left: 30px !important;
+        font-size: 0 !important;
+        height: 24px !important;
+    }
 
-  /* Replace mkdocs logo with custom logo - sidebar (responsive menu) */
-  .md-nav__title {
-    background-image: url('../images/sheaf-light.png');
-    background-size: 64px 64px;
-    background-repeat: no-repeat;
-    background-position: center;
-    padding-left: 30px !important;
-    font-size: 0 !important;
-    height: 24px !important;
-  }
-
-  .md-nav__title img,
-  .md-nav__title svg {
-    opacity: 0;
-  }
+    .md-nav__title img,
+    .md-nav__title svg {
+        opacity: 0;
+    }
 </style>
 
-    
-
+     
       <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
       
         
@@ -78,396 +84,423 @@
 
     
 <style>
-  /* === GLOBAL STYLES (all pages) === */
+    /* === GLOBAL STYLES (all pages) === */
 
-  /* === COLOR PALETTE #418d95ff, #421168 === */
-  :root {
-    --sheaf-primary: #612156;
-    --md-primary-fg-color: #421168;
-    --md-primary-fg-color--light: #5a1a8c;
-    --md-primary-fg-color--dark: #2d0b4a;
-    --md-code-font: "Fira Code";
-    --md-code-font-family: "Fira Code", monospace;
-  }
-
-  /* Override primary color from Material theme */
-  .md-header,
-  .md-tabs,
-  .md-nav__link--active,
-  .md-nav__item:target > .md-nav__link,
-  a {
-    --md-primary-fg-color: var(--sheaf-primary) !important;
-  }
-
-  .md-header {
-    background-color: var(--sheaf-primary) !important;
-  }
-
-
-  .md-tabs {
-    background-color: var(--sheaf-primary) !important;
-  }
-
-  .md-nav__link:hover {
-    color: var(--sheaf-primary) !important;
-  }
-
-  .md-nav__link--active {
-    color: var(--sheaf-primary) !important;
-    border-color: var(--sheaf-primary) !important;
-  }
-
-  .md-typeset a:not(.md-button) {
-    color: rgb(255, 110, 66) !important;
-  }
-
-  a:hover {
-    opacity: 0.8;
-  }
-
-  .md-footer {
-    background-color: #410136;
-    font-size: 0.5rem !important;
-  }
-
-  .md-footer__inner {
-    justify-content: center !important;
-    margin: 0 auto !important;
-  }
-
-  .md-footer__inner,
-  .md-footer span,
-  .md-footer div {
-    font-size: 0.6rem !important;
-  }
-
-  /* Reduce TOC (right sidebar) width */
-  .md-sidebar--secondary {
-    width: 10rem;
-  }
-
-
-  /* Optionally reduce left sidebar too */
-  .md-sidebar--primary {
-    width: 10rem;
-  }
-
-  /* Code styling */
-  code, pre, .highlight {
-    font-family: "Fira Code", monospace !important;
-    text-shadow: 0.25px 0 0 currentColor;
-  }
-
-  /* Inline code only (not in code blocks) */
-  .md-typeset p code,
-  .md-typeset li code,
-  .md-typeset table code {
-    font-size: 0.7rem !important;
-  }
-
-  .highlight {
-    color : black;
-    font-size: 0.9rem;
-    font-weight: 400;
-    line-height: 1.4;
-    text-shadow: 0.1px 0 0 currentColor;
-    background-color: #f5f5f5 !important;
-    border-radius: 0.9rem;
-    padding: 0.75rem !important;
-    overflow-x: auto;
-  }
-
-  /* Sheaf/Lisp syntax highlighting */
-  .language-sheaf .k { color: #d73a49; }  /* Keywords */
-  .language-sheaf .n { color: #24292e; }  /* Names */
-  .language-sheaf .s { color: #032f62; }  /* Strings */
-  .language-sheaf .m { color: #005cc5; }  /* Numbers */
-  .language-sheaf .c { color: #6a737d; }  /* Comments */
-
-  /* Pygments theme for code blocks */
-  .highlight .c { color: #6a737d; font-style: italic; }     /* Comment */
-  .highlight .k { color: #d73a49; font-weight: bold; }      /* Keyword */
-  .highlight .n { color: #24292e; }                         /* Name */
-  .highlight .s { color: #032f62; }                         /* String */
-  .highlight .m { color: #005cc5; }                         /* Number */
-  .highlight .nb { color: #6f42c1; }                        /* Name.Builtin */
-  .highlight .p { color: #24292e; }                         /* Punctuation */
-
-  /* Hero section: 2 columns, 50/50 split */
-  .flex-section-header {
-    width: 95% !important;
-    margin: 1rem auto 4rem auto !important;
-    padding-left: 2rem !important;
-    padding-right: 2rem !important;
-    padding-bottom: 3rem;
-    background-color: #f5f5f5 !important;
-    border-radius: 0.9rem !important;
-    display: flex !important;
-    gap: 2rem !important;
-    align-items: flex-start !important;
-    font-size: inherit !important;
-  }
-
-  .flex-section-header > div {
-    flex: 0 0 50% !important;
-    padding: 0 1rem !important;
-    margin-top: -1rem;
-    margin-right: -1rem;
-    min-width: 0 !important;
-  }
-
-  /* Flex section layout (replaces old feature-columns tables) */
-  .flex-section {
-    display: flex;
-    gap: 2rem;
-    padding: 1rem 0;
-    margin: 1rem 0 3rem 0;
-    align-items: center;
-    font-size: 0.9rem !important;
-  }
-
-  /* Center single code block vertically (only if it's the only code child) */
-  .flex-section > *:last-child:has(.highlight):only-of-type {
-    display: flex;
-    align-items: center;
-  }
-
-  .flex-section > * {
-    flex: 1;
-  }
-
-  .flex-section > *:first-child {
-    flex: 0 0 33.33%;
-    padding-right: 1rem;
-  }
-
-  .flex-section > *:last-child {
-    flex: 0 0 66.67%;
-    min-width: 0;  /* Allow flex child to shrink below content size */
-    overflow: hidden;
-  }
-
-  .flex-section .highlight {
-    margin: 0 !important;
-    padding: 0.75rem !important;
-  }
-
-  .flex-section .highlight {
-    overflow-x: auto !important;
-    max-width: 100% !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-  }
-
-  .flex-section .highlight code {
-    line-height: 1.5 !important;
-  }
-
-  .flex-section pre {
-    margin: 0 !important;
-    overflow-x: auto !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-  }
-
-  /* Flex grid styling (for markdown content in flex containers) */
-  div[style*="display: flex"] {
-    font-size: 0.9rem;
-    margin: 1rem 0;
-  }
-
-  div[style*="display: flex"] code {
-    font-size: 0.85rem;
-  }
-
-  div[style*="display: flex"] pre {
-    font-size: 0.85rem;
-  }
-
-  /* === RESPONSIVE DESIGN === */
-  /* Mobile landscape mode: force flex sections to stack */
-  @media (orientation: landscape) and (max-height: 500px) {
-    /* Simple approach: just disable flex layout */
-    .flex-section-header {
-      display: block !important;
-      padding: 1rem !important;
+    /* === COLOR PALETTE #418d95ff, #421168 === */
+    :root {
+        --sheaf-primary: #612156;
+        --md-primary-fg-color: #421168;
+        --md-primary-fg-color--light: #5a1a8c;
+        --md-primary-fg-color--dark: #2d0b4a;
+        --md-code-font: "Fira Code";
+        --md-code-font-family: "Fira Code", monospace;
     }
 
-    .flex-section-header > div {
-      margin-bottom: 1rem !important;
+    /* Override primary color from Material theme */
+    .md-header,
+    .md-tabs,
+    .md-nav__link--active,
+    .md-nav__item:target > .md-nav__link,
+    a {
+        --md-primary-fg-color: var(--sheaf-primary) !important;
     }
 
-    .flex-section {
-      display: block !important;
-      padding: 0 !important;
-      margin: 1rem 0 !important;
+    .md-header {
+        background-color: var(--sheaf-primary) !important;
     }
 
-    .flex-section > * {
-      margin-bottom: 1rem !important;
-      padding: 0 !important;
+    .md-tabs {
+        background-color: var(--sheaf-primary) !important;
     }
 
-    /* Reduce text and code size for landscape */
-    .highlight {
-      font-size: 0.7rem !important;
+    .md-nav__link:hover {
+        color: var(--sheaf-primary) !important;
     }
 
-    .highlight code {
-      font-size: 0.7rem !important;
-    }
-  }
-
-  @media (max-width: 768px) {
-    /* Force mobile viewport */
-    body, html {
-      overflow-x: hidden !important;
-      width: 100% !important;
-      max-width: 100% !important;
+    .md-nav__link--active {
+        color: var(--sheaf-primary) !important;
+        border-color: var(--sheaf-primary) !important;
     }
 
-    .md-container,
-    .md-main,
-    .md-content {
-      width: 100% !important;
-      max-width: 100% !important;
-      overflow-x: hidden !important;
+    .md-typeset a:not(.md-button) {
+        color: rgb(255, 110, 66) !important;
     }
 
-    .md-content__inner {
-      width: calc(100vw - 1.5rem) !important;
-      max-width: calc(100vw - 1.5rem) !important;
-      padding-left: 0.75rem !important;
-      padding-right: 0.75rem !important;
-      overflow-x: hidden !important;
-      box-sizing: border-box !important;
+    a:hover {
+        opacity: 0.8;
     }
 
-    /* Force ALL direct children to fit viewport */
-    .md-content__inner > * {
-      width: 100% !important;
-      max-width: 100% !important;
-      box-sizing: border-box !important;
-    }
-
-    /* Fix tabs overflow on mobile */
-    .tabbed-set {
-      width: 100% !important;
-      margin: 0 !important;
-      padding: 0 !important;
-    }
-
-    .tabbed-labels,
-    .tabbed-labels--linked {
-      width: 100% !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      left: 0 !important;
-      right: 0 !important;
-      transform: none !important;
-      display: flex !important;
-      overflow-x: auto !important;
-      -webkit-overflow-scrolling: touch !important;
-      position: relative !important;
-    }
-
-    .tabbed-labels > * {
-      flex-shrink: 0 !important;
-    }
-
-    .tabbed-content {
-      margin: 0 !important;
-      padding: 0 !important;
-      width: 100% !important;
-    }
-
-    /* Mobile navigation drawer */
-    .md-nav--primary {
-      display: block !important;
-    }
-
-    /* Mobile navigation drawer header background */
-    .md-nav__title {
-      background-color: var(--sheaf-primary) !important;
-    }
-
-    .flex-section {
-      flex-direction: column !important;
-      padding: 1rem !important;
-    }
-
-    .flex-section-header {
-      width: 100% !important;
-      flex-direction: column !important;
-    }
-
-    .flex-section-header > div {
-      flex: 0 0 100% !important;
-      padding: 1rem 0 !important;
-    }
-
-    .flex-section > *:last-child:has(.highlight):only-of-type {
-      flex-direction: column !important;
-      width: 100% !important;
-    }
-
-    .flex-section .highlight {
-      width: auto !important;
-      min-width: 0 !important;
-      max-width: 100% !important;
-      box-sizing: border-box !important;
-      overflow-x: auto;
-      margin: 0 !important;
-    }
-
-    .highlight {
-      font-size: 0.75rem !important;
-      margin: 0 !important;
-      padding: 0.5rem !important;
-    }
-
-    /* Ensure all content inside mobile container fits viewport */
-    .md-content__inner > * {
-      width: 100% !important;
-      max-width: calc(100vw - 1.5rem) !important;
-      box-sizing: border-box !important;
-    }
-
-    /* Force parent containers too - but not the navigation */
-    .md-content .flex-section > div {
-      width: 100% !important;
-      min-width: 0 !important;
-      max-width: 100% !important;
-    }
-
-    /* Force all code containers */
-    pre, code {
-      width: auto !important;
-      max-width: 100% !important;
-      box-sizing: border-box !important;
-      overflow-x: auto !important;
-      white-space: pre !important;
-      word-wrap: normal !important;
-    }
-
-    .highlight code {
-      font-size: 0.75rem !important;
-    }
-
-    pre {
-      max-width: 100% !important;
-      overflow-x: auto !important;
-      padding: 0.5rem !important;
+    .md-footer {
+        background-color: #410136;
+        font-size: 0.5rem !important;
     }
 
     .md-footer__inner {
-      justify-content: center !important;
+        justify-content: center !important;
+        margin: 0 auto !important;
     }
-  }
+
+    .md-footer__inner,
+    .md-footer span,
+    .md-footer div {
+        font-size: 0.6rem !important;
+    }
+
+    /* Reduce TOC (right sidebar) width */
+    .md-sidebar--secondary {
+        width: 10rem;
+    }
+
+    /* Optionally reduce left sidebar too */
+    .md-sidebar--primary {
+        width: 10rem;
+    }
+
+    /* Code styling */
+    code,
+    pre,
+    .highlight {
+        font-family: "Fira Code", monospace !important;
+        text-shadow: 0.25px 0 0 currentColor;
+    }
+
+    /* Inline code only (not in code blocks) */
+    .md-typeset p code,
+    .md-typeset li code,
+    .md-typeset table code {
+        font-size: 0.7rem !important;
+    }
+
+    .highlight {
+        color: black;
+        font-size: 0.9rem;
+        font-weight: 400;
+        line-height: 1.4;
+        text-shadow: 0.1px 0 0 currentColor;
+        background-color: #f5f5f5 !important;
+        border-radius: 0.9rem;
+        padding: 0.75rem !important;
+        overflow-x: auto;
+    }
+
+    /* Sheaf/Lisp syntax highlighting */
+    .language-sheaf .k {
+        color: #d73a49;
+    } /* Keywords */
+    .language-sheaf .n {
+        color: #24292e;
+    } /* Names */
+    .language-sheaf .s {
+        color: #032f62;
+    } /* Strings */
+    .language-sheaf .m {
+        color: #005cc5;
+    } /* Numbers */
+    .language-sheaf .c {
+        color: #6a737d;
+    } /* Comments */
+
+    /* Pygments theme for code blocks */
+    .highlight .c {
+        color: #6a737d;
+        font-style: italic;
+    } /* Comment */
+    .highlight .k {
+        color: #d73a49;
+        font-weight: bold;
+    } /* Keyword */
+    .highlight .n {
+        color: #24292e;
+    } /* Name */
+    .highlight .s {
+        color: #032f62;
+    } /* String */
+    .highlight .m {
+        color: #005cc5;
+    } /* Number */
+    .highlight .nb {
+        color: #6f42c1;
+    } /* Name.Builtin */
+    .highlight .p {
+        color: #24292e;
+    } /* Punctuation */
+
+    /* Hero section: 2 columns, 50/50 split */
+    .flex-section-header {
+        width: 95% !important;
+        margin: 1rem auto 4rem auto !important;
+        padding-left: 2rem !important;
+        padding-right: 2rem !important;
+        padding-bottom: 3rem;
+        background-color: #f5f5f5 !important;
+        border-radius: 0.9rem !important;
+        display: flex !important;
+        gap: 2rem !important;
+        align-items: flex-start !important;
+        font-size: inherit !important;
+    }
+
+    .flex-section-header > div {
+        flex: 0 0 50% !important;
+        padding: 0 1rem !important;
+        margin-top: -1rem;
+        margin-right: -1rem;
+        min-width: 0 !important;
+    }
+
+    /* Flex section layout (replaces old feature-columns tables) */
+    .flex-section {
+        display: flex;
+        gap: 2rem;
+        padding: 1rem 0;
+        margin: 1rem 0 3rem 0;
+        align-items: center;
+        font-size: 0.9rem !important;
+    }
+
+    /* Center single code block vertically (only if it's the only code child) */
+    .flex-section > *:last-child:has(.highlight):only-of-type {
+        display: flex;
+        align-items: center;
+    }
+
+    .flex-section > * {
+        flex: 1;
+    }
+
+    .flex-section > *:first-child {
+        flex: 0 0 33.33%;
+        padding-right: 1rem;
+    }
+
+    .flex-section > *:last-child {
+        flex: 0 0 66.67%;
+        min-width: 0; /* Allow flex child to shrink below content size */
+        overflow: hidden;
+    }
+
+    .flex-section .highlight {
+        margin: 0 !important;
+        padding: 0.75rem !important;
+    }
+
+    .flex-section .highlight {
+        overflow-x: auto !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .flex-section .highlight code {
+        line-height: 1.5 !important;
+    }
+
+    .flex-section pre {
+        margin: 0 !important;
+        overflow-x: auto !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Flex grid styling (for markdown content in flex containers) */
+    div[style*="display: flex"] {
+        font-size: 0.9rem;
+        margin: 1rem 0;
+    }
+
+    div[style*="display: flex"] code {
+        font-size: 0.85rem;
+    }
+
+    div[style*="display: flex"] pre {
+        font-size: 0.85rem;
+    }
+
+    /* === RESPONSIVE DESIGN === */
+    /* Mobile landscape mode: force flex sections to stack */
+    @media (orientation: landscape) and (max-height: 500px) {
+        /* Simple approach: just disable flex layout */
+        .flex-section-header {
+            display: block !important;
+            padding: 1rem !important;
+        }
+
+        .flex-section-header > div {
+            margin-bottom: 1rem !important;
+        }
+
+        .flex-section {
+            display: block !important;
+            padding: 0 !important;
+            margin: 1rem 0 !important;
+        }
+
+        .flex-section > * {
+            margin-bottom: 1rem !important;
+            padding: 0 !important;
+        }
+
+        /* Reduce text and code size for landscape */
+        .highlight {
+            font-size: 0.7rem !important;
+        }
+
+        .highlight code {
+            font-size: 0.7rem !important;
+        }
+    }
+
+    @media (max-width: 768px) {
+        /* Force mobile viewport */
+        body,
+        html {
+            overflow-x: hidden !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+
+        .md-container,
+        .md-main,
+        .md-content {
+            width: 100% !important;
+            max-width: 100% !important;
+            overflow-x: hidden !important;
+        }
+
+        .md-content__inner {
+            width: calc(100vw - 1.5rem) !important;
+            max-width: calc(100vw - 1.5rem) !important;
+            padding-left: 0.75rem !important;
+            padding-right: 0.75rem !important;
+            overflow-x: hidden !important;
+            box-sizing: border-box !important;
+        }
+
+        /* Force ALL direct children to fit viewport */
+        .md-content__inner > * {
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+        }
+
+        /* Fix tabs overflow on mobile */
+        .tabbed-set {
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .tabbed-labels,
+        .tabbed-labels--linked {
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            transform: none !important;
+            display: flex !important;
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            position: relative !important;
+        }
+
+        .tabbed-labels > * {
+            flex-shrink: 0 !important;
+        }
+
+        .tabbed-content {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+        }
+
+        /* Mobile navigation drawer */
+        .md-nav--primary {
+            display: block !important;
+        }
+
+        /* Mobile navigation drawer header background */
+        .md-nav__title {
+            background-color: var(--sheaf-primary) !important;
+        }
+
+        .flex-section {
+            flex-direction: column !important;
+            padding: 1rem !important;
+        }
+
+        .flex-section-header {
+            width: 100% !important;
+            flex-direction: column !important;
+        }
+
+        .flex-section-header > div {
+            flex: 0 0 100% !important;
+            padding: 1rem 0 !important;
+        }
+
+        .flex-section > *:last-child:has(.highlight):only-of-type {
+            flex-direction: column !important;
+            width: 100% !important;
+        }
+
+        .flex-section .highlight {
+            width: auto !important;
+            min-width: 0 !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            overflow-x: auto;
+            margin: 0 !important;
+        }
+
+        .highlight {
+            font-size: 0.75rem !important;
+            margin: 0 !important;
+            padding: 0.5rem !important;
+        }
+
+        /* Ensure all content inside mobile container fits viewport */
+        .md-content__inner > * {
+            width: 100% !important;
+            max-width: calc(100vw - 1.5rem) !important;
+            box-sizing: border-box !important;
+        }
+
+        /* Force parent containers too - but not the navigation */
+        .md-content .flex-section > div {
+            width: 100% !important;
+            min-width: 0 !important;
+            max-width: 100% !important;
+        }
+
+        /* Force all code containers */
+        pre,
+        code {
+            width: auto !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            overflow-x: auto !important;
+            white-space: pre !important;
+            word-wrap: normal !important;
+        }
+
+        .highlight code {
+            font-size: 0.75rem !important;
+        }
+
+        pre {
+            max-width: 100% !important;
+            overflow-x: auto !important;
+            padding: 0.5rem !important;
+        }
+
+        .md-footer__inner {
+            justify-content: center !important;
+        }
+    }
 </style>
 
-
-
+ 
     
       
     
@@ -515,8 +548,7 @@
       
     </div>
     
-    
-
+     
       
 
   
@@ -663,8 +695,7 @@
     
   
 </header>
-    
-
+     
     <div class="md-container" data-md-component="container">
       
       
@@ -7237,9 +7268,21 @@ Adam optimizer step. Maintains first moment <code>m</code> (mean) and second mom
       </main>
       
 <footer class="md-footer">
-    <div class="md-footer__inner md-grid" style="display: flex; justify-content: center; align-items: center; gap: 10px;">
-      <img src="../images/sheaf-light.png" alt="Logo" style="height: 24px;"/>
-      <span>| © 2025-2026 Damien Boureille</span>
+    <div
+        class="md-footer__inner md-grid"
+        style="
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        "
+    >
+        <img
+            src="../images/sheaf-light.png"
+            alt="Logo"
+            style="height: 24px"
+        />
+        <span>| © 2025-2026 Damien Boureille</span>
     </div>
 </footer>
 
