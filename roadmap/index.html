@@ -1078,10 +1078,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#misc" class="md-nav__link">
+  <a href="#operations" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Misc
+        Operations
       
     </span>
   </a>
@@ -1268,10 +1268,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#misc" class="md-nav__link">
+  <a href="#operations" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Misc
+        Operations
       
     </span>
   </a>
@@ -1329,9 +1329,14 @@
 <p><strong><code>:trace</code> and <code>:blame</code> in the REPL</strong>: These observability modes were tied to V1 semantics and temporarily removed. They will be re-introduced with behavior adapted to the V2 execution model.</p>
 </li>
 </ul>
-<h3 id="misc">Misc</h3>
+<h3 id="operations">Operations</h3>
 <ul>
-<li><strong><code>vmap</code> on dictionaries</strong>: <code>vmap</code> currently only accepts tensor arguments. PyTree support (automatic flattening/unflattening of dicts) will be added to match the behavior of <code>value-and-grad</code>.</li>
+<li>
+<p><strong>Convolution primitives</strong>: <code>conv1d</code> and <code>conv2d</code> via <code>stablehlo.convolution</code>, exposed through the standard library.</p>
+</li>
+<li>
+<p><strong><code>vmap</code> on dictionaries</strong>: <code>vmap</code> currently only accepts tensor arguments. PyTree support (automatic flattening/unflattening of dicts) will be added to match the behavior of <code>value-and-grad</code>.</p>
+</li>
 </ul>
 
 

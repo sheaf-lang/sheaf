@@ -5768,7 +5768,7 @@ nil                  ; Null/None value
 <p><strong>Type:</strong> function
 <strong>Signature:</strong> <code>(transpose x [perm])</code>
 <strong>Alias:</strong> <code>tr</code></p>
-<p>Permutes the dimensions of a tensor according to the sequence of axes provided. This is a zero-copy operation in XLA that is critical for reordering dimensions (e.g., swapping batch and sequence axes or head dimensions).</p>
+<p>Permutes the dimensions of a tensor according to the sequence of axes provided. This is a zero-copy operation that is critical for reordering dimensions (e.g., swapping batch and sequence axes or head dimensions).</p>
 <div class="language-text highlight"><pre><span></span><code>;; Default transpose (reverse axes): (2 3 2) -&gt; (2 3 2)
 (shape (transpose [[[1 2]
                     [3 4]
@@ -7150,7 +7150,7 @@ If it does not exist:</p>
 <h4 id="adam-step">adam-step</h4>
 <p><strong>Type:</strong> function<br />
 <strong>Signature:</strong> <code>(adam-step params grads m v t lr [beta1 beta2 eps])</code>
-Adam optimizer step. Maintains first moment <code>m</code> (mean) and second moment <code>v</code> (variance). Returns <code>[new-params, new-m, new-v]</code>.</p>
+Adam optimizer step. Maintains first moment <code>m</code> (mean) and second moment <code>v</code> (variance). Returns <code>[new-params, new-m, new-v, new-t]</code>.</p>
 <div class="language-text highlight"><pre><span></span><code>(let [p {:w 1.0} g {:w 0.1}  ; Params and gradients
       m {:w 0.0} v {:w 0.0}  ; Moments
       t 0]                   ; Steps
