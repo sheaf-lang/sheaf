@@ -34,7 +34,7 @@
 <meta name="twitter:card" content="summary_large_image" />
 <meta
     property="og:title"
-    content="Sheaf - A functional language for machine learning. Compiles to native GPU code. Inspired by Clojure."
+    content="Sheaf - A functional language for machine learning. Inspired by Clojure, JIT-compiled to native GPU code."
 />
 <meta
     property="og:description"
@@ -1856,7 +1856,7 @@ Step N: DeviceBuffer -&gt; host (D2H transfer, only for checkpointing)
 <p>Each argument position holds up to 8 cached buffers with most-recently-used ordering. This prevents thrashing when transformer layers share a compiled function but pass different weight tensors.</p>
 <h2 id="known-limitations">Known Limitations</h2>
 <ul>
-<li><strong>Static shapes.</strong> All tensor shapes must be known at compile time. Dynamic batch sizes trigger recompilation.</li>
+<li><strong>Shape specialization.</strong> Functions are compiled for the tensor shapes seen at the first call. A different shape (e.g., a different batch size) triggers automatic recompilation and caching. This is the same tracing model as <code>jax.jit</code>.</li>
 <li><strong>Control flow.</strong> <code>if</code> expressions inside compiled functions cause fallback to the interpreter. Conditional logic must live outside the hot path, or use <code>where</code>, which compiles to <code>stablehlo.select</code>.</li>
 <li><strong>Metal backend.</strong> IREE's Metal/SPIR-V backend is less optimized than CUDA. Some operations are slower on Apple GPUs than on equivalent NVIDIA hardware.</li>
 <li><strong>Memory management.</strong> No automatic model sharding or gradient checkpointing. Large models may exceed device memory.</li>
