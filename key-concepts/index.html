@@ -1769,33 +1769,7 @@
 </ol>
 <p>Subsequent calls with the same argument shapes dispatch directly to the cached VMFB. If the source code changes, the content hash changes, and the function is recompiled automatically.</p>
 <h3 id="backend-selection">Backend Selection</h3>
-<p>Sheaf selects the compilation backend based on available hardware:</p>
-<table>
-<thead>
-<tr>
-<th>Platform</th>
-<th>Primary Backend</th>
-<th>Fallback</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Linux</td>
-<td>CUDA</td>
-<td>Vulkan, CPU</td>
-</tr>
-<tr>
-<td>macOS</td>
-<td>Metal</td>
-<td>CPU</td>
-</tr>
-<tr>
-<td>Other</td>
-<td>CPU</td>
-<td>-</td>
-</tr>
-</tbody>
-</table>
+<p>Sheaf probes available hardware in preference order: CUDA, Metal, Vulkan, CPU. The first available backend is used.</p>
 <p>You can override this with the <code>--device</code> flag:</p>
 <div class="language-bash highlight"><pre><span></span><code>sheaf<span class="w"> </span>model.shf<span class="w"> </span>--device<span class="w"> </span>cuda<span class="w">     </span><span class="c1"># Force CUDA backend</span>
 sheaf<span class="w"> </span>model.shf<span class="w"> </span>--device<span class="w"> </span>metal<span class="w">    </span><span class="c1"># Force Metal backend</span>
@@ -1863,7 +1837,7 @@ Step N: DeviceBuffer -&gt; host (D2H transfer, only for checkpointing)
 <ul>
 <li><strong>Shape specialization.</strong> Functions are compiled for the tensor shapes seen at the first call. A different shape (e.g., a different batch size) triggers automatic recompilation and caching. This is the same tracing model as <code>jax.jit</code>.</li>
 <li><strong>Control flow.</strong> <code>if</code> expressions inside compiled functions cause fallback to the interpreter. Conditional logic must live outside the hot path, or use <code>where</code>, which compiles to <code>stablehlo.select</code>.</li>
-<li><strong>Metal backend.</strong> IREE's Metal/SPIR-V backend is less optimized than CUDA. Some operations are slower on Apple GPUs than on equivalent NVIDIA hardware.</li>
+<li><strong>Backend maturity.</strong> IREE backend performance varies by hardware. Benchmarks on your target device are recommended.</li>
 <li><strong>Memory management.</strong> No automatic model sharding or gradient checkpointing. Large models may exceed device memory.</li>
 </ul>
 

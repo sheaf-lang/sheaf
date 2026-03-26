@@ -1310,10 +1310,10 @@
 <h3 id="performance">Performance</h3>
 <ul>
 <li>
-<p><strong>KV cache</strong>: Sheaf 2.0 currently doesn't have a KV cache, which is essential for competitive inference at scale. Without it, each generated token recomputes full O(n^2) attention over the entire context. With it, each step costs O(n) after the first pass.</p>
+<p><strong>KV cache helpers</strong>: A <code>cached-attention</code> stdlib function to simplify implementing KV cache in transformer models.</p>
 </li>
 <li>
-<p><strong>Batch generation mode</strong>: Currently, autoregressive generation calls the compiled model once per token. Batch mode would compile the full generation loop into a single dispatch, returning all tokens at once.</p>
+<p><strong>Batch generation mode</strong>: Compile the full autoregressive generation loop into a single dispatch, returning all tokens at once.</p>
 </li>
 </ul>
 <h3 id="distribution">Distribution</h3>
