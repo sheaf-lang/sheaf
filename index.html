@@ -1461,20 +1461,14 @@ as a single 4 MB executable.</p>
 <p>The compiler toolchain is downloaded on first use and is not required to run a compiled model.</p>
 </div>
 <div>
-<div class="language-text highlight"><pre><span></span><code>$ du -h * # Standalone, self-contained deployment
+<div class="language-text highlight"><pre><span></span><code># Standalone, self-contained deployment
+$ du -h *
 128K	__sheaf__                 # compiled model
 3.2M	data
 4.0K	model.shf
-164M	out-shakespeare-char
+164M	out-weights
 3.6M	sheaf                     # runtime
 4.0K	train.shf
-
-$ ./sheaf train.shf
-Loading model...
-Loaded: 6 layers, 384 dim, 65 vocab
-Training data: 1115394 tokens
-Training for 100 steps (batch_size=4 block_size=256)...
-Step 100 | Loss: 2.4573
 </code></pre></div>
 </div>
 </div>
