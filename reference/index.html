@@ -1258,6 +1258,39 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#round" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        round
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ceil" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ceil
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#floor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        floor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2571,23 +2604,6 @@
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Loss &amp; Metrics">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#sparse-cross-entropy" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        sparse-cross-entropy
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -3406,6 +3422,39 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#round" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        round
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ceil" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ceil
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#floor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        floor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4720,23 +4769,6 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Loss &amp; Metrics">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#sparse-cross-entropy" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        sparse-cross-entropy
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
       
         <li class="md-nav__item">
@@ -5493,6 +5525,30 @@
 (sqrt [1.0 4.0 9.0]) ; =&gt; [1. 2. 3.]
 </code></pre></div>
 <hr />
+<h3 id="round">round</h3>
+<p><strong>Type:</strong> function
+<strong>Signature:</strong> <code>(round x)</code></p>
+<p>Rounds each element to the nearest integer (half away from zero).</p>
+<div class="language-text highlight"><pre><span></span><code>(round 3.7)           ; =&gt; 4.0
+(round [1.4 2.5 3.6]) ; =&gt; [1. 3. 4.]
+</code></pre></div>
+<hr />
+<h3 id="ceil">ceil</h3>
+<p><strong>Type:</strong> function
+<strong>Signature:</strong> <code>(ceil x)</code></p>
+<p>Rounds each element up to the nearest integer.</p>
+<div class="language-text highlight"><pre><span></span><code>(ceil 3.2)            ; =&gt; 4.0
+(ceil [-1.7 2.3])     ; =&gt; [-1. 3.]
+</code></pre></div>
+<hr />
+<h3 id="floor">floor</h3>
+<p><strong>Type:</strong> function
+<strong>Signature:</strong> <code>(floor x)</code></p>
+<p>Rounds each element down to the nearest integer.</p>
+<div class="language-text highlight"><pre><span></span><code>(floor 3.9)           ; =&gt; 3.0
+(floor [-1.2 2.8])    ; =&gt; [-2. 2.]
+</code></pre></div>
+<hr />
 <h3 id="_6">@</h3>
 <p><strong>Type:</strong> function<br />
 <strong>Signature:</strong> <code>(@ a b)</code></p>
@@ -5508,10 +5564,12 @@
 <h3 id="_7">=</h3>
 <p><strong>Type:</strong> function<br />
 <strong>Signature:</strong> <code>(= a b)</code></p>
-<p>Performs structural equality comparison. Returns a single scalar boolean indicating whether the two inputs have the same shape and identical values across all elements.</p>
+<p>Performs structural equality comparison. Works on tensors, lists, strings, keywords, and booleans. Returns a single scalar boolean.</p>
 <div class="language-text highlight"><pre><span></span><code>(= 1 1)              ; =&gt; true
 (= [1 2] [1 2])      ; =&gt; true
 (= [1 2] [1 3])      ; =&gt; false
+(= &#39;[1 2 3] &#39;[1 2 3]) ; =&gt; true
+(= &#39;[:a :b] &#39;[:a :c]) ; =&gt; false
 </code></pre></div>
 <hr />
 <h3 id="_8">==</h3>
@@ -5935,15 +5993,14 @@ nil                  ; Null/None value
 </code></pre></div>
 <hr />
 <h2 id="initializers">Initializers</h2>
-<p>Provided by <code>(use nn)</code>. All follow the <code>(init key shape)</code> convention, matching PyTorch naming.
+<p>All follow the <code>(init key shape)</code> convention, matching PyTorch naming. These functions are available by default (no import needed).
 Use a quoted vector for the shape (e.g., <code>'[256 128]</code>) to ensure it is treated as static data.</p>
 <p>For zero/one initialization, use the builtins <code>zeros</code> and <code>ones</code> directly (no key needed).</p>
 <h3 id="xavier-uniform-xavier-normal">xavier-uniform, xavier-normal</h3>
 <p><strong>Type:</strong> function (<code>nn</code> module)
 <strong>Signature:</strong> <code>(xavier-uniform key shape)</code>, <code>(xavier-normal key shape)</code></p>
 <p>Xavier (Glorot) initialization. Scales weights so variance stays constant across layers. Effective with symmetric activations (<code>tanh</code>, <code>sigmoid</code>).</p>
-<div class="language-text highlight"><pre><span></span><code>(use nn)
-(xavier-uniform (random-key 42) &#39;[256 128])  ; U(-limit, limit), limit = sqrt(6/(fan_in+fan_out))
+<div class="language-text highlight"><pre><span></span><code>(xavier-uniform (random-key 42) &#39;[256 128])  ; U(-limit, limit), limit = sqrt(6/(fan_in+fan_out))
 (xavier-normal  (random-key 42) &#39;[256 128])  ; N(0, sqrt(2/(fan_in+fan_out)))
 </code></pre></div>
 <hr />
@@ -6751,14 +6808,6 @@ If it does not exist:</p>
 </code></pre></div>
 <hr />
 <h2 id="loss-metrics">Loss &amp; Metrics</h2>
-<h3 id="sparse-cross-entropy">sparse-cross-entropy</h3>
-<p><strong>Type:</strong> function
-<strong>Signature:</strong> <code>(sparse-cross-entropy logits targets :i32)</code></p>
-<p>Computes the categorical cross-entropy loss between logits (unnormalized predictions) and targets (integer class indices). This function internally applies a softmax to the logits, making it more numerically stable than manual computation.</p>
-<p>Note: <code>targets</code> must be integers. Specify the <code>:i32</code> type to avoid type errors.</p>
-<div class="language-text highlight"><pre><span></span><code>(sparse-cross-entropy [[0.9 0.1] [0.2 0.8]] [0 1] :i32) ; =&gt; 0.40429434
-</code></pre></div>
-<hr />
 <h2 id="advanced-tensor-ops">Advanced Tensor Ops</h2>
 <h3 id="einsum">einsum</h3>
 <p><strong>Type:</strong> function<br />
@@ -6996,8 +7045,8 @@ If it does not exist:</p>
 <p><strong>Type:</strong> special-form<br />
 <strong>Signature:</strong> <code>(use module-name)</code></p>
 <p>Loads a library module and imports its public functions into the current global namespace. Use ':registry' to see what functions have been imported.</p>
-<div class="language-text highlight"><pre><span></span><code>(use nn)              ; Load neural network ops
-(use optim)           ; Load optimizer ops
+<p>Note: the standard library modules (<code>nn</code>, <code>optim</code>, <code>macros</code>) are loaded automatically. You do not need to call <code>(use nn)</code> or <code>(use optim)</code> explicitly.</p>
+<div class="language-text highlight"><pre><span></span><code>(use my-model)        ; Load a user-defined module (my-model.shf)
 </code></pre></div>
 <hr />
 <h2 id="quoting-metaprogramming">Quoting &amp; Metaprogramming</h2>
