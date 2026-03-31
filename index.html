@@ -1254,7 +1254,13 @@
   <h1 style="margin: 0; font-size: 4.5rem; font-weight: 500; color: black;">Sheaf</h1>
 </div>
 
-<h2 style="max-width: 36rem; margin-left: auto; margin-right: auto;">A functional language inspired by Clojure, designed from the ground up for machine learning.</h2>
+<h2 style="max-width: 36rem; margin-left: auto; margin-right: auto;">A functional language for machine learning.</h2>
+
+<p  style="text-align: center; size: 1rem; max-width: 50rem; margin-left: auto; margin-right: auto;"  markdown="1">
+
+Sheaf brings Clojure’s code-as-data to GPU machine learning, with models as inspectable, composable, and compiled data structures.
+
+</p>
 
 </div>
 
@@ -1279,9 +1285,8 @@
 <h2 id="neural-networks-as-math"><strong>Neural Networks as Math</strong></h2>
 <div class="flex-section">
 <div>
-<p>Neural networks in Sheaf are written as mathematical transformations.</p>
-<p>Layers, activations, and parameter bindings form explicit data flow, without imperative state management.</p>
-<p>Because the language is functionally pure, compilation and differentiation require no decorators or annotations. <code>value-and-grad</code> differentiates any pure function; the JIT resolves shapes and compiles to GPU code automatically.</p>
+<p>In Sheaf, a neural network is a composition of mathematical functions over a parameter tree.</p>
+<p>Sheaf is purely functional, so differentiation and compilation require no annotations. Any pure function can be differentiated with value-and-grad and is automatically compiled to GPU code.</p>
 </div>
 <div>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Atomic</label><label for="__tabbed_1_2">Composite</label></div>
@@ -1315,28 +1320,26 @@
 <h2 id="models-as-data"><strong>Models as Data</strong></h2>
 <div class="flex-section">
 <div>
-<p>In Sheaf, model parameters are nested dictionaries.</p>
-<p>There are no module classes, or registration, or parameter groups. Structural operations like pruning, freezing, or weight sharing are expressed as regular data transformations.</p>
-<p>Compile-time macros generate architecture variants from a single template. The same primitives extend to neuro-symbolic pipelines where logic and learning are jointly differentiable.</p>
+<p>Because models are data, Sheaf requires no module classes, registration, or parameter groups. Even structural operations like pruning, freezing, or weight sharing are expressed as regular data transformations.</p>
+<p>Sheaf brings compile-time macros to the computation graph itself, generating architecture variants from a single template.</p>
 </div>
 <div>
-<div class="language-clojure highlight"><pre><span></span><code><span class="c1">;; Freeze a layer: zero out its gradients</span>
-<span class="p">(</span><span class="kd">defn </span><span class="nv">freeze</span><span class="w"> </span><span class="p">[</span><span class="nv">grad</span><span class="w"> </span><span class="nv">layer-key</span><span class="p">]</span>
-<span class="w">  </span><span class="p">(</span><span class="nb">assoc </span><span class="nv">grad</span><span class="w"> </span><span class="nv">layer-key</span>
-<span class="w">    </span><span class="p">(</span><span class="nf">tree-map</span><span class="w"> </span><span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">g</span><span class="p">]</span><span class="w"> </span><span class="p">(</span><span class="nf">zeros</span><span class="w"> </span><span class="p">(</span><span class="nf">shape</span><span class="w"> </span><span class="nv">g</span><span class="p">)))</span>
-<span class="w">              </span><span class="p">(</span><span class="nb">get </span><span class="nv">grad</span><span class="w"> </span><span class="nv">layer-key</span><span class="p">))))</span>
+<div class="language-clojure highlight"><pre><span></span><code><span class="c1">;; Grow a model: add a layer at runtime</span>
+<span class="p">(</span><span class="kd">defn </span><span class="nv">append-layer</span><span class="w"> </span><span class="p">[</span><span class="nv">params</span><span class="w"> </span><span class="nv">new-layer</span><span class="p">]</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">assoc </span><span class="nv">params</span><span class="w"> </span><span class="ss">:layers</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">append</span><span class="w"> </span><span class="p">(</span><span class="nb">get </span><span class="nv">params</span><span class="w"> </span><span class="ss">:layers</span><span class="p">)</span><span class="w"> </span><span class="nv">new-layer</span><span class="p">)))</span>
 
-<span class="c1">;; Apply weight decay to all parameters at once</span>
-<span class="p">(</span><span class="kd">defn </span><span class="nv">weight-decay</span><span class="w"> </span><span class="p">[</span><span class="nv">params</span><span class="w"> </span><span class="nv">rate</span><span class="p">]</span>
-<span class="w">  </span><span class="p">(</span><span class="nf">tree-map</span><span class="w"> </span><span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">w</span><span class="p">]</span><span class="w"> </span><span class="p">(</span><span class="nb">* </span><span class="nv">w</span><span class="w"> </span><span class="p">(</span><span class="nb">- </span><span class="mf">1.0</span><span class="w"> </span><span class="nv">rate</span><span class="p">)))</span><span class="w"> </span><span class="nv">params</span><span class="p">))</span>
+<span class="c1">;; Swap the output head for a different task</span>
+<span class="p">(</span><span class="kd">defn </span><span class="nv">hot-swap-head</span><span class="w"> </span><span class="p">[</span><span class="nv">model</span><span class="w"> </span><span class="nv">task-id</span><span class="w"> </span><span class="nv">heads</span><span class="p">]</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">assoc </span><span class="nv">model</span><span class="w"> </span><span class="ss">:head</span><span class="w"> </span><span class="p">(</span><span class="nb">get </span><span class="nv">heads</span><span class="w"> </span><span class="nv">task-id</span><span class="p">)))</span>
 </code></pre></div>
 </div>
 </div>
 <h2 id="observability"><strong>Observability</strong></h2>
 <div class="flex-section">
 <div>
-<p>Every function call, tensor shape, and numerical statistic is observable at runtime.</p>
-<p>Three modes expose different aspects of execution: a tracer reconstructs the full call hierarchy with tensor statistics, guards halt on numerical invariants like NaN or range violations, and a profiler attributes wall time to each function in the call tree.</p>
+<p>In Sheaf, every function call, tensor shape, and numerical statistic is observable at runtime.</p>
+<p>A tracer logs the full call hierarchy with tensor statistics. Guards halt execution on numerical invariants like NaN or range violations. A profiler attributes wall time to each function in the call tree.</p>
 </div>
 <div>
 <div class="tabbed-set tabbed-alternate" data-tabs="2:3"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><input id="__tabbed_2_3" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">Tracer</label><label for="__tabbed_2_2">Guards</label><label for="__tabbed_2_3">Profiler</label></div>
@@ -1411,7 +1414,7 @@
 <div class="flex-section">
 <div markdown="1">
 
-A complete GPT-2 124M implementation in Sheaf is 1,908 tokens, while the equivalent PyTorch is 7,486. Sheaf's uniform syntax keeps the code concise and close to the math.
+A complete GPT-2 124M implementation in Sheaf is 1,908 tokens, while the equivalent PyTorch is 7,486. Sheaf's uniform syntax keeps the code concise and unambiguous.
 <br/><br/>
 
 Context usage counts GPT-4 tokens (tiktoken) across model, training, and sampling code. Deploy size is the minimal runtime required to train and run a model on a CUDA GPU.
@@ -1455,7 +1458,7 @@ Context usage counts GPT-4 tokens (tiktoken) across model, training, and samplin
 <div>
 <p>Sheaf is written in Rust. The complete runtime with GPU backends ships
 as a single 4 MB executable.</p>
-<p>Sheaf code is JIT-compiled to optimized GPU kernels for CUDA and Metal through StableHLO and IREE.</p>
+<p>Sheaf code is JIT-compiled to optimized GPU kernels for CUDA and Metal.</p>
 <p>The compiler toolchain is downloaded on first use and is not required to run a compiled model.</p>
 </div>
 <div>
