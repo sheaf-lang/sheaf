@@ -1197,14 +1197,13 @@
 
 <h2 id="version-history">Version history</h2>
 <p>v2.0.0 — 2026-03-18</p>
-<p>Complete rewrite in Rust. The language semantics remain unchanged. All V1 code runs in V2.</p>
+<p>Complete rewrite in Rust, with no Python in the execution path. The language semantics remain unchanged: all V1 code runs in V2.</p>
 <ul>
-<li>Compiler rewritten in Rust: Sheaf source compiles directly to StableHLO MLIR, with no Python in the execution path</li>
-<li>IREE runtime statically linked</li>
-<li>Transparent JIT compilation: pure functions compile automatically on first call, with content-hash caching in <code>__sheaf__/</code></li>
-<li>Symbolic reverse-mode autodiff: differentiation operates on the AST before codegen</li>
+<li>New architecture: Sheaf source compiles directly to StableHLO MLIR, IREE runtime statically linked and called through FFI.</li>
+<li>Transparent JIT compilation: pure functions compile automatically on first call, with content-hash caching in <strong>sheaf</strong>/</li>
+<li>Automatic differentiation via <code>value-and-grad</code></li>
 <li>DeviceBuffer: compiled functions pass tensors between IREE calls without host round-trips</li>
-<li>Multiple dtype support: f32 (default), bf16, i32 via <code>cast</code> or literal annotation</li>
+<li>Multiple dtype support: f32 (default), bf16, i32 via cast or literal annotation</li>
 </ul>
 <p>v1.2.0 — 2026-02-06</p>
 <ul>
