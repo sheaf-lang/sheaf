@@ -77,7 +77,7 @@ The reverse-mode pass then walks these bindings backward, accumulating adjoint c
 | Category    | Operations                                                  |
 | ----------- | ----------------------------------------------------------- |
 | Arithmetic  | `+`, `-`, `*`, `/`, `**`, `neg`                             |
-| Matrix      | `@` (matmul), `transpose`                                   |
+| Matrix      | `@` (matmul), `einsum`, `transpose`                         |
 | Shape       | `reshape`, `swapaxes`, `slice`                              |
 | Activations | `relu`, `gelu`, `sigmoid`, `tanh`, `softmax`, `log-softmax` |
 | Reductions  | `sum`, `mean`, `var`                                        |
@@ -129,13 +129,7 @@ Subsequent calls with the same argument shapes dispatch directly to the cached V
 
 ### Backend Selection
 
-Sheaf selects the compilation backend based on available hardware:
-
-| Platform | Primary Backend | Fallback    |
-| -------- | --------------- | ----------- |
-| Linux    | CUDA            | Vulkan, CPU |
-| macOS    | Metal           | CPU         |
-| Other    | CPU             | -           |
+Sheaf probes available hardware in preference order: CUDA, Metal, Vulkan, CPU. The first available backend is used.
 
 You can override this with the `--device` flag:
 
@@ -246,5 +240,5 @@ Each argument position holds up to 8 cached buffers with most-recently-used orde
 
 - **Shape specialization.** Functions are compiled for the tensor shapes seen at the first call. A different shape (e.g., a different batch size) triggers automatic recompilation and caching. This is the same tracing model as `jax.jit`.
 - **Control flow.** `if` expressions inside compiled functions cause fallback to the interpreter. Conditional logic must live outside the hot path, or use `where`, which compiles to `stablehlo.select`.
-- **Metal backend.** IREE's Metal/SPIR-V backend is less optimized than CUDA. Some operations are slower on Apple GPUs than on equivalent NVIDIA hardware.
+- **Backend maturity.** IREE backend performance varies by hardware. Benchmarks on your target device are recommended.
 - **Memory management.** No automatic model sharding or gradient checkpointing. Large models may exceed device memory.

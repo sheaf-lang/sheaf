@@ -10,9 +10,13 @@ hide:
   <h1 style="margin: 0; font-size: 4.5rem; font-weight: 500; color: black;">Sheaf</h1>
 </div>
 
-<h2>A Functional Language for Differentiable Computation</h2>
+<h2 style="max-width: 36rem; margin-left: auto; margin-right: auto; margin-top: 1rem;">A functional language for differentiable computation</h2>
 
-<p>Inspired by Clojure. Designed from the ground up for machine learning. Compiles to native GPU code.</p>
+<p  style="text-align: center; size: 1rem; max-width: 40rem; margin-left: auto; margin-right: auto; margin-top: 1rem;"  markdown="1">
+
+Sheaf brings Clojure’s code-as-data to machine learning, with models as inspectable, composable, and compiled data structures.
+
+</p>
 
 </div>
 
@@ -22,9 +26,9 @@ hide:
 
 ## For ML Researchers
 
-- **Single binary framework** — Models train and run on GPU with no environment to configure
-- **Functional parameters** — Models are data structures that can be inspected, transformed, and composed
-- **Runtime Observability** — Guards and traces expose tensor stability and failure modes
+- **No classes, no boilerplate** — Write math, not plumbing
+- **Runtime Observability** — Catch NaN, trace shapes and profile performance without code changes
+- **Single binary framework** — One executable, no dependencies. Train and run on GPU out of the box
 
 </div>
 
@@ -45,11 +49,9 @@ hide:
 <div class="flex-section" markdown="1">
 <div markdown="1">
 
-Neural networks in Sheaf are written as mathematical transformations.
+In Sheaf, a neural network is a composition of mathematical functions over a parameter tree.
 
-Layers, activations, and parameter bindings form explicit data flow, without imperative state management.
-
-Because the language is functionally pure, compilation and differentiation require no decorators or annotations. `value-and-grad` differentiates any pure function; the JIT resolves shapes and compiles to GPU code automatically.
+Sheaf is purely functional, so differentiation and compilation require no annotations. Any pure function can be differentiated with value-and-grad and is automatically compiled to GPU code.
 
 </div>
 <div markdown="1">
@@ -98,26 +100,23 @@ Because the language is functionally pure, compilation and differentiation requi
 <div class="flex-section" markdown="1">
 <div markdown="1">
 
-In Sheaf, model parameters are nested dictionaries.
+Because models are data, Sheaf requires no module classes, registration, or parameter groups. Even structural operations like pruning, freezing, or weight sharing are expressed as regular data transformations.
 
-There are no module classes, or registration, or parameter groups. Structural operations like pruning, freezing, or weight sharing are expressed as regular data transformations.
-
-Compile-time macros generate architecture variants from a single template. The same primitives extend to neuro-symbolic pipelines where logic and learning are jointly differentiable.
+Sheaf brings compile-time macros to the computation graph itself, generating architecture variants from a single template.
 
 </div>
 
 <div markdown="1">
 
 ```clojure
-;; Freeze a layer: zero out its gradients
-(defn freeze [grad layer-key]
-  (assoc grad layer-key
-    (tree-map (fn [g] (zeros (shape g)))
-              (get grad layer-key))))
+;; Grow a model: add a layer at runtime
+(defn append-layer [params new-layer]
+  (assoc params :layers
+    (append (get params :layers) new-layer)))
 
-;; Apply weight decay to all parameters at once
-(defn weight-decay [params rate]
-  (tree-map (fn [w] (* w (- 1.0 rate))) params))
+;; Swap the output head for a different task
+(defn hot-swap-head [model task-id heads]
+  (assoc model :head (get heads task-id)))
 
 ```
 
@@ -129,9 +128,9 @@ Compile-time macros generate architecture variants from a single template. The s
 <div class="flex-section" markdown="1">
 <div markdown="1">
 
-Every function call, tensor shape, and numerical statistic is observable at runtime.
+In Sheaf, every function call, tensor shape, and numerical statistic is observable at runtime.
 
-Three modes expose different aspects of execution: a tracer reconstructs the full call hierarchy with tensor statistics, guards halt on numerical invariants like NaN or range violations, and a profiler attributes wall time to each function in the call tree.
+A tracer logs the full call hierarchy with tensor statistics. Guards halt execution on numerical invariants like NaN or range violations. A profiler attributes wall time to each function in the call tree.
 
 </div>
 
@@ -147,9 +146,7 @@ Three modes expose different aspects of execution: a tracer reconstructs the ful
     │ │ ├─ [sigmoid] f32[4x1] [min:-5.48e-2 max:1.18e0] (16B)
     │ │ └─ ← f32[4x1] [min:4.86e-1 max:7.66e-1] (16B) (1.8μs)
     │ └─ ← f32[4x1] [min:4.86e-1 max:7.66e-1] (16B) (0.0μs)
-    │ ├─ [sgd-step] dict(keys:["l1", "l2"]), dict(keys:["l1", "l2"]), 0.700000
-    │ └─ ← dict(keys:["l1", "l2"]) (8.9μs)
-    └─ ← dict(keys:["loss", "p"]) (0.0μs)
+    ...
     ```
 
 === "Guards"
@@ -176,11 +173,11 @@ Three modes expose different aspects of execution: a tracer reconstructs the ful
 === "Profiler"
 
     ```css
-    Profiler: 5.63s wall
+    Profiler: 3.63s wall
 
       Function                          Calls      Total       Self   Avg/call
       ------------------------------------------------------------------------
-      gpt-forward                         100      3.72s      3.72s    37.23ms
+      gpt-forward                         100      1.72s      3.72s    37.23ms
       reshape                             301   900.57ms   900.57ms     2.99ms
       choice                              100   622.85ms   622.85ms     6.23ms
       softmax                             100   158.67ms   158.67ms     1.59ms
@@ -191,11 +188,11 @@ Three modes expose different aspects of execution: a tracer reconstructs the ful
 
       Call tree:
 
-      ├── generate (5.58s, 1 call)
-      │   ├── reduce (5.58s, 1 call)
-      │   │   └── <lambda> (5.58s, 101 calls)
-      │   │       ├── generate-token (5.56s, 100 calls)
-      │   │       │   ├── gpt-forward (3.72s, 100 calls)
+      ├── generate (3.58s, 1 call)
+      │   ├── reduce (3.58s, 1 call)
+      │   │   └── <lambda> (3.58s, 101 calls)
+      │   │       ├── generate-token (3.56s, 100 calls)
+      │   │       │   ├── gpt-forward (1.72s, 100 calls)
       │   │       │   ├── reshape (900.16ms, 100 calls)
       │   │       │   ├── choice (622.85ms, 100 calls)
       │   │       │   ├── softmax (158.67ms, 100 calls)
@@ -213,7 +210,7 @@ Three modes expose different aspects of execution: a tracer reconstructs the ful
 <div class="flex-section">
 <div markdown="1">
 
-A complete GPT-2 124M implementation in Sheaf is 1,908 tokens, while the equivalent PyTorch is 7,486. Sheaf's uniform syntax keeps the code concise and close to the math.
+A complete GPT-2 124M implementation in Sheaf is 1,908 tokens, while the equivalent PyTorch is 7,486. Sheaf's uniform syntax keeps the code concise and unambiguous.
 <br/><br/>
 
 Context usage counts GPT-4 tokens (tiktoken) across model, training, and sampling code. Deploy size is the minimal runtime required to train and run a model on a CUDA GPU.
@@ -260,8 +257,6 @@ Context usage counts GPT-4 tokens (tiktoken) across model, training, and samplin
 Sheaf is written in Rust. The complete runtime with GPU backends ships
 as a single 4 MB executable.
 
-Sheaf code is JIT-compiled to optimized GPU kernels for CUDA and Metal through StableHLO and IREE.
-
 The compiler toolchain is downloaded on first use and is not required to run a compiled model.
 
 </div>
@@ -269,20 +264,14 @@ The compiler toolchain is downloaded on first use and is not required to run a c
 <div markdown="1">
 
 ```
-$ du -h * # Standalone, self-contained deployment
+# Standalone, self-contained deployment
+$ du -h *
 128K	__sheaf__                 # compiled model
 3.2M	data
 4.0K	model.shf
-164M	out-shakespeare-char
-3.6M	sheaf                     # runtime
+164M	out-weights
+3.8M	sheaf                     # runtime
 4.0K	train.shf
-
-$ ./sheaf train.shf
-Loading model...
-Loaded: 6 layers, 384 dim, 65 vocab
-Training data: 1115394 tokens
-Training for 100 steps (batch_size=4 block_size=256)...
-Step 100 | Loss: 2.4573
 ```
 
 </div>
