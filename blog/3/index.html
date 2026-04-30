@@ -8,27 +8,29 @@
       
       
       
-        <link rel="canonical" href="https://sheaf-lang.org/quickstart/">
+        <link rel="canonical" href="https://sheaf-lang.org/blog/3/">
       
       
+        <link rel="prev" href="../4/">
       
-        <link rel="next" href="../rationale/">
+      
+        <link rel="next" href="../2/">
       
       
         
       
       
-      <link rel="icon" href="../images/favicon.png">
+      <link rel="icon" href="../../images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
      
       
-        <title>Quick Start - Sheaf</title>
+        <title>Ditching Enzyme: A Case for Symbolic Autodiff in Sheaf V2 - Sheaf</title>
       
     
-<link rel="icon" type="image/png" href="../images/favicon.png" />
+<link rel="icon" type="image/png" href="../../images/favicon.png" />
 <meta name="robots" content="index, follow" />
-<meta property="og:image" content="../images/sheaf-dark.png" />
+<meta property="og:image" content="../../images/sheaf-dark.png" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta
     property="og:title"
@@ -45,7 +47,7 @@
 <style>
     /* Replace mkdocs logo with custom logo - header */
     .md-header__button.md-logo {
-        background-image: url("../images/sheaf-light.png");
+        background-image: url("../../images/sheaf-light.png");
         background-size: contain;
         background-repeat: no-repeat;
         background-position: center;
@@ -58,7 +60,7 @@
 
     /* Replace mkdocs logo with custom logo - sidebar (responsive menu) */
     .md-nav__title {
-        background-image: url("../images/sheaf-light.png");
+        background-image: url("../../images/sheaf-light.png");
         background-size: 64px 64px;
         background-repeat: no-repeat;
         background-position: center;
@@ -74,10 +76,10 @@
 </style>
 
      
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -514,9 +516,9 @@
       
     
     
-      <link rel="stylesheet" href="../stylesheets/extra.css">
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -539,7 +541,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#quick-start" class="md-skip">
+        <a href="#the-enzyme-detour" class="md-skip">
           Skip to content
         </a>
       
@@ -555,9 +557,9 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="Sheaf" class="md-header__button md-logo" aria-label="Sheaf" data-md-component="logo">
+    <a href="../.." title="Sheaf" class="md-header__button md-logo" aria-label="Sheaf" data-md-component="logo">
       
-  <img src="../images/sheaf-light.png" alt="logo">
+  <img src="../../images/sheaf-light.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -574,7 +576,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Quick Start
+              Ditching Enzyme: A Case for Symbolic Autodiff in Sheaf V2
             
           </span>
         </div>
@@ -651,13 +653,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="./" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../../quickstart/" class="md-tabs__link">
           
   
   
@@ -677,7 +677,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../reference/" class="md-tabs__link">
+        <a href="../../reference/" class="md-tabs__link">
           
   
   
@@ -693,11 +693,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../blog/6/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../6/" class="md-tabs__link">
           
   
   
@@ -726,6 +728,8 @@
           
             
               
+                
+              
               <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
@@ -737,9 +741,9 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="Sheaf" class="md-nav__button md-logo" aria-label="Sheaf" data-md-component="logo">
+    <a href="../.." title="Sheaf" class="md-nav__button md-logo" aria-label="Sheaf" data-md-component="logo">
       
-  <img src="../images/sheaf-light.png" alt="logo">
+  <img src="../../images/sheaf-light.png" alt="logo">
 
     </a>
     Sheaf
@@ -763,29 +767,24 @@
       
   
   
-    
   
   
-  
     
     
     
     
       
-        
-        
-      
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" >
         
           
-          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="">
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
             
   
   
@@ -803,7 +802,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_1">
             <span class="md-nav__icon md-icon"></span>
             
@@ -818,37 +817,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Quick Start
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../quickstart/" class="md-nav__link">
         
   
   
@@ -864,92 +836,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#installation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Installation
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#repl" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        REPL
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#running-a-file" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Running a file
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#examples" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Examples
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#ai-assistant-bootstrap" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        AI assistant bootstrap
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#next-steps" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Next steps
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -962,7 +848,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../rationale/" class="md-nav__link">
+      <a href="../../rationale/" class="md-nav__link">
         
   
   
@@ -990,7 +876,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../starting/" class="md-nav__link">
+      <a href="../../starting/" class="md-nav__link">
         
   
   
@@ -1018,7 +904,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../key-concepts/" class="md-nav__link">
+      <a href="../../key-concepts/" class="md-nav__link">
         
   
   
@@ -1046,7 +932,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../types/" class="md-nav__link">
+      <a href="../../types/" class="md-nav__link">
         
   
   
@@ -1074,7 +960,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../changelog/" class="md-nav__link">
+      <a href="../../changelog/" class="md-nav__link">
         
   
   
@@ -1102,7 +988,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../roadmap/" class="md-nav__link">
+      <a href="../../roadmap/" class="md-nav__link">
         
   
   
@@ -1187,7 +1073,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../reference/" class="md-nav__link">
+      <a href="../../reference/" class="md-nav__link">
         
   
   
@@ -1219,24 +1105,29 @@
       
   
   
+    
   
   
+  
     
     
     
     
-      
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
             
   
   
@@ -1254,7 +1145,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1272,7 +1163,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../blog/6/" class="md-nav__link">
+      <a href="../6/" class="md-nav__link">
         
   
   
@@ -1300,7 +1191,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../blog/5/" class="md-nav__link">
+      <a href="../5/" class="md-nav__link">
         
   
   
@@ -1328,7 +1219,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../blog/4/" class="md-nav__link">
+      <a href="../4/" class="md-nav__link">
         
   
   
@@ -1353,10 +1244,35 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../blog/3/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ditching Enzyme: A Case for Symbolic Autodiff in Sheaf V2
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1372,6 +1288,101 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-enzyme-detour" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Enzyme Detour
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-minimal-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Minimal Path
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#proof-of-concept-in-python" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Proof of Concept in Python
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scaling-to-a-real-world-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scaling to a Real World Example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-full-training-loop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Full Training Loop
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conclusion
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1384,7 +1395,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../blog/2/" class="md-nav__link">
+      <a href="../2/" class="md-nav__link">
         
   
   
@@ -1412,7 +1423,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../blog/1/" class="md-nav__link">
+      <a href="../1/" class="md-nav__link">
         
   
   
@@ -1448,7 +1459,9 @@
             
             
               
-              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" hidden>
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
                     
@@ -1456,8 +1469,6 @@
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
-  
-    
   
   
     <label class="md-nav__title" for="__toc">
@@ -1467,10 +1478,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#installation" class="md-nav__link">
+  <a href="#the-enzyme-detour" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Installation
+        The Enzyme Detour
       
     </span>
   </a>
@@ -1478,10 +1489,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#repl" class="md-nav__link">
+  <a href="#the-minimal-path" class="md-nav__link">
     <span class="md-ellipsis">
       
-        REPL
+        The Minimal Path
       
     </span>
   </a>
@@ -1489,10 +1500,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#running-a-file" class="md-nav__link">
+  <a href="#proof-of-concept-in-python" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Running a file
+        Proof of Concept in Python
       
     </span>
   </a>
@@ -1500,10 +1511,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#examples" class="md-nav__link">
+  <a href="#scaling-to-a-real-world-example" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Examples
+        Scaling to a Real World Example
       
     </span>
   </a>
@@ -1511,10 +1522,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#ai-assistant-bootstrap" class="md-nav__link">
+  <a href="#the-full-training-loop" class="md-nav__link">
     <span class="md-ellipsis">
       
-        AI assistant bootstrap
+        The Full Training Loop
       
     </span>
   </a>
@@ -1522,10 +1533,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#next-steps" class="md-nav__link">
+  <a href="#performance" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Next steps
+        Performance
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conclusion
       
     </span>
   </a>
@@ -1546,74 +1568,207 @@
               <article class="md-content__inner md-typeset">
                 
                   
+  
+
 
 
   
   
 
 
-<h1 id="quick-start">Quick Start</h1>
-<p>Sheaf ships as a single native binary with no runtime dependencies.</p>
-<h2 id="installation">Installation</h2>
-<p>Download the binary for your platform from the <a href="https://github.com/sheaf-lang/sheaf/releases">releases page</a>:</p>
-<table>
-<thead>
-<tr>
-<th>Platform</th>
-<th>Binary</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>macOS (Apple Silicon)</td>
-<td><code>sheaf-macos-aarch64</code></td>
-</tr>
-<tr>
-<td>Linux x86_64</td>
-<td><code>sheaf-linux-x86_64</code></td>
-</tr>
-<tr>
-<td>Linux aarch64</td>
-<td><code>sheaf-linux-aarch64</code></td>
-</tr>
-</tbody>
-</table>
-<p>Make the binary executable and move it to your PATH:</p>
-<div class="language-bash highlight"><pre><span></span><code>chmod<span class="w"> </span>+x<span class="w"> </span>sheaf-macos-aarch64
-mv<span class="w"> </span>sheaf-macos-aarch64<span class="w"> </span>/usr/local/bin/sheaf
+  <h1>Ditching Enzyme: A Case for Symbolic Autodiff in Sheaf V2</h1>
+
+<p><em>Feb 15th 2026</em></p>
+<p>The Rust compiler for Sheaf is progressing well. The parser handles
+S-expressions correctly, and the first StableHLO emission works. Pattern
+matching in Rust proved to be the right choice: it doesn't prevent panics, but
+exhaustiveness checking catches missing cases at compile time.</p>
+<p>Before going further, I need to validate the autodiff strategy. The V2
+architecture targets IREE, which means I need gradients in StableHLO/Linalg, not
+through JAX. As I mentioned in the first blog post, the obvious candidate was
+Enzyme-MLIR, because it provided a convenient black-box for the autodiff.</p>
+<h3 id="the-enzyme-detour"><strong>The Enzyme Detour</strong></h3>
+<p>Enzyme is a compile-time autodiff engine that operates on LLVM IR and MLIR. It
+checks what I want for Sheaf: MLIR-native, designed for ahead-of-time
+compilation, and supposedly lightweight.</p>
+<p>I spent quite some time compiling it from source, fixing CMake issues to
+generate a shared library on macOS, and eventually got a whooping "lightweight"
+80MB <code>libEnzymeMLIR-23.dylib</code>.</p>
+<p>The problem became clear when trying to integrate it with IREE: IREE doesn't
+support dynamic plugin loading. To use Enzyme, IREE would need to be rebuilt
+with Enzyme statically linked, then included in Sheaf. Embedding such a
+fast-moving project inside Sheaf would turn it into a very large and tightly
+coupled monolith, with long build times and high maintenance cost.</p>
+<p>For a project aiming to minimize bloat and stick to <em>do one thing and do it
+well</em>, this is an anti-pattern.</p>
+<p>I briefly considered alternatives: jax.grad, torch.autograd and the TinyGrad
+autodiff, but they all bring Python back into the compilation pipeline, negating
+the entire point of V2. <em>Python shall be no more</em>.</p>
+<h3 id="the-minimal-path"><strong>The Minimal Path</strong></h3>
+<p>Facing these limitations, the question became: do I need such a large code base
+to perform differentiation? What does Sheaf actually need?</p>
+<p>Enzyme is designed to differentiate arbitrary C++ code with pointers, aliasing,
+and side effects. Sheaf has none of that. The code is purely functional,
+immutable, and operates on a small set of mathematical operations: matrix
+multiplication, element-wise arithmetic, activations, and reductions.</p>
+<p>Besides, I don't need an <em>optimizin</em> autodiff engine: I need one that generates
+mathematically correct gradients. IREE will optimise the MLIR afterward through
+DCE, kernel fusion and vectorization.</p>
+<p>This suggested a different approach: maybe I could try an easy (albeit very
+slow) symbolic differentiation on the AST, before StableHLO emission, then let
+IREE optimize the mess. Since Sheaf code is data (S-expressions), so I can
+transform it directly using standard calculus rules, which means a fairly
+straightforward implementation.</p>
+<p>This also gives me an advantage compared to Enzyme: operating straight on the
+semantic structure of the program (the AST), not on the compiled MLIR. Enzyme
+works on LLVM IR, where it must reconstruct intent from low-level operations. In
+Sheaf, the intent is explicit in the S-expression tree. A multiplication is
+<code>(* a b)</code>, not a sequence of pointer dereferences and SIMD instructions, which
+means I don't have to be an LLVM or XLA engineer to understand and debug it.</p>
+<p>Having an internal and standalone autograd also solves one of the main
+architectural issue of the V2: differentiation in the interpreter, which would
+have otherwise depended on Enzyme.</p>
+<h3 id="proof-of-concept-in-python"><strong>Proof of Concept in Python</strong></h3>
+<p>To validate this, I built a minimal autodiff in Python, which reminded me of my
+old Andrew Ng courses. Start with a simple expression, a product:</p>
+<div class="language-python highlight"><pre><span></span><code><span class="n">x</span> <span class="o">=</span> <span class="n">Var</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">Var</span><span class="p">(</span><span class="s2">&quot;y&quot;</span><span class="p">)</span>
+<span class="n">expr</span> <span class="o">=</span> <span class="n">Add</span><span class="p">(</span><span class="n">Mul</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>  <span class="c1"># f(x,y) = x*y + x</span>
 </code></pre></div>
-<h2 id="repl">REPL</h2>
-<p>Run <code>sheaf</code> with no arguments to start the interactive console:</p>
-<div class="language-text highlight"><pre><span></span><code>Sheaf 2.0.0 (:h for help)
-sheaf&gt; (+ 1 2)
-=&gt; 3
-sheaf&gt; (map (fn [x] (* x x)) [1 2 3 4])
-=&gt; [1.0, 4.0, 9.0, 16.0]
+<p>Then derivate it:</p>
+<div class="language-python highlight"><pre><span></span><code><span class="n">df_dx</span> <span class="o">=</span> <span class="n">grad</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">)</span>  <span class="c1"># =&gt; y + 1</span>
+<span class="n">df_dy</span> <span class="o">=</span> <span class="n">grad</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">)</span>  <span class="c1"># =&gt; x</span>
 </code></pre></div>
-<p>Tab completion is available. Inline help: <code>:help &lt;name&gt;</code> (e.g., <code>:help let</code>).</p>
-<h2 id="running-a-file">Running a file</h2>
-<p>To run a program, pass the source file to <code>sheaf</code>:</p>
-<div class="language-bash highlight"><pre><span></span><code>sheaf<span class="w"> </span>run.shf
+<p>Then grep the
+<a href="https://github.com/openxla/stablehlo/blob/main/docs/spec.md">StableHLO specifications</a>
+to generate something that IREE can run:</p>
+<div class="language-text highlight"><pre><span></span><code>func.func @forward(%x: tensor&lt;f32&gt;, %y: tensor&lt;f32&gt;) -&gt; tensor&lt;f32&gt; {
+  %0 = stablehlo.multiply %x, %y : tensor&lt;f32&gt;
+  %1 = stablehlo.add %0, %x : tensor&lt;f32&gt;
+  return %1 : tensor&lt;f32&gt;
+}
+
+func.func @grad_x(%x: tensor&lt;f32&gt;, %y: tensor&lt;f32&gt;) -&gt; tensor&lt;f32&gt; {
+  %0 = stablehlo.add %y, %c1 : tensor&lt;f32&gt;
+  return %0 : tensor&lt;f32&gt;
+}
 </code></pre></div>
-<h2 id="examples">Examples</h2>
-<p>Download the examples archive from the <a href="https://github.com/sheaf-lang/sheaf/releases">releases page</a> (<a href="https://github.com/sheaf-lang/sheaf/releases/download/v2.0.0-rc1/sheaf-examples.tar.gz">direct link</a>). Each example is self-contained:</p>
-<div class="language-bash highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>examples/mlp
-sheaf<span class="w"> </span>run.shf
-</code></pre></div>
-<p>Available examples:</p>
+<p>Compile with IREE, execute, verify: <code>df/dx(2,3) = 4</code>, <code>df/dy(2,3) = 2</code>, and
+voilà! My first StableHLO grad, very far from a generic implementation, but
+already gratifying.</p>
+<h3 id="scaling-to-a-real-world-example"><strong>Scaling to a Real World Example</strong></h3>
+<p>Validating the engine requires more than differentiating a simple expression, so
+I moved to the simple XOR MLP Sheaf example and see if I could derivate it with
+my rudimentary autograd. This requires the differentiation of a lot more
+operations:</p>
 <ul>
-<li><strong><a href="https://github.com/sheaf-lang/sheaf/tree/main/examples/clevr">CLEVR</a></strong>: A neuro-symbolic model for visual question answering</li>
-<li><strong><a href="https://github.com/sheaf-lang/sheaf/tree/main/examples/hydra">Hydra</a></strong>: A self-modifying model that grows during training</li>
-<li><strong><a href="https://github.com/sheaf-lang/sheaf/tree/main/examples/mlp">MLP</a></strong>: "Hello World" example of a small multi-layer network to solve XOR</li>
-<li><strong><a href="https://github.com/sheaf-lang/sheaf/tree/main/examples/nanoGPT">NanoGPT</a></strong>: A port of Karpathy's nanoGPT in Sheaf</li>
+<li>Matrix multiplication with proper transpose for gradients</li>
+<li>Bias broadcast ([8] -&gt; [4×8]) and reduction ([4×8] -&gt; [8]) for gradient
+  accumulation</li>
+<li>Activations (ReLU, Sigmoid) with their derivatives</li>
+<li>MSE loss with mean reduction</li>
+<li>Value-and-grad returning both loss and all parameter gradients</li>
 </ul>
-<h2 id="ai-assistant-bootstrap">AI assistant bootstrap</h2>
-<p><code>sheaf init-ai</code> generates a context file in the current directory. Provide this file to Claude Code, Cursor, Copilot, or any other assistant to get code generation, code completion, and debugging help.</p>
-<div class="language-bash highlight"><pre><span></span><code>sheaf<span class="w"> </span>init-ai
-<span class="c1"># Generates sheaf-context.md</span>
+<p>The implementation grew to about 400 lines of Python: AST nodes, shape
+inference, gradient rules, and StableHLO emission with broadcast handling
+through <code>stablehlo.broadcast_in_dim</code>. Claude helped writing the boilerplate, but
+I'm okay relying on AI assistance for this kind of work.</p>
+<p>For the XOR MLP, this generates a single <code>train_step</code> function that computes:</p>
+<div class="language-text highlight"><pre><span></span><code>(loss, dL/dW1, dL/db1, dL/dW2, dL/db2) = train_step(x, W1, b1, W2, b2, y)
 </code></pre></div>
-<h2 id="next-steps">Next steps</h2>
-<p>Follow the <a href="../starting/">tutorial</a> to learn the language fundamentals.</p>
+<p>This compiles to an 18KB VMFB, but more importantly, it outputs the correct
+shapes and values.</p>
+<h3 id="the-full-training-loop"><strong>The Full Training Loop</strong></h3>
+<p>The next step is to compile the entire training loop into the VMFB, not just a
+hard-coded single pass. Instead of calling <code>train_step</code> 500 times from Python,
+this requires generating MLIR with <code>scf.for</code> that contains forward, backward,
+and stochastic gradient descent updates (Adam will wait):</p>
+<div class="language-text highlight"><pre><span></span><code>func.func @train(%x, %y, %W1_init, %b1_init, %W2_init, %b2_init, %lr, %epochs) {
+  %final = scf.for %epoch = 0 to %epochs {
+    %loss, %grads = call @train_step(...)
+    %params_new = sgd_update(%params, %grads, %lr)
+    scf.yield %params_new
+  }
+  return %final
+}
+</code></pre></div>
+<p>The interface is not yet user-friendly, but I can proudly watch my own
+standalone autograd perform the differenciation:</p>
+<div class="language-sh highlight"><pre><span></span><code>~/standalone_train$<span class="w"> </span>ll<span class="w"> </span>-h
+total<span class="w"> </span><span class="m">1720</span>
+-rwxr-xr-x<span class="w">  </span><span class="m">1</span><span class="w"> </span>damien<span class="w">  </span>staff<span class="w">   </span>836K<span class="w"> </span>Feb<span class="w">  </span><span class="m">9</span><span class="w"> </span><span class="m">01</span>:33<span class="w"> </span>iree-run-module*
+-rw-r--r--<span class="w">  </span><span class="m">1</span><span class="w"> </span>damien<span class="w">  </span>staff<span class="w">    </span>18K<span class="w"> </span>Feb<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="m">18</span>:41<span class="w"> </span>training_loop.vmfb
+~/standalone_train$<span class="w"> </span>./iree-run-module<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--module<span class="o">=</span>training_loop.vmfb<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--device<span class="o">=</span>local-task<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--function<span class="o">=</span>train<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--input<span class="o">=</span><span class="s2">&quot;4x2xf32=0,0,0,1,1,0,1,1&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--input<span class="o">=</span><span class="s2">&quot;4x1xf32=0,1,1,0&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--input<span class="o">=</span><span class="s2">&quot;2x8xf32=0.05723,-0.00872,0.04017,0.09566,-0.01383,0.06476,-0.03770,0.04296,0.06901,-0.09234,0.03320,0.07782,-0.04273,0.00332,0.00073,0.00774&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--input<span class="o">=</span><span class="s2">&quot;8xf32=0,0,0,0,0,0,0,0&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--input<span class="o">=</span><span class="s2">&quot;8x1xf32=-0.13197,0.06499,0.00506,-0.04559,0.09581,-0.05592,0.04567,0.02028&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--input<span class="o">=</span><span class="s2">&quot;1xf32=0&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--input<span class="o">=</span><span class="s2">&quot;f32=0.7&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--input<span class="o">=</span><span class="s2">&quot;500&quot;</span>
+EXEC<span class="w"> </span>@train
+result<span class="o">[</span><span class="m">0</span><span class="o">]</span>:<span class="w"> </span>hal.buffer_view
+<span class="nv">2x8xf32</span><span class="o">=[</span><span class="m">0</span>.0277724<span class="w"> </span><span class="m">0</span>.0014524<span class="w"> </span><span class="m">0</span>.0427165<span class="w"> </span><span class="m">0</span>.0880606<span class="w"> </span><span class="m">0</span>.00132029<span class="w"> </span><span class="m">0</span>.0561985<span class="w"> </span>-0.0111438<span class="w"> </span><span class="m">0</span>.0482478<span class="o">][</span><span class="m">0</span>.0442278<span class="w"> </span>-0.0827338<span class="w"> </span><span class="m">0</span>.0352603<span class="w"> </span><span class="m">0</span>.0713262<span class="w"> </span>-0.0288227<span class="w"> </span>-0.00330342<span class="w"> </span><span class="m">0</span>.0230232<span class="w"> </span><span class="m">0</span>.012129<span class="o">]</span>
+result<span class="o">[</span><span class="m">1</span><span class="o">]</span>:<span class="w"> </span>hal.buffer_view
+<span class="nv">8xf32</span><span class="o">=</span><span class="m">0</span>.000628438<span class="w"> </span>-0.000299154<span class="w"> </span>-0.000169139<span class="w"> </span>-5.71229E-05<span class="w"> </span>-0.000200321<span class="w"> </span>-0.000927506<span class="w"> </span>-0.00394388<span class="w"> </span>-0.000171253
+result<span class="o">[</span><span class="m">2</span><span class="o">]</span>:<span class="w"> </span>hal.buffer_view
+<span class="nv">8x1xf32</span><span class="o">=[</span>-0.157072<span class="o">][</span><span class="m">0</span>.206765<span class="o">][</span><span class="m">0</span>.0120207<span class="o">][</span>-0.0359833<span class="o">][</span><span class="m">0</span>.224716<span class="o">][</span><span class="m">0</span>.187995<span class="o">][</span><span class="m">0</span>.695675<span class="o">][</span><span class="m">0</span>.0252195<span class="o">]</span>
+result<span class="o">[</span><span class="m">3</span><span class="o">]</span>:<span class="w"> </span>hal.buffer_view
+<span class="nv">1xf32</span><span class="o">=</span>-0.00244113
+result<span class="o">[</span><span class="m">4</span><span class="o">]</span>:<span class="w"> </span>hal.buffer_view
+<span class="nv">f32</span><span class="o">=</span><span class="m">0</span>.997798
+</code></pre></div>
+<p>I am happy with this result. The compiled training loop is 18KB, the entire
+standalone package (runtime + VMFB) fits in 850KB, and the network output
+converges correctly (final prediction ~= 0.998).</p>
+<p>Of course, this is still a Proof of Concept, but this validates that a custom
+differentiation engine is feasible.</p>
+<h3 id="performance"><strong>Performance</strong></h3>
+<p>Since XLA is highly optimized and probably uses all kind of performance tricks,
+I didn't expect much from my naive autograd.</p>
+<p>I ran a 500 epochs benchmark on the MLP:</p>
+<ul>
+<li>Sheaf V1 (Python loop + JAX): 1.84 seconds for 500 epochs.</li>
+<li>Sheaf V2 (symbolic autodiff + compiled loop): 0.036 seconds for 500 epochs.</li>
+</ul>
+<p>Wait, 51x faster? There simply is no way I should even be close to JAX with my naive autograd.
+However, this isn't that surprising as V2 compiles the entire training loop
+ahead of time, while V1 has a huge dispatch latency as it calls JAX from Python
+500 times. Once I add a JIT profiler to monitor the cach misses and the
+overhead, I will know if this actually scales. Right now, it already
+demonstrates the overhead eliminated by AOT compilation.</p>
+<h3 id="conclusion"><strong>Conclusion</strong></h3>
+<p>This POC validates the approach for simple models. Having a standalone
+differentiation engine will allow me to keep the SDK size minimal with no LLVM
+dependency in the distributed package, and no 80MB autodiff plugin.</p>
+<p>However, several questions remain open.</p>
+<ul>
+<li>
+<p>The current implementation handles standard operations (matmul, activations,
+  element-wise ops) on static shapes. Control flow dependent on runtime values,
+  non-differentiable operations, and custom gradient definitions are not yet
+  supported.</p>
+</li>
+<li>
+<p>I use reverse-mode autodiff, which emits explicit gradient functions for each
+  parameter. The implementation does not yet include gradient checkpointing or
+  recomputation strategies for memory efficiency. Gradients are computed
+  directly from the symbolic AST and emitted as StableHLO. This works for POC
+  scale, but larger models will require checkpointing.</p>
+</li>
+<li>
+<p>Testing on XOR validates correctness but does not demonstrate how the approach
+  scales to deeper architectures. BareGPT (the full Sheaf generative transformer
+  example) will be the real test, and will also allow me to test the sharding
+  with reduce-all, which is my next POC.</p>
+</li>
+</ul>
+<p>The Rust implementation will need to address these constraints as it extends to
+the full Sheaf feature set.</p>
 
 
 
@@ -1621,8 +1776,13 @@ sheaf<span class="w"> </span>run.shf
 
 
 
+  
+  
 
 
+
+
+  
 
 
 
@@ -1647,7 +1807,7 @@ sheaf<span class="w"> </span>run.shf
         "
     >
         <img
-            src="../images/sheaf-light.png"
+            src="../../images/sheaf-light.png"
             alt="Logo"
             style="height: 24px"
         />
@@ -1664,14 +1824,14 @@ sheaf<span class="w"> </span>run.shf
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.tabs.sticky", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
-        <script src="../javascripts/fix-drawer.js"></script>
+        <script src="../../javascripts/fix-drawer.js"></script>
       
-        <script src="../javascripts/clean-url.js"></script>
+        <script src="../../javascripts/clean-url.js"></script>
       
     
   </body>

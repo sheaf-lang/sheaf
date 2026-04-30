@@ -8,27 +8,29 @@
       
       
       
-        <link rel="canonical" href="https://sheaf-lang.org/quickstart/">
+        <link rel="canonical" href="https://sheaf-lang.org/blog/4/">
       
       
+        <link rel="prev" href="../5/">
       
-        <link rel="next" href="../rationale/">
+      
+        <link rel="next" href="../3/">
       
       
         
       
       
-      <link rel="icon" href="../images/favicon.png">
+      <link rel="icon" href="../../images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
      
       
-        <title>Quick Start - Sheaf</title>
+        <title>A Single Binary ML Framework - Sheaf</title>
       
     
-<link rel="icon" type="image/png" href="../images/favicon.png" />
+<link rel="icon" type="image/png" href="../../images/favicon.png" />
 <meta name="robots" content="index, follow" />
-<meta property="og:image" content="../images/sheaf-dark.png" />
+<meta property="og:image" content="../../images/sheaf-dark.png" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta
     property="og:title"
@@ -45,7 +47,7 @@
 <style>
     /* Replace mkdocs logo with custom logo - header */
     .md-header__button.md-logo {
-        background-image: url("../images/sheaf-light.png");
+        background-image: url("../../images/sheaf-light.png");
         background-size: contain;
         background-repeat: no-repeat;
         background-position: center;
@@ -58,7 +60,7 @@
 
     /* Replace mkdocs logo with custom logo - sidebar (responsive menu) */
     .md-nav__title {
-        background-image: url("../images/sheaf-light.png");
+        background-image: url("../../images/sheaf-light.png");
         background-size: 64px 64px;
         background-repeat: no-repeat;
         background-position: center;
@@ -74,10 +76,10 @@
 </style>
 
      
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -514,9 +516,9 @@
       
     
     
-      <link rel="stylesheet" href="../stylesheets/extra.css">
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -539,7 +541,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#quick-start" class="md-skip">
+        <a href="#a-revised-architecture" class="md-skip">
           Skip to content
         </a>
       
@@ -555,9 +557,9 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="Sheaf" class="md-header__button md-logo" aria-label="Sheaf" data-md-component="logo">
+    <a href="../.." title="Sheaf" class="md-header__button md-logo" aria-label="Sheaf" data-md-component="logo">
       
-  <img src="../images/sheaf-light.png" alt="logo">
+  <img src="../../images/sheaf-light.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -574,7 +576,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Quick Start
+              A Single Binary ML Framework
             
           </span>
         </div>
@@ -651,13 +653,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="./" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../../quickstart/" class="md-tabs__link">
           
   
   
@@ -677,7 +677,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../reference/" class="md-tabs__link">
+        <a href="../../reference/" class="md-tabs__link">
           
   
   
@@ -693,11 +693,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../blog/6/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../6/" class="md-tabs__link">
           
   
   
@@ -726,6 +728,8 @@
           
             
               
+                
+              
               <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
@@ -737,9 +741,9 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="Sheaf" class="md-nav__button md-logo" aria-label="Sheaf" data-md-component="logo">
+    <a href="../.." title="Sheaf" class="md-nav__button md-logo" aria-label="Sheaf" data-md-component="logo">
       
-  <img src="../images/sheaf-light.png" alt="logo">
+  <img src="../../images/sheaf-light.png" alt="logo">
 
     </a>
     Sheaf
@@ -763,29 +767,24 @@
       
   
   
-    
   
   
-  
     
     
     
     
       
-        
-        
-      
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" >
         
           
-          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="">
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
             
   
   
@@ -803,7 +802,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_1">
             <span class="md-nav__icon md-icon"></span>
             
@@ -818,37 +817,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Quick Start
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../quickstart/" class="md-nav__link">
         
   
   
@@ -864,92 +836,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#installation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Installation
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#repl" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        REPL
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#running-a-file" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Running a file
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#examples" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Examples
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#ai-assistant-bootstrap" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        AI assistant bootstrap
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#next-steps" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Next steps
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -962,7 +848,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../rationale/" class="md-nav__link">
+      <a href="../../rationale/" class="md-nav__link">
         
   
   
@@ -990,7 +876,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../starting/" class="md-nav__link">
+      <a href="../../starting/" class="md-nav__link">
         
   
   
@@ -1018,7 +904,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../key-concepts/" class="md-nav__link">
+      <a href="../../key-concepts/" class="md-nav__link">
         
   
   
@@ -1046,7 +932,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../types/" class="md-nav__link">
+      <a href="../../types/" class="md-nav__link">
         
   
   
@@ -1074,7 +960,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../changelog/" class="md-nav__link">
+      <a href="../../changelog/" class="md-nav__link">
         
   
   
@@ -1102,7 +988,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../roadmap/" class="md-nav__link">
+      <a href="../../roadmap/" class="md-nav__link">
         
   
   
@@ -1187,7 +1073,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../reference/" class="md-nav__link">
+      <a href="../../reference/" class="md-nav__link">
         
   
   
@@ -1219,24 +1105,29 @@
       
   
   
+    
   
   
+  
     
     
     
     
-      
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
             
   
   
@@ -1254,7 +1145,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1272,7 +1163,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../blog/6/" class="md-nav__link">
+      <a href="../6/" class="md-nav__link">
         
   
   
@@ -1300,7 +1191,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../blog/5/" class="md-nav__link">
+      <a href="../5/" class="md-nav__link">
         
   
   
@@ -1325,10 +1216,35 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../blog/4/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    A Single Binary ML Framework
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1344,6 +1260,101 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#a-revised-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A revised architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reducing-friction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reducing friction
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-manifest" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The manifest
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#transparent-dispatch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Transparent dispatch
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#debugging-the-autodiff" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Debugging the autodiff
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Results
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#whats-next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What's next
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1356,7 +1367,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../blog/3/" class="md-nav__link">
+      <a href="../3/" class="md-nav__link">
         
   
   
@@ -1384,7 +1395,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../blog/2/" class="md-nav__link">
+      <a href="../2/" class="md-nav__link">
         
   
   
@@ -1412,7 +1423,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../blog/1/" class="md-nav__link">
+      <a href="../1/" class="md-nav__link">
         
   
   
@@ -1448,7 +1459,9 @@
             
             
               
-              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" hidden>
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
                     
@@ -1456,8 +1469,6 @@
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
-  
-    
   
   
     <label class="md-nav__title" for="__toc">
@@ -1467,10 +1478,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#installation" class="md-nav__link">
+  <a href="#a-revised-architecture" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Installation
+        A revised architecture
       
     </span>
   </a>
@@ -1478,10 +1489,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#repl" class="md-nav__link">
+  <a href="#reducing-friction" class="md-nav__link">
     <span class="md-ellipsis">
       
-        REPL
+        Reducing friction
       
     </span>
   </a>
@@ -1489,10 +1500,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#running-a-file" class="md-nav__link">
+  <a href="#the-manifest" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Running a file
+        The manifest
       
     </span>
   </a>
@@ -1500,10 +1511,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#examples" class="md-nav__link">
+  <a href="#transparent-dispatch" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Examples
+        Transparent dispatch
       
     </span>
   </a>
@@ -1511,10 +1522,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#ai-assistant-bootstrap" class="md-nav__link">
+  <a href="#debugging-the-autodiff" class="md-nav__link">
     <span class="md-ellipsis">
       
-        AI assistant bootstrap
+        Debugging the autodiff
       
     </span>
   </a>
@@ -1522,10 +1533,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#next-steps" class="md-nav__link">
+  <a href="#results" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Next steps
+        Results
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#whats-next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What's next
       
     </span>
   </a>
@@ -1546,74 +1568,232 @@
               <article class="md-content__inner md-typeset">
                 
                   
+  
+
 
 
   
   
 
 
-<h1 id="quick-start">Quick Start</h1>
-<p>Sheaf ships as a single native binary with no runtime dependencies.</p>
-<h2 id="installation">Installation</h2>
-<p>Download the binary for your platform from the <a href="https://github.com/sheaf-lang/sheaf/releases">releases page</a>:</p>
+  <h1>A Single Binary ML Framework</h1>
+
+<p><em>Mar 1st 2026</em></p>
+<p>The <a href="../1/">first article</a> outlined a fairly ambitious V2 architecture for Sheaf:
+several shared libraries, an external IREE runtime, and Enzyme-MLIR for
+autodiff. The whole SDK weighed around 300MB. Over the past few weeks, as the
+pieces came together, that plan changed considerably. What emerged is simpler
+and, in hindsight, more honest about what the project actually needs at this
+stage.</p>
+<p>This article describes the simplifications to the current architecture, to the
+AOT build system, and the autodiff debugging that preceded it all.</p>
+<h3 id="a-revised-architecture">A revised architecture</h3>
+<p>Article 1 described a V2 architecture split into <code>sheaf-parser.so</code>,
+<code>sheaf-interpreter.so</code>, a separate <code>sheaf-compiler.so</code>, and an external IREE
+runtime. The autodiff was handled by Enzyme-MLIR as a large 80MB LLVM plugin.</p>
+<p>That plan did not survive contact with reality. Enzyme turned out to be
+overkill, and was eventually dropped in favor of a simpler symbolic autodiff
+engine described in <a href="../3/">article 3</a>. It also appeared that the separate
+components were small enough to be merged into a single monolithic binary, with
+the IREE runtime statically linked.</p>
+<p>Sheaf thus moved to the Go approach: a single binary for everything. Or more
+exactly: <strong>a single binary, yet clusterable, ML framework</strong>.</p>
+<p><img alt="Sheaf V2 architecture" src="../../images/v2-architecture-revised.png" /></p>
+<p><code>sheaf</code> contains everything: parser, JIT compiler, autodiff engine, interpreter,
+special forms, and the IREE runtime for VMFB execution. It comes to about 2.5MB,
+which makes it easy to deploy at scale.</p>
+<p>The only remaining external tool is the heavy <code>iree-compile</code>, invoked by the JIT
+(formely <code>sheaf build</code>) to lower StableHLO to VMFB. It is part of the IREE SDK
+and only needed at build time, not at runtime. A deployed Sheaf program consists
+of the lightweight <code>sheaf</code> binary, <code>.shf</code> source files, and optional <code>.vmfb</code>
+artifacts.</p>
+<p>This simplicity is partly a reaction to what ML toolchains tend to become:
+layered dependency trees of CUDA, cuDNN, Python packages, and C++ shared
+libraries with their own version conflicts. Whether it will hold as the project
+grows is an open question, but for now, a single binary feels like the right
+starting point.</p>
+<h3 id="reducing-friction">Reducing friction</h3>
+<p>With a single binary came a practical question: how do you compile an entire
+model? The previous workflow was impractical. All pure functions (those without
+side-effects) had to be grouped in a separate file, and their shapes annotated.
+For a project with ten functions across three files, this meant a lot of
+refactoring, each with manual type annotations.</p>
+<p>Thus, the JIT was rewritten to compile everything at once without the need for
+manual intervention. Given a folder of <code>.shf</code> files, it:</p>
+<ol>
+<li>Collects all <code>.shf</code> files</li>
+<li>Filters out impure functions (anything calling <code>print</code>, <code>random-*</code>, <code>io</code>)
+   with a warning, and selects all functions that can be compiled AOT</li>
+<li>Parses and compiles them into a single compiler context (resolving
+   <code>(use ...)</code> across files)</li>
+<li>Infers types from either a runner script (<code>--trace-with</code>), manual config
+   (<code>--config</code>), or a <code>defparams</code> form</li>
+<li>Emits a single StableHLO module containing all pure functions</li>
+<li>Compiles it to one <code>.vmfb</code> via <code>iree-compile</code></li>
+<li>Writes a <code>manifest.json</code> alongside the artifact</li>
+</ol>
+<p>Step 2 deserves a note. Functions with side effects cannot be compiled
+ahead-of-time as they depend on runtime state. Rather than failing, the compiler
+skips them and lets the interpreter handle them at runtime. This is the
+dual-mode architecture described in <a href="../1/">article 1</a>: compiled code for pure
+computation, interpreted code for orchestration.</p>
+<h3 id="the-manifest">The manifest</h3>
+<p>Transparent dispatch introduces a subtle problem: if a user modifies a
+function's source but forgets to recompile, the runtime would silently keep
+dispatching the old compiled version. The code has changed, yet the behavior
+hasn't. This is the kind of issue that can waste hours of debugging.</p>
+<p>The <code>manifest.json</code> file exists to prevent this. It records what was compiled,
+with enough information for the runtime to detect stale artifacts and fall back
+to interpretation when needed:</p>
+<div class="language-json highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;_comment&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Sheaf build manifest — generated by sheaf build, do not edit&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;vmfb&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;compiled-functions.vmfb&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;functions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;forward&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;hash&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;a3f1c0b7e2d94815&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;params&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;x&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;tensor&lt;4x2xf32&gt;&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;params&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;tuple&lt;tensor&lt;2x8xf32&gt;, tensor&lt;8xf32&gt;, tensor&lt;8x1xf32&gt;, tensor&lt;1xf32&gt;&gt;&quot;</span>
+<span class="w">      </span><span class="p">},</span>
+<span class="w">      </span><span class="nt">&quot;returns&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;tensor&lt;4x1xf32&gt;&quot;</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;loss&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;hash&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;e7b2d1f809ca3267&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;params&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;x&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;tensor&lt;4x2xf32&gt;&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;y&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;tensor&lt;4x1xf32&gt;&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;params&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;tuple&lt;tensor&lt;2x8xf32&gt;, tensor&lt;8xf32&gt;, tensor&lt;8x1xf32&gt;, tensor&lt;1xf32&gt;&gt;&quot;</span>
+<span class="w">      </span><span class="p">},</span>
+<span class="w">      </span><span class="nt">&quot;returns&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;tensor&lt;f32&gt;&quot;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Each function entry contains:</p>
+<ul>
+<li><strong><code>hash</code></strong>: a content hash of the function body's AST. If the source changes,
+  the hash changes, and the runtime knows the VMFB is stale.</li>
+<li><strong><code>params</code></strong>: parameter names mapped to their MLIR types, preserving call-site
+  order.</li>
+<li><strong><code>returns</code></strong>: the MLIR return type.</li>
+</ul>
+<p>The hash is computed from the AST's <code>Display</code> representation, which excludes
+source locations. Reformatting code or adding comments does not invalidate the
+compiled artifact; only semantic changes do.</p>
+<h3 id="transparent-dispatch">Transparent dispatch</h3>
+<p>When the interpreter encounters <code>(use math)</code>, it resolves the module, parses and
+compiles it as usual, then checks for a companion <code>manifest.json</code> in the same
+directory. If found, and if all hashes match, it loads the <code>.vmfb</code> and tags each
+compiled function with a session index.</p>
+<p>At call time, the interpreter checks whether the function has an associated VMFB
+session. If so, it marshals the arguments, calls IREE, and unmarshals the
+result. Otherwise, it interprets normally.</p>
+<div class="language-text highlight"><pre><span></span><code>(use math)         ;; loads math.shf, finds manifest.json + compiled-functions.vmfb
+(forward x params) ;; pure, compiled -&gt; dispatched to IREE
+(print loss)       ;; side effect -&gt; interpreted
+</code></pre></div>
+<p>From the caller's perspective, nothing changes. The boundary between compiled
+and interpreted code is determined at build time, and the runtime respects it
+quietly.</p>
+<h3 id="debugging-the-autodiff">Debugging the autodiff</h3>
+<p>None of the above would have worked without first fixing the autodiff engine. In
+the <a href="../3/">previous article</a>, the symbolic autodiff was validated on a simple
+XOR network. The natural next step was to run it on Hydra, Sheaf's growing
+neural network example, which is slightly more complex than the XOR MLP.
+Unfortunately, this didn't go so well.</p>
+<p>The XOR network is a 2-layer MLP with fixed topology. Hydra is a different kind
+of problem: it starts small and grows new layers during training. After growth,
+the parameter tree changes shape, new weights appear, and the autodiff engine
+must handle all of them correctly.</p>
+<p>The first run after growth crashed immediately:</p>
+<div class="language-text highlight"><pre><span></span><code>Error: Undefined symbol: h_in
+</code></pre></div>
+<p>This turned out to be the first of several issues, uncovered over a few days of
+debugging with AI assistance, that pointed to something deeper in the way the
+symbolic engine and the interpreter were interacting.</p>
+<p>The tracer evaluates a function symbolically: it replaces concrete tensor
+operations with symbolic nodes, then differentiates the resulting expression.
+The first problem was that the tracer was keeping internal names alive longer
+than it should have.</p>
+<p>When Sheaf evaluates <code>(reduce f init coll)</code>, <code>f</code> is a lambda like
+<code>(fn [acc x] ...)</code>. The tracer would record <code>Symbol("acc")</code> and <code>Symbol("x")</code> in
+the traced expression. Later, when the autodiff engine tried to differentiate,
+these symbols had no binding: they were internal to the lambda, not part of the
+function's parameter space.</p>
+<p>A related issue appeared in the threading macro <code>as-&gt;</code>, which generates nested
+<code>Let</code> bindings where the same symbol is rebound at each step:</p>
+<div class="language-text highlight"><pre><span></span><code>Let { h = input,
+  Let { h = layer1(h),
+    Let { h = layer2(h),
+      body }}}
+</code></pre></div>
+<p>When <code>substitute_bindings</code> processed these in order, the first substitution
+replaced <code>h</code> in the body, and subsequent ones found nothing left to substitute.
+The gradient of the head layer was always zero. The root cause was the same in
+both cases: the traced expression contained scoping constructs that the autodiff
+engine had no way to resolve.</p>
+<p>The fix required rewriting the tracer. Instead of emitting <code>Let</code> bindings that
+preserved internal names, the new version uses a flat environment (<code>SymEnv</code>)
+that inlines everything eagerly. When it encounters <code>Symbol("acc")</code>, it replaces
+it immediately with the traced expression it refers to. The output is a single
+expression tree with no internal names , only <code>FunctionCall</code> nodes and
+references to the original parameters.</p>
+<p>This turned out to be the right abstraction: producing expressions that are
+entirely self-contained, with no scoping or shadowing left for downstream passes
+to worry about. Both bugs disappeared as a consequence.</p>
+<p>A third issue was more "mechanical". In a linear layer <code>(+ (matmul x W) b)</code>, the
+bias <code>b</code> has shape <code>[1]</code> but gets broadcast to <code>[4, 1]</code> during addition (where 4
+is the batch size). The gradient flows back with shape <code>[4, 1]</code>, but the
+parameter has shape <code>[1]</code>. StableHLO's <code>broadcast_in_dim</code> stretches dimensions
+silently, and the gradient engine must undo this.</p>
+<p>The solution is a standard technique in autodiff: <code>reduce_grad_to_param_shape()</code>
+compares the gradient shape to the parameter shape, identifies which dimensions
+were broadcast (where the parameter had size 1 or was missing), and reduces
+along those axes. It had to be implemented explicitly here because the symbolic
+engine operates before StableHLO emission, at a stage where shape information is
+still available.</p>
+<h3 id="results">Results</h3>
+<p>After these fixes, the test suite passes:</p>
 <table>
 <thead>
 <tr>
-<th>Platform</th>
-<th>Binary</th>
+<th>Test case</th>
+<th>Status</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>macOS (Apple Silicon)</td>
-<td><code>sheaf-macos-aarch64</code></td>
+<td>Scalar <code>(* x x)</code> at x=3</td>
+<td><code>[9.0, 6.0]</code> (correct)</td>
 </tr>
 <tr>
-<td>Linux x86_64</td>
-<td><code>sheaf-linux-x86_64</code></td>
+<td>Single-layer network</td>
+<td>Gradients match finite differences</td>
 </tr>
 <tr>
-<td>Linux aarch64</td>
-<td><code>sheaf-linux-aarch64</code></td>
+<td>XOR MLP (2-&gt;8-&gt;1)</td>
+<td>Converges in 100 epochs</td>
+</tr>
+<tr>
+<td>Hydra post-growth</td>
+<td>Loss &lt; 0.01, training succeeds</td>
 </tr>
 </tbody>
 </table>
-<p>Make the binary executable and move it to your PATH:</p>
-<div class="language-bash highlight"><pre><span></span><code>chmod<span class="w"> </span>+x<span class="w"> </span>sheaf-macos-aarch64
-mv<span class="w"> </span>sheaf-macos-aarch64<span class="w"> </span>/usr/local/bin/sheaf
-</code></pre></div>
-<h2 id="repl">REPL</h2>
-<p>Run <code>sheaf</code> with no arguments to start the interactive console:</p>
-<div class="language-text highlight"><pre><span></span><code>Sheaf 2.0.0 (:h for help)
-sheaf&gt; (+ 1 2)
-=&gt; 3
-sheaf&gt; (map (fn [x] (* x x)) [1 2 3 4])
-=&gt; [1.0, 4.0, 9.0, 16.0]
-</code></pre></div>
-<p>Tab completion is available. Inline help: <code>:help &lt;name&gt;</code> (e.g., <code>:help let</code>).</p>
-<h2 id="running-a-file">Running a file</h2>
-<p>To run a program, pass the source file to <code>sheaf</code>:</p>
-<div class="language-bash highlight"><pre><span></span><code>sheaf<span class="w"> </span>run.shf
-</code></pre></div>
-<h2 id="examples">Examples</h2>
-<p>Download the examples archive from the <a href="https://github.com/sheaf-lang/sheaf/releases">releases page</a> (<a href="https://github.com/sheaf-lang/sheaf/releases/download/v2.0.0-rc1/sheaf-examples.tar.gz">direct link</a>). Each example is self-contained:</p>
-<div class="language-bash highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>examples/mlp
-sheaf<span class="w"> </span>run.shf
-</code></pre></div>
-<p>Available examples:</p>
-<ul>
-<li><strong><a href="https://github.com/sheaf-lang/sheaf/tree/main/examples/clevr">CLEVR</a></strong>: A neuro-symbolic model for visual question answering</li>
-<li><strong><a href="https://github.com/sheaf-lang/sheaf/tree/main/examples/hydra">Hydra</a></strong>: A self-modifying model that grows during training</li>
-<li><strong><a href="https://github.com/sheaf-lang/sheaf/tree/main/examples/mlp">MLP</a></strong>: "Hello World" example of a small multi-layer network to solve XOR</li>
-<li><strong><a href="https://github.com/sheaf-lang/sheaf/tree/main/examples/nanoGPT">NanoGPT</a></strong>: A port of Karpathy's nanoGPT in Sheaf</li>
-</ul>
-<h2 id="ai-assistant-bootstrap">AI assistant bootstrap</h2>
-<p><code>sheaf init-ai</code> generates a context file in the current directory. Provide this file to Claude Code, Cursor, Copilot, or any other assistant to get code generation, code completion, and debugging help.</p>
-<div class="language-bash highlight"><pre><span></span><code>sheaf<span class="w"> </span>init-ai
-<span class="c1"># Generates sheaf-context.md</span>
-</code></pre></div>
-<h2 id="next-steps">Next steps</h2>
-<p>Follow the <a href="../starting/">tutorial</a> to learn the language fundamentals.</p>
+<p>Hydra now completes in about 0.73 seconds, down from 1.46s in V1. The difference
+comes from removing interpreter overhead: V1 called JAX repeatedly from the
+Python event loop, while V2 evaluates the symbolic gradient expression directly.
+This is reminiscent of the sharp 51x speedup I experienced with the MLP.</p>
+<h3 id="whats-next">What's next</h3>
+<p>The flat tracer, content-hash manifests, and transparent dispatch form a
+coherent enough system: write Sheaf code, run <code>sheaf build</code>, and the runtime
+uses compiled artifacts where it can. The boundary between interpreted and
+compiled code is determined by the compiler, not by the programmer.</p>
+<p>The next step is to run the full standard library and example suite end-to-end.
+After that, the major step will be the introduction of <code>all-reduce</code> with NCCL,
+for Sheaf V2.1 or V2.2. This will most likely be the subject of the next
+article.</p>
 
 
 
@@ -1621,8 +1801,13 @@ sheaf<span class="w"> </span>run.shf
 
 
 
+  
+  
 
 
+
+
+  
 
 
 
@@ -1647,7 +1832,7 @@ sheaf<span class="w"> </span>run.shf
         "
     >
         <img
-            src="../images/sheaf-light.png"
+            src="../../images/sheaf-light.png"
             alt="Logo"
             style="height: 24px"
         />
@@ -1664,14 +1849,14 @@ sheaf<span class="w"> </span>run.shf
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.tabs.sticky", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
-        <script src="../javascripts/fix-drawer.js"></script>
+        <script src="../../javascripts/fix-drawer.js"></script>
       
-        <script src="../javascripts/clean-url.js"></script>
+        <script src="../../javascripts/clean-url.js"></script>
       
     
   </body>

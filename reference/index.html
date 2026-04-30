@@ -14,6 +14,8 @@
         <link rel="prev" href="../roadmap/">
       
       
+        <link rel="next" href="../blog/6/">
+      
       
         
       
@@ -682,6 +684,26 @@
   
   
   Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../blog/6/" class="md-tabs__link">
+          
+  
+  
+  Blog
 
         </a>
       </li>
@@ -2413,16 +2435,27 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#function-definition" class="md-nav__link">
+  <a href="#definitions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Function Definition
+        Definitions
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Function Definition">
+    <nav class="md-nav" aria-label="Definitions">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#def" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        def
+      
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#defn" class="md-nav__link">
@@ -3239,6 +3272,231 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blog
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Blog
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../blog/6/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Symbolic Autodiff Hits a Wall
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../blog/5/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Catching PyTorch's Performance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../blog/4/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    A Single Binary ML Framework
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../blog/3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ditching Enzyme: A Case for Symbolic Autodiff in Sheaf V2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../blog/2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Picking a language for Sheaf's Compiler
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../blog/1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    On the Future of Sheaf
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -4577,16 +4835,27 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#function-definition" class="md-nav__link">
+  <a href="#definitions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Function Definition
+        Definitions
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Function Definition">
+    <nav class="md-nav" aria-label="Definitions">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#def" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        def
+      
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#defn" class="md-nav__link">
@@ -6321,8 +6590,11 @@ Reduces all leaves of a PyTree to a single value by applying a binary function c
 Reduces a collection to a single value by applying a binary function func cumulatively to the elements of seq, from left to right, starting with the init value. Each step takes the current accumulator and the next element to produce the new accumulator.
 
 ```sheaf
-;; Simple sum: 0 + 1 + 2 + 3 + 4
-(reduce + 0 [1 2 3 4]) ; =&gt; 10.
+;; Simple sum: 1 + 2 + 3 + 4
+(reduce + [1 2 3 4]) ; =&gt; 10.
+
+;; Subtract from 10: 1 - 2 - 3 -4
+(reduce - 10 [1 2 3 4]) ; =&gt; 0.
 
 ;; Finding the maximum value across multiple tensors
 ;; Useful for tracking the peak activation across different layers
@@ -6591,7 +6863,22 @@ If it does not exist:</p>
   (+ x y))            ; =&gt; 3
 </code></pre></div>
 <hr />
-<h2 id="function-definition">Function Definition</h2>
+<h2 id="definitions">Definitions</h2>
+<h3 id="def">def</h3>
+<p><strong>Type:</strong> special-form
+<strong>Signature:</strong> <code>(def name value)</code></p>
+<p>Binds a global name to an immutable value. The value is evaluated once at definition time. Redefinition is not allowed. Use <code>def</code> for constants, configuration, and shared data that does not change.</p>
+<div class="language-text highlight"><pre><span></span><code>(def scale 2.0)
+(defn double [x] (* x scale))
+(double 21.0)            ; =&gt; 42.0
+
+(def colors [&quot;red&quot; &quot;green&quot; &quot;blue&quot;])
+(first colors)            ; =&gt; &quot;red&quot;
+
+(def mask [1 0 1 0])
+(sum mask)                ; =&gt; 2.0
+</code></pre></div>
+<hr />
 <h3 id="defn">defn</h3>
 <p><strong>Type:</strong> special-form
 <strong>Signature:</strong> <code>(defn name [params] body ...)</code></p>

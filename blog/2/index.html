@@ -8,27 +8,29 @@
       
       
       
-        <link rel="canonical" href="https://sheaf-lang.org/quickstart/">
+        <link rel="canonical" href="https://sheaf-lang.org/blog/2/">
       
       
+        <link rel="prev" href="../3/">
       
-        <link rel="next" href="../rationale/">
+      
+        <link rel="next" href="../1/">
       
       
         
       
       
-      <link rel="icon" href="../images/favicon.png">
+      <link rel="icon" href="../../images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
      
       
-        <title>Quick Start - Sheaf</title>
+        <title>Picking a language for Sheaf's Compiler - Sheaf</title>
       
     
-<link rel="icon" type="image/png" href="../images/favicon.png" />
+<link rel="icon" type="image/png" href="../../images/favicon.png" />
 <meta name="robots" content="index, follow" />
-<meta property="og:image" content="../images/sheaf-dark.png" />
+<meta property="og:image" content="../../images/sheaf-dark.png" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta
     property="og:title"
@@ -45,7 +47,7 @@
 <style>
     /* Replace mkdocs logo with custom logo - header */
     .md-header__button.md-logo {
-        background-image: url("../images/sheaf-light.png");
+        background-image: url("../../images/sheaf-light.png");
         background-size: contain;
         background-repeat: no-repeat;
         background-position: center;
@@ -58,7 +60,7 @@
 
     /* Replace mkdocs logo with custom logo - sidebar (responsive menu) */
     .md-nav__title {
-        background-image: url("../images/sheaf-light.png");
+        background-image: url("../../images/sheaf-light.png");
         background-size: 64px 64px;
         background-repeat: no-repeat;
         background-position: center;
@@ -74,10 +76,10 @@
 </style>
 
      
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -514,9 +516,9 @@
       
     
     
-      <link rel="stylesheet" href="../stylesheets/extra.css">
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -539,7 +541,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#quick-start" class="md-skip">
+        <a href="#considering-c" class="md-skip">
           Skip to content
         </a>
       
@@ -555,9 +557,9 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="Sheaf" class="md-header__button md-logo" aria-label="Sheaf" data-md-component="logo">
+    <a href="../.." title="Sheaf" class="md-header__button md-logo" aria-label="Sheaf" data-md-component="logo">
       
-  <img src="../images/sheaf-light.png" alt="logo">
+  <img src="../../images/sheaf-light.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -574,7 +576,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Quick Start
+              Picking a language for Sheaf's Compiler
             
           </span>
         </div>
@@ -651,13 +653,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="./" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../../quickstart/" class="md-tabs__link">
           
   
   
@@ -677,7 +677,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../reference/" class="md-tabs__link">
+        <a href="../../reference/" class="md-tabs__link">
           
   
   
@@ -693,11 +693,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../blog/6/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../6/" class="md-tabs__link">
           
   
   
@@ -726,6 +728,8 @@
           
             
               
+                
+              
               <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
@@ -737,9 +741,9 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="Sheaf" class="md-nav__button md-logo" aria-label="Sheaf" data-md-component="logo">
+    <a href="../.." title="Sheaf" class="md-nav__button md-logo" aria-label="Sheaf" data-md-component="logo">
       
-  <img src="../images/sheaf-light.png" alt="logo">
+  <img src="../../images/sheaf-light.png" alt="logo">
 
     </a>
     Sheaf
@@ -763,29 +767,24 @@
       
   
   
-    
   
   
-  
     
     
     
     
       
-        
-        
-      
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" >
         
           
-          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="">
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
             
   
   
@@ -803,7 +802,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_1">
             <span class="md-nav__icon md-icon"></span>
             
@@ -818,37 +817,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Quick Start
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../quickstart/" class="md-nav__link">
         
   
   
@@ -864,92 +836,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#installation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Installation
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#repl" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        REPL
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#running-a-file" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Running a file
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#examples" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Examples
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#ai-assistant-bootstrap" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        AI assistant bootstrap
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#next-steps" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Next steps
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -962,7 +848,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../rationale/" class="md-nav__link">
+      <a href="../../rationale/" class="md-nav__link">
         
   
   
@@ -990,7 +876,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../starting/" class="md-nav__link">
+      <a href="../../starting/" class="md-nav__link">
         
   
   
@@ -1018,7 +904,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../key-concepts/" class="md-nav__link">
+      <a href="../../key-concepts/" class="md-nav__link">
         
   
   
@@ -1046,7 +932,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../types/" class="md-nav__link">
+      <a href="../../types/" class="md-nav__link">
         
   
   
@@ -1074,7 +960,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../changelog/" class="md-nav__link">
+      <a href="../../changelog/" class="md-nav__link">
         
   
   
@@ -1102,7 +988,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../roadmap/" class="md-nav__link">
+      <a href="../../roadmap/" class="md-nav__link">
         
   
   
@@ -1187,7 +1073,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../reference/" class="md-nav__link">
+      <a href="../../reference/" class="md-nav__link">
         
   
   
@@ -1219,24 +1105,29 @@
       
   
   
+    
   
   
+  
     
     
     
     
-      
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
             
   
   
@@ -1254,7 +1145,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1272,7 +1163,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../blog/6/" class="md-nav__link">
+      <a href="../6/" class="md-nav__link">
         
   
   
@@ -1300,7 +1191,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../blog/5/" class="md-nav__link">
+      <a href="../5/" class="md-nav__link">
         
   
   
@@ -1328,7 +1219,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../blog/4/" class="md-nav__link">
+      <a href="../4/" class="md-nav__link">
         
   
   
@@ -1356,7 +1247,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../blog/3/" class="md-nav__link">
+      <a href="../3/" class="md-nav__link">
         
   
   
@@ -1381,10 +1272,35 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../blog/2/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Picking a language for Sheaf's Compiler
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1400,6 +1316,90 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#considering-c" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Considering C++
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#golang" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Golang
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rust" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rust
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-real-cost" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Real Cost
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-entropy-principle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Entropy Principle
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-exists-so-far" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Exists So Far
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1412,7 +1412,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../blog/1/" class="md-nav__link">
+      <a href="../1/" class="md-nav__link">
         
   
   
@@ -1448,7 +1448,9 @@
             
             
               
-              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" hidden>
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
                     
@@ -1456,8 +1458,6 @@
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
-  
-    
   
   
     <label class="md-nav__title" for="__toc">
@@ -1467,10 +1467,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#installation" class="md-nav__link">
+  <a href="#considering-c" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Installation
+        Considering C++
       
     </span>
   </a>
@@ -1478,10 +1478,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#repl" class="md-nav__link">
+  <a href="#golang" class="md-nav__link">
     <span class="md-ellipsis">
       
-        REPL
+        Golang
       
     </span>
   </a>
@@ -1489,10 +1489,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#running-a-file" class="md-nav__link">
+  <a href="#rust" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Running a file
+        Rust
       
     </span>
   </a>
@@ -1500,10 +1500,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#examples" class="md-nav__link">
+  <a href="#the-real-cost" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Examples
+        The Real Cost
       
     </span>
   </a>
@@ -1511,10 +1511,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#ai-assistant-bootstrap" class="md-nav__link">
+  <a href="#the-entropy-principle" class="md-nav__link">
     <span class="md-ellipsis">
       
-        AI assistant bootstrap
+        The Entropy Principle
       
     </span>
   </a>
@@ -1522,10 +1522,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#next-steps" class="md-nav__link">
+  <a href="#what-exists-so-far" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Next steps
+        What Exists So Far
       
     </span>
   </a>
@@ -1546,74 +1546,162 @@
               <article class="md-content__inner md-typeset">
                 
                   
+  
+
 
 
   
   
 
 
-<h1 id="quick-start">Quick Start</h1>
-<p>Sheaf ships as a single native binary with no runtime dependencies.</p>
-<h2 id="installation">Installation</h2>
-<p>Download the binary for your platform from the <a href="https://github.com/sheaf-lang/sheaf/releases">releases page</a>:</p>
-<table>
-<thead>
-<tr>
-<th>Platform</th>
-<th>Binary</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>macOS (Apple Silicon)</td>
-<td><code>sheaf-macos-aarch64</code></td>
-</tr>
-<tr>
-<td>Linux x86_64</td>
-<td><code>sheaf-linux-x86_64</code></td>
-</tr>
-<tr>
-<td>Linux aarch64</td>
-<td><code>sheaf-linux-aarch64</code></td>
-</tr>
-</tbody>
-</table>
-<p>Make the binary executable and move it to your PATH:</p>
-<div class="language-bash highlight"><pre><span></span><code>chmod<span class="w"> </span>+x<span class="w"> </span>sheaf-macos-aarch64
-mv<span class="w"> </span>sheaf-macos-aarch64<span class="w"> </span>/usr/local/bin/sheaf
+  <h1>Picking a language for Sheaf's Compiler</h1>
+
+<p><em>Feb 10th 2026</em></p>
+<p>Last week I outlined the vision for Sheaf V2. The next question was immediate:
+now that I am on my own without XLA, which language should I write the compiler in?</p>
+<p>My favorite language for lower level code are C and Go, with Zig another
+contender. C++ and Rust are usually not on my radar unless I have to.</p>
+<p>C is clean, small and dependable despite its notorious undefined behaviors. I
+have used it for countless projects already, but writing an MLIR compiler in C
+promises some entertaining debugging... Besides, most modern ML infrastructure
+uses "modern" C++11, pretty removed from ANSI C. If I want to call MLIR APIs
+directly, manipulate IR programmatically, or debug the compilation pipeline, C++
+is the obvious choice even though I find it messy.</p>
+<p>Rust, on the other hand, I don't really know. I've read about it and played with
+the rustlings exercises. I somewhat understand the borrow checker but I've never
+shipped any Rust code. Choosing Rust means relying on the dreaded "vibe coding"
+approach, which is intellectually dishonest and downright irresponsible for a compiler. Besides, I dislike this trend of
+blindly rewriting large portions of C code in Rust (or even have Claude do it),
+so I'd rather avoid giving this trend more momentum.</p>
+<h3 id="considering-c"><strong>Considering C++</strong></h3>
+<p>I am currently working on the CUDA C++ certification from Nvidia and diving
+deeper into IREE, which means a lot of exposure to "modern" C++, with the
+functional expressions and iterators.</p>
+<p>I like the functional approach that modern C++ offers, reminiscent of Lisp.
+<code>map</code>, <code>reduce</code>, <code>transform</code>, or <code>tabulate</code> are nice. But C++ still fights me on
+the fundamentals. Memory management isn't just about <code>new</code> and <code>delete</code> anymore.
+It's <code>unique_ptr</code> vs <code>shared_ptr</code> vs <code>weak_ptr</code>, move semantics, and trying to
+remember if this API takes ownership or just borrows. The type system doesn't
+help: it compiles, runs, and then segfaults three weeks later because some
+object got freed and I didn't notice. I don't want to go through that.</p>
+<p>I also dislike CMake, it is its own language. CMakeFiles can be buggy and let me
+down 90% down the build process (just submitted a PR for IREE). You vendor LLVM
+(hello IREE)? Great, now your build takes 40 minutes. You link dynamically? Good
+luck with RPATH on macOS.</p>
+<p>I can work in C++, although reluctantly. But maintaining an MLIR compiler in C++
+over years is something different, and every contributor will have to navigate
+the same landmines. Every refactor will trigger a fear that it will break
+something subtle, and that is going to happen anyway.</p>
+<p>This is not a general argument against C++, but a local optimum for Sheaf’s
+constraints.</p>
+<h3 id="golang"><strong>Golang</strong></h3>
+<p>I mentioned I like Go a lot. It has Thompson and Pike behind it, which I both
+have a lot of respect for, and it is <strong>simple</strong> at heart. The tooling is
+excellent. <code>go build</code> "just works", it has no lifetime annotations, no borrow
+checker fights...</p>
+<p>For many compilers, Go would be a great choice, but Sheaf's compiler has a
+specific constraint: exhaustive pattern matching matters more than simplicity.</p>
+<p>A compiler is a series of transformations on an AST. At each step, every
+possible node type must be handled properly. Forget one case, and get a subtle
+bug that only surfaces when someone writes <code>[1 2 3]</code> instead of <code>'[1 2 3]</code>.</p>
+<p>In Go, type switches are not exhaustive:</p>
+<div class="language-go highlight"><pre><span></span><code><span class="k">switch</span><span class="w"> </span><span class="nx">v</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">expr</span><span class="p">.(</span><span class="kd">type</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="k">case</span><span class="w"> </span><span class="nx">Integer</span><span class="p">:</span><span class="w"> </span><span class="o">...</span>
+<span class="k">case</span><span class="w"> </span><span class="nx">Symbol</span><span class="p">:</span><span class="w"> </span><span class="o">...</span>
+<span class="c1">// Forget something -&gt; compiles, crashes at runtime</span>
+<span class="p">}</span>
 </code></pre></div>
-<h2 id="repl">REPL</h2>
-<p>Run <code>sheaf</code> with no arguments to start the interactive console:</p>
-<div class="language-text highlight"><pre><span></span><code>Sheaf 2.0.0 (:h for help)
-sheaf&gt; (+ 1 2)
-=&gt; 3
-sheaf&gt; (map (fn [x] (* x x)) [1 2 3 4])
-=&gt; [1.0, 4.0, 9.0, 16.0]
+<p>In Rust, on the other hand, the compiler enforces this:</p>
+<div class="language-rust highlight"><pre><span></span><code><span class="k">match</span><span class="w"> </span><span class="n">expr</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">SheafValue</span><span class="p">::</span><span class="n">Integer</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="o">..</span><span class="p">.,</span>
+<span class="w">    </span><span class="n">SheafValue</span><span class="p">::</span><span class="n">Symbol</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="o">..</span><span class="p">.,</span>
+<span class="w">    </span><span class="c1">// Forget something -&gt; compilation error</span>
+<span class="p">}</span>
 </code></pre></div>
-<p>Tab completion is available. Inline help: <code>:help &lt;name&gt;</code> (e.g., <code>:help let</code>).</p>
-<h2 id="running-a-file">Running a file</h2>
-<p>To run a program, pass the source file to <code>sheaf</code>:</p>
-<div class="language-bash highlight"><pre><span></span><code>sheaf<span class="w"> </span>run.shf
+<p>For a project that will evolve over years, with contributions from both humans
+and LLMs, I need the compiler to catch these errors. That's the trade-off: Go's
+simplicity vs Rust's safety guarantees. For Sheaf, safety won, even though Go
+would be easier. So, Rust it is.</p>
+<h3 id="rust"><strong>Rust</strong></h3>
+<p>C sucks: too low-level, too many UBs for such a project. C++ sucks: too noisy,
+complex and bloated. And Rust sucks as well: too "hype-y" and large. Yet I will have to
+choose Rust. Not because it's trendy, but because it's the only language I felt
+glimpses of elegance when prototyping the Sheaf parser.</p>
+<p>For instance, the Sheaf algebraic data types match how compilers think. This is
+what an AST node in Sheaf currently looks like:</p>
+<div class="language-rust highlight"><pre><span></span><code><span class="k">enum</span><span class="w"> </span><span class="nc">SheafValue</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">Integer</span><span class="p">(</span><span class="kt">i64</span><span class="p">),</span>
+<span class="w">    </span><span class="n">Float</span><span class="p">(</span><span class="kt">f64</span><span class="p">),</span>
+<span class="w">    </span><span class="n">Symbol</span><span class="p">(</span><span class="nb">String</span><span class="p">),</span>
+<span class="w">    </span><span class="n">List</span><span class="p">(</span><span class="nb">Vec</span><span class="o">&lt;</span><span class="n">SheafValue</span><span class="o">&gt;</span><span class="p">),</span>
+<span class="w">    </span><span class="n">Vector</span><span class="p">(</span><span class="nb">Vec</span><span class="o">&lt;</span><span class="n">SheafValue</span><span class="o">&gt;</span><span class="p">),</span>
+<span class="p">}</span>
 </code></pre></div>
-<h2 id="examples">Examples</h2>
-<p>Download the examples archive from the <a href="https://github.com/sheaf-lang/sheaf/releases">releases page</a> (<a href="https://github.com/sheaf-lang/sheaf/releases/download/v2.0.0-rc1/sheaf-examples.tar.gz">direct link</a>). Each example is self-contained:</p>
-<div class="language-bash highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>examples/mlp
-sheaf<span class="w"> </span>run.shf
-</code></pre></div>
-<p>Available examples:</p>
+<p>With a simple <code>match expr</code>, the compiler forces to handle every case. It will
+not allow to forget <code>Vector</code> and have it crash at runtime. Rust actually has a
+beautiful type system, it makes the data structure <em>explicit</em>.</p>
+<p>Of course, C++ has ways to perform the same, using <code>variant</code> or inheritance with
+<code>dynamic_cast</code>, but it's clunkier.</p>
+<p>Rust also famously checks ownership at compile time, which removes the fear
+during refactor. If the borrow checker accepts it, then the data flow is
+correct. I still hit panics, but there's no need for <code>valgrind</code> like in my past
+projects. And no need to trace through pointer lifetimes.</p>
+<p>Finally, like <code>go build</code>, cargo and its dependencies management just work. No
+<code>CMakeLists.txt</code> that breaks on a different version of LLVM. No hunting for
+where <code>libmlir.so</code> got installed.</p>
+<h3 id="the-real-cost"><strong>The Real Cost</strong></h3>
+<p>Choosing Rust also has real costs, which I am paying for right now.</p>
+<p>The main one, obviously: <strong>I don't know Rust well.</strong> I tried asking an LLM to
+write me some Rust code, and it could have embedded an entire rootkit inside
+without me noticing. I'm picking up steam, slowly. The main grief is ironically
+the borrow checker I was praising above: it likes to reject things that feel
+like they should work. I hit lifetime errors I don't fully understand and while
+Claude helps, relying on it can undertake the foundation of Sheaf: reducing
+bloat and entropy.</p>
+<p><em>Side note: writing code is trivial for an LLM, so code piles up and quickly
+turns into technical debt. This is easy to miss with vibe coding because of the
+massive amount of code generated in short times. This is the antithesis of what
+I want with Sheaf: <strong>suckless ML</strong>, that is, the least amount of code necessary
+for elegance and performance. Every byte should be justified.</em></p>
+<p>Choosing Rust could make MLIR interop a problem later. Right now, Sheaf emits
+text MLIR, so there's no FFI - and this will have to change for performance
+reasons. But if I ever need to manipulate MLIR IR programmatically, I'd need
+Rust bindings to MLIR's C++ APIs. That's manual work. <code>bindgen</code> would help, but
+MLIR's template-heavy headers seem like a nightmare to wrap.</p>
+<p>The ML systems community speaks C++. Should I need contributions from IREE, XLA,
+or TensorFlow teams, they will know C++ more than Rust.</p>
+<p>But here's the thing: these costs are upfront. I only pay them now, during
+initial development, to have an easier life later. It's the opposite for C++.</p>
+<h3 id="the-entropy-principle"><strong>The Entropy Principle</strong></h3>
+<p>One of the goal of Sheaf is to reduce entropy in ML code. That's part the design
+filters: does this choice add noise or remove it?</p>
+<p>Using C++ would add entropy:</p>
 <ul>
-<li><strong><a href="https://github.com/sheaf-lang/sheaf/tree/main/examples/clevr">CLEVR</a></strong>: A neuro-symbolic model for visual question answering</li>
-<li><strong><a href="https://github.com/sheaf-lang/sheaf/tree/main/examples/hydra">Hydra</a></strong>: A self-modifying model that grows during training</li>
-<li><strong><a href="https://github.com/sheaf-lang/sheaf/tree/main/examples/mlp">MLP</a></strong>: "Hello World" example of a small multi-layer network to solve XOR</li>
-<li><strong><a href="https://github.com/sheaf-lang/sheaf/tree/main/examples/nanoGPT">NanoGPT</a></strong>: A port of Karpathy's nanoGPT in Sheaf</li>
+<li>Build complexity (CMake, dependencies, platform quirks)</li>
+<li>Memory management (manual reasoning about ownership)</li>
+<li>Language cruft (40 years of legacy, multiple ways to do everything)</li>
 </ul>
-<h2 id="ai-assistant-bootstrap">AI assistant bootstrap</h2>
-<p><code>sheaf init-ai</code> generates a context file in the current directory. Provide this file to Claude Code, Cursor, Copilot, or any other assistant to get code generation, code completion, and debugging help.</p>
-<div class="language-bash highlight"><pre><span></span><code>sheaf<span class="w"> </span>init-ai
-<span class="c1"># Generates sheaf-context.md</span>
-</code></pre></div>
-<h2 id="next-steps">Next steps</h2>
-<p>Follow the <a href="../starting/">tutorial</a> to learn the language fundamentals.</p>
+<p>Using Rust removes entropy:</p>
+<ul>
+<li>One build tool (Cargo)</li>
+<li>Ownership checked by compiler</li>
+<li>ADTs that match AST structure</li>
+<li>Exhaustive pattern matching</li>
+</ul>
+<p>If I'm building a language about clarity, the compiler should embody that. Not
+"do as I say, not as I do."</p>
+<h3 id="what-exists-so-far"><strong>What Exists So Far</strong></h3>
+<p>Over the past week, I built a small proof-of-concept to generate MLIR from
+S-expressions. What I have so far:</p>
+<ul>
+<li>A parser that handles S-expressions, vectors, symbols, literals</li>
+<li>A compiler stub that tracks function definitions and resolves symbols</li>
+<li>A code generator that emits StableHLO text for <code>(+ 1 2)</code> and <code>(* x y)</code></li>
+<li>Error handling with source locations and meaningful messages</li>
+</ul>
+<p>Everything builds and tests pass. The foundation is there. Now comes the real
+work: function calls, control flow, and tensors to make it an actual compiler.</p>
+<p>I'll document the implementation as it unfolds.</p>
 
 
 
@@ -1621,8 +1709,13 @@ sheaf<span class="w"> </span>run.shf
 
 
 
+  
+  
 
 
+
+
+  
 
 
 
@@ -1647,7 +1740,7 @@ sheaf<span class="w"> </span>run.shf
         "
     >
         <img
-            src="../images/sheaf-light.png"
+            src="../../images/sheaf-light.png"
             alt="Logo"
             style="height: 24px"
         />
@@ -1664,14 +1757,14 @@ sheaf<span class="w"> </span>run.shf
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.tabs.sticky", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
-        <script src="../javascripts/fix-drawer.js"></script>
+        <script src="../../javascripts/fix-drawer.js"></script>
       
-        <script src="../javascripts/clean-url.js"></script>
+        <script src="../../javascripts/clean-url.js"></script>
       
     
   </body>

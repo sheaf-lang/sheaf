@@ -8,27 +8,29 @@
       
       
       
-        <link rel="canonical" href="https://sheaf-lang.org/quickstart/">
+        <link rel="canonical" href="https://sheaf-lang.org/blog/5/">
       
       
+        <link rel="prev" href="../6/">
       
-        <link rel="next" href="../rationale/">
+      
+        <link rel="next" href="../4/">
       
       
         
       
       
-      <link rel="icon" href="../images/favicon.png">
+      <link rel="icon" href="../../images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
      
       
-        <title>Quick Start - Sheaf</title>
+        <title>Catching PyTorch's Performance - Sheaf</title>
       
     
-<link rel="icon" type="image/png" href="../images/favicon.png" />
+<link rel="icon" type="image/png" href="../../images/favicon.png" />
 <meta name="robots" content="index, follow" />
-<meta property="og:image" content="../images/sheaf-dark.png" />
+<meta property="og:image" content="../../images/sheaf-dark.png" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta
     property="og:title"
@@ -45,7 +47,7 @@
 <style>
     /* Replace mkdocs logo with custom logo - header */
     .md-header__button.md-logo {
-        background-image: url("../images/sheaf-light.png");
+        background-image: url("../../images/sheaf-light.png");
         background-size: contain;
         background-repeat: no-repeat;
         background-position: center;
@@ -58,7 +60,7 @@
 
     /* Replace mkdocs logo with custom logo - sidebar (responsive menu) */
     .md-nav__title {
-        background-image: url("../images/sheaf-light.png");
+        background-image: url("../../images/sheaf-light.png");
         background-size: 64px 64px;
         background-repeat: no-repeat;
         background-position: center;
@@ -74,10 +76,10 @@
 </style>
 
      
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -514,9 +516,9 @@
       
     
     
-      <link rel="stylesheet" href="../stylesheets/extra.css">
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -539,7 +541,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#quick-start" class="md-skip">
+        <a href="#new-tooling" class="md-skip">
           Skip to content
         </a>
       
@@ -555,9 +557,9 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="Sheaf" class="md-header__button md-logo" aria-label="Sheaf" data-md-component="logo">
+    <a href="../.." title="Sheaf" class="md-header__button md-logo" aria-label="Sheaf" data-md-component="logo">
       
-  <img src="../images/sheaf-light.png" alt="logo">
+  <img src="../../images/sheaf-light.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -574,7 +576,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Quick Start
+              Catching PyTorch's Performance
             
           </span>
         </div>
@@ -651,13 +653,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="./" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../../quickstart/" class="md-tabs__link">
           
   
   
@@ -677,7 +677,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../reference/" class="md-tabs__link">
+        <a href="../../reference/" class="md-tabs__link">
           
   
   
@@ -693,11 +693,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../blog/6/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../6/" class="md-tabs__link">
           
   
   
@@ -726,6 +728,8 @@
           
             
               
+                
+              
               <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
@@ -737,9 +741,9 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="Sheaf" class="md-nav__button md-logo" aria-label="Sheaf" data-md-component="logo">
+    <a href="../.." title="Sheaf" class="md-nav__button md-logo" aria-label="Sheaf" data-md-component="logo">
       
-  <img src="../images/sheaf-light.png" alt="logo">
+  <img src="../../images/sheaf-light.png" alt="logo">
 
     </a>
     Sheaf
@@ -763,29 +767,24 @@
       
   
   
-    
   
   
-  
     
     
     
     
       
-        
-        
-      
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" >
         
           
-          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="">
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
             
   
   
@@ -803,7 +802,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_1">
             <span class="md-nav__icon md-icon"></span>
             
@@ -818,37 +817,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Quick Start
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../quickstart/" class="md-nav__link">
         
   
   
@@ -864,92 +836,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#installation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Installation
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#repl" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        REPL
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#running-a-file" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Running a file
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#examples" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Examples
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#ai-assistant-bootstrap" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        AI assistant bootstrap
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#next-steps" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Next steps
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -962,7 +848,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../rationale/" class="md-nav__link">
+      <a href="../../rationale/" class="md-nav__link">
         
   
   
@@ -990,7 +876,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../starting/" class="md-nav__link">
+      <a href="../../starting/" class="md-nav__link">
         
   
   
@@ -1018,7 +904,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../key-concepts/" class="md-nav__link">
+      <a href="../../key-concepts/" class="md-nav__link">
         
   
   
@@ -1046,7 +932,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../types/" class="md-nav__link">
+      <a href="../../types/" class="md-nav__link">
         
   
   
@@ -1074,7 +960,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../changelog/" class="md-nav__link">
+      <a href="../../changelog/" class="md-nav__link">
         
   
   
@@ -1102,7 +988,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../roadmap/" class="md-nav__link">
+      <a href="../../roadmap/" class="md-nav__link">
         
   
   
@@ -1187,7 +1073,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../reference/" class="md-nav__link">
+      <a href="../../reference/" class="md-nav__link">
         
   
   
@@ -1219,24 +1105,29 @@
       
   
   
+    
   
   
+  
     
     
     
     
-      
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
             
   
   
@@ -1254,7 +1145,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1272,7 +1163,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../blog/6/" class="md-nav__link">
+      <a href="../6/" class="md-nav__link">
         
   
   
@@ -1297,10 +1188,35 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../blog/5/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Catching PyTorch's Performance
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1316,6 +1232,112 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#new-tooling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        New tooling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-sheafs-compiler-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How Sheaf's compiler works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-marshalling-wall" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The marshalling wall
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deep-copies-in-the-interpreter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deep copies in the interpreter
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#jit-compilation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        JIT compilation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#f32-everywhere" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        f32 everywhere
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#devicebuffer-and-the-fast-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DeviceBuffer and the fast path
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#where-things-stand" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where things stand
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1328,7 +1350,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../blog/4/" class="md-nav__link">
+      <a href="../4/" class="md-nav__link">
         
   
   
@@ -1356,7 +1378,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../blog/3/" class="md-nav__link">
+      <a href="../3/" class="md-nav__link">
         
   
   
@@ -1384,7 +1406,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../blog/2/" class="md-nav__link">
+      <a href="../2/" class="md-nav__link">
         
   
   
@@ -1412,7 +1434,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../blog/1/" class="md-nav__link">
+      <a href="../1/" class="md-nav__link">
         
   
   
@@ -1448,7 +1470,9 @@
             
             
               
-              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" hidden>
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
                     
@@ -1456,8 +1480,6 @@
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
-  
-    
   
   
     <label class="md-nav__title" for="__toc">
@@ -1467,10 +1489,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#installation" class="md-nav__link">
+  <a href="#new-tooling" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Installation
+        New tooling
       
     </span>
   </a>
@@ -1478,10 +1500,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#repl" class="md-nav__link">
+  <a href="#how-sheafs-compiler-works" class="md-nav__link">
     <span class="md-ellipsis">
       
-        REPL
+        How Sheaf's compiler works
       
     </span>
   </a>
@@ -1489,10 +1511,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#running-a-file" class="md-nav__link">
+  <a href="#the-marshalling-wall" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Running a file
+        The marshalling wall
       
     </span>
   </a>
@@ -1500,10 +1522,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#examples" class="md-nav__link">
+  <a href="#deep-copies-in-the-interpreter" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Examples
+        Deep copies in the interpreter
       
     </span>
   </a>
@@ -1511,10 +1533,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#ai-assistant-bootstrap" class="md-nav__link">
+  <a href="#jit-compilation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        AI assistant bootstrap
+        JIT compilation
       
     </span>
   </a>
@@ -1522,10 +1544,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#next-steps" class="md-nav__link">
+  <a href="#f32-everywhere" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Next steps
+        f32 everywhere
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#devicebuffer-and-the-fast-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DeviceBuffer and the fast path
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#where-things-stand" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where things stand
       
     </span>
   </a>
@@ -1546,74 +1590,249 @@
               <article class="md-content__inner md-typeset">
                 
                   
+  
+
 
 
   
   
 
 
-<h1 id="quick-start">Quick Start</h1>
-<p>Sheaf ships as a single native binary with no runtime dependencies.</p>
-<h2 id="installation">Installation</h2>
-<p>Download the binary for your platform from the <a href="https://github.com/sheaf-lang/sheaf/releases">releases page</a>:</p>
+  <h1>Catching PyTorch's Performance</h1>
+
+<p><em>Mar 11th 2026</em></p>
+<p>As Sheaf V2 moves closer to release, it's time to test it on larger models than
+BareGPT, my toy generative transformer.</p>
+<p>Last week, I ported Karpathy's NanoGPT to Sheaf and benchmarked it against
+PyTorch. The first results were humbling:</p>
 <table>
 <thead>
 <tr>
-<th>Platform</th>
-<th>Binary</th>
+<th>Configuration</th>
+<th>Wall time</th>
+<th>tk/s</th>
+<th>vs PyTorch</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>macOS (Apple Silicon)</td>
-<td><code>sheaf-macos-aarch64</code></td>
+<td>Interpreter only (no IREE)</td>
+<td>~90s</td>
+<td>~1.1</td>
+<td>108× slower</td>
 </tr>
 <tr>
-<td>Linux x86_64</td>
-<td><code>sheaf-linux-x86_64</code></td>
+<td>Sheaf (JIT)</td>
+<td>7.64s</td>
+<td>~13</td>
+<td>9.2× slower</td>
 </tr>
 <tr>
-<td>Linux aarch64</td>
-<td><code>sheaf-linux-aarch64</code></td>
+<td>PyTorch (CPU, reference)</td>
+<td>0.83s</td>
+<td>~120</td>
+<td>baseline</td>
 </tr>
 </tbody>
 </table>
-<p>Make the binary executable and move it to your PATH:</p>
-<div class="language-bash highlight"><pre><span></span><code>chmod<span class="w"> </span>+x<span class="w"> </span>sheaf-macos-aarch64
-mv<span class="w"> </span>sheaf-macos-aarch64<span class="w"> </span>/usr/local/bin/sheaf
-</code></pre></div>
-<h2 id="repl">REPL</h2>
-<p>Run <code>sheaf</code> with no arguments to start the interactive console:</p>
-<div class="language-text highlight"><pre><span></span><code>Sheaf 2.0.0 (:h for help)
-sheaf&gt; (+ 1 2)
-=&gt; 3
-sheaf&gt; (map (fn [x] (* x x)) [1 2 3 4])
-=&gt; [1.0, 4.0, 9.0, 16.0]
-</code></pre></div>
-<p>Tab completion is available. Inline help: <code>:help &lt;name&gt;</code> (e.g., <code>:help let</code>).</p>
-<h2 id="running-a-file">Running a file</h2>
-<p>To run a program, pass the source file to <code>sheaf</code>:</p>
-<div class="language-bash highlight"><pre><span></span><code>sheaf<span class="w"> </span>run.shf
-</code></pre></div>
-<h2 id="examples">Examples</h2>
-<p>Download the examples archive from the <a href="https://github.com/sheaf-lang/sheaf/releases">releases page</a> (<a href="https://github.com/sheaf-lang/sheaf/releases/download/v2.0.0-rc1/sheaf-examples.tar.gz">direct link</a>). Each example is self-contained:</p>
-<div class="language-bash highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>examples/mlp
-sheaf<span class="w"> </span>run.shf
-</code></pre></div>
-<p>Available examples:</p>
+<p>So far, I had been confident that IREE and LLVM would handle the heavy lifting,
+and had mostly focused on getting the Sheaf language right. These numbers were a
+wake-up call. They triggered a shift from design work to performance tuning,
+which is still ongoing as I write this. Spoiler: Sheaf's performance is now
+quite closer to PyTorch.</p>
+<h3 id="new-tooling">New tooling</h3>
+<p>To start, I added two features to the CLI, which I wanted for quite some time
+but never took the time of implementing:</p>
 <ul>
-<li><strong><a href="https://github.com/sheaf-lang/sheaf/tree/main/examples/clevr">CLEVR</a></strong>: A neuro-symbolic model for visual question answering</li>
-<li><strong><a href="https://github.com/sheaf-lang/sheaf/tree/main/examples/hydra">Hydra</a></strong>: A self-modifying model that grows during training</li>
-<li><strong><a href="https://github.com/sheaf-lang/sheaf/tree/main/examples/mlp">MLP</a></strong>: "Hello World" example of a small multi-layer network to solve XOR</li>
-<li><strong><a href="https://github.com/sheaf-lang/sheaf/tree/main/examples/nanoGPT">NanoGPT</a></strong>: A port of Karpathy's nanoGPT in Sheaf</li>
+<li><code>--blame</code>, inspired by <code>systemd-analyze blame</code>, which profiles Sheaf execution
+  and shows where time is spent</li>
+<li><code>--jit-profile</code>, which instruments the IREE dispatch path: buffer marshalling,
+  GPU call, and output transfer</li>
 </ul>
-<h2 id="ai-assistant-bootstrap">AI assistant bootstrap</h2>
-<p><code>sheaf init-ai</code> generates a context file in the current directory. Provide this file to Claude Code, Cursor, Copilot, or any other assistant to get code generation, code completion, and debugging help.</p>
-<div class="language-bash highlight"><pre><span></span><code>sheaf<span class="w"> </span>init-ai
-<span class="c1"># Generates sheaf-context.md</span>
+<p>Something became immediately visible: too few functions were being compiled,
+because side-effects and higher-order functions blocked AOT compilation.
+Besides, interpreter performance for the HOF functions was so poor that clearly,
+I would have to JIT a <em>lot more</em> Sheaf code, which is painful for
+differentiation.</p>
+<h3 id="how-sheafs-compiler-works">How Sheaf's compiler works</h3>
+<p>Before diving into the optimizations, a brief overview of Sheaf's compilation
+pipeline.</p>
+<p><strong>1. Parser.</strong> Sheaf source is transformed into an AST of S-expressions. Unlike
+a "pure" Lisp such as Scheme, which is its own AST, Sheaf has syntactic sugar
+(threading macros, destructuring, keyword args), so we need a parser to
+normalize everything into a uniform tree:</p>
+<div class="language-text highlight"><pre><span></span><code>(defn gpt-forward [x params config] ...)
+↓
+SheafValue::List([Symbol(&quot;defn&quot;), Symbol(&quot;gpt-forward&quot;), ...])
 </code></pre></div>
-<h2 id="next-steps">Next steps</h2>
-<p>Follow the <a href="../starting/">tutorial</a> to learn the language fundamentals.</p>
+<p><strong>2. Compiler.</strong> The AST is then lowered into <code>CompiledExpr</code>, an internal IR.
+This stage expands macros, recognizes special forms (<code>defn</code>, <code>let</code>, <code>if</code>, <code>fn</code>),
+resolves symbols, and registers functions in the compiler registry. The result
+is a tree of typed enum variants:</p>
+<div class="language-rust highlight"><pre><span></span><code><span class="k">enum</span><span class="w"> </span><span class="nc">CompiledExpr</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">Integer</span><span class="p">(</span><span class="kt">i64</span><span class="p">),</span>
+<span class="w">    </span><span class="n">Float</span><span class="p">(</span><span class="kt">f64</span><span class="p">),</span>
+<span class="w">    </span><span class="n">Symbol</span><span class="p">(</span><span class="nb">String</span><span class="p">),</span>
+<span class="w">    </span><span class="n">FunctionCall</span><span class="p">(</span><span class="nb">String</span><span class="p">,</span><span class="w"> </span><span class="nb">Vec</span><span class="o">&lt;</span><span class="n">CompiledExpr</span><span class="o">&gt;</span><span class="p">),</span>
+<span class="w">    </span><span class="n">Let</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">bindings</span><span class="p">,</span><span class="w"> </span><span class="n">body</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="n">Lambda</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">params</span><span class="p">,</span><span class="w"> </span><span class="n">body</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="n">If</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">cond</span><span class="p">,</span><span class="w"> </span><span class="n">then</span><span class="p">,</span><span class="w"> </span><span class="n">else_</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="n">GetTupleElement</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">param</span><span class="p">,</span><span class="w"> </span><span class="n">indices</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="n">Vector</span><span class="p">(</span><span class="nb">Vec</span><span class="o">&lt;</span><span class="n">CompiledExpr</span><span class="o">&gt;</span><span class="p">),</span>
+<span class="w">    </span><span class="n">Keyword</span><span class="p">(</span><span class="nb">String</span><span class="p">),</span>
+<span class="w">    </span><span class="o">..</span><span class="p">.</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><strong>3. Transforms.</strong> Several passes rewrite the <code>CompiledExpr</code> tree before
+codegen: dictionary accesses become positional tuple lookups, known function
+calls are inlined, <code>reduce</code> loops are unrolled into chains of <code>Let</code> bindings
+(required for autodiff), and constant subexpressions are evaluated at compile
+time.</p>
+<p><strong>4. Codegen.</strong> Each <code>CompiledExpr</code> node maps to one or more StableHLO
+operations. The codegen also computes output shapes for each tensor operation,
+threading shape information through the entire graph.</p>
+<p><strong>5. Compilation.</strong> Finally, <code>iree-compile</code> lowers the StableHLO module into a
+VMFB file for a specific backend (CPU, Metal, Vulkan or CUDA).</p>
+<h3 id="the-marshalling-wall">The marshalling wall</h3>
+<p>With the profiling tools in place, the first bottleneck became obvious:
+marshalling overhead. Every time the interpreter calls into IREE, it must
+convert each tensor argument into an IREE buffer view. For NanoGPT's forward
+pass, that means 27 parameter tensors, converted and uploaded on every single
+call.</p>
+<p>For 1000 tokens of autoregressive generation, that's 27,000 buffer allocations
+and roughly 8GB of cumulative memory copies. The GPU was spending more time
+waiting for data than computing.</p>
+<p>The fix was a fingerprint-based buffer view cache. Computing a hash per function
+proved very compute-expensive, so each tensor argument is now fingerprinted
+using <code>Arc</code> pointer identity: same <code>Arc</code> means same data, which means the
+previously created buffer view can be reused. This is O(1) with no false
+positives, since Sheaf's values are immutable.</p>
+<p>The cache brought inference from 11.3s down to 7.7s for 1000 tokens (a 32%
+improvement), but a gap remained.</p>
+<h3 id="deep-copies-in-the-interpreter">Deep copies in the interpreter</h3>
+<p>Profiling the remaining gap revealed a surprising cost: the interpreter was
+deep-cloning entire tensors on every function call and environment lookup. A GPT
+forward pass with 27 parameter tensors meant copying ~8MB of weights repeatedly,
+in what should have been zero-cost reference passing.</p>
+<p>The new implementation wraps tensor data in <code>Arc&lt;ArrayD&lt;f32&gt;&gt;</code>. Function calls,
+let bindings, and dictionary lookups now bump a reference count instead of
+copying data. The impact is dramatic:</p>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>1000 tokens</th>
+<th>vs V1 (JAX)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Before optimizations</td>
+<td>11.3s</td>
+<td>1.7× slower</td>
+</tr>
+<tr>
+<td>+ buffer cache</td>
+<td>7.7s</td>
+<td>1.1× slower</td>
+</tr>
+<tr>
+<td>+ Arc tensors</td>
+<td>4.85s</td>
+<td>1.4× faster</td>
+</tr>
+<tr>
+<td>JAX V1 (Python + JAX)</td>
+<td>6.8s</td>
+<td>baseline</td>
+</tr>
+</tbody>
+</table>
+<p>For BareGPT, my small Transformer, Sheaf V2 now beats the Sheaf V1 Python+JAX
+implementation, in a 3MB binary vs a 500MB runtime.</p>
+<p>The next step is to scale up to GPT-2 124M and benchmark against PyTorch
+directly.</p>
+<h3 id="jit-compilation">JIT compilation</h3>
+<p>The AOT approach (<code>sheaf build</code>) required a manual compilation step and couldn't
+handle higher-order functions or closures that capture runtime state. The JIT
+compiler replaced it with transparent on-first-call compilation.</p>
+<p>When a pure function is called for the first time, the JIT traces its arguments
+to infer concrete types (no more <code>defparams</code>!) and automatically runs the full
+compiler pipeline. If the function's source changes, the hash changes, and the
+JIT recompiles. The <code>iree-compile</code> toolchain is auto-downloaded on first use
+(Zig-style), so there's nothing to install.</p>
+<h3 id="f32-everywhere">f32 everywhere</h3>
+<p>A less obvious optimization: the interpreter was using f64 internally (Rust and
+ndarray's default float type), while IREE and the GPU work exclusively in f32.
+Every tensor crossing the interpreter-IREE boundary was being cast, element by
+element.</p>
+<p>Switching <code>Value::Float</code> from f64 to f32 eliminated this conversion entirely.
+The impact on inference was a 31% speedup (1080ms to 746ms for 100 tokens), and
+training dropped from 1.26s to ~670ms per step.</p>
+<h3 id="devicebuffer-and-the-fast-path">DeviceBuffer and the fast path</h3>
+<p>The final optimization addressed what happens between consecutive IREE calls.
+When <code>adam-step</code> produces updated parameters on the GPU, those tensors should
+flow directly into the next <code>train-step</code> call without ever touching host memory.</p>
+<p><code>DeviceBuffer</code> wraps an IREE buffer view that stays on the GPU. When all inputs
+to an IREE call are already DeviceBuffers, a fast path skips the buffer cache
+entirely: no mutex lock, no fingerprint check, just a pointer retain and push.
+For multi-step training, this means step 1 pays the full marshalling cost (all
+tensors are new), but steps 2+ run with near-zero buffer overhead.</p>
+<div class="language-text highlight"><pre><span></span><code>IREE dispatch profile (3 calls, 1461.5ms total):
+  flatten:      0.0ms ( 0.0%)
+  buffers:    416.7ms (28.5%)  [hits: 908, misses: 454]
+  call:      1044.7ms (71.5%)
+  output:       0.0ms ( 0.0%)
+</code></pre></div>
+<p>All 454 misses occur on step 1. Steps 2 and 3 are 100% cache hits.</p>
+<h3 id="where-things-stand">Where things stand</h3>
+<p>Here is the full journey on GPT-2 124M training so far (batch=1, block=64, Metal
+GPU):</p>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Per step (warm)</th>
+<th>vs PyTorch MPS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Interpreter only</td>
+<td>~11s</td>
+<td>86×</td>
+</tr>
+<tr>
+<td>+ JIT</td>
+<td>1.26s</td>
+<td>10×</td>
+</tr>
+<tr>
+<td>+ f32 interpreter</td>
+<td>~670ms</td>
+<td>5×</td>
+</tr>
+<tr>
+<td>+ DeviceBuffer fast path</td>
+<td>533ms</td>
+<td>4.2×</td>
+</tr>
+<tr>
+<td>PyTorch (eager, MPS)</td>
+<td>128ms</td>
+<td>baseline</td>
+</tr>
+</tbody>
+</table>
+<p>From 11 seconds to 533 milliseconds. The remaining 4.2× gap is now dominated by
+the GPU kernel itself (71.5% of dispatch time). This is IREE's Metal backend vs
+Apple's MPS, which is a different compiler targeting the same hardware and is
+outside Sheaf's control.</p>
+<p>For inference, the picture is different. For 100 tokens of autoregressive
+generation, 94% of the time is spent in the GPU call. Buffer overhead is
+negligible. The gap with PyTorch (746ms vs 390ms) is entirely in kernel quality.</p>
+<p>The optimizations described here will continue in a follow-up article, where
+I'll cover the autodiff pipeline and training step fusion.</p>
 
 
 
@@ -1621,8 +1840,13 @@ sheaf<span class="w"> </span>run.shf
 
 
 
+  
+  
 
 
+
+
+  
 
 
 
@@ -1647,7 +1871,7 @@ sheaf<span class="w"> </span>run.shf
         "
     >
         <img
-            src="../images/sheaf-light.png"
+            src="../../images/sheaf-light.png"
             alt="Logo"
             style="height: 24px"
         />
@@ -1664,14 +1888,14 @@ sheaf<span class="w"> </span>run.shf
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.tabs.sticky", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
-        <script src="../javascripts/fix-drawer.js"></script>
+        <script src="../../javascripts/fix-drawer.js"></script>
       
-        <script src="../javascripts/clean-url.js"></script>
+        <script src="../../javascripts/clean-url.js"></script>
       
     
   </body>

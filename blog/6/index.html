@@ -8,27 +8,29 @@
       
       
       
-        <link rel="canonical" href="https://sheaf-lang.org/quickstart/">
+        <link rel="canonical" href="https://sheaf-lang.org/blog/6/">
       
       
+        <link rel="prev" href="../../reference/">
       
-        <link rel="next" href="../rationale/">
+      
+        <link rel="next" href="../5/">
       
       
         
       
       
-      <link rel="icon" href="../images/favicon.png">
+      <link rel="icon" href="../../images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
      
       
-        <title>Quick Start - Sheaf</title>
+        <title>Symbolic Autodiff Hits a Wall - Sheaf</title>
       
     
-<link rel="icon" type="image/png" href="../images/favicon.png" />
+<link rel="icon" type="image/png" href="../../images/favicon.png" />
 <meta name="robots" content="index, follow" />
-<meta property="og:image" content="../images/sheaf-dark.png" />
+<meta property="og:image" content="../../images/sheaf-dark.png" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta
     property="og:title"
@@ -45,7 +47,7 @@
 <style>
     /* Replace mkdocs logo with custom logo - header */
     .md-header__button.md-logo {
-        background-image: url("../images/sheaf-light.png");
+        background-image: url("../../images/sheaf-light.png");
         background-size: contain;
         background-repeat: no-repeat;
         background-position: center;
@@ -58,7 +60,7 @@
 
     /* Replace mkdocs logo with custom logo - sidebar (responsive menu) */
     .md-nav__title {
-        background-image: url("../images/sheaf-light.png");
+        background-image: url("../../images/sheaf-light.png");
         background-size: 64px 64px;
         background-repeat: no-repeat;
         background-position: center;
@@ -74,10 +76,10 @@
 </style>
 
      
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -514,9 +516,9 @@
       
     
     
-      <link rel="stylesheet" href="../stylesheets/extra.css">
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -539,7 +541,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#quick-start" class="md-skip">
+        <a href="#the-limits-of-symbolic-differentiation" class="md-skip">
           Skip to content
         </a>
       
@@ -555,9 +557,9 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="Sheaf" class="md-header__button md-logo" aria-label="Sheaf" data-md-component="logo">
+    <a href="../.." title="Sheaf" class="md-header__button md-logo" aria-label="Sheaf" data-md-component="logo">
       
-  <img src="../images/sheaf-light.png" alt="logo">
+  <img src="../../images/sheaf-light.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -574,7 +576,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Quick Start
+              Symbolic Autodiff Hits a Wall
             
           </span>
         </div>
@@ -651,13 +653,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="./" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../../quickstart/" class="md-tabs__link">
           
   
   
@@ -677,7 +677,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../reference/" class="md-tabs__link">
+        <a href="../../reference/" class="md-tabs__link">
           
   
   
@@ -693,11 +693,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../blog/6/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="./" class="md-tabs__link">
           
   
   
@@ -726,6 +728,8 @@
           
             
               
+                
+              
               <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
@@ -737,9 +741,9 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="Sheaf" class="md-nav__button md-logo" aria-label="Sheaf" data-md-component="logo">
+    <a href="../.." title="Sheaf" class="md-nav__button md-logo" aria-label="Sheaf" data-md-component="logo">
       
-  <img src="../images/sheaf-light.png" alt="logo">
+  <img src="../../images/sheaf-light.png" alt="logo">
 
     </a>
     Sheaf
@@ -763,29 +767,24 @@
       
   
   
-    
   
   
-  
     
     
     
     
       
-        
-        
-      
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" >
         
           
-          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="">
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
             
   
   
@@ -803,7 +802,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_1">
             <span class="md-nav__icon md-icon"></span>
             
@@ -818,37 +817,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Quick Start
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../quickstart/" class="md-nav__link">
         
   
   
@@ -864,92 +836,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#installation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Installation
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#repl" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        REPL
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#running-a-file" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Running a file
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#examples" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Examples
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#ai-assistant-bootstrap" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        AI assistant bootstrap
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#next-steps" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Next steps
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -962,7 +848,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../rationale/" class="md-nav__link">
+      <a href="../../rationale/" class="md-nav__link">
         
   
   
@@ -990,7 +876,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../starting/" class="md-nav__link">
+      <a href="../../starting/" class="md-nav__link">
         
   
   
@@ -1018,7 +904,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../key-concepts/" class="md-nav__link">
+      <a href="../../key-concepts/" class="md-nav__link">
         
   
   
@@ -1046,7 +932,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../types/" class="md-nav__link">
+      <a href="../../types/" class="md-nav__link">
         
   
   
@@ -1074,7 +960,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../changelog/" class="md-nav__link">
+      <a href="../../changelog/" class="md-nav__link">
         
   
   
@@ -1102,7 +988,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../roadmap/" class="md-nav__link">
+      <a href="../../roadmap/" class="md-nav__link">
         
   
   
@@ -1187,7 +1073,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../reference/" class="md-nav__link">
+      <a href="../../reference/" class="md-nav__link">
         
   
   
@@ -1219,24 +1105,29 @@
       
   
   
+    
   
   
+  
     
     
     
     
-      
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
             
   
   
@@ -1254,7 +1145,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1269,10 +1160,35 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../blog/6/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Symbolic Autodiff Hits a Wall
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1288,6 +1204,90 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-limits-of-symbolic-differentiation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The limits of symbolic differentiation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-other-frameworks-handle-this" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How other frameworks handle this
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#anf-naming-every-sub-expression" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ANF: naming every sub-expression
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reverse-mode-ad-on-anf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reverse-mode AD on ANF
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-symbolic-engine-is-staying" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The symbolic engine is staying
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#whats-next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What's next
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1300,7 +1300,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../blog/5/" class="md-nav__link">
+      <a href="../5/" class="md-nav__link">
         
   
   
@@ -1328,7 +1328,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../blog/4/" class="md-nav__link">
+      <a href="../4/" class="md-nav__link">
         
   
   
@@ -1356,7 +1356,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../blog/3/" class="md-nav__link">
+      <a href="../3/" class="md-nav__link">
         
   
   
@@ -1384,7 +1384,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../blog/2/" class="md-nav__link">
+      <a href="../2/" class="md-nav__link">
         
   
   
@@ -1412,7 +1412,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../blog/1/" class="md-nav__link">
+      <a href="../1/" class="md-nav__link">
         
   
   
@@ -1448,7 +1448,9 @@
             
             
               
-              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" hidden>
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
                     
@@ -1456,8 +1458,6 @@
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
-  
-    
   
   
     <label class="md-nav__title" for="__toc">
@@ -1467,10 +1467,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#installation" class="md-nav__link">
+  <a href="#the-limits-of-symbolic-differentiation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Installation
+        The limits of symbolic differentiation
       
     </span>
   </a>
@@ -1478,10 +1478,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#repl" class="md-nav__link">
+  <a href="#how-other-frameworks-handle-this" class="md-nav__link">
     <span class="md-ellipsis">
       
-        REPL
+        How other frameworks handle this
       
     </span>
   </a>
@@ -1489,10 +1489,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#running-a-file" class="md-nav__link">
+  <a href="#anf-naming-every-sub-expression" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Running a file
+        ANF: naming every sub-expression
       
     </span>
   </a>
@@ -1500,10 +1500,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#examples" class="md-nav__link">
+  <a href="#reverse-mode-ad-on-anf" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Examples
+        Reverse-mode AD on ANF
       
     </span>
   </a>
@@ -1511,10 +1511,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#ai-assistant-bootstrap" class="md-nav__link">
+  <a href="#the-symbolic-engine-is-staying" class="md-nav__link">
     <span class="md-ellipsis">
       
-        AI assistant bootstrap
+        The symbolic engine is staying
       
     </span>
   </a>
@@ -1522,10 +1522,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#next-steps" class="md-nav__link">
+  <a href="#whats-next" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Next steps
+        What's next
       
     </span>
   </a>
@@ -1546,74 +1546,156 @@
               <article class="md-content__inner md-typeset">
                 
                   
+  
+
 
 
   
   
 
 
-<h1 id="quick-start">Quick Start</h1>
-<p>Sheaf ships as a single native binary with no runtime dependencies.</p>
-<h2 id="installation">Installation</h2>
-<p>Download the binary for your platform from the <a href="https://github.com/sheaf-lang/sheaf/releases">releases page</a>:</p>
-<table>
-<thead>
-<tr>
-<th>Platform</th>
-<th>Binary</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>macOS (Apple Silicon)</td>
-<td><code>sheaf-macos-aarch64</code></td>
-</tr>
-<tr>
-<td>Linux x86_64</td>
-<td><code>sheaf-linux-x86_64</code></td>
-</tr>
-<tr>
-<td>Linux aarch64</td>
-<td><code>sheaf-linux-aarch64</code></td>
-</tr>
-</tbody>
-</table>
-<p>Make the binary executable and move it to your PATH:</p>
-<div class="language-bash highlight"><pre><span></span><code>chmod<span class="w"> </span>+x<span class="w"> </span>sheaf-macos-aarch64
-mv<span class="w"> </span>sheaf-macos-aarch64<span class="w"> </span>/usr/local/bin/sheaf
+  <h1>Symbolic Autodiff Hits a Wall</h1>
+
+<p><em>Mar 28th 2026</em></p>
+<p>I concluded that previous article with a sense of satisfaction with the
+performance improvements in Sheaf. It ended with GPT-2 training at 114ms per
+step thanks to a fused VMFB dispatch containing forward, backward, gradient
+clipping, and Adam.</p>
+<p>That fusion works because the autodiff engine can produce correct gradients for
+the entire GPT forward pass. Unfortunately, the original symbolic AD engine,
+which I discussed in article 3, worked beautifully for XOR but hit a wall on
+GPT-2.</p>
+<h3 id="the-limits-of-symbolic-differentiation">The limits of symbolic differentiation</h3>
+<p>Sheaf's autodiff engine, <code>grad_simplified</code>, is a symbolic differentiator. Given
+a <code>CompiledExpr</code> tree and a variable name, it returns a new <code>CompiledExpr</code> tree
+representing the derivative. This makes the implementation straightforward:
+parse the tree, compute the derivative for each node, and voilà:</p>
+<div class="language-text highlight"><pre><span></span><code>d/dx (* x y) = (+ (* 1 y) (* x 1))  -&gt;  y
+d/dx (sin x) = (cos x)
 </code></pre></div>
-<h2 id="repl">REPL</h2>
-<p>Run <code>sheaf</code> with no arguments to start the interactive console:</p>
-<div class="language-text highlight"><pre><span></span><code>Sheaf 2.0.0 (:h for help)
-sheaf&gt; (+ 1 2)
-=&gt; 3
-sheaf&gt; (map (fn [x] (* x x)) [1 2 3 4])
-=&gt; [1.0, 4.0, 9.0, 16.0]
+<p>This, of course, is slow, but the output MLIR is optimized by IREE so I saw no
+red flags when writing the autodiff. Besides, I was somewhat relieved that
+implementing it wasn't as difficult as I had feared.</p>
+<p>For the small XOR MLP network, this worked perfectly. The gradient expression is
+small, the simplifier cleans up trivial cases, and the result compiles to
+correct StableHLO.</p>
+<p>But GPT-2's forward pass is much larger, and the symbolic diff quickly showed
+that it simply uses too much memory. After inlining and unrolling the 6
+transformer blocks, the <code>CompiledExpr</code> tree contains roughly 3000 nodes. The
+problem is that <code>CompiledExpr</code> is a <strong>tree</strong>, so each node owns its children.
+When the chain rule produces:</p>
+<div class="language-text highlight"><pre><span></span><code>d/dx (f * g) = f&#39; * g + f * g&#39;
 </code></pre></div>
-<p>Tab completion is available. Inline help: <code>:help &lt;name&gt;</code> (e.g., <code>:help let</code>).</p>
-<h2 id="running-a-file">Running a file</h2>
-<p>To run a program, pass the source file to <code>sheaf</code>:</p>
-<div class="language-bash highlight"><pre><span></span><code>sheaf<span class="w"> </span>run.shf
+<p>It <strong>clones</strong> the entire subtrees <code>f</code> and <code>g</code> into both branches. For GPT with
+58 parameter leaves across 6 layers of nesting, every chain rule application
+duplicates everything below the current node. The gradient expression grows
+exponentially. The process consumed 165 GB of RAM and nearly crashed my machine
+before I could kill it.</p>
+<p>The limitation here is architectural, and even has a name: <em>expression swell</em>.
+It's the reason every production AD system avoids operating on raw syntax trees.</p>
+<p>One might ask: why not just JIT-compile the gradient expression too? The answer
+is that the tree never makes it to Sheaf codegen. Constructing the gradient
+expression in memory is the bottleneck: the clones and heap allocations happen
+at IR level, before any StableHLO is emitted. By the time the codegen would see
+the gradient, the process has already run out of memory.</p>
+<p>One way to solve this would be to emit StableHLO directly during the chain rule
+traversal, building a "tape" of MLIR operations instead of a <code>CompiledExpr</code>
+tree. This is essentially what PyTorch does. But this approach couples the AD
+logic with code generation, which creates a monolith. I prefer modular
+architectures for long-term maintainability, so Sheaf's keeps these separate: AD
+is a transformation from IR to IR, and codegen then translates IR to MLIR.</p>
+<h3 id="how-other-frameworks-handle-this">How other frameworks handle this</h3>
+<p>PyTorch and JAX both avoid expression swell by operating on graphs with sharing,
+not trees.</p>
+<p>PyTorch uses a runtime tape. During the forward pass, each operation records
+itself and its backward function. <code>loss.backward()</code> walks the tape in reverse,
+computing concrete gradient tensors. Each intermediate value exists once in
+memory, so there is no duplication like in a naive symbolic autodiff.</p>
+<p>JAX uses a compiled IR called <code>jaxpr</code> where each variable is defined exactly
+once. <code>jax.grad</code> then transforms a forward jaxpr into a backward jaxpr.
+Variables are names, not trees, so referencing a variable doesn't copy anything.</p>
+<p>What's relevant here is that in both systems, sub-expressions are <strong>shared by
+reference</strong>. When the chain rule needs <code>f</code> in both <code>f' * g</code> and <code>f * g'</code>, it
+references the same node or register in both places. The gradient is the same
+size as the forward pass, so it stays O(n) instead of O(2^n).</p>
+<p>Sheaf needed the same property for its autodiff, but I couldn't simply copy
+PyTorch's tape (no runtime dispatch) nor jaxpr (Sheaf has its own IR).</p>
+<p>The question was how to get sharing in a tree-structured <code>CompiledExpr</code>.</p>
+<h3 id="anf-naming-every-sub-expression">ANF: naming every sub-expression</h3>
+<p>I have read a lot about compilers since I started writing Sheaf. The main
+courses I follow are
+<a href="https://www.cs.cornell.edu/courses/cs6120/2025fa/self-guided/">CS6120</a> from
+Cornell university. One of the discussed topic is Administrative Normal Form
+(ANF), a standard technique from compiler theory which is nicely summarized by
+Kris Micinski in <a href="https://kmicinski.com/cis400-f21/assets/slides/anf.pdf">this presentation</a>.</p>
+<p>ANF flattens a nested expression into a sequence of <code>let</code> bindings where every
+right-hand side is a simple operation.</p>
+<p>Before ANF (tree):</p>
+<div class="language-text highlight"><pre><span></span><code>(* (+ a b) (- (+ a b) c))
+;;       *
+;;      / \
+;;     +   -
+;;    / \ / \
+;;   a b +  c    &lt;- (+ a b) duplicated
+;;      / \
+;;     a   b
 </code></pre></div>
-<h2 id="examples">Examples</h2>
-<p>Download the examples archive from the <a href="https://github.com/sheaf-lang/sheaf/releases">releases page</a> (<a href="https://github.com/sheaf-lang/sheaf/releases/download/v2.0.0-rc1/sheaf-examples.tar.gz">direct link</a>). Each example is self-contained:</p>
-<div class="language-bash highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>examples/mlp
-sheaf<span class="w"> </span>run.shf
+<p>After ANF (flat Let chain):</p>
+<div class="language-text highlight"><pre><span></span><code>(let [t0 (+ a b)
+      t1 (- t0 c)
+      t2 (* t0 t1)]
+  t2)
+;; t0 appears twice, but it&#39;s just a name
 </code></pre></div>
-<p>Available examples:</p>
-<ul>
-<li><strong><a href="https://github.com/sheaf-lang/sheaf/tree/main/examples/clevr">CLEVR</a></strong>: A neuro-symbolic model for visual question answering</li>
-<li><strong><a href="https://github.com/sheaf-lang/sheaf/tree/main/examples/hydra">Hydra</a></strong>: A self-modifying model that grows during training</li>
-<li><strong><a href="https://github.com/sheaf-lang/sheaf/tree/main/examples/mlp">MLP</a></strong>: "Hello World" example of a small multi-layer network to solve XOR</li>
-<li><strong><a href="https://github.com/sheaf-lang/sheaf/tree/main/examples/nanoGPT">NanoGPT</a></strong>: A port of Karpathy's nanoGPT in Sheaf</li>
-</ul>
-<h2 id="ai-assistant-bootstrap">AI assistant bootstrap</h2>
-<p><code>sheaf init-ai</code> generates a context file in the current directory. Provide this file to Claude Code, Cursor, Copilot, or any other assistant to get code generation, code completion, and debugging help.</p>
-<div class="language-bash highlight"><pre><span></span><code>sheaf<span class="w"> </span>init-ai
-<span class="c1"># Generates sheaf-context.md</span>
+<p>The ANF form is structurally identical to SSA or MLIR registers. Each binding
+computes one operation and names the result. When the chain rule needs <code>t0</code> in
+two places, it references the same symbol, like JAX and PyTorch do.</p>
+<p>I went back to the gptel buffer and soon enough, I had a prototype <code>to_anf</code>
+transform function. It walks the tree and lifts every non-trivial sub-expression
+into a <code>let</code> binding with a fresh <code>__anf_N</code> name. Trivial expressions (symbols,
+literals, <code>GetTupleElement</code>) stay inline. For GPT-2, the tree of ~3000 nodes
+becomes a flat sequence of 556 forward bindings, one per operation.</p>
+<h3 id="reverse-mode-ad-on-anf">Reverse-mode AD on ANF</h3>
+<p>With the expression in ANF, reverse-mode AD is now a linear walk. The algorithm
+walks the 556 bindings in reverse order, accumulating contributions for each
+variable:</p>
+<div class="language-text highlight"><pre><span></span><code>;; Forward:
+;; t0 = a + b,  t1 = t0 - c,  t2 = t0 * t1
+;;
+;; Reverse:
+;; dt2 = 1.0       (seed)
+;; dt1 += dt2 * t0 (from t2 = t0 * t1)
+;; dt0 += dt2 * t1 (from t2 = t0 * t1)
+;; dt0 += dt1 * 1  (from t1 = t0 - c)
+;; da  += dt0      (from t0 = a + b)
+;; db  += dt0      (from t0 = a + b)
 </code></pre></div>
-<h2 id="next-steps">Next steps</h2>
-<p>Follow the <a href="../starting/">tutorial</a> to learn the language fundamentals.</p>
+<p>All gradients are computed in one pass, with O(n) expression size. For GPT-2,
+<code>reverse_grad</code> produces 1639 backward bindings from the 556 forward ones.</p>
+<p>More importantly: the expression that previously required 165 GB <em>now fits in a
+few megabytes of IR</em>, which means the ANF actually solved the memory problem.</p>
+<h3 id="the-symbolic-engine-is-staying">The symbolic engine is staying</h3>
+<p>I was hoping to get rid of the symbolic code entirely, but the JIT can't compile
+all VAG calls since some are effectful.</p>
+<p>So the symbolic engine still serves as the interpreter fallback. When the JIT
+can't compile a VAG call, the interpreter runs <code>grad_simplified</code> on the inlined
+expression. For small functions, this works fine. For anything larger, the JIT
+with ANF-based reverse AD is the only practical option, not because it's faster,
+but because the symbolic engine literally cannot produce a gradient expression
+that fits in memory.</p>
+<h3 id="whats-next">What's next</h3>
+<p>The ANF-based reverse AD handles GPT-2. The next frontier is data-dependent
+control flow: conditional branching, dynamic shapes, variable-length sequences.
+<code>reverse_grad</code> currently does not handle <code>If</code> or <code>While</code>, the same limitation
+that exists in JAX (which requires <code>jax.lax.cond</code> instead of Python <code>if</code>).</p>
+<p>Sheaf's <code>where</code> already has a VJP, and most ML code can be written without
+branching. But supporting <code>If</code> would extend the AD to a wider class of programs
+without requiring users to restructure their code.</p>
+<p>Additionally, I still routinely hit bugs and panics in the autodiff. Sheaf's
+development has become a lot more complex with its progress, and fixing bugs
+requires both a lot of thinking and a lot of testing - and my OpenRouter tokens
+can only help so much. The benchmarks and regression tests suites have evolved
+to reflect this.</p>
 
 
 
@@ -1621,8 +1703,13 @@ sheaf<span class="w"> </span>run.shf
 
 
 
+  
+  
 
 
+
+
+  
 
 
 
@@ -1647,7 +1734,7 @@ sheaf<span class="w"> </span>run.shf
         "
     >
         <img
-            src="../images/sheaf-light.png"
+            src="../../images/sheaf-light.png"
             alt="Logo"
             style="height: 24px"
         />
@@ -1664,14 +1751,14 @@ sheaf<span class="w"> </span>run.shf
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.tabs.sticky", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
-        <script src="../javascripts/fix-drawer.js"></script>
+        <script src="../../javascripts/fix-drawer.js"></script>
       
-        <script src="../javascripts/clean-url.js"></script>
+        <script src="../../javascripts/clean-url.js"></script>
       
     
   </body>
