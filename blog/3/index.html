@@ -1592,7 +1592,7 @@ Enzyme-MLIR, because it provided a convenient black-box for the autodiff.</p>
 checks what I want for Sheaf: MLIR-native, designed for ahead-of-time
 compilation, and supposedly lightweight.</p>
 <p>I spent quite some time compiling it from source, fixing CMake issues to
-generate a shared library on macOS, and eventually got a whooping "lightweight"
+generate a shared library on macOS, and eventually got a whoping "lightweight"
 80MB <code>libEnzymeMLIR-23.dylib</code>.</p>
 <p>The problem became clear when trying to integrate it with IREE: IREE doesn't
 support dynamic plugin loading. To use Enzyme, IREE would need to be rebuilt
@@ -1630,12 +1630,12 @@ architectural issue of the V2: differentiation in the interpreter, which would
 have otherwise depended on Enzyme.</p>
 <h3 id="proof-of-concept-in-python"><strong>Proof of Concept in Python</strong></h3>
 <p>To validate this, I built a minimal autodiff in Python, which reminded me of my
-old Andrew Ng courses. Start with a simple expression, a product:</p>
+old Andrew Ng course. Start with a simple expression, a product:</p>
 <div class="language-python highlight"><pre><span></span><code><span class="n">x</span> <span class="o">=</span> <span class="n">Var</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">)</span>
 <span class="n">y</span> <span class="o">=</span> <span class="n">Var</span><span class="p">(</span><span class="s2">&quot;y&quot;</span><span class="p">)</span>
 <span class="n">expr</span> <span class="o">=</span> <span class="n">Add</span><span class="p">(</span><span class="n">Mul</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>  <span class="c1"># f(x,y) = x*y + x</span>
 </code></pre></div>
-<p>Then derivate it:</p>
+<p>Then differenciate it:</p>
 <div class="language-python highlight"><pre><span></span><code><span class="n">df_dx</span> <span class="o">=</span> <span class="n">grad</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">)</span>  <span class="c1"># =&gt; y + 1</span>
 <span class="n">df_dy</span> <span class="o">=</span> <span class="n">grad</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">)</span>  <span class="c1"># =&gt; x</span>
 </code></pre></div>
@@ -1658,8 +1658,8 @@ voilà! My first StableHLO grad, very far from a generic implementation, but
 already gratifying.</p>
 <h3 id="scaling-to-a-real-world-example"><strong>Scaling to a Real World Example</strong></h3>
 <p>Validating the engine requires more than differentiating a simple expression, so
-I moved to the simple XOR MLP Sheaf example and see if I could derivate it with
-my rudimentary autograd. This requires the differentiation of a lot more
+I moved to the simple XOR MLP Sheaf example and see if I could differenciate it
+with my rudimentary autograd. This requires the differentiation of a lot more
 operations:</p>
 <ul>
 <li>Matrix multiplication with proper transpose for gradients</li>
@@ -1671,8 +1671,8 @@ operations:</p>
 </ul>
 <p>The implementation grew to about 400 lines of Python: AST nodes, shape
 inference, gradient rules, and StableHLO emission with broadcast handling
-through <code>stablehlo.broadcast_in_dim</code>. Claude helped writing the boilerplate, but
-I'm okay relying on AI assistance for this kind of work.</p>
+through <code>stablehlo.broadcast_in_dim</code>. Claude helped write the boilerplate, but
+I'm okay relying on AI assistance to deleguate the execution (not the thinking).</p>
 <p>For the XOR MLP, this generates a single <code>train_step</code> function that computes:</p>
 <div class="language-text highlight"><pre><span></span><code>(loss, dL/dW1, dL/db1, dL/dW2, dL/db2) = train_step(x, W1, b1, W2, b2, y)
 </code></pre></div>
@@ -1728,18 +1728,18 @@ converges correctly (final prediction ~= 0.998).</p>
 <p>Of course, this is still a Proof of Concept, but this validates that a custom
 differentiation engine is feasible.</p>
 <h3 id="performance"><strong>Performance</strong></h3>
-<p>Since XLA is highly optimized and probably uses all kind of performance tricks,
+<p>Since XLA is highly optimized and probably uses all kinds of performance tricks,
 I didn't expect much from my naive autograd.</p>
 <p>I ran a 500 epochs benchmark on the MLP:</p>
 <ul>
 <li>Sheaf V1 (Python loop + JAX): 1.84 seconds for 500 epochs.</li>
 <li>Sheaf V2 (symbolic autodiff + compiled loop): 0.036 seconds for 500 epochs.</li>
 </ul>
-<p>Wait, 51x faster? There simply is no way I should even be close to JAX with my naive autograd.
-However, this isn't that surprising as V2 compiles the entire training loop
-ahead of time, while V1 has a huge dispatch latency as it calls JAX from Python
-500 times. Once I add a JIT profiler to monitor the cach misses and the
-overhead, I will know if this actually scales. Right now, it already
+<p>Wait, 51x faster? There is simply no way I should even be close to JAX with my
+naive autograd. However, this isn't that surprising as V2 compiles the entire
+training loop ahead of time, while V1 has a huge dispatch latency as it calls
+JAX from Python 500 times. Once I add a JIT profiler to monitor the cache misses
+and the overhead, I will know if this actually scales. Right now, it already
 demonstrates the overhead eliminated by AOT compilation.</p>
 <h3 id="conclusion"><strong>Conclusion</strong></h3>
 <p>This POC validates the approach for simple models. Having a standalone

@@ -60,32 +60,4 @@
          <loc>https://sheaf-lang.org/blog/6/</loc>
          <lastmod>2026-04-30</lastmod>
     </url>
-    <url>
-         <loc>https://sheaf-lang.org/design/checkpointing-vag/</loc>
-         <lastmod>2026-04-30</lastmod>
-    </url>
-    <url>
-         <loc>https://sheaf-lang.org/design/performance-work/</loc>
-         <lastmod>2026-04-30</lastmod>
-    </url>
-    <url>
-         <loc>https://sheaf-lang.org/design/qwen-performance/</loc>
-         <lastmod>2026-04-30</lastmod>
-    </url>
-    <url>
-         <loc>https://sheaf-lang.org/design/spec-device-pipeline/</loc>
-         <lastmod>2026-04-30</lastmod>
-    </url>
-    <url>
-         <loc>https://sheaf-lang.org/design/spec-mlir-optimization/</loc>
-         <lastmod>2026-04-30</lastmod>
-    </url>
-    <url>
-         <loc>https://sheaf-lang.org/design/vag-fusion-benchmarks/</loc>
-         <lastmod>2026-04-30</lastmod>
-    </url>
-    <url>
-         <loc>https://sheaf-lang.org/design/vag-memory/</loc>
-         <lastmod>2026-04-30</lastmod>
-    </url>
 </urlset>
