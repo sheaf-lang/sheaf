@@ -1616,13 +1616,13 @@ PyTorch. The first results were humbling:</p>
 </thead>
 <tbody>
 <tr>
-<td>Interpreter only (no IREE)</td>
+<td>Interpreter only (no JIT)</td>
 <td>~90s</td>
 <td>~1.1</td>
 <td>108× slower</td>
 </tr>
 <tr>
-<td>Sheaf (JIT)</td>
+<td>Sheaf (JIT, CPU)</td>
 <td>7.64s</td>
 <td>~13</td>
 <td>9.2× slower</td>
@@ -1650,10 +1650,9 @@ but never took the time of implementing:</p>
   GPU call, and output transfer</li>
 </ul>
 <p>Something became immediately visible: too few functions were being compiled,
-because side-effects and higher-order functions blocked AOT compilation.
-Besides, interpreter performance for the HOF functions was so poor that clearly,
-I would have to JIT a <em>lot more</em> Sheaf code, which is painful for
-differentiation.</p>
+because side-effects and higher-order functions blocked compilation. Besides,
+interpreter performance for the HOF functions was so poor that clearly, I would
+have to JIT a <em>lot more</em> Sheaf code, which is painful for differentiation.</p>
 <h3 id="how-sheafs-compiler-works">How Sheaf's compiler works</h3>
 <p>Before diving into the optimizations, a brief overview of Sheaf's compilation
 pipeline.</p>

@@ -1558,7 +1558,8 @@
 
 <p><em>Feb 10th 2026</em></p>
 <p>Last week I outlined the vision for Sheaf V2. The next question was immediate:
-now that I am on my own without XLA, which language should I write the compiler in?</p>
+now that I am on my own without XLA, which language should I write the compiler
+in?</p>
 <p>My favorite language for lower level code are C and Go, with Zig another
 contender. C++ and Rust are usually not on my radar unless I have to.</p>
 <p>C is clean, small and dependable despite its notorious undefined behaviors. I
@@ -1570,9 +1571,11 @@ is the obvious choice even though I find it messy.</p>
 <p>Rust, on the other hand, I don't really know. I've read about it and played with
 the rustlings exercises. I somewhat understand the borrow checker but I've never
 shipped any Rust code. Choosing Rust means relying on the dreaded "vibe coding"
-approach, which is intellectually dishonest and downright irresponsible for a compiler. Besides, I dislike this trend of
-blindly rewriting large portions of C code in Rust (or even have Claude do it),
-so I'd rather avoid giving this trend more momentum.</p>
+approach, which is intellectually dishonest and downright irresponsible for a
+compiler. Not only does it introduce new classes of bugs, but there's also this
+ongoing, low-effort "I rewrote Emacs in Rust" clout-chase of feeding C codebases
+to an LLM and calling it a day. I'd rather avoid giving the "cheap" Rust trend
+more momentum.</p>
 <h3 id="considering-c"><strong>Considering C++</strong></h3>
 <p>I am currently working on the CUDA C++ certification from Nvidia and diving
 deeper into IREE, which means a lot of exposure to "modern" C++, with the
@@ -1623,10 +1626,9 @@ and LLMs, I need the compiler to catch these errors. That's the trade-off: Go's
 simplicity vs Rust's safety guarantees. For Sheaf, safety won, even though Go
 would be easier. So, Rust it is.</p>
 <h3 id="rust"><strong>Rust</strong></h3>
-<p>C sucks: too low-level, too many UBs for such a project. C++ sucks: too noisy,
-complex and bloated. And Rust sucks as well: too "hype-y" and large. Yet I will have to
-choose Rust. Not because it's trendy, but because it's the only language I felt
-glimpses of elegance when prototyping the Sheaf parser.</p>
+<p>Rust is trendy, and for someone who values continuity and stability, that is not
+a selling point. I chose Rust because it's the only language where I caught
+glimpses of elegance while prototyping the Sheaf parser.</p>
 <p>For instance, the Sheaf algebraic data types match how compilers think. This is
 what an AST node in Sheaf currently looks like:</p>
 <div class="language-rust highlight"><pre><span></span><code><span class="k">enum</span><span class="w"> </span><span class="nc">SheafValue</span><span class="w"> </span><span class="p">{</span>
@@ -1644,37 +1646,40 @@ beautiful type system, it makes the data structure <em>explicit</em>.</p>
 <code>dynamic_cast</code>, but it's clunkier.</p>
 <p>Rust also famously checks ownership at compile time, which removes the fear
 during refactor. If the borrow checker accepts it, then the data flow is
-correct. I still hit panics, but there's no need for <code>valgrind</code> like in my past
-projects. And no need to trace through pointer lifetimes.</p>
+correct. I will still hit panics, but there will be no need for <code>valgrind</code> like
+in my past projects. And no need to trace through pointer lifetimes.</p>
 <p>Finally, like <code>go build</code>, cargo and its dependencies management just work. No
 <code>CMakeLists.txt</code> that breaks on a different version of LLVM. No hunting for
-where <code>libmlir.so</code> got installed.</p>
+where <code>libmlir.so</code> got installed. Rust is the choice that will make writing and
+debugging an MLIR compiler the least painful.</p>
 <h3 id="the-real-cost"><strong>The Real Cost</strong></h3>
 <p>Choosing Rust also has real costs, which I am paying for right now.</p>
-<p>The main one, obviously: <strong>I don't know Rust well.</strong> I tried asking an LLM to
-write me some Rust code, and it could have embedded an entire rootkit inside
-without me noticing. I'm picking up steam, slowly. The main grief is ironically
-the borrow checker I was praising above: it likes to reject things that feel
-like they should work. I hit lifetime errors I don't fully understand and while
-Claude helps, relying on it can undertake the foundation of Sheaf: reducing
-bloat and entropy.</p>
-<p><em>Side note: writing code is trivial for an LLM, so code piles up and quickly
-turns into technical debt. This is easy to miss with vibe coding because of the
-massive amount of code generated in short times. This is the antithesis of what
-I want with Sheaf: <strong>suckless ML</strong>, that is, the least amount of code necessary
-for elegance and performance. Every byte should be justified.</em></p>
+<p>The main one, which I mentioned earlier, is that <strong>I don't know Rust well.</strong> I
+tried asking an LLM to write me some Rust code, and it could have embedded an
+entire rootkit inside without me noticing. I'm picking up steam, slowly. The
+main grief is ironically the borrow checker I was praising above: it likes to
+reject things that feel like they should work. I hit lifetime errors I don't
+fully understand and while Claude helps, relying on it can undermine the
+foundation of Sheaf: reducing bloat and entropy.</p>
+<p><em>Side note: writing code is trivial for an LLM, so even when done right, code
+piles up and quickly turns into technical debt. This is easy to miss with vibe
+coding because of the massive amount of code generated in a short time. This is
+the antithesis of what I want with Sheaf: <strong>suckless ML</strong>, that is, the least
+amount of code necessary for elegance and performance. Every byte should be
+justified.</em></p>
 <p>Choosing Rust could make MLIR interop a problem later. Right now, Sheaf emits
 text MLIR, so there's no FFI - and this will have to change for performance
 reasons. But if I ever need to manipulate MLIR IR programmatically, I'd need
 Rust bindings to MLIR's C++ APIs. That's manual work. <code>bindgen</code> would help, but
 MLIR's template-heavy headers seem like a nightmare to wrap.</p>
-<p>The ML systems community speaks C++. Should I need contributions from IREE, XLA,
-or TensorFlow teams, they will know C++ more than Rust.</p>
+<p>Besides, the ML systems community currently speaks C++. Should I need
+contributions from IREE, XLA, or TensorFlow teams, they will know C++ more than
+Rust.</p>
 <p>But here's the thing: these costs are upfront. I only pay them now, during
 initial development, to have an easier life later. It's the opposite for C++.</p>
 <h3 id="the-entropy-principle"><strong>The Entropy Principle</strong></h3>
-<p>One of the goal of Sheaf is to reduce entropy in ML code. That's part the design
-filters: does this choice add noise or remove it?</p>
+<p>I mentionned one of the goal of Sheaf is to reduce entropy in ML code. That's
+part the design filters: does this choice add noise or remove it?</p>
 <p>Using C++ would add entropy:</p>
 <ul>
 <li>Build complexity (CMake, dependencies, platform quirks)</li>
@@ -1688,8 +1693,7 @@ filters: does this choice add noise or remove it?</p>
 <li>ADTs that match AST structure</li>
 <li>Exhaustive pattern matching</li>
 </ul>
-<p>If I'm building a language about clarity, the compiler should embody that. Not
-"do as I say, not as I do."</p>
+<p>If I'm building a language about clarity, the compiler should embody that.</p>
 <h3 id="what-exists-so-far"><strong>What Exists So Far</strong></h3>
 <p>Over the past week, I built a small proof-of-concept to generate MLIR from
 S-expressions. What I have so far:</p>

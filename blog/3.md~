@@ -18,12 +18,12 @@ Enzyme-MLIR, because it provided a convenient black-box for the autodiff.
 ### **The Enzyme Detour**
 
 Enzyme is a compile-time autodiff engine that operates on LLVM IR and MLIR. It
-checks what I want for Sheaf: MLIR-native, designed for ahead-of-time
-compilation, and supposedly lightweight.
+ticks all the boxes for Sheaf: MLIR-native, designed for compilation, and
+supposedly lightweight.
 
 I spent quite some time compiling it from source, fixing CMake issues to
-generate a shared library on macOS, and eventually got a whooping "lightweight"
-80MB `libEnzymeMLIR-23.dylib`.
+generate a shared library on macOS, and eventually wound up with a whopping
+"lightweight" 80MB `libEnzymeMLIR-23.dylib`.
 
 The problem became clear when trying to integrate it with IREE: IREE doesn't
 support dynamic plugin loading. To use Enzyme, IREE would need to be rebuilt
@@ -32,7 +32,7 @@ fast-moving project inside Sheaf would turn it into a very large and tightly
 coupled monolith, with long build times and high maintenance cost.
 
 For a project aiming to minimize bloat and stick to _do one thing and do it
-well_, this is an anti-pattern.
+well_ philosophy, this is an anti-pattern.
 
 I briefly considered alternatives: jax.grad, torch.autograd and the TinyGrad
 autodiff, but they all bring Python back into the compilation pipeline, negating
@@ -72,7 +72,7 @@ have otherwise depended on Enzyme.
 ### **Proof of Concept in Python**
 
 To validate this, I built a minimal autodiff in Python, which reminded me of my
-old Andrew Ng courses. Start with a simple expression, a product:
+old Andrew Ng course. Start with a simple expression, a product:
 
 ```python
 x = Var("x")
@@ -80,7 +80,7 @@ y = Var("y")
 expr = Add(Mul(x, y), x)  # f(x,y) = x*y + x
 ```
 
-Then derivate it:
+Then differenciate it:
 
 ```python
 df_dx = grad(expr, "x")  # => y + 1
@@ -111,8 +111,8 @@ already gratifying.
 ### **Scaling to a Real World Example**
 
 Validating the engine requires more than differentiating a simple expression, so
-I moved to the simple XOR MLP Sheaf example and see if I could derivate it with
-my rudimentary autograd. This requires the differentiation of a lot more
+I moved to the simple XOR MLP Sheaf example and see if I could differenciate it
+with my rudimentary autograd. This requires the differentiation of a lot more
 operations:
 
 - Matrix multiplication with proper transpose for gradients
@@ -124,9 +124,8 @@ operations:
 
 The implementation grew to about 400 lines of Python: AST nodes, shape
 inference, gradient rules, and StableHLO emission with broadcast handling
-through `stablehlo.broadcast_in_dim`. Claude helped writing the boilerplate, but
-I'm okay relying on AI assistance to deleguate the execution, as long as it's
-not the design.
+through `stablehlo.broadcast_in_dim`. Claude helped write the boilerplate, but
+I'm okay relying on AI assistance to deleguate the execution (not the thinking).
 
 For the XOR MLP, this generates a single `train_step` function that computes:
 
@@ -197,7 +196,7 @@ differentiation engine is feasible.
 
 ### **Performance**
 
-Since XLA is highly optimized and probably uses all kind of performance tricks,
+Since XLA is highly optimized and probably uses all kinds of performance tricks,
 I didn't expect much from my naive autograd.
 
 I ran a 500 epochs benchmark on the MLP:
@@ -205,10 +204,10 @@ I ran a 500 epochs benchmark on the MLP:
 - Sheaf V1 (Python loop + JAX): 1.84 seconds for 500 epochs.
 - Sheaf V2 (symbolic autodiff + compiled loop): 0.036 seconds for 500 epochs.
 
-Wait, 51x faster? There simply is no way I should even be close to JAX with my
+Wait, 51x faster? There is simply no way I should even be close to JAX with my
 naive autograd. However, this isn't that surprising as V2 compiles the entire
 training loop ahead of time, while V1 has a huge dispatch latency as it calls
-JAX from Python 500 times. Once I add a JIT profiler to monitor the cach misses
+JAX from Python 500 times. Once I add a JIT profiler to monitor the cache misses
 and the overhead, I will know if this actually scales. Right now, it already
 demonstrates the overhead eliminated by AOT compilation.
 

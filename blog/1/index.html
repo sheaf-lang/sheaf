@@ -1525,47 +1525,48 @@ amount of machinery to compensate for what the language itself does not express.
 Too much of what matters in a model ends up encoded indirectly, through
 imperative control flow, decorators, and framework-specific plumbing.</p>
 <h3 id="a-systems-perspective"><strong>A systems perspective</strong></h3>
-<p>I come from systems engineering and I tend to think in fairly old-fashioned
-terms. Unix ideas still resonate with me: explicit structure, minimal runtime
-assumptions, and components that do one thing and do it well.</p>
+<p>I come from systems engineering and tend to value continuity. Unix ideas still
+resonate with me: explicit structure, minimal runtime assumptions, and
+components that do one thing and do it well.</p>
 <p>Modern ML frameworks tend to violate these principles by necessity. They grow
 large because they must compensate for the host language. They accumulate
 features because there is no single place where the structure of computation is
-represented directly.</p>
+represented directly, so it has to be abstracted away with more layers.</p>
 <p>At some point, I started wondering what it would look like to approach
 differentiable programming from the opposite direction: start with a language
 that represents computation explicitly, and build the numerical machinery
-underneath it, not around it. by The first mental model was simple: <em>Scheme with
+underneath it, not around it. The first mental model was simple: <em>Scheme with
 tensors</em> and <em>Suckless meets machine learning</em>.</p>
-<p>At least two projects have attempted bringing Lisp to modern "AI" (connexionist
-rather than symbolic):</p>
+<p>At least two projects have attempted bringing Lisp to modern (connectionist
+rather than symbolic) AI:</p>
 <ul>
-<li><strong><a href="https://github.com/uncomplicate">Uncomplicate</a></strong>, from Dragan Djuric. A very nice set of linear algebra and
-  machine learning libraries for Clojure. One of them, <strong>Neanderthal</strong>, brings a
-  complete BLAS-like matrix/vector/linear algebra on top of Clojure, somewhat
-  like Numpy does with Python.</li>
-<li><strong><a href="https://github.com/wedesoft/aiscm">AIscm</a></strong>, aiming at bringing accelerated numerical processing to Guile
-  through TensorFlow and LLVM.</li>
+<li><strong><a href="https://github.com/uncomplicate">Uncomplicate</a></strong>, from Dragan Djuric. A
+  very nice set of linear algebra and machine learning by for Clojure. One of
+  them, <strong>Neanderthal</strong>, brings a complete BLAS-like matrix/vector/linear
+  algebra on top of Clojure, somewhat like Numpy does with Python.</li>
+<li><strong><a href="https://github.com/wedesoft/aiscm">AIscm</a></strong>, aiming at bringing accelerated
+  numerical processing to Guile through TensorFlow and LLVM.</li>
 </ul>
 <p>I love Scheme for its mathematical elegance. It brings an entire language from
 very few primitives, but its concision, ironically, can become noisy, and the
 lack of native types makes it also a burden to run a model. Besides, AIscm
 cannot be called a framework or a library, it's more like a Guile wrapper for
-TensorFlow. This is something I want to avoid with the design of Sheaf: a nice
+TensorFlow. This is something I want to avoid with the design of Sheaf: a fancy
 dress for a clunky framework.</p>
-<p>Clojure has a lot of elegance: type V1 Lisp (common namespace for variables and
+<p>Clojure has a lot of elegance: Lisp-1 (common namespace for variables and
 functions), clean, terse syntax relying on metacharacters, and data
-immutability. This, in turn, is clearly what I want for Sheaf... But the
-JVM's weight stands in the way. I would rather have a lean, small runtime than a
-JVM. In an age of agentic development pouring oceans of unreviewed code every
-day, the promess of <em>removing</em> code has already become the value proposal.</p>
+immutability. This, in turn, is what I want for Sheaf... But the JVM's weight
+stands in the way, and I would rather have Sheaf run on a lean, small runtime
+than a JVM. In an age of agentic development flooding the ecosystem with oceans
+of code, the promise of <em>removing</em> code has already become the value
+proposition.</p>
 <p>Sure, Clojure can be compiled natively with graalVM, and
 <a href="https://jank-lang.org/">Jank</a> looks promising, but none of those options feel
 solid.</p>
 <p>Instead, Sheaf V1 has focused on providing something that works, and for that
 purpose, JAX was the better option. That also means I <em>still</em> have Python in the
 way, but at least, JAX is a sane framework. In fact, JAX is <em>brilliant</em>, and I
-will certainly use it as a reference implementation as Sheaf matures.</p>
+plan to use it as a reference implementation as Sheaf matures.</p>
 <h3 id="sheaf-v1"><strong>Sheaf V1</strong></h3>
 <p>Currently, Sheaf is essentially a functional layer for model description,
 inspired by Clojure, and delegating numerical execution to XLA via JAX.</p>
@@ -1592,10 +1593,10 @@ addressing it at the root.</p>
 <h3 id="envisioning-sheaf-v2"><strong>Envisioning Sheaf v2</strong></h3>
 <p>The real value of Sheaf lies in what happens when Python can be removed from the
 loop. Sheaf 1.2, releasing this week, is a step forward in this direction. A lot
-of boilerplate and imperative code has been added, even functionally impure
-forms I was initially reluctant to implement such as a <code>do</code> and <code>while</code>. All
-examples are now standalone and can do weight loading, checkpointing and
-training.</p>
+of boilerplate and imperative code has been added to remove the need for Python,
+even functionally impure forms I was initially reluctant to implement such as a
+<code>do</code> and <code>while</code>. All examples are now standalone and can do weight loading,
+checkpointing and training.</p>
 <p><em>But Sheaf remains a DSL on top of Python.</em></p>
 <p>The main goal for the next major release is to break free from Python. To
 achieve this, the plan is to emit StableHLO and let IREE lower it to Linalg,

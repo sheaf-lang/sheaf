@@ -1589,21 +1589,21 @@ through JAX. As I mentioned in the first blog post, the obvious candidate was
 Enzyme-MLIR, because it provided a convenient black-box for the autodiff.</p>
 <h3 id="the-enzyme-detour"><strong>The Enzyme Detour</strong></h3>
 <p>Enzyme is a compile-time autodiff engine that operates on LLVM IR and MLIR. It
-checks what I want for Sheaf: MLIR-native, designed for ahead-of-time
-compilation, and supposedly lightweight.</p>
+ticks all the boxes for Sheaf: MLIR-native, designed for compilation, and
+supposedly lightweight.</p>
 <p>I spent quite some time compiling it from source, fixing CMake issues to
-generate a shared library on macOS, and eventually got a whoping "lightweight"
-80MB <code>libEnzymeMLIR-23.dylib</code>.</p>
+generate a shared library on macOS, and eventually wound up with a whopping
+"lightweight" 80MB <code>libEnzymeMLIR-23.dylib</code>.</p>
 <p>The problem became clear when trying to integrate it with IREE: IREE doesn't
 support dynamic plugin loading. To use Enzyme, IREE would need to be rebuilt
 with Enzyme statically linked, then included in Sheaf. Embedding such a
 fast-moving project inside Sheaf would turn it into a very large and tightly
-coupled monolith, with long build times and high maintenance cost.</p>
+coupled monolith, with long build times and high maintenance costs.</p>
 <p>For a project aiming to minimize bloat and stick to <em>do one thing and do it
-well</em>, this is an anti-pattern.</p>
+well</em> philosophy, this is an anti-pattern.</p>
 <p>I briefly considered alternatives: jax.grad, torch.autograd and the TinyGrad
 autodiff, but they all bring Python back into the compilation pipeline, negating
-the entire point of V2. <em>Python shall be no more</em>.</p>
+the entire point of Sheaf V2. <em>Python shall be no more</em>.</p>
 <h3 id="the-minimal-path"><strong>The Minimal Path</strong></h3>
 <p>Facing these limitations, the question became: do I need such a large code base
 to perform differentiation? What does Sheaf actually need?</p>
@@ -1611,15 +1611,15 @@ to perform differentiation? What does Sheaf actually need?</p>
 and side effects. Sheaf has none of that. The code is purely functional,
 immutable, and operates on a small set of mathematical operations: matrix
 multiplication, element-wise arithmetic, activations, and reductions.</p>
-<p>Besides, I don't need an <em>optimizin</em> autodiff engine: I need one that generates
+<p>Besides, I don't need an <em>optimizing</em> autodiff engine: I need one that generates
 mathematically correct gradients. IREE will optimise the MLIR afterward through
-DCE, kernel fusion and vectorization.</p>
+DCE, vectorization and kernel fusion.</p>
 <p>This suggested a different approach: maybe I could try an easy (albeit very
 slow) symbolic differentiation on the AST, before StableHLO emission, then let
-IREE optimize the mess. Since Sheaf code is data (S-expressions), so I can
+IREE optimize the result. Since Sheaf code is data (S-expressions), I can
 transform it directly using standard calculus rules, which means a fairly
 straightforward implementation.</p>
-<p>This also gives me an advantage compared to Enzyme: operating straight on the
+<p>This also gives it an advantage compared to Enzyme: operating straight on the
 semantic structure of the program (the AST), not on the compiled MLIR. Enzyme
 works on LLVM IR, where it must reconstruct intent from low-level operations. In
 Sheaf, the intent is explicit in the S-expression tree. A multiplication is
