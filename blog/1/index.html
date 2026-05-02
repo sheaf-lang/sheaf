@@ -1562,14 +1562,12 @@ of code, the promise of <em>removing</em> code has already become the value
 proposition.</p>
 <p>Sure, Clojure can be compiled natively with graalVM, and
 <a href="https://jank-lang.org/">Jank</a> looks promising, but none of those options feel
-solid.</p>
-<p>Instead, Sheaf V1 has focused on providing something that works, and for that
-purpose, JAX was the better option. That also means I <em>still</em> have Python in the
-way, but at least, JAX is a sane framework. In fact, JAX is <em>brilliant</em>, and I
-plan to use it as a reference implementation as Sheaf matures.</p>
+solid. That means I need something built from the ground up.</p>
 <h3 id="sheaf-v1"><strong>Sheaf V1</strong></h3>
-<p>Currently, Sheaf is essentially a functional layer for model description,
-inspired by Clojure, and delegating numerical execution to XLA via JAX.</p>
+<p>Sheaf V1 has focused on providing something that works, and for that purpose,
+JAX was the better option. In the end, Sheaf V1 is essentially a functional
+layer for model description, inspired by Clojure, and delegating numerical
+execution to XLA via JAX.</p>
 <p>While this still is a proof of concept for the Sheaf language, it already does
 some things well:</p>
 <ul>

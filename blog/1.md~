@@ -67,15 +67,12 @@ Sure, Clojure can be compiled natively with graalVM, and
 [Jank](https://jank-lang.org/) looks promising, but none of those options feel
 solid.
 
-Instead, Sheaf V1 has focused on providing something that works, and for that
-purpose, JAX was the better option. That also means I _still_ have Python in the
-way, but at least, JAX is a sane framework. In fact, JAX is _brilliant_, and I
-plan to use it as a reference implementation as Sheaf matures.
-
 ### **Sheaf V1**
 
-Currently, Sheaf is essentially a functional layer for model description,
-inspired by Clojure, and delegating numerical execution to XLA via JAX.
+Sheaf V1 has focused on providing something that works, and for that purpose,
+JAX was the better option. In the end, Sheaf V1 is essentially a functional
+layer for model description, inspired by Clojure, and delegating numerical
+execution to XLA via JAX.
 
 While this still is a proof of concept for the Sheaf language, it already does
 some things well:
