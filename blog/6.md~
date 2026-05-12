@@ -102,59 +102,75 @@ standard technique from compiler theory which is nicely summarized by Kris
 Micinski in
 [this presentation](https://kmicinski.com/cis400-f21/assets/slides/anf.pdf).
 
-It works by flattenning a nested expression into a sequence of `let` bindings
-where every right-hand side is a simple operation.
+ANF works by breaking down complex logic into a simple sequence of 'result =
+operation' steps. Each binding computes one operation and names the result. When
+the chain rule needs `t0` in two places, it references the same symbol, like JAX
+and PyTorch do.
 
-Before ANF (tree):
+Put simply, _ANF is to data trees what deduplication is to storage_.The
+generated assembly is more compact, reducing both the instruction footprint and
+redundant computations.
+
+Let's consider the following Sheaf expression: `(* (+ a b) (- (+ a b) c))`
+
+AST before ANF:
 
 ```
-(* (+ a b) (- (+ a b) c))
-;;       *
-;;      / \
-;;     +   -
-;;    / \ / \
-;;   a b +  c    <- (+ a b) duplicated
-;;      / \
-;;     a   b
+    *
+   / \
+  +   -
+ / \ / \
+a b +  c    <- (+ a b) is duplicated
+   / \       /
+  a   b    <-
 ```
 
-After ANF (flat Let chain):
+After ANF (flat Let chain), the expression becomes:
 
 ```
 (let [t0 (+ a b)
       t1 (- t0 c)
       t2 (* t0 t1)]
   t2)
-;; t0 appears twice, but it's just a name
 ```
 
-The ANF form is structurally identical to SSA or MLIR registers. Each binding
-computes one operation and names the result. When the chain rule needs `t0` in
-two places, it references the same symbol, like JAX and PyTorch do.
+Which results in a more compact tree:
 
-I went back to the gptel buffer and soon enough, I had a prototype `to_anf`
+```
+   t2 (*)
+   /   \
+ t0(+)  t1(-)
+ /  \   /  \
+a    b t0   c
+        ^
+        |
+ (Points back to the same t0 node)
+```
+
+I went back to my gptel buffer and soon enough, I had a prototype `to_anf`
 transform function. It walks the tree and lifts every non-trivial sub-expression
 into a `let` binding with a fresh `__anf_N` name. Trivial expressions (symbols,
 literals, `GetTupleElement`) stay inline. For GPT-2, the tree of ~3000 nodes
-becomes a flat sequence of 556 forward bindings, one per operation.
+becomes a flat sequence of 556 forward bindings.
 
 ### Reverse-mode AD on ANF
 
-With the expression in ANF, reverse-mode AD is now a linear walk. The algorithm
-walks the 556 bindings in reverse order, accumulating contributions for each
-variable:
+With the expression in ANF, reverse-mode AD is now a linear walk instead of a
+recursive exploration (tree walk).
+
+Sheaf expression (same as above): `(* (+ a b) (- (+ a b) c))`
+
+After ANF: `t0 = a + b,  t1 = t0 - c,  t2 = t0 * t1`
+
+Reverse (differentiated ANF):
 
 ```
-;; Forward:
-;; t0 = a + b,  t1 = t0 - c,  t2 = t0 * t1
-;;
-;; Reverse:
-;; dt2 = 1.0       (seed)
-;; dt1 += dt2 * t0 (from t2 = t0 * t1)
-;; dt0 += dt2 * t1 (from t2 = t0 * t1)
-;; dt0 += dt1 * 1  (from t1 = t0 - c)
-;; da  += dt0      (from t0 = a + b)
-;; db  += dt0      (from t0 = a + b)
+dt2 = 1.0       (seed)
+dt1 += dt2 * t0 (from t2 = t0 * t1)
+dt0 += dt2 * t1 (from t2 = t0 * t1)
+dt0 += dt1 * 1  (from t1 = t0 - c)
+da  += dt0      (from t0 = a + b)
+db  += dt0      (from t0 = a + b)
 ```
 
 All gradients are computed in one pass, with O(n) expression size. For GPT-2,
@@ -165,10 +181,10 @@ few megabytes of IR_, which means the ANF actually solved the memory problem.
 
 ### The symbolic engine is staying
 
-I was hoping to get rid of the symbolic code entirely, but the JIT can't compile
-all VAG calls since some are effectful.
+Unfortunately, the symbolic code cannot be removed entirely, because the JIT
+can't compile all VAG calls since some are effectful.
 
-So the symbolic engine still serves as the interpreter fallback. When the JIT
+So the symbolic autodiff still serves as the interpreter fallback. When the JIT
 can't compile a VAG call, the interpreter runs `grad_simplified` on the inlined
 expression. For small functions, this works fine. For anything larger, the JIT
 with ANF-based reverse AD is the only practical option, not because it's faster,

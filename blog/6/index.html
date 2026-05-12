@@ -1630,56 +1630,64 @@ before. One of the discussed topic is Administrative Normal Form (ANF), a
 standard technique from compiler theory which is nicely summarized by Kris
 Micinski in
 <a href="https://kmicinski.com/cis400-f21/assets/slides/anf.pdf">this presentation</a>.</p>
-<p>ANF works by flattenning a nested expression into a sequence of <code>let</code> bindings
-where every right-hand side is a simple operation.</p>
-<p>Before ANF (tree):</p>
-<div class="language-text highlight"><pre><span></span><code>(* (+ a b) (- (+ a b) c))
-;;       *
-;;      / \
-;;     +   -
-;;    / \ / \
-;;   a b +  c    &lt;- (+ a b) duplicated
-;;      / \
-;;     a   b
+<p>ANF works by breaking down complex logic into a simple sequence of 'result =
+operation' steps. Each binding computes one operation and names the result. When
+the chain rule needs <code>t0</code> in two places, it references the same symbol, like JAX
+and PyTorch do.</p>
+<p>Put simply, <em>ANF is to data trees what deduplication is to storage</em>.The
+generated assembly is more compact, reducing both the instruction footprint and
+redundant computations.</p>
+<p>Let's consider the following Sheaf expression: <code>(* (+ a b) (- (+ a b) c))</code></p>
+<p>AST before ANF:</p>
+<div class="language-text highlight"><pre><span></span><code>    *
+   / \
+  +   -
+ / \ / \
+a b +  c    &lt;- (+ a b) is duplicated
+   / \       /
+  a   b    &lt;-
 </code></pre></div>
-<p>After ANF (flat Let chain):</p>
+<p>After ANF (flat Let chain), the expression becomes:</p>
 <div class="language-text highlight"><pre><span></span><code>(let [t0 (+ a b)
       t1 (- t0 c)
       t2 (* t0 t1)]
   t2)
-;; t0 appears twice, but it&#39;s just a name
 </code></pre></div>
-<p>The ANF form is structurally identical to SSA or MLIR registers. Each binding
-computes one operation and names the result. When the chain rule needs <code>t0</code> in
-two places, it references the same symbol, like JAX and PyTorch do.</p>
-<p>I went back to my gptel buffer and soon enough, I had a prototype <code>to_anf</code>
-transform function. It walks the tree and lifts every non-trivial sub-expression
-into a <code>let</code> binding with a fresh <code>__anf_N</code> name. Trivial expressions (symbols,
-literals, <code>GetTupleElement</code>) stay inline. For GPT-2, the tree of ~3000 nodes
-becomes a flat sequence of 556 forward bindings, one per operation.</p>
+<p>Which results in a more compact tree:</p>
+<div class="language-text highlight"><pre><span></span><code>   t2 (*)
+   /   \
+ t0(+)  t1(-)
+ /  \   /  \
+a    b t0   c
+        ^
+        |
+ (Points back to the same t0 node)
+</code></pre></div>
+<p>Sheaf's new <code>to_anf</code> transform function walks the tree and lifts every
+non-trivial sub-expression into a <code>let</code> binding with a fresh <code>__anf_N</code> name.
+Trivial expressions (symbols, literals, <code>GetTupleElement</code>) stay inline. For
+GPT-2, the tree of ~3000 nodes becomes a flat sequence of 556 forward bindings.</p>
 <h3 id="reverse-mode-ad-on-anf">Reverse-mode AD on ANF</h3>
-<p>With the expression in ANF, reverse-mode AD is now a linear walk. The algorithm
-walks the 556 bindings in reverse order, accumulating contributions for each
-variable:</p>
-<div class="language-text highlight"><pre><span></span><code>;; Forward:
-;; t0 = a + b,  t1 = t0 - c,  t2 = t0 * t1
-;;
-;; Reverse:
-;; dt2 = 1.0       (seed)
-;; dt1 += dt2 * t0 (from t2 = t0 * t1)
-;; dt0 += dt2 * t1 (from t2 = t0 * t1)
-;; dt0 += dt1 * 1  (from t1 = t0 - c)
-;; da  += dt0      (from t0 = a + b)
-;; db  += dt0      (from t0 = a + b)
+<p>With the expression in ANF, reverse-mode AD is now a linear walk instead of a
+recursive exploration (tree walk).</p>
+<p>Sheaf expression (same as above): <code>(* (+ a b) (- (+ a b) c))</code></p>
+<p>After ANF: <code>t0 = a + b,  t1 = t0 - c,  t2 = t0 * t1</code></p>
+<p>Reverse (differentiated ANF):</p>
+<div class="language-text highlight"><pre><span></span><code>dt2 = 1.0       (seed)
+dt1 += dt2 * t0 (from t2 = t0 * t1)
+dt0 += dt2 * t1 (from t2 = t0 * t1)
+dt0 += dt1 * 1  (from t1 = t0 - c)
+da  += dt0      (from t0 = a + b)
+db  += dt0      (from t0 = a + b)
 </code></pre></div>
 <p>All gradients are computed in one pass, with O(n) expression size. For GPT-2,
 <code>reverse_grad</code> produces 1639 backward bindings from the 556 forward ones.</p>
 <p>More importantly: the expression that previously required 165 GB <em>now fits in a
 few megabytes of IR</em>, which means the ANF actually solved the memory problem.</p>
 <h3 id="the-symbolic-engine-is-staying">The symbolic engine is staying</h3>
-<p>I was hoping to get rid of the symbolic code entirely, but the JIT can't compile
-all VAG calls since some are effectful.</p>
-<p>So the symbolic engine still serves as the interpreter fallback. When the JIT
+<p>Unfortunately, the symbolic code cannot be removed entirely, because the JIT
+can't compile all VAG calls since some are effectful.</p>
+<p>So the symbolic autodiff still serves as the interpreter fallback. When the JIT
 can't compile a VAG call, the interpreter runs <code>grad_simplified</code> on the inlined
 expression. For small functions, this works fine. For anything larger, the JIT
 with ANF-based reverse AD is the only practical option, not because it's faster,

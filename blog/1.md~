@@ -41,10 +41,10 @@ tensors_ and _Suckless meets machine learning_.
 At least two projects have attempted bringing Lisp to modern (connectionist
 rather than symbolic) AI:
 
-- **[Uncomplicate](https://github.com/uncomplicate)**, from Dragan Djuric. A
-  very nice set of linear algebra and machine learning by for Clojure. One of
-  them, **Neanderthal**, brings a complete BLAS-like matrix/vector/linear
-  algebra on top of Clojure, somewhat like Numpy does with Python.
+- **[Uncomplicate](https://uncomplicate.org/)**, from Dragan Djuric. A very nice
+  set of linear algebra and machine learning by for Clojure. One of them,
+  **Neanderthal**, brings a complete BLAS-like matrix/vector/linear algebra on
+  top of Clojure, somewhat like Numpy does with Python.
 - **[AIscm](https://github.com/wedesoft/aiscm)**, aiming at bringing accelerated
   numerical processing to Guile through TensorFlow and LLVM.
 
@@ -65,7 +65,7 @@ proposition.
 
 Sure, Clojure can be compiled natively with graalVM, and
 [Jank](https://jank-lang.org/) looks promising, but none of those options feel
-solid.
+solid. That means I need something built from the ground up.
 
 ### **Sheaf V1**
 

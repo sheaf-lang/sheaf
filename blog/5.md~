@@ -1,8 +1,3 @@
----
-hide:
-  - toc
----
-
 _Mar 11th 2026_
 
 As Sheaf V2 moves closer to release, it's time to test it on larger models than
@@ -11,14 +6,14 @@ BareGPT, my toy generative transformer.
 Last week, I ported Karpathy's NanoGPT to Sheaf and benchmarked it against
 PyTorch. The first results were humbling:
 
-| Configuration             | Wall time | tk/s | vs PyTorch  |
-| ------------------------- | --------- | ---- | ----------- |
-| Interpreter only (no JIT) | ~90s      | ~1.1 | 108× slower |
-| Sheaf (JIT, CPU)          | 7.64s     | ~13  | 9.2× slower |
-| PyTorch (CPU, reference)  | 0.83s     | ~120 | baseline    |
+| Configuration              | Wall time | tk/s | vs PyTorch  |
+| -------------------------- | --------- | ---- | ----------- |
+| Interpreter only (no IREE) | ~90s      | ~1.1 | 108× slower |
+| Sheaf (JIT)                | 7.64s     | ~13  | 9.2× slower |
+| PyTorch (CPU, reference)   | 0.83s     | ~120 | baseline    |
 
-So far, I had been confident that IREE and LLVM would handle the heavy lifting,
-and had mostly focused on getting the Sheaf language right. These numbers were a
+So far, I had been confident that IREE and LLVM would handle the heavy lifting, and had
+mostly focused on getting the Sheaf language right. These numbers were a
 wake-up call. They triggered a shift from design work to performance tuning,
 which is still ongoing as I write this. Spoiler: Sheaf's performance is now
 quite closer to PyTorch.
@@ -36,8 +31,7 @@ but never took the time of implementing:
 Something became immediately visible: too few functions were being compiled,
 because side-effects and higher-order functions blocked AOT compilation.
 Besides, interpreter performance for the HOF functions was so poor that clearly,
-I would have to JIT a _lot more_ Sheaf code, which is painful for
-differentiation.
+I would have to JIT a _lot more_ Sheaf code, which is painful for differentiation.
 
 ### How Sheaf's compiler works
 
@@ -87,7 +81,7 @@ operations. The codegen also computes output shapes for each tensor operation,
 threading shape information through the entire graph.
 
 **5. Compilation.** Finally, `iree-compile` lowers the StableHLO module into a
-VMFB file for a specific backend (CPU, Metal, Vulkan or CUDA).
+VMFB file for a specific backend (CPU, Metal, or CUDA).
 
 ### The marshalling wall
 
@@ -117,11 +111,11 @@ deep-cloning entire tensors on every function call and environment lookup. A GPT
 forward pass with 27 parameter tensors meant copying ~8MB of weights repeatedly,
 in what should have been zero-cost reference passing.
 
-The new implementation wraps tensor data in `Arc<ArrayD<f32>>`. Function calls,
-let bindings, and dictionary lookups now bump a reference count instead of
-copying data. The impact is dramatic:
+The fix was straightforward: wrap tensor data in `Arc<ArrayD<f32>>`. Function
+calls, let bindings, and dictionary lookups now bump a reference count instead
+of copying data. The impact was dramatic:
 
-| Version               | 1000 tokens | vs V1 (JAX) |
+| Version               | 1000 tokens | vs JAX V1   |
 | --------------------- | ----------- | ----------- |
 | Before optimizations  | 11.3s       | 1.7× slower |
 | + buffer cache        | 7.7s        | 1.1× slower |
@@ -131,7 +125,7 @@ copying data. The impact is dramatic:
 For BareGPT, my small Transformer, Sheaf V2 now beats the Sheaf V1 Python+JAX
 implementation, in a 3MB binary vs a 500MB runtime.
 
-The next step is to scale up to GPT-2 124M and benchmark against PyTorch
+The next step was to scale up to GPT-2 124M and benchmark against PyTorch
 directly.
 
 ### JIT compilation
@@ -199,7 +193,7 @@ outside Sheaf's control.
 
 For inference, the picture is different. For 100 tokens of autoregressive
 generation, 94% of the time is spent in the GPU call. Buffer overhead is
-negligible. The gap with PyTorch (746ms vs 390ms) is entirely in kernel quality.
+negligible. The gap with PyTorch (746ms vs 390ms) is almost entirely in kernel quality, but I suspect the generated MLIR can be improved so IREE will optimize it better.
 
 The optimizations described here will continue in a follow-up article, where
 I'll cover the autodiff pipeline and training step fusion.
