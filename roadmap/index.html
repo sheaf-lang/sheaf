@@ -1064,17 +1064,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#macros" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Macros
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#operations" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1495,17 +1484,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#macros" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Macros
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#operations" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1598,13 +1576,6 @@
 <li>
 <p><strong><code>inc</code> / <code>dec</code></strong>: Small convenience to increment and decrement, as in Clojure. Currently <code>(+ var 1)</code> and <code>(- var 1)</code>.</p>
 </li>
-<li>
-<p><strong><code>argmax</code> returns integers</strong>: <code>argmax</code> and <code>argmin</code> currently return floats. They will return integer tensors for direct use as indices.</p>
-</li>
-</ul>
-<h3 id="macros">Macros</h3>
-<ul>
-<li><strong>Enriched <code>defmacro</code></strong>: <code>range</code> and <code>reduce</code> available at compile time, enabling macros that generate architecture variants from a single template.</li>
 </ul>
 <h3 id="operations">Operations</h3>
 <ul>
@@ -1617,12 +1588,7 @@
 </ul>
 <h3 id="autodiff">Autodiff</h3>
 <ul>
-<li>
-<p><strong>Gradient checkpointing</strong>: Recompute forward activations during the backward pass instead of storing them all. This will reduce memory usage for deep models (the GPT-2 124M training currently uses 13 GB).</p>
-</li>
-<li>
-<p><strong>Scalar parameters in <code>value-and-grad</code></strong>: Float scalars in parameter dictionaries (e.g., <code>{:w 5.0}</code>) will produce correct gradients. Currently requires wrapping in a 1-element tensor.</p>
-</li>
+<li><strong>Gradient checkpointing</strong>: Recompute forward activations during the backward pass instead of storing them all. This will reduce memory usage for deep models (the GPT-2 124M training currently uses 13 GB).</li>
 </ul>
 <h3 id="performance">Performance</h3>
 <ul>

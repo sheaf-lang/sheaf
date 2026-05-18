@@ -1589,8 +1589,7 @@ When the chain rule produces:</p>
 <p>It <strong>clones</strong> the entire subtrees <code>f</code> and <code>g</code> into both branches. For GPT with
 58 parameter leaves across 6 layers of nesting, every chain rule application
 duplicates everything below the current node. The gradient expression grows
-exponentially. The process consumed 165 GB of RAM and nearly crashed my machine
-before I could kill it.</p>
+exponentially and the process eventually devoured 165 GB of memory.</p>
 <p>The limitation here is architectural, and even has a name: <em>expression swell</em>.
 It's the reason every production AD system avoids operating on raw syntax trees.</p>
 <p>One might ask: why not just JIT-compile the gradient expression too? The answer

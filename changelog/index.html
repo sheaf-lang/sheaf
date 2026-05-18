@@ -1027,6 +1027,67 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Version history">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#v210-2026-05-18" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v2.1.0 — 2026-05-18
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v200-2026-04-02" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v2.0.0 — 2026-04-02
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v120-2026-02-06" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v1.2.0 — 2026-02-06
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v110-2026-01-24" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v1.1.0 — 2026-01-24
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v100-2026-01-13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v1.0.0 — 2026-01-13
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -1416,6 +1477,67 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Version history">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#v210-2026-05-18" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v2.1.0 — 2026-05-18
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v200-2026-04-02" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v2.0.0 — 2026-04-02
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v120-2026-02-06" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v1.2.0 — 2026-02-06
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v110-2026-01-24" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v1.1.0 — 2026-01-24
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v100-2026-01-13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v1.0.0 — 2026-01-13
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -1441,7 +1563,53 @@
   <h1>Version history</h1>
 
 <h2 id="version-history">Version history</h2>
-<p>v2.0.0 — 2026-03-18</p>
+<h3 id="v210-2026-05-18">v2.1.0 — 2026-05-18</h3>
+<p>This release brings a few refinements to the language, as well as many bug fixes and performance improvements. The CLEVR example is now fully differentiable and includes a new web visualizer.</p>
+<p><strong>Language improvments</strong></p>
+<ul>
+<li><code>def</code> for global constants, like in Clojure</li>
+<li><code>reduce</code> now also supports the 2-argument form used in Clojure</li>
+<li><code>sort</code> now accepts tensor arguments</li>
+<li>Macros can now use quasiquoted templates</li>
+<li>Better error hints for shapes and indexing errors</li>
+</ul>
+<p><strong>Runtime</strong></p>
+<ul>
+<li>Distinguish unsupported codegen cases from real bugs when a JIT error happens</li>
+<li>Gracefully bail out when graph exceeds 10K nodes</li>
+<li><code>--mem-profile</code> flag</li>
+<li>Removed unneeded dependencies</li>
+</ul>
+<p><strong>Bugfix</strong></p>
+<ul>
+<li>Fixed reduce backward pass by reusing scan_vjp (1ea2fba)</li>
+<li>Dict key loss fix in JIT path: dict keys no longer dropped through the JIT codegen path</li>
+<li>VAG lambda preprocessing: static constants resolved inside lambda bodies before JIT (a496238, 150c663)</li>
+<li>get backward for scalar indices: reverse-mode AD now handles scalar indices correctly (30fe862)</li>
+<li>Slice shape propagation: <code>:axis</code> keyword now properly propagates shape in autodiff (4a779e5)</li>
+<li>Batched matmul gradients: fixed panic with batched tensor inputs (101b290)</li>
+<li>Einsum dimension mismatch: no longer panics on subscript/operand shape mismatch (123ed91)</li>
+<li>No longer panics on 0-dimensional tensor slicing (4b99ff1)</li>
+<li>One-hot bounds check: out-of-bounds indices now return proper error (d6b5883)</li>
+<li>nth out-of-bounds: tensor indexing no longer panics (f39da67)</li>
+<li>Deep layout propagation in scan VJP: nested dicts handled correctly (ed32b3f)</li>
+<li>Lambda scoping in resolve_constants_rec: fixed incorrect constant resolution across lambda boundaries (699148e)</li>
+<li>Macro expansion errors: fixed error location and body evaluation for non-quasiquoted templates (9abf9aa, ceecb71)</li>
+<li>Direct param unquotes: no longer eval'd at compile time in macro engine (9b4deab)</li>
+<li>False error for unsupported codegen calls: no longer spurious errors (add7c46)</li>
+<li>Fixed an REPL inline help overflow (inline help occasionally didn't show the proper help section) (f77d06c)</li>
+</ul>
+<p><strong>Performance</strong></p>
+<ul>
+<li>Fused value-and-grad IREE dispatch (single IREE dispatch instead of separate forward/backward calls)</li>
+<li>Dot-general optimization (reshape + matmul2D + reshape instead of generic contraction)</li>
+<li>Backward pass optimization (simplify + CSE + double transpose elimination)</li>
+<li>Forward-pass binding reuse in backward to avoid recomputing values already available (ad43163)</li>
+<li>Fixes cache misses for closures capturing scalars (45697e5)</li>
+<li>Scalar constant extraction: singleton tensors extracted as scalars in codegen (5475c2f)</li>
+<li>Apple Accelerate enabled for ndarray on macOS (47c682f, 5c80080)</li>
+</ul>
+<h3 id="v200-2026-04-02">v2.0.0 — 2026-04-02</h3>
 <p>Complete rewrite in Rust, with no Python in the execution path. The language semantics remain unchanged: all V1 code runs in V2.</p>
 <ul>
 <li>New architecture: Sheaf source compiles directly to StableHLO MLIR, IREE runtime statically linked and called through FFI.</li>
@@ -1450,7 +1618,7 @@
 <li>DeviceBuffer: compiled functions pass tensors between IREE calls without host round-trips</li>
 <li>Multiple dtype support: f32 (default), bf16, i32 via cast or literal annotation</li>
 </ul>
-<p>v1.2.0 — 2026-02-06</p>
+<h3 id="v120-2026-02-06">v1.2.0 — 2026-02-06</h3>
 <ul>
 <li>Sheaf programs are now mostly independent from Python, most missing primitives for imperative control have been added.</li>
 <li>I/O module: <code>(io "load" ...)</code> / <code>(io "save" ...)</code> with safetensors and JSON. Entropy source <code>(io "entropy")</code></li>
@@ -1462,14 +1630,14 @@
 <li>REPL has <code>--trace</code> and <code>--guard</code> modes for standalone tracing and debugging</li>
 <li>All examples are now standalone and do not require Python</li>
 </ul>
-<p>v1.1.0 — 2026-01-24</p>
+<h3 id="v110-2026-01-24">v1.1.0 — 2026-01-24</h3>
 <ul>
 <li>Syntax cleanup: quoted arrays (<code>'[]</code>) are now the canonical way to distinguish lists from tensors. Legacy <code>list</code> form is deprecated.</li>
 <li>More syntax purity: also deprecate <code>lambda</code> (alias for <code>fn</code>) and <code>dict</code></li>
 <li>Protection for special forms (<code>fn</code>, <code>let</code>, <code>get</code>...)</li>
 <li>Many bugfixes in the compiler</li>
 </ul>
-<p>v1.0.0 — 2026-01-13</p>
+<h3 id="v100-2026-01-13">v1.0.0 — 2026-01-13</h3>
 <ul>
 <li>First stable release</li>
 </ul>
