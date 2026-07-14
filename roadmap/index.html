@@ -909,6 +909,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../building.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installing and Building
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../key-concepts/" class="md-nav__link">
         
   
@@ -1565,55 +1593,71 @@
 <h3 id="language">Language</h3>
 <ul>
 <li>
-<p><strong><code>loop</code> / <code>recur</code></strong>: Explicit tail-recursive loops. Sheaf uses <code>repeat</code>, but <code>loop</code> and <code>recur</code> are more natural for someone coming from Clojure.</p>
+<p><strong>Clojure-style desugaring</strong> (<code>#(...)</code>): Support anonymous function shorthand
+  like Clojure. This reduces boilerplate for small higher-order functions.</p>
 </li>
 <li>
-<p><strong><code>reverse</code> / <code>flip</code></strong>: Reverse a tensor along an axis. Currently requires manual index construction.</p>
+<p><strong><code>loop</code> / <code>recur</code></strong>: Explicit tail-recursive loops. Sheaf uses <code>repeat</code>, but
+  <code>loop</code> and <code>recur</code> are more natural for someone coming from Clojure.</p>
 </li>
 <li>
 <p><strong><code>stack</code></strong>: Combine multiple tensors into a new dimension.</p>
 </li>
 <li>
-<p><strong><code>inc</code> / <code>dec</code></strong>: Small convenience to increment and decrement, as in Clojure. Currently <code>(+ var 1)</code> and <code>(- var 1)</code>.</p>
+<p><strong><code>inc</code> / <code>dec</code></strong>: Small convenience to increment and decrement, as in
+  Clojure. Currently <code>(+ var 1)</code> and <code>(- var 1)</code>.</p>
 </li>
 </ul>
 <h3 id="operations">Operations</h3>
 <ul>
 <li>
-<p><strong>Convolution primitives</strong>: <code>conv1d</code> and <code>conv2d</code> via <code>stablehlo.convolution</code>, exposed through the standard library.</p>
+<p><strong>Convolution primitives</strong>: <code>conv1d</code> and <code>conv2d</code> via <code>stablehlo.convolution</code>,
+  exposed through the standard library.</p>
 </li>
 <li>
-<p><strong><code>vmap</code> on dictionaries</strong>: <code>vmap</code> currently only accepts tensor arguments. PyTree support (automatic flattening/unflattening of dicts) should be added to match the behavior of <code>value-and-grad</code>.</p>
+<p><strong><code>vmap</code> on dictionaries</strong>: <code>vmap</code> currently only accepts tensor arguments.
+  PyTree support (automatic flattening/unflattening of dicts) should be added to
+  match the behavior of <code>value-and-grad</code>.</p>
 </li>
 </ul>
 <h3 id="autodiff">Autodiff</h3>
 <ul>
-<li><strong>Gradient checkpointing</strong>: Recompute forward activations during the backward pass instead of storing them all. This will reduce memory usage for deep models (the GPT-2 124M training currently uses 13 GB).</li>
+<li><strong>Gradient checkpointing</strong>: Recompute forward activations during the backward
+  pass instead of storing them all. This will reduce memory usage for deep
+  models (the GPT-2 124M training currently uses 13 GB).</li>
 </ul>
 <h3 id="performance">Performance</h3>
 <ul>
 <li>
-<p><strong>KV cache helpers</strong>: A <code>cached-attention</code> stdlib function to simplify implementing KV cache in transformer models.</p>
+<p><strong>KV cache helpers</strong>: A <code>cached-attention</code> stdlib function to simplify
+  implementing KV cache in transformer models.</p>
 </li>
 <li>
-<p><strong>Batch generation mode</strong>: Compile the full autoregressive generation loop into a single dispatch, returning all tokens at once.</p>
+<p><strong>Batch generation mode</strong>: Compile the full autoregressive generation loop
+  into a single dispatch, returning all tokens at once.</p>
 </li>
 </ul>
 <h3 id="developer-experience">Developer experience</h3>
 <ul>
 <li>
-<p><strong>Error call stack propagation</strong>: When an error occurs inside a stdlib function, the error message will show the user's call site, not the stdlib internals.</p>
+<p><strong>Error call stack propagation</strong>: When an error occurs inside a stdlib
+  function, the error message will show the user's call site, not the stdlib
+  internals.</p>
 </li>
 <li>
-<p><strong>Jupyter integration</strong>: A Sheaf kernel for Jupyter, allowing interactive notebook workflows with inline tensor visualization and training loops.</p>
+<p><strong>Jupyter integration</strong>: A Sheaf kernel for Jupyter, allowing interactive
+  notebook workflows with inline tensor visualization and training loops.</p>
 </li>
 <li>
-<p><strong><code>:trace</code> and <code>:blame</code> in the REPL</strong>: These observability modes were tied to V1 semantics and temporarily removed. They will be re-introduced with behavior adapted to the V2 execution model.</p>
+<p><strong><code>:trace</code> and <code>:blame</code> in the REPL</strong>: These observability modes were tied to
+  V1 semantics and temporarily removed. They will be re-introduced with behavior
+  adapted to the V2 execution model.</p>
 </li>
 </ul>
 <h3 id="distribution">Distribution</h3>
 <ul>
-<li><strong>NCCL all-reduce</strong>: Multi-GPU training via NCCL collective operations, for data-parallel training across multiple devices.</li>
+<li><strong>NCCL all-reduce</strong>: Multi-GPU training via NCCL collective operations, for
+  data-parallel training across multiple devices.</li>
 </ul>
 
 

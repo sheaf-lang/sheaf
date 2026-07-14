@@ -907,6 +907,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../building.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installing and Building
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../key-concepts/" class="md-nav__link">
         
   
@@ -1029,6 +1057,17 @@
   
     <nav class="md-nav" aria-label="Version history">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#v220-2026-07-14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v2.2.0 — 2026-07-14
+      
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#v210-2026-05-18" class="md-nav__link">
@@ -1481,6 +1520,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#v220-2026-07-14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v2.2.0 — 2026-07-14
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#v210-2026-05-18" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1563,9 +1613,73 @@
   <h1>Version history</h1>
 
 <h2 id="version-history">Version history</h2>
+<h3 id="v220-2026-07-14">v2.2.0 — 2026-07-14</h3>
+<p>This release improves language correctness, brings new training features to the
+standard library, adds <code>let</code> destructuring, fixes runtime bugs, and improves the
+REPL experience.</p>
+<p><strong>Language improvements</strong></p>
+<ul>
+<li><code>stop-gradient</code> blocks gradient flow while passing the value through
+  unchanged, similar to <code>jax.lax.stop_gradient</code> (b77e79a)</li>
+<li><code>sin</code>, <code>cos</code>, <code>tan</code>: fully differentiable trigonometric primitives, for RoPE
+  and sinusoidal position encodings (8e0a2c3)</li>
+<li>Destructuring bindings: <code>(let [[a b] expr] ...)</code> destructures vectors and
+  tuples directly, including typed function parameters, with no interpreter
+  fallback (aaa6629, 4016b87, 5a009c3)</li>
+<li><code>flip</code> reverses a tensor or list along an axis (6b3905b)</li>
+<li><code>transpose</code> accepts a quoted permutation such as <code>(transpose x '[0 2 1])</code> in
+  the <code>value-and-grad</code> path (dd0830d)</li>
+</ul>
+<p><strong>Standard library additions</strong></p>
+<ul>
+<li><code>adamw-step</code> and <code>sgd-momentum-step</code> optimizers (0acd028)</li>
+<li>Learning-rate schedulers: <code>linear-warmup</code>, <code>inverse-sqrt-warmup</code> (Noam),
+  <code>exponential-decay</code>, <code>step-decay</code>, <code>cosine-decay</code> (f1724ad)</li>
+<li><code>dropout</code>: inverted, differentiable dropout (cce366d)</li>
+</ul>
+<p><strong>Runtime</strong></p>
+<ul>
+<li>Removed unnecessary unwrap() calls on infallible writeln! in the MLIR emitter
+  (9485d03)</li>
+<li>A warning is now emitted when a scalar baked into a compiled graph changes
+  value between calls, instead of failing silently with stale results (4d90969)</li>
+<li>Add a build script to build the IREE runtime without depending on the GitHub
+  workflow (e6a366c)</li>
+</ul>
+<p><strong>Performance</strong></p>
+<ul>
+<li>Host tensors are no longer redundantly cloned in the arithmetic builtins and
+  IREE dispatch path (<code>ensure_host_cow</code>, <code>Cow&lt;ArrayD&gt;</code>) (5c95e8b, 156e00b)</li>
+<li><code>random-uniform</code> now lowers to StableHLO, so compiled functions using it no
+  longer fall back to the interpreter (c24c1c1)</li>
+</ul>
+<p><strong>Bug fixes</strong></p>
+<ul>
+<li><code>io save</code> now matches <code>io load</code> when using .safetensors files (184707b)</li>
+<li>JIT no longer bakes dict scalars unless required for tensor shapes (ee0c2dc)</li>
+<li><code>defn</code> no longer infinite-loops when a parameter is referenced in its own body
+  (01f3187)</li>
+<li><code>tril</code> no longer panics on a missing argument (3acee0b)</li>
+<li><code>scan</code> rejects ambiguous 2-element tensor returns with a clear error instead
+  of misreading them as a carry/output pair (ad6b4cf)</li>
+<li>Runtime vectors of tensors are no longer implicitly stacked into a single
+  tensor (d1574d9)</li>
+<li>The YAML test loader no longer drops multi-line test cases (c599ac7)</li>
+</ul>
+<p><strong>REPL</strong></p>
+<ul>
+<li>Bracket matching with highlightning (bfe4d97)</li>
+<li><code>:show &lt;name&gt;</code> now pretty-prints a function's source instead of a placeholder
+  (1c0a35a)</li>
+<li>New <code>:list</code> command and a shared inline documentation module (18c8c18)</li>
+<li>Verbatim preservation of multi-line history instead of flattening it into a
+  single line (1c0a35a)</li>
+</ul>
 <h3 id="v210-2026-05-18">v2.1.0 — 2026-05-18</h3>
-<p>This release brings a few refinements to the language, as well as many bug fixes and performance improvements. The CLEVR example is now fully differentiable and includes a new web visualizer.</p>
-<p><strong>Language improvments</strong></p>
+<p>This release brings a few refinements to the language, as well as many bug fixes
+and performance improvements. The CLEVR example is now fully differentiable and
+includes a new web visualizer.</p>
+<p><strong>Language improvements</strong></p>
 <ul>
 <li><code>def</code> for global constants, like in Clojure</li>
 <li><code>reduce</code> now also supports the 2-argument form used in Clojure</li>
@@ -1580,59 +1694,83 @@
 <li><code>--mem-profile</code> flag</li>
 <li>Removed unneeded dependencies</li>
 </ul>
-<p><strong>Bugfix</strong></p>
+<p><strong>Bug fixes</strong></p>
 <ul>
 <li>Fixed reduce backward pass by reusing scan_vjp (1ea2fba)</li>
-<li>Dict key loss fix in JIT path: dict keys no longer dropped through the JIT codegen path</li>
-<li>VAG lambda preprocessing: static constants resolved inside lambda bodies before JIT (a496238, 150c663)</li>
-<li>get backward for scalar indices: reverse-mode AD now handles scalar indices correctly (30fe862)</li>
-<li>Slice shape propagation: <code>:axis</code> keyword now properly propagates shape in autodiff (4a779e5)</li>
+<li>Dict key loss fix in JIT path: dict keys no longer dropped through the JIT
+  codegen path</li>
+<li>VAG lambda preprocessing: static constants resolved inside lambda bodies
+  before JIT (a496238, 150c663)</li>
+<li>get backward for scalar indices: reverse-mode AD now handles scalar indices
+  correctly (30fe862)</li>
+<li>Slice shape propagation: <code>:axis</code> keyword now properly propagates shape in
+  autodiff (4a779e5)</li>
 <li>Batched matmul gradients: fixed panic with batched tensor inputs (101b290)</li>
-<li>Einsum dimension mismatch: no longer panics on subscript/operand shape mismatch (123ed91)</li>
+<li>Einsum dimension mismatch: no longer panics on subscript/operand shape
+  mismatch (123ed91)</li>
 <li>No longer panics on 0-dimensional tensor slicing (4b99ff1)</li>
 <li>One-hot bounds check: out-of-bounds indices now return proper error (d6b5883)</li>
 <li>nth out-of-bounds: tensor indexing no longer panics (f39da67)</li>
 <li>Deep layout propagation in scan VJP: nested dicts handled correctly (ed32b3f)</li>
-<li>Lambda scoping in resolve_constants_rec: fixed incorrect constant resolution across lambda boundaries (699148e)</li>
-<li>Macro expansion errors: fixed error location and body evaluation for non-quasiquoted templates (9abf9aa, ceecb71)</li>
-<li>Direct param unquotes: no longer eval'd at compile time in macro engine (9b4deab)</li>
+<li>Lambda scoping in resolve_constants_rec: fixed incorrect constant resolution
+  across lambda boundaries (699148e)</li>
+<li>Macro expansion errors: fixed error location and body evaluation for
+  non-quasiquoted templates (9abf9aa, ceecb71)</li>
+<li>Direct param unquotes: no longer eval'd at compile time in macro engine
+  (9b4deab)</li>
 <li>False error for unsupported codegen calls: no longer spurious errors (add7c46)</li>
-<li>Fixed an REPL inline help overflow (inline help occasionally didn't show the proper help section) (f77d06c)</li>
+<li>Fixed an REPL inline help overflow (inline help occasionally didn't show the
+  proper help section) (f77d06c)</li>
 </ul>
 <p><strong>Performance</strong></p>
 <ul>
-<li>Fused value-and-grad IREE dispatch (single IREE dispatch instead of separate forward/backward calls)</li>
-<li>Dot-general optimization (reshape + matmul2D + reshape instead of generic contraction)</li>
+<li>Fused value-and-grad IREE dispatch (single IREE dispatch instead of separate
+  forward/backward calls)</li>
+<li>Dot-general optimization (reshape + matmul2D + reshape instead of generic
+  contraction)</li>
 <li>Backward pass optimization (simplify + CSE + double transpose elimination)</li>
-<li>Forward-pass binding reuse in backward to avoid recomputing values already available (ad43163)</li>
+<li>Forward-pass binding reuse in backward to avoid recomputing values already
+  available (ad43163)</li>
 <li>Fixes cache misses for closures capturing scalars (45697e5)</li>
-<li>Scalar constant extraction: singleton tensors extracted as scalars in codegen (5475c2f)</li>
+<li>Scalar constant extraction: singleton tensors extracted as scalars in codegen
+  (5475c2f)</li>
 <li>Apple Accelerate enabled for ndarray on macOS (47c682f, 5c80080)</li>
 </ul>
 <h3 id="v200-2026-04-02">v2.0.0 — 2026-04-02</h3>
-<p>Complete rewrite in Rust, with no Python in the execution path. The language semantics remain unchanged: all V1 code runs in V2.</p>
+<p>Complete rewrite in Rust, with no Python in the execution path. The language
+semantics remain unchanged: all V1 code runs in V2.</p>
 <ul>
-<li>New architecture: Sheaf source compiles directly to StableHLO MLIR, IREE runtime statically linked and called through FFI.</li>
-<li>Transparent JIT compilation: pure functions compile automatically on first call, with content-hash caching in <strong>sheaf</strong>/</li>
+<li>New architecture: Sheaf source compiles directly to StableHLO MLIR, IREE
+  runtime statically linked and called through FFI.</li>
+<li>Transparent JIT compilation: pure functions compile automatically on first
+  call, with content-hash caching in <strong>sheaf</strong>/</li>
 <li>Automatic differentiation via <code>value-and-grad</code></li>
-<li>DeviceBuffer: compiled functions pass tensors between IREE calls without host round-trips</li>
-<li>Multiple dtype support: f32 (default), bf16, i32 via cast or literal annotation</li>
+<li>DeviceBuffer: compiled functions pass tensors between IREE calls without host
+  round-trips</li>
+<li>Multiple dtype support: f32 (default), bf16, i32 via cast or literal
+  annotation</li>
 </ul>
 <h3 id="v120-2026-02-06">v1.2.0 — 2026-02-06</h3>
 <ul>
-<li>Sheaf programs are now mostly independent from Python, most missing primitives for imperative control have been added.</li>
-<li>I/O module: <code>(io "load" ...)</code> / <code>(io "save" ...)</code> with safetensors and JSON. Entropy source <code>(io "entropy")</code></li>
+<li>Sheaf programs are now mostly independent from Python, most missing primitives
+  for imperative control have been added.</li>
+<li>I/O module: <code>(io "load" ...)</code> / <code>(io "save" ...)</code> with safetensors and JSON.
+  Entropy source <code>(io "entropy")</code></li>
 <li>Support f-strings: <code>(print "loss={:.4f}" loss)</code></li>
 <li>Support string escape sequences: <code>\n</code>, <code>\t</code>, <code>\"</code>, <code>\\</code></li>
-<li>New primitives: <code>filter</code>, <code>find</code>, <code>index-of</code>, <code>argmax</code>, <code>argmin</code>, <code>arange</code>, <code>eye</code>, <code>index-update</code>, <code>int</code>, <code>float</code>, <code>sort</code>, <code>chars</code>, <code>rms-norm</code>, <code>do</code>, <code>while</code></li>
-<li>Error messages: suggestions for common mistakes (<code>def</code> -&gt; <code>defn</code>, <code>lambda</code> -&gt; <code>fn</code>, <code>import</code> -&gt; <code>use</code>), paren balancer with culprit detection</li>
+<li>New primitives: <code>filter</code>, <code>find</code>, <code>index-of</code>, <code>argmax</code>, <code>argmin</code>, <code>arange</code>,
+  <code>eye</code>, <code>index-update</code>, <code>int</code>, <code>float</code>, <code>sort</code>, <code>chars</code>, <code>rms-norm</code>, <code>do</code>,
+  <code>while</code></li>
+<li>Error messages: suggestions for common mistakes (<code>def</code> -&gt; <code>defn</code>, <code>lambda</code> -&gt;
+  <code>fn</code>, <code>import</code> -&gt; <code>use</code>), paren balancer with culprit detection</li>
 <li>More bugfixes</li>
 <li>REPL has <code>--trace</code> and <code>--guard</code> modes for standalone tracing and debugging</li>
 <li>All examples are now standalone and do not require Python</li>
 </ul>
 <h3 id="v110-2026-01-24">v1.1.0 — 2026-01-24</h3>
 <ul>
-<li>Syntax cleanup: quoted arrays (<code>'[]</code>) are now the canonical way to distinguish lists from tensors. Legacy <code>list</code> form is deprecated.</li>
+<li>Syntax cleanup: quoted arrays (<code>'[]</code>) are now the canonical way to distinguish
+  lists from tensors. Legacy <code>list</code> form is deprecated.</li>
 <li>More syntax purity: also deprecate <code>lambda</code> (alias for <code>fn</code>) and <code>dict</code></li>
 <li>Protection for special forms (<code>fn</code>, <code>let</code>, <code>get</code>...)</li>
 <li>Many bugfixes in the compiler</li>

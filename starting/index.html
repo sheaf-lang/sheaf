@@ -1097,6 +1097,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../building.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installing and Building
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../key-concepts/" class="md-nav__link">
         
   
@@ -1710,13 +1738,27 @@
 
 <h1 id="starting-with-sheaf">Starting with Sheaf</h1>
 <h3 id="the-functional-mindset">The Functional Mindset</h3>
-<p>Sheaf is a <em>functional</em> language rather than an <em>imperative</em> one. An imperative language like Python instructs the computer to change its internal state step-by-step. In Sheaf, transformations are defined by how data flows through nested functions to produce a result.</p>
-<p>Functional programming avoids side effects, which makes code deterministic. It maps naturally to computational graphs and machine learning workloads.</p>
+<p>Sheaf is a <em>functional</em> language rather than an <em>imperative</em> one. An imperative
+language like Python instructs the computer to change its internal state
+step-by-step. In Sheaf, transformations are defined by how data flows through
+nested functions to produce a result.</p>
+<p>Functional programming avoids side effects, which makes code deterministic. It
+maps naturally to computational graphs and machine learning workloads.</p>
 <h3 id="a-first-example">A first example</h3>
-<p>A functional language can appear confusing at first, because even a classic <code>val = 2 ; print val</code> example does not translate directly. Since "everything is a function", we would write a function <code>(defn val [] 2)</code> and then call it: <code>(val)</code>. Or, alternatively, evaluate both immediately: <code>((defn val [] 2))</code></p>
-<p>In Sheaf, as in all Lisp dialects, the fundamental unit of computation is the <em>expression</em>. There is no structural difference between a mathematical operator, a control flow structure, or a complex neural layer: they all follow the same notation.</p>
-<p>For this reason, a global "variable" is effectively a nullary function (a function with no arguments) that returns a constant.</p>
-<p>To define a function, we use the <code>defn</code> form, followed by the function name and its arguments enclosed in square brackets <code>[]</code> rather than parentheses <code>()</code>. This is borrowed from Clojure to differentiate the parameter list from the function calls.</p>
+<p>A functional language can appear confusing at first, because even a classic
+<code>val = 2 ; print val</code> example does not translate directly. Since "everything is
+a function", we would write a function <code>(defn val [] 2)</code> and then call it:
+<code>(val)</code>. Or, alternatively, evaluate both immediately: <code>((defn val [] 2))</code></p>
+<p>In Sheaf, as in all Lisp dialects, the fundamental unit of computation is the
+<em>expression</em>. There is no structural difference between a mathematical operator,
+a control flow structure, or a complex neural layer: they all follow the same
+notation.</p>
+<p>For this reason, a global "variable" is effectively a nullary function (a
+function with no arguments) that returns a constant.</p>
+<p>To define a function, we use the <code>defn</code> form, followed by the function name and
+its arguments enclosed in square brackets <code>[]</code> rather than parentheses <code>()</code>.
+This is borrowed from Clojure to differentiate the parameter list from the
+function calls.</p>
 <p>In the REPL:</p>
 <div class="language-text highlight"><pre><span></span><code>sheaf&gt; (defn val [] 2)
 =&gt; &lt;fn:val&gt;
@@ -1734,13 +1776,19 @@ sheaf&gt; (+ 2 (val))
 sheaf&gt; (defn val [] 4)
 error: Redefinition of &#39;val&#39; is not allowed.
 </code></pre></div>
-<p>The inability to change the value of <code>val</code> may come as surprise. In Sheaf, every value is immutable: once a function is defined, it cannot be changed. This is required both for predictability and for the JIT compiler.</p>
+<p>The inability to change the value of <code>val</code> may come as surprise. In Sheaf, every
+value is immutable: once a function is defined, it cannot be changed. This is
+required both for predictability and for the JIT compiler.</p>
 <h3 id="expressions-and-lambdas">Expressions and Lambdas</h3>
-<p>When an expression like <code>(+ 1 2)</code> is evaluated, the interpreter evaluates a <em>form</em> where the symbol <code>+</code> refers to a function, and <code>1</code> <code>2</code> are its arguments.</p>
-<p>Conceptually, a Sheaf program is not a sequence of instructions, but a single, nested tree of expressions.</p>
-<p>While <code>(+ 1 2)</code> will execute immediately, it can also be explicitly defined as a lambda with <code>(fn [] (+ 1 2))</code>.
-When defined with <code>fn</code>, the logic won't be executed immediately but will return an anonymous function that can be called from within the parent function.
-This is used when a small transformation is needed just once, without giving the function a permanent name.</p>
+<p>When an expression like <code>(+ 1 2)</code> is evaluated, the interpreter evaluates a
+<em>form</em> where the symbol <code>+</code> refers to a function, and <code>1</code> <code>2</code> are its arguments.</p>
+<p>Conceptually, a Sheaf program is not a sequence of instructions, but a single,
+nested tree of expressions.</p>
+<p>While <code>(+ 1 2)</code> will execute immediately, it can also be explicitly defined as a
+lambda with <code>(fn [] (+ 1 2))</code>. When defined with <code>fn</code>, the logic won't be
+executed immediately but will return an anonymous function that can be called
+from within the parent function. This is used when a small transformation is
+needed just once, without giving the function a permanent name.</p>
 <div class="language-text highlight"><pre><span></span><code>sheaf&gt; (* 5 10)
 =&gt; 50
 sheaf&gt; (* x 10)
@@ -1750,13 +1798,17 @@ error: Undefined symbol: x
 sheaf&gt; ((fn [x] (* x 10)) 5)
 =&gt; 50
 </code></pre></div>
-<p>Note the double <code>(( ))</code> to call the lambda immediately. Without them, the expression defines the function but does not apply it:</p>
+<p>Note the double <code>(( ))</code> to call the lambda immediately. Without them, the
+expression defines the function but does not apply it:</p>
 <div class="language-text highlight"><pre><span></span><code>sheaf&gt; (fn [x] (* x 10))
 =&gt; &lt;function&gt;
 </code></pre></div>
 <h3 id="local-bindings">Local bindings</h3>
-<p>Defining a function to return a scalar value isn't very helpful. Usually, Sheaf functions apply transformations to tensors and pass them to other functions.
-Sheaf doesn't <em>assign variables</em>; it <em>binds local symbols</em> with the form <code>let</code>. Variables exist within the function's scope and disappear after the evaluation is complete.</p>
+<p>Defining a function to return a scalar value isn't very helpful. Usually, Sheaf
+functions apply transformations to tensors and pass them to other functions.
+Sheaf doesn't <em>assign variables</em>; it <em>binds local symbols</em> with the form <code>let</code>.
+Variables exist within the function's scope and disappear after the evaluation
+is complete.</p>
 <div class="language-text highlight"><pre><span></span><code>sheaf&gt; (let [x [1 2 3]]
      &gt;   x)
 =&gt; [1. 2. 3.]
@@ -1765,44 +1817,63 @@ sheaf&gt; (let [x [1 2 3]]
      &gt;   (+ x 2))
 =&gt; [3. 4. 5.]
 </code></pre></div>
-<p>Because of immutability, <code>x</code> is also not modified in the second example. Instead, a new tensor is created and returned. Once the command ends, it is no longer accessible.</p>
+<p>Because of immutability, <code>x</code> is also not modified in the second example.
+Instead, a new tensor is created and returned. Once the command ends, it is no
+longer accessible.</p>
 <h3 id="prefix-notation-polish-notation">Prefix Notation (Polish Notation)</h3>
-<p>Another confusing aspect in our example may be the operation order: <code>(+ x 2)</code> instead of <code>(x + 2)</code>.</p>
-<p>Sheaf, like Clojure, Scheme and other Lisps, use prefix notation, where the operator always precedes its operands.</p>
+<p>Another confusing aspect in our example may be the operation order: <code>(+ x 2)</code>
+instead of <code>(x + 2)</code>.</p>
+<p>Sheaf, like Clojure, Scheme and other Lisps, use prefix notation, where the
+operator always precedes its operands.</p>
 <p>This approach serves two critical purposes:</p>
 <ul>
 <li>
-<p>Variadic Operations: Functions can take any number of arguments without repeating the operator. Instead of <code>1 + 2 + 3 + 4</code>, one simply writes <code>(+ 1 2 3 4)</code>.</p>
+<p>Variadic Operations: Functions can take any number of arguments without
+  repeating the operator. Instead of <code>1 + 2 + 3 + 4</code>, one simply writes
+  <code>(+ 1 2 3 4)</code>.</p>
 </li>
 <li>
-<p>Consistency: Since everything between parens is a function, mathematical operators, built-in functions, and user-defined functions all follow the exact same structure: <code>(function argument1 argument2 ...)</code>. This uniformity is what allows the language to treat code as data.</p>
+<p>Consistency: Since everything between parens is a function, mathematical
+  operators, built-in functions, and user-defined functions all follow the exact
+  same structure: <code>(function argument1 argument2 ...)</code>. This uniformity is what
+  allows the language to treat code as data.</p>
 </li>
 </ul>
 <p>The first symbol after an opening parenthesis is always a function.</p>
 <h3 id="conditionals-if-and-where">Conditionals: <code>if</code> and <code>where</code></h3>
-<p>Most programming languages have an <code>if</code> statement for branching logic. Sheaf has two distinct forms for conditional evaluation, and understanding when to use each is important.</p>
-<p>The <code>if</code> form works like a traditional conditional: it evaluates a condition, then returns either the "then" branch or the "else" branch:</p>
+<p>Most programming languages have an <code>if</code> statement for branching logic. Sheaf has
+two distinct forms for conditional evaluation, and understanding when to use
+each is important.</p>
+<p>The <code>if</code> form works like a traditional conditional: it evaluates a condition,
+then returns either the "then" branch or the "else" branch:</p>
 <div class="language-text highlight"><pre><span></span><code>sheaf&gt; (if (&gt; 5 3) :yes :no)
 =&gt; :yes
 sheaf&gt; (if false &quot;not returned&quot; &quot;returned&quot;)
 =&gt; &quot;returned&quot;
 </code></pre></div>
-<p>This works for decisions based on configuration values or scalars. However, <code>if</code> cannot be used with tensor values inside JIT-compiled functions. The compiler needs to know the control flow at compile time, and tensor values are only known at runtime.</p>
+<p>This works for decisions based on configuration values or scalars. However, <code>if</code>
+cannot be used with tensor values inside JIT-compiled functions. The compiler
+needs to know the control flow at compile time, and tensor values are only known
+at runtime.</p>
 <div class="language-clojure highlight"><pre><span></span><code><span class="p">(</span><span class="kd">defn </span><span class="nv">broken</span><span class="w"> </span><span class="p">[</span><span class="nv">x</span><span class="p">]</span>
 <span class="w">  </span><span class="p">(</span><span class="k">if </span><span class="p">(</span><span class="nb">&gt; </span><span class="nv">x</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span><span class="w">  </span><span class="c1">;; This will fail in JIT context</span>
 </code></pre></div>
-<p>For element-wise conditionals on tensors, <code>where</code> is used instead. It evaluates both branches and selects values based on a boolean mask:</p>
+<p>For element-wise conditionals on tensors, <code>where</code> is used instead. It evaluates
+both branches and selects values based on a boolean mask:</p>
 <div class="language-text highlight"><pre><span></span><code>sheaf&gt; (where (&gt; [1 5 3 8] 4) [1 5 3 8] 0)
 =&gt; [0. 5. 0. 8.]
 </code></pre></div>
-<p>A common pattern is implementing ReLU (Rectified Linear Unit), which returns <code>x</code> if positive, else <code>0</code>:</p>
+<p>A common pattern is implementing ReLU (Rectified Linear Unit), which returns <code>x</code>
+if positive, else <code>0</code>:</p>
 <div class="language-clojure highlight"><pre><span></span><code><span class="p">(</span><span class="kd">defn </span><span class="nv">my-relu</span><span class="w"> </span><span class="p">[</span><span class="nv">x</span><span class="p">]</span>
 <span class="w">  </span><span class="p">(</span><span class="nf">where</span><span class="w"> </span><span class="p">(</span><span class="nb">&gt; </span><span class="nv">x</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span>
 </code></pre></div>
-<p>In summary: use <code>if</code> for static branching (configs, flags), and <code>where</code> for tensor operations.</p>
+<p>In summary: use <code>if</code> for static branching (configs, flags), and <code>where</code> for
+tensor operations.</p>
 <h3 id="recursion">Recursion</h3>
-<p>Sheaf does not have imperative loops. Iteration is handled through higher-order functions.</p>
-<p>A typical loop in Python:</p>
+<p>Sheaf does not have imperative loops. Iteration is handled through higher-order
+functions.</p>
+<p>A typical loop in Python looks like this:</p>
 <div class="language-python highlight"><pre><span></span><code><span class="c1"># Imperative loop</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">total</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
@@ -1815,14 +1886,17 @@ sheaf&gt; (if false &quot;not returned&quot; &quot;returned&quot;)
 <span class="o">&gt;&gt;&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>
 <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">(</span><span class="mi">45</span><span class="p">)</span>
 </code></pre></div>
-<p>In Sheaf, use <code>reduce</code>:</p>
+<p>In Sheaf, we would use a function such as <code>reduce</code> instead:</p>
 <div class="language-text highlight"><pre><span></span><code>sheaf&gt; (reduce + 0 (range 10))
 =&gt; 45.0
 </code></pre></div>
-<p><code>reduce</code> takes a function (here, <code>+</code>), a starting number (<code>0</code>), and a sequence on which to apply the function. For instance, <code>(reduce + 0 [1 2 3 4])</code> will result in adding <code>0 + 1 + 2 + 3 + 4</code>.</p>
+<p><code>reduce</code> takes a function (here, <code>+</code>), a starting number (<code>0</code>), and a sequence
+on which to apply the function. For instance, <code>(reduce + 0 [1 2 3 4])</code> will
+result in adding <code>0 + 1 + 2 + 3 + 4</code>.</p>
 <p>Other popular higher order functions are <code>map</code>, <code>vmap</code> and <code>scan</code>.</p>
-<p>Unlike <code>reduce</code> which returns a single combined value, <code>map</code> applies a transformation to every element of an array and returns another array.</p>
-<p>Squaring all values from 1 to 10:</p>
+<p>Unlike <code>reduce</code> which returns a single combined value, <code>map</code> applies a
+transformation to every element of an array and returns another array.</p>
+<p>For instance, to square all values from 1 to 10:</p>
 <div class="language-text highlight"><pre><span></span><code>sheaf&gt; (map (fn [i] (* i i)) (range 1 11))
 =&gt; [1.0, 4.0, 9.0, 16.0, 25.0, 36.0, 49.0, 64.0, 81.0, 100.0]
 </code></pre></div>
@@ -1830,14 +1904,20 @@ sheaf&gt; (if false &quot;not returned&quot; &quot;returned&quot;)
 <div class="language-text highlight"><pre><span></span><code>sheaf&gt; ((vmap (fn [i] (* i i)) 0) (range 1 11))
 =&gt; tensor i32[10] = [  1   4   9  16  25  36  49  64  81 100]
 </code></pre></div>
-<p><code>scan</code> carries a state across a sequence (like <code>reduce</code>) but also returns all intermediate results. In differentiable programming, <code>scan</code> is the preferred way to implement recurrent structures or deep loops, as it allows the compiler to optimize backpropagation through time.</p>
+<p><code>scan</code> carries a state across a sequence (like <code>reduce</code>) but also returns all
+intermediate results. In differentiable programming, <code>scan</code> is the preferred way
+to implement recurrent structures or deep loops, as it allows the compiler to
+optimize backpropagation through time.</p>
 <h3 id="working-with-parameters">Working with Parameters</h3>
-<p>In neural networks, parameters (weights and biases) are typically stored in nested dictionaries. Sheaf provides several tools to work with these structures elegantly.</p>
+<p>In neural networks, parameters (weights and biases) are typically stored in
+nested dictionaries. Sheaf provides several tools to work with these structures
+elegantly.</p>
 <p>The <code>get</code> function retrieves a value from a dictionary by key:</p>
 <div class="language-text highlight"><pre><span></span><code>sheaf&gt; (get {:learning-rate 0.001 :epochs 10} :learning-rate)
 =&gt; 0.001
 </code></pre></div>
-<p>For deeply nested structures, <code>get-in</code> navigates through multiple levels using a path vector:</p>
+<p>For deeply nested structures, <code>get-in</code> navigates through multiple levels using a
+path vector:</p>
 <div class="language-text highlight"><pre><span></span><code>sheaf&gt; (get-in {:model {:layer1 {:W [[1 2] [3 4]] :b [0.1 0.2]}}} &#39;[:model :layer1 :b])
 =&gt; [0.1 0.2]
 </code></pre></div>
@@ -1845,7 +1925,9 @@ sheaf&gt; (if false &quot;not returned&quot; &quot;returned&quot;)
 <div class="language-text highlight"><pre><span></span><code>sheaf&gt; (get-in {:a 1} &#39;[:missing :path] 42)
 =&gt; 42
 </code></pre></div>
-<p>When writing neural network layers, repeatedly calling <code>get</code> becomes tedious. The <code>with-params</code> form unpacks dictionary keys directly into the local scope. This is called <em>parameters destructuring</em>:</p>
+<p>When writing neural network layers, repeatedly calling <code>get</code> becomes tedious.
+The <code>with-params</code> form unpacks dictionary keys directly into the local scope.
+This is called <em>parameters destructuring</em>:</p>
 <div class="language-text highlight"><pre><span></span><code>sheaf&gt; (let [params {:W [[1 2] [3 4]] :b [0.5 0.5]}
      &gt;       x [1.0 1.0]]
      &gt;   (with-params [params]
@@ -1858,7 +1940,8 @@ sheaf&gt; (if false &quot;not returned&quot; &quot;returned&quot;)
 <span class="w">      </span><span class="nv">x</span><span class="w"> </span><span class="p">[</span><span class="mf">1.0</span><span class="w"> </span><span class="mf">1.0</span><span class="p">]]</span>
 <span class="w">  </span><span class="p">(</span><span class="nb">+ </span><span class="p">(</span><span class="o">@</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="p">(</span><span class="nb">get </span><span class="nv">params</span><span class="w"> </span><span class="ss">:W</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nb">get </span><span class="nv">params</span><span class="w"> </span><span class="ss">:b</span><span class="p">)))</span>
 </code></pre></div>
-<p>For nested parameter structures, a key can be specified to destructure a sub-dictionary:</p>
+<p>For nested parameter structures, a key can be specified to destructure a
+sub-dictionary:</p>
 <div class="language-text highlight"><pre><span></span><code>sheaf&gt; (let [model {:layer1 {:W [[1 0] [0 1]] :b [0 0]}
      &gt;             :layer2 {:W [[2 2] [2 2]] :b [1 1]}}
      &gt;       x [1.0 2.0]]
@@ -1866,11 +1949,13 @@ sheaf&gt; (if false &quot;not returned&quot; &quot;returned&quot;)
      &gt;     (+ (@ x W) b)))
 =&gt; [1. 2.]
 </code></pre></div>
-<p>Since all values are immutable, dictionaries are updated by creating new ones. The <code>assoc</code> form adds or updates keys:</p>
+<p>Since all values are immutable, dictionaries are updated by creating new ones.
+The <code>assoc</code> form adds or updates keys:</p>
 <div class="language-text highlight"><pre><span></span><code>sheaf&gt; (assoc {:a 1} :b 2 :c 3)
 =&gt; {:a 1, :b 2, :c 3}
 </code></pre></div>
-<p>The <code>merge</code> function combines multiple dictionaries (later values override earlier ones):</p>
+<p>The <code>merge</code> function combines multiple dictionaries (later values override
+earlier ones):</p>
 <div class="language-text highlight"><pre><span></span><code>sheaf&gt; (merge {:lr 0.001 :epochs 10} {:lr 0.0001})
 =&gt; {:lr 0.0001, :epochs 10}
 </code></pre></div>
@@ -1878,12 +1963,21 @@ sheaf&gt; (if false &quot;not returned&quot; &quot;returned&quot;)
 <div class="language-text highlight"><pre><span></span><code>sheaf&gt; (dissoc {:a 1 :b 2 :c 3} [:a :c])
 =&gt; {:b 2}
 </code></pre></div>
-<p>These operations are essential for managing optimizer state, where parameters, momentum, and velocity are all stored in nested dictionaries that must be updated at each training step.</p>
+<p>These operations are essential for managing optimizer state, where parameters,
+momentum, and velocity are all stored in nested dictionaries that must be
+updated at each training step.</p>
 <h3 id="the-threading-operators">The threading operators</h3>
-<p>In older Lisps such as Scheme, Common Lisp, or Emacs Lisp, nesting functions can sometimes become a "parentheses nightmare." One of the great innovations of Clojure is the threading operators <code>-&gt;</code> and <code>as-&gt;</code>.</p>
-<p>These operators "thread" a value through a sequence of functions, making the code read like a pipeline from top to bottom.</p>
-<p><code>-&gt;</code> (<em>Thread-first</em>) automatically injects the result of the previous expression as the first argument of the next function call. It is ideal for linear transformations.</p>
-<p><code>as-&gt;</code> (<em>Thread-as</em>) binds the result to a specific symbol (a variable, in imperative talk), allowing us to place it anywhere in the next expressions. This is more typically used for operations where the input must be reused.</p>
+<p>In older Lisps such as Scheme, Common Lisp, or Emacs Lisp, nesting functions can
+sometimes become a "parentheses nightmare." One of the great innovations of
+Clojure is the threading operators <code>-&gt;</code> and <code>as-&gt;</code>.</p>
+<p>These operators "thread" a value through a sequence of functions, making the
+code read like a pipeline from top to bottom.</p>
+<p><code>-&gt;</code> (<em>Thread-first</em>) automatically injects the result of the previous
+expression as the first argument of the next function call. It is ideal for
+linear transformations.</p>
+<p><code>as-&gt;</code> (<em>Thread-as</em>) binds the result to a specific symbol (a variable, in
+imperative talk), allowing us to place it anywhere in the next expressions. This
+is more typically used for operations where the input must be reused.</p>
 <div class="language-text highlight"><pre><span></span><code>;; Traditional nesting
 ((fn [x] (* x x)) (* (+ 10 5) 2))
 ;; =&gt; 900
@@ -1895,7 +1989,8 @@ sheaf&gt; (if false &quot;not returned&quot; &quot;returned&quot;)
   (* x x))
 ;; =&gt; 900
 </code></pre></div>
-<p>In the NanoGPT example, both threading operators describe the flow of a tensor through layers:</p>
+<p>In the NanoGPT example, both threading operators describe the flow of a tensor
+through layers:</p>
 <div class="language-clojure highlight"><pre><span></span><code><span class="p">(</span><span class="kd">defn </span><span class="nv">transformer-block</span><span class="w"> </span><span class="p">[</span><span class="nv">x</span><span class="w"> </span><span class="nv">layer-p</span><span class="w"> </span><span class="nv">config</span><span class="p">]</span>
 <span class="w">  </span><span class="c1">;; as-&gt; binds the initial &#39;x&#39; to the name &#39;h&#39;</span>
 <span class="w">  </span><span class="c1">;; This allows us to reuse &#39;h&#39; multiple times within the block,</span>
@@ -1918,11 +2013,18 @@ sheaf&gt; (if false &quot;not returned&quot; &quot;returned&quot;)
 <span class="w">            </span><span class="p">(</span><span class="nb">+ </span><span class="nv">h</span><span class="p">)))))</span><span class="w"> </span><span class="c1">;; Residual 2</span>
 </code></pre></div>
 <h3 id="reading-and-writing-files">Reading and writing files</h3>
-<p>In a functional language, file I/O cannot be treated as an ordinary function call. Reading from or writing to disk depends on external state, and therefore breaks determinism.</p>
-<p>In Sheaf, all interactions with the file system are explicitly routed through a single form: <code>io</code>. This makes side effects visible in the code and prevents them from leaking into otherwise pure transformations.</p>
+<p>In a functional language, file I/O cannot be treated as an ordinary function
+call. Reading from or writing to disk depends on external state, and therefore
+breaks determinism.</p>
+<p>In Sheaf, all interactions with the file system are explicitly routed through a
+single form: <code>io</code>. This makes side effects visible in the code and prevents them
+from leaking into otherwise pure transformations.</p>
 <p><strong>The io Form</strong></p>
-<p>The <code>io</code> form takes a verb as its first argument, followed by verb-specific parameters. Each verb describes a concrete operation on external data, such as loading a file, saving a value, or streaming content.</p>
-<p>This approach keeps the language core small while avoiding a proliferation of specialized I/O primitives.</p>
+<p>The <code>io</code> form takes a verb as its first argument, followed by verb-specific
+parameters. Each verb describes a concrete operation on external data, such as
+loading a file, saving a value, or streaming content.</p>
+<p>This approach keeps the language core small while avoiding a proliferation of
+specialized I/O primitives.</p>
 <p>Here is a simple example:</p>
 <div class="language-clojure highlight"><pre><span></span><code><span class="c1">;; Loading a configuration file into a dictionary</span>
 <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">config</span><span class="w"> </span><span class="p">(</span><span class="nf">io</span><span class="w"> </span><span class="s">&quot;load&quot;</span><span class="w"> </span><span class="s">&quot;model_config.json&quot;</span><span class="p">)]</span>
@@ -1932,10 +2034,14 @@ sheaf&gt; (if false &quot;not returned&quot; &quot;returned&quot;)
 <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">corpus</span><span class="w"> </span><span class="p">(</span><span class="nf">io</span><span class="w"> </span><span class="s">&quot;read&quot;</span><span class="w"> </span><span class="s">&quot;data/shakespeare.txt&quot;</span><span class="p">)]</span>
 <span class="w">  </span><span class="p">(</span><span class="nb">print </span><span class="s">&quot;Length:&quot;</span><span class="w"> </span><span class="p">(</span><span class="nf">len</span><span class="w"> </span><span class="nv">corpus</span><span class="p">)))</span>
 </code></pre></div>
-<p>Depending on the verb and the file format, <code>io</code> may return an in-memory value or a lazy view over the underlying data.</p>
+<p>Depending on the verb and the file format, <code>io</code> may return an in-memory value or
+a lazy view over the underlying data.</p>
 <p><strong>Large Files and Handles</strong></p>
-<p>For large datasets, eagerly loading files into memory is often impractical. Instead, Sheaf uses <em>Handles</em>: lazy, memory-mapped views over file-backed data.</p>
-<p>A Handle behaves like a regular collection, but data is only read from disk when it is accessed. This allows programs to work with datasets that are much larger than available RAM.</p>
+<p>For large datasets, eagerly loading files into memory is often impractical.
+Instead, Sheaf uses <em>Handles</em>: lazy, memory-mapped views over file-backed data.</p>
+<p>A Handle behaves like a regular collection, but data is only read from disk when
+it is accessed. This allows programs to work with datasets that are much larger
+than available RAM.</p>
 <table>
 <thead>
 <tr>
@@ -1963,35 +2069,44 @@ sheaf&gt; (if false &quot;not returned&quot; &quot;returned&quot;)
 </tbody>
 </table>
 <p><strong>Working with Sharded Data</strong></p>
-<p>Datasets are often split across multiple files for storage or distribution. In Sheaf, a <em>ShardedHandle</em> presents multiple files as a single logical sequence.</p>
-<p>Whether data is stored in one file or thousands, the access pattern remains the same.</p>
+<p>Datasets are often split across multiple files for storage or distribution. In
+Sheaf, a <em>ShardedHandle</em> presents multiple files as a single logical sequence.</p>
+<p>Whether data is stored in one file or thousands, the access pattern remains the
+same.</p>
 <div class="language-clojure highlight"><pre><span></span><code><span class="c1">;; Treating multiple binary shards as a single sequence of tokens</span>
 <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">dataset</span><span class="w"> </span><span class="p">(</span><span class="nf">io</span><span class="w"> </span><span class="s">&quot;load&quot;</span><span class="w"> </span><span class="s">&quot;tokens/shard-*.bin&quot;</span><span class="w"> </span><span class="ss">:i32</span><span class="p">)]</span>
 <span class="w">  </span><span class="p">(</span><span class="nb">print </span><span class="s">&quot;Total tokens:&quot;</span><span class="w"> </span><span class="p">(</span><span class="nf">len</span><span class="w"> </span><span class="nv">dataset</span><span class="p">))</span>
 <span class="w">  </span><span class="p">(</span><span class="nb">get </span><span class="nv">dataset</span><span class="w"> </span><span class="p">(</span><span class="nb">range </span><span class="mi">0</span><span class="w"> </span><span class="mi">1024</span><span class="p">)))</span><span class="w"> </span><span class="c1">; Reads only the required slices</span>
 </code></pre></div>
-<p>Sharding, file boundaries, and memory mapping are handled by the runtime. From the program’s point of view, the dataset is just another collection.</p>
+<p>Sharding, file boundaries, and memory mapping are handled by the runtime. From
+the program’s point of view, the dataset is just another collection.</p>
 <p><strong>Summary</strong></p>
-<p>The <code>io</code> form isolates side effects while still allowing efficient access to large, persistent datasets. This keeps most Sheaf code focused on data transformation, while I/O remains explicit and localized.</p>
+<p>The <code>io</code> form isolates side effects while still allowing efficient access to
+large, persistent datasets. This keeps most Sheaf code focused on data
+transformation, while I/O remains explicit and localized.</p>
 <h3 id="some-quick-exercises">Some quick exercises</h3>
 <p><strong>Exercise 1</strong>:</p>
 <ul>
-<li>What is the result of <code>(1 + 2) * 3</code> ?</li>
+<li>Use the REPL to compute the result of <code>(1 + 2) * 3</code></li>
 <li>Create an array of integers ranging from 1 to 5</li>
 <li>Get its mean value</li>
 <li>Get its shape</li>
 </ul>
-<p><em>Hint: The Sheaf REPL has autocompletion. Press [Tab] twice to see all the commands.</em></p>
+<p><em>Hint: The Sheaf REPL has autocompletion. Press [Tab] twice to see all the
+commands.</em></p>
 <p><strong>Exercise 2</strong>:</p>
 <ul>
-<li>Write a <code>square</code> function using the form <code>defn</code>, and call it with various numbers</li>
+<li>Write a <code>square</code> function using the form <code>defn</code>, and call it with various
+  numbers</li>
 <li>Write a lambda that returns its argument cubed (^3), using <code>fn</code></li>
 <li>How could we make this work on an array instead of a scalar?</li>
 </ul>
 <p><strong>Exercise 3</strong>:</p>
 <ul>
-<li>We need to perform the following operations on input <code>x</code>: add 5, multiply by 2, square</li>
-<li>Implement it with a function that uses the threading operator <code>as-&gt;</code> to lower the amount of nested parentheses</li>
+<li>We need to perform the following operations on input <code>x</code>: add 5, multiply by
+  2, square</li>
+<li>Implement it with a function that uses the threading operator <code>as-&gt;</code> to lower
+  the amount of nested parentheses</li>
 <li>Write a function that sums all elements of an array, without using <code>sum</code>.</li>
 </ul>
 <p><em>Hint: To see the documentation and signature of a form, use <code>:help &lt;form&gt;</code>.</em></p>
@@ -2031,12 +2146,16 @@ sheaf&gt; (if false &quot;not returned&quot; &quot;returned&quot;)
 <p>Sheaf, like Clojure and other Lisp dialects, uses its own terminology.</p>
 <ul>
 <li><strong>Application</strong>: A function call (applying arguments to a function).</li>
-<li><strong>Binding</strong>: The association of a value to a symbol within a specific scope (<em>assigning a variable</em> in imperative talk).</li>
+<li><strong>Binding</strong>: The association of a value to a symbol within a specific scope
+  (<em>assigning a variable</em> in imperative talk).</li>
 <li><strong>Expression</strong>: Any piece of code that, when evaluated, produces a value.</li>
-<li><strong>Form</strong>: Any syntactically valid piece of code (a symbol, a literal, or a list).</li>
+<li><strong>Form</strong>: Any syntactically valid piece of code (a symbol, a literal, or a
+  list).</li>
 <li><strong>Lambda</strong> (<code>fn</code>): An anonymous function.</li>
-<li><strong>S-Expression</strong>: The core of Lisp: a symbolic expression inside parentheses, and also the tree structure that represents both code and data.</li>
-<li><strong>Symbol</strong>: A name (like <code>x</code> or <code>my-func</code>) that refers to a value or a function.</li>
+<li><strong>S-Expression</strong>: The core of Lisp: a symbolic expression inside parentheses,
+  and also the tree structure that represents both code and data.</li>
+<li><strong>Symbol</strong>: A name (like <code>x</code> or <code>my-func</code>) that refers to a value or a
+  function.</li>
 </ul>
 
 
