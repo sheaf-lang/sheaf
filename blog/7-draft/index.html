@@ -1,0 +1,1652 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://sheaf-lang.org/blog/7-draft/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+     
+      
+        <title>7 draft - Sheaf</title>
+      
+    
+<link rel="icon" type="image/png" href="../../images/favicon.png" />
+<meta name="robots" content="index, follow" />
+<meta property="og:image" content="../../images/sheaf-dark.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta
+    property="og:title"
+    content="Sheaf - A functional language for machine learning. Inspired by Clojure, JIT-compiled to native GPU code."
+/>
+<meta
+    property="og:description"
+    content="Inspired by Clojure. Designed from the ground up for machine learning. Compiles to native GPU code."
+/>
+<link
+    href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&display=swap"
+    rel="stylesheet"
+/>
+<style>
+    /* Replace mkdocs logo with custom logo - header */
+    .md-header__button.md-logo {
+        background-image: url("../../images/sheaf-light.png");
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+    }
+
+    .md-header__button.md-logo img,
+    .md-header__button.md-logo svg {
+        opacity: 0;
+    }
+
+    /* Replace mkdocs logo with custom logo - sidebar (responsive menu) */
+    .md-nav__title {
+        background-image: url("../../images/sheaf-light.png");
+        background-size: 64px 64px;
+        background-repeat: no-repeat;
+        background-position: center;
+        padding-left: 30px !important;
+        font-size: 0 !important;
+        height: 24px !important;
+    }
+
+    .md-nav__title img,
+    .md-nav__title svg {
+        opacity: 0;
+    }
+</style>
+
+     
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+<style>
+    /* === GLOBAL STYLES (all pages) === */
+
+    /* === COLOR PALETTE #418d95ff, #421168 === */
+    :root {
+        --sheaf-primary: #612156;
+        --md-primary-fg-color: #421168;
+        --md-primary-fg-color--light: #5a1a8c;
+        --md-primary-fg-color--dark: #2d0b4a;
+        --md-code-font: "Fira Code";
+        --md-code-font-family: "Fira Code", monospace;
+    }
+
+    /* Override primary color from Material theme */
+    .md-header,
+    .md-tabs,
+    .md-nav__link--active,
+    .md-nav__item:target > .md-nav__link,
+    a {
+        --md-primary-fg-color: var(--sheaf-primary) !important;
+    }
+
+    .md-header {
+        background-color: var(--sheaf-primary) !important;
+    }
+
+    .md-tabs {
+        background-color: var(--sheaf-primary) !important;
+    }
+
+    .md-nav__link:hover {
+        color: var(--sheaf-primary) !important;
+    }
+
+    .md-nav__link--active {
+        color: var(--sheaf-primary) !important;
+        border-color: var(--sheaf-primary) !important;
+    }
+
+    .md-typeset a:not(.md-button) {
+        color: rgb(255, 110, 66) !important;
+    }
+
+    a:hover {
+        opacity: 0.8;
+    }
+
+    .md-footer {
+        background-color: #410136;
+        font-size: 0.5rem !important;
+    }
+
+    .md-footer__inner {
+        justify-content: center !important;
+        margin: 0 auto !important;
+    }
+
+    .md-footer__inner,
+    .md-footer span,
+    .md-footer div {
+        font-size: 0.6rem !important;
+    }
+
+    /* Reduce TOC (right sidebar) width */
+    .md-sidebar--secondary {
+        width: 10rem;
+    }
+
+    /* Optionally reduce left sidebar too */
+    .md-sidebar--primary {
+        width: 10rem;
+    }
+
+    /* Code styling */
+    code,
+    pre,
+    .highlight {
+        font-family: "Fira Code", monospace !important;
+        text-shadow: 0.25px 0 0 currentColor;
+    }
+
+    /* Inline code only (not in code blocks) */
+    .md-typeset p code,
+    .md-typeset li code,
+    .md-typeset table code {
+        font-size: 0.7rem !important;
+    }
+
+    .highlight {
+        color: black;
+        font-size: 0.9rem;
+        font-weight: 400;
+        line-height: 1.4;
+        text-shadow: 0.1px 0 0 currentColor;
+        background-color: #f5f5f5 !important;
+        border-radius: 0.9rem;
+        padding: 0.75rem !important;
+        overflow-x: auto;
+    }
+
+    /* Sheaf/Lisp syntax highlighting */
+    .language-sheaf .k {
+        color: #d73a49;
+    } /* Keywords */
+    .language-sheaf .n {
+        color: #24292e;
+    } /* Names */
+    .language-sheaf .s {
+        color: #032f62;
+    } /* Strings */
+    .language-sheaf .m {
+        color: #005cc5;
+    } /* Numbers */
+    .language-sheaf .c {
+        color: #6a737d;
+    } /* Comments */
+
+    /* Pygments theme for code blocks */
+    .highlight .c {
+        color: #6a737d;
+        font-style: italic;
+    } /* Comment */
+    .highlight .k {
+        color: #d73a49;
+        font-weight: bold;
+    } /* Keyword */
+    .highlight .n {
+        color: #24292e;
+    } /* Name */
+    .highlight .s {
+        color: #032f62;
+    } /* String */
+    .highlight .m {
+        color: #005cc5;
+    } /* Number */
+    .highlight .nb {
+        color: #6f42c1;
+    } /* Name.Builtin */
+    .highlight .p {
+        color: #24292e;
+    } /* Punctuation */
+
+    /* Hero section: 2 columns, 50/50 split */
+    .flex-section-header {
+        width: 95% !important;
+        margin: 1rem auto 4rem auto !important;
+        padding-left: 2rem !important;
+        padding-right: 2rem !important;
+        padding-bottom: 3rem;
+        background-color: #f5f5f5 !important;
+        border-radius: 0.9rem !important;
+        display: flex !important;
+        gap: 2rem !important;
+        align-items: flex-start !important;
+        font-size: inherit !important;
+    }
+
+    .flex-section-header > div {
+        flex: 0 0 50% !important;
+        padding: 0 1rem !important;
+        margin-top: -1rem;
+        margin-right: -1rem;
+        min-width: 0 !important;
+    }
+
+    /* Flex section layout (replaces old feature-columns tables) */
+    .flex-section {
+        display: flex;
+        gap: 2rem;
+        padding: 1rem 0;
+        margin: 1rem 0 3rem 0;
+        align-items: center;
+        font-size: 0.9rem !important;
+    }
+
+    /* Center single code block vertically (only if it's the only code child) */
+    .flex-section > *:last-child:has(.highlight):only-of-type {
+        display: flex;
+        align-items: center;
+    }
+
+    .flex-section > * {
+        flex: 1;
+    }
+
+    .flex-section > *:first-child {
+        flex: 0 0 33.33%;
+        padding-right: 1rem;
+    }
+
+    .flex-section > *:last-child {
+        flex: 0 0 66.67%;
+        min-width: 0; /* Allow flex child to shrink below content size */
+        overflow: hidden;
+    }
+
+    .flex-section .highlight {
+        margin: 0 !important;
+        padding: 0.75rem !important;
+    }
+
+    .flex-section .highlight {
+        overflow-x: auto !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .flex-section .highlight code {
+        line-height: 1.5 !important;
+    }
+
+    .flex-section pre {
+        margin: 0 !important;
+        overflow-x: auto !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Flex grid styling (for markdown content in flex containers) */
+    div[style*="display: flex"] {
+        font-size: 0.9rem;
+        margin: 1rem 0;
+    }
+
+    div[style*="display: flex"] code {
+        font-size: 0.85rem;
+    }
+
+    div[style*="display: flex"] pre {
+        font-size: 0.85rem;
+    }
+
+    /* === RESPONSIVE DESIGN === */
+    /* Mobile landscape mode: force flex sections to stack */
+    @media (orientation: landscape) and (max-height: 500px) {
+        /* Simple approach: just disable flex layout */
+        .flex-section-header {
+            display: block !important;
+            padding: 1rem !important;
+        }
+
+        .flex-section-header > div {
+            margin-bottom: 1rem !important;
+        }
+
+        .flex-section {
+            display: block !important;
+            padding: 0 !important;
+            margin: 1rem 0 !important;
+        }
+
+        .flex-section > * {
+            margin-bottom: 1rem !important;
+            padding: 0 !important;
+        }
+
+        /* Reduce text and code size for landscape */
+        .highlight {
+            font-size: 0.7rem !important;
+        }
+
+        .highlight code {
+            font-size: 0.7rem !important;
+        }
+    }
+
+    @media (max-width: 768px) {
+        /* Force mobile viewport */
+        body,
+        html {
+            overflow-x: hidden !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+
+        .md-container,
+        .md-main,
+        .md-content {
+            width: 100% !important;
+            max-width: 100% !important;
+            overflow-x: hidden !important;
+        }
+
+        .md-content__inner {
+            width: calc(100vw - 1.5rem) !important;
+            max-width: calc(100vw - 1.5rem) !important;
+            padding-left: 0.75rem !important;
+            padding-right: 0.75rem !important;
+            overflow-x: hidden !important;
+            box-sizing: border-box !important;
+        }
+
+        /* Force ALL direct children to fit viewport */
+        .md-content__inner > * {
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+        }
+
+        /* Fix tabs overflow on mobile */
+        .tabbed-set {
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .tabbed-labels,
+        .tabbed-labels--linked {
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            transform: none !important;
+            display: flex !important;
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            position: relative !important;
+        }
+
+        .tabbed-labels > * {
+            flex-shrink: 0 !important;
+        }
+
+        .tabbed-content {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+        }
+
+        /* Mobile navigation drawer */
+        .md-nav--primary {
+            display: block !important;
+        }
+
+        /* Mobile navigation drawer header background */
+        .md-nav__title {
+            background-color: var(--sheaf-primary) !important;
+        }
+
+        .flex-section {
+            flex-direction: column !important;
+            padding: 1rem !important;
+        }
+
+        .flex-section-header {
+            width: 100% !important;
+            flex-direction: column !important;
+        }
+
+        .flex-section-header > div {
+            flex: 0 0 100% !important;
+            padding: 1rem 0 !important;
+        }
+
+        .flex-section > *:last-child:has(.highlight):only-of-type {
+            flex-direction: column !important;
+            width: 100% !important;
+        }
+
+        .flex-section .highlight {
+            width: auto !important;
+            min-width: 0 !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            overflow-x: auto;
+            margin: 0 !important;
+        }
+
+        .highlight {
+            font-size: 0.75rem !important;
+            margin: 0 !important;
+            padding: 0.5rem !important;
+        }
+
+        /* Ensure all content inside mobile container fits viewport */
+        .md-content__inner > * {
+            width: 100% !important;
+            max-width: calc(100vw - 1.5rem) !important;
+            box-sizing: border-box !important;
+        }
+
+        /* Force parent containers too - but not the navigation */
+        .md-content .flex-section > div {
+            width: 100% !important;
+            min-width: 0 !important;
+            max-width: 100% !important;
+        }
+
+        /* Force all code containers */
+        pre,
+        code {
+            width: auto !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            overflow-x: auto !important;
+            white-space: pre !important;
+            word-wrap: normal !important;
+        }
+
+        .highlight code {
+            font-size: 0.75rem !important;
+        }
+
+        pre {
+            max-width: 100% !important;
+            overflow-x: auto !important;
+            padding: 0.5rem !important;
+        }
+
+        .md-footer__inner {
+            justify-content: center !important;
+        }
+    }
+</style>
+
+ 
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="deep-orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#1-le-probleme-actuel" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+     
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Sheaf" class="md-header__button md-logo" aria-label="Sheaf" data-md-component="logo">
+      
+  <img src="../../images/sheaf-light.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Sheaf
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              7 draft
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/sheaf-lang/sheaf" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../quickstart/" class="md-tabs__link">
+          
+  
+  
+  Documentation
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../reference/" class="md-tabs__link">
+          
+  
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../6/" class="md-tabs__link">
+          
+  
+  
+  Blog
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+     
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Sheaf" class="md-nav__button md-logo" aria-label="Sheaf" data-md-component="logo">
+      
+  <img src="../../images/sheaf-light.png" alt="logo">
+
+    </a>
+    Sheaf
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/sheaf-lang/sheaf" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Documentation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Documentation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rationale/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rationale
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../starting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Starting with Sheaf
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../building.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installing and Building
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../key-concepts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Key Concepts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data types
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Version history
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Roadmap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Builtins
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blog
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Blog
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../6/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Symbolic Autodiff Hits a Wall
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../5/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Catching PyTorch's Performance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../4/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    A Single Binary ML Framework
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ditching Enzyme: A Case for Symbolic Autodiff in Sheaf V2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Picking a language for Sheaf's Compiler
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    On the Future of Sheaf
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-le-probleme-actuel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Le problème actuel
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-diagramme-ascii-1-fonctionnement-actuel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Diagramme ASCII #1 — fonctionnement actuel
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-comment-jax-fonctionne" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Comment JAX fonctionne
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-comment-pytorch-fonctionne" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Comment PyTorch fonctionne
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-le-choix-retenu-et-pourquoi-on-ecarte-les-autres" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Le choix retenu, et pourquoi on écarte les autres
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-diagramme-ascii-2-architecture-cible-d-a" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Diagramme ASCII #2 — architecture cible (D + A)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+  <h1>7 draft</h1>
+
+<p>Voici les fondations, sans rédaction :</p>
+<hr />
+<h2 id="1-le-probleme-actuel">1. Le problème actuel</h2>
+<p>Points à couvrir, dans l'esprit de la table <code>--jit-profile</code> de blog/5 :</p>
+<ul>
+<li>Le tableau Iters/Sessions/RSS tel quel (30/500/5000 itérations) — c'est ton
+  meilleur "hook" d'ouverture, comme le tableau de benchmark NanoGPT en intro de
+  blog/5.</li>
+<li>La distinction device vs host : <code>IREE device allocator: peak 4KB, live 0KB</code> vs
+  <code>phys_footprint (dirty): 7.85GB</code> — ce contraste est frappant et mérite d'être
+  mis en avant tôt, ça évite au lecteur de penser "fuite GPU classique".</li>
+<li>Le mécanisme de ping-pong en 4 étapes (shape A compile → shape B invalide A,
+  compile → shape A invalide B, recompile...) — probablement le meilleur
+  candidat pour être présenté comme un <code>eprintln</code> trace réel, dans le style
+  "code block observé" que tu utilises pour le <code>IREE dispatch profile</code> de
+  blog/5.</li>
+<li>Pourquoi ce n'est pas une bizarrerie CLEVR : le polymorphisme de shape est <em>le
+  cas normal</em> en Sheaf, pas l'exception (à relier à ta philosophie "JAX-flavored
+  Lisp" de blog/1).</li>
+</ul>
+<h2 id="2-diagramme-ascii-1-fonctionnement-actuel">2. Diagramme ASCII #1 — fonctionnement actuel</h2>
+<div class="language-text highlight"><pre><span></span><code>FunctionDef &quot;sigmoid&quot;
+  └── vmfb_session_idx: Option&lt;usize&gt;   ← un seul slot, jamais un ensemble
+
+Appel 1: sigmoid(f32[1,5])
+  vmfb_session_idx = None → compile → push #0 dans vmfb_sessions
+  vmfb_session_idx = Some(0)
+
+Appel 2: sigmoid(f32[1,5,1])
+  check_shapes_match([1,5] vs [1,5,1]) → MISMATCH
+  vmfb_session_idx cleared → compile → push #1
+  vmfb_session_idx = Some(1)        ← session #0 toujours dans le Vec, mais orpheline
+
+Appel 3: sigmoid(f32[1,5])
+  check_shapes_match([1,5,1] vs [1,5]) → MISMATCH
+  vmfb_session_idx cleared → compile → push #2
+  vmfb_session_idx = Some(2)        ← #0 et #1 orphelines
+
+vmfb_sessions: [ #0(dead) #1(dead) #2(live) ... ]  ← append-only, jamais purgé
+                └────────────┬────────────┘
+                   ~106MB × sessions mortes
+</code></pre></div>
+<p>Idée pour la légende : montrer que le graphe de vie "un seul index vivant"
+contredit visuellement la croissance du <code>Vec</code> en dessous — c'est le cœur du bug
+en une image.</p>
+<h2 id="3-comment-jax-fonctionne">3. Comment JAX fonctionne</h2>
+<ul>
+<li>Structure : <code>xla::LRUCache&lt;CallSignature, ...&gt;</code> par <code>PjitFunction</code>, capacité
+  par défaut 4096.</li>
+<li>Ce qui compose <code>CallSignature</code> (<code>jax_jit.h:141</code>) : shape/dtype des args,
+  structure pytree, sharding, device, config — donc deux shapes ≠ deux entrées
+  coexistantes, pas une invalidation.</li>
+<li>Le point clé pour ton lecteur : JAX traite le changement de shape comme un
+  <strong>cache miss ordinaire</strong>, jamais comme une erreur qui invalide l'existant.</li>
+<li>Mentionner le disk cache secondaire (recompilation évitée entre process).</li>
+<li><code>static_argnums</code> comme seul mécanisme <em>voulu</em> de thrashing, documenté comme un
+  risque assumé par l'utilisateur — bon contrepoint pour montrer que même JAX
+  peut thrasher, mais volontairement.</li>
+</ul>
+<h2 id="4-comment-pytorch-fonctionne">4. Comment PyTorch fonctionne</h2>
+<ul>
+<li>Cache Dynamo : liste chaînée de <code>(guard_manager, code, next)</code> sur <code>co_extra</code>,
+  walk + premier match gagne.</li>
+<li>Les deux limites (<code>recompile_limit=8</code> par région,
+  <code>accumulated_recompile_limit=256</code> global) et surtout <strong>la dégradation
+  explicite vers eager</strong> quand la limite est dépassée — c'est le contraste le
+  plus utile avec Sheaf actuel, qui lui n'a <em>aucun</em> mécanisme de dégradation (il
+  crashait avant le fix de <code>clear_failure</code>, maintenant il boucle indéfiniment).</li>
+<li>Automatic dynamic shapes : le mécanisme de "wobble" sur une dimension → une
+  seule recompile avec dimension symbolique, N valeurs futures collapsent sur
+  une entrée. Bon endroit pour introduire Option E et pourquoi elle reste hors
+  scope (dépend de shapes dynamiques dans la pipeline de lowering, absentes de
+  Sheaf aujourd'hui).</li>
+<li>Point structurel important pour la clarté de l'article : bien montrer que la
+  stratégie multi-entrée (A) est <strong>le socle commun</strong> à JAX et PyTorch, et que
+  les dynamic shapes sont un raffinement PyTorch <em>par-dessus</em> ce socle, pas une
+  alternative.</li>
+</ul>
+<h2 id="5-le-choix-retenu-et-pourquoi-on-ecarte-les-autres">5. Le choix retenu, et pourquoi on écarte les autres</h2>
+<ul>
+<li><strong>Retenu : D puis A.</strong> D (runtime/session IREE partagé, modules chargés par
+  nom) règle le coût par artefact (~106MB observés) ; A (cache multi-shape borné
+  par fonction, LRU) règle le nombre d'artefacts retenus. Le séquençage
+  D-avant-A isole le refactor FFI risqué (lifetimes, Drop) et le rend testable
+  indépendamment (RSS par module chargé avant/après).</li>
+<li><strong>B (interpreter-only après seuil de thrash) écarté comme fix principal</strong> :
+  contredit l'idiome central de Sheaf — le polymorphisme de shape est censé être
+  gratuit, pas pénalisé. Reste pertinent comme filet de sécurité au-dessus de A,
+  pas comme solution.</li>
+<li><strong>C n'est pas une option distincte</strong> : c'est A avec une capacité fixée dès la
+  conception plutôt qu'ajoutée après coup — bon endroit pour la leçon "borner
+  dès le départ, pas après" (écho possible à la fuite elle-même : un slot unique
+  non borné avait déjà été la cause du bug).</li>
+<li><strong>E (dynamic shapes automatiques) écarté pour l'instant</strong> : suppose une
+  pipeline de lowering avec shapes symboliques, que Sheaf n'a pas encore
+  (<code>lowering/</code> suppose du statique partout). Raffinement futur <em>sur</em> A, pas
+  maintenant.</li>
+<li>Point additionnel à ne pas oublier : les scalaires capturés (<code>temperature</code>,
+  etc.) doivent entrer dans la clé de cache aux côtés des shapes — sinon bug de
+  correction silencieux, pas juste de perf. Bon endroit pour une note "ce qu'on
+  a failli rater".</li>
+</ul>
+<h2 id="6-diagramme-ascii-2-architecture-cible-d-a">6. Diagramme ASCII #2 — architecture cible (D + A)</h2>
+<div class="language-text highlight"><pre><span></span><code>                 ┌─────────────────────────────┐
+                 │   IreeRuntime (unique, partagé)  │
+                 │   instance + device + allocator   │
+                 └───────────────┬─────────────┘
+                                 │ modules chargés par nom
+        ┌────────────────────────┼────────────────────────┐
+        │                        │                        │
+   module &quot;sigmoid              module &quot;sigmoid            module &quot;softmax
+    [1,5]&quot;                       [1,5,1]&quot;                   [B,S,V]&quot;
+   (~qq KB, pas de              (~qq KB)                   (~qq KB)
+    nouvelle instance)
+
+JitCompiler
+  per_function_cache: HashMap&lt;fn_name, LRU&lt;ShapeSignature, ModuleHandle&gt;&gt;
+                                          capacité fixe (ex. 8), éviction FIFO/LRU
+
+sigmoid → lookup ShapeSignature{shape, dtype, captured_scalars}
+            hit  → dispatch direct
+            miss → compile, load module dans le runtime partagé, insert, evict si plein
+</code></pre></div>
+<p>Légende possible : contraster avec le diagramme #1 — même topologie logique (une
+fonction, plusieurs shapes possibles), mais le coût par entrée passe de
+"nouvelle instance de runtime" à "module chargé dans un runtime existant", et le
+nombre d'entrées passe de non-borné à borné.</p>
+<hr />
+<p>Si tu veux, je peux aussi relire un brouillon une fois que tu l'auras rédigé —
+mais je te laisse la plume, comme demandé.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+<footer class="md-footer">
+    <div
+        class="md-footer__inner md-grid"
+        style="
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        "
+    >
+        <img
+            src="../../images/sheaf-light.png"
+            alt="Logo"
+            style="height: 24px"
+        />
+        <span>| © 2025-2026 Damien Boureille</span>
+    </div>
+</footer>
+
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../javascripts/fix-drawer.js"></script>
+      
+        <script src="../../javascripts/clean-url.js"></script>
+      
+    
+  </body>
+</html>

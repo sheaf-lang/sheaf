@@ -1477,10 +1477,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#resource-efficiency" class="md-nav__link">
+  <a href="#compact-by-construction" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Resource Efficiency
+        Compact by Construction
       
     </span>
   </a>
@@ -1488,10 +1488,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#clean-implementation" class="md-nav__link">
+  <a href="#native-runtime" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Clean Implementation
+        Native Runtime
       
     </span>
   </a>
@@ -1531,7 +1531,8 @@
 
 <p  style="text-align: center; size: 1rem; max-width: 40rem; margin-left: auto; margin-right: auto; margin-top: 1rem;"  markdown="1">
 
-Sheaf brings Clojure’s code-as-data to machine learning, with models as inspectable, composable, and compiled data structures.
+Sheaf brings Clojure’s code-as-data to machine learning, with models as
+inspectable, composable, and compiled data structures.
 
 </p>
 
@@ -1542,24 +1543,32 @@ Sheaf brings Clojure’s code-as-data to machine learning, with models as inspec
 <h2 id="for-ml-researchers">For ML Researchers</h2>
 <ul>
 <li><strong>No classes, no boilerplate</strong> — Write math, not plumbing</li>
-<li><strong>Runtime Observability</strong> — Catch NaN, trace shapes and profile performance without code changes</li>
-<li><strong>Single binary framework</strong> — One executable, no dependencies. Train and run on GPU out of the box</li>
+<li><strong>Runtime Observability</strong> — Catch NaN, trace shapes and profile performance
+  without code changes</li>
+<li><strong>Single binary framework</strong> — One executable, no dependencies. Train and run
+  on GPU out of the box</li>
 </ul>
 </div>
 <div>
 <h2 id="for-agentic-ai">For Agentic AI</h2>
 <ul>
-<li><strong>Context Density</strong> — 60-75% fewer tokens than equivalent Python for the same architecture</li>
-<li><strong>Uniform Syntax</strong> — Single syntactic form for all operations reduces ambiguity and generation errors</li>
-<li><strong>Immediate Onboarding</strong> — Built-in context generator for Claude Code, Cursor, and Copilot</li>
+<li><strong>Context Density</strong> — 60-75% fewer tokens than equivalent Python for the same
+  architecture</li>
+<li><strong>Uniform Syntax</strong> — Single syntactic form for all operations reduces
+  ambiguity and generation errors</li>
+<li><strong>Immediate Onboarding</strong> — Built-in context generator for Claude Code, Cursor,
+  and Copilot</li>
 </ul>
 </div>
 </div>
 <h2 id="neural-networks-as-math"><strong>Neural Networks as Math</strong></h2>
 <div class="flex-section">
 <div>
-<p>In Sheaf, a neural network is a composition of mathematical functions over a parameter tree.</p>
-<p>Sheaf is purely functional, so differentiation and compilation require no annotations. Any pure function can be differentiated with value-and-grad and is automatically compiled to GPU code.</p>
+<p>In Sheaf, a neural network is a composition of mathematical functions over a
+parameter tree.</p>
+<p>Sheaf's functional core makes differentiation and compilation possible without
+graph annotations. Supported tensor functions can be differentiated with
+value-and-grad and compiled automatically for CPU or GPU.</p>
 </div>
 <div>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Atomic</label><label for="__tabbed_1_2">Composite</label></div>
@@ -1593,8 +1602,11 @@ Sheaf brings Clojure’s code-as-data to machine learning, with models as inspec
 <h2 id="models-as-data"><strong>Models as Data</strong></h2>
 <div class="flex-section">
 <div>
-<p>Because models are data, Sheaf requires no module classes, registration, or parameter groups. Even structural operations like pruning, freezing, or weight sharing are expressed as regular data transformations.</p>
-<p>Sheaf brings compile-time macros to the computation graph itself, generating architecture variants from a single template.</p>
+<p>Because models are data, Sheaf requires no module classes, registration, or
+parameter groups. Even structural operations like pruning, freezing, or weight
+sharing are expressed as regular data transformations.</p>
+<p>Sheaf brings compile-time macros to the computation graph itself, generating
+architecture variants from a single template.</p>
 </div>
 <div>
 <div class="language-clojure highlight"><pre><span></span><code><span class="c1">;; Grow a model: add a layer at runtime</span>
@@ -1611,8 +1623,11 @@ Sheaf brings Clojure’s code-as-data to machine learning, with models as inspec
 <h2 id="observability"><strong>Observability</strong></h2>
 <div class="flex-section">
 <div>
-<p>In Sheaf, every function call, tensor shape, and numerical statistic is observable at runtime.</p>
-<p>A tracer logs the full call hierarchy with tensor statistics. Guards halt execution on numerical invariants like NaN or range violations. A profiler attributes wall time to each function in the call tree.</p>
+<p>In Sheaf, every function call, tensor shape, and numerical statistic is
+observable at runtime.</p>
+<p>A tracer logs the full call hierarchy with tensor statistics. Guards halt
+execution on numerical invariants like NaN or range violations. A profiler
+attributes wall time to each function in the call tree.</p>
 </div>
 <div>
 <div class="tabbed-set tabbed-alternate" data-tabs="2:3"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><input id="__tabbed_2_3" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">Tracer</label><label for="__tabbed_2_2">Guards</label><label for="__tabbed_2_3">Profiler</label></div>
@@ -1648,47 +1663,53 @@ Sheaf brings Clojure’s code-as-data to machine learning, with models as inspec
 </code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="language-css highlight"><pre><span></span><code><span class="nt">Profiler</span><span class="o">:</span><span class="w"> </span><span class="nt">3</span><span class="p">.</span><span class="nc">63s</span><span class="w"> </span><span class="nt">wall</span>
+<div class="language-css highlight"><pre><span></span><code><span class="nt">Profiler</span><span class="o">:</span><span class="w"> </span><span class="nt">3</span><span class="p">.</span><span class="nc">78s</span><span class="w"> </span><span class="nt">wall</span>
 
-<span class="w">  </span><span class="nt">Function</span><span class="w">                          </span><span class="nt">Calls</span><span class="w">      </span><span class="nt">Total</span><span class="w">       </span><span class="nt">Self</span><span class="w">   </span><span class="nt">Avg</span><span class="o">/</span><span class="nt">call</span>
-<span class="w">  </span><span class="nt">------------------------------------------------------------------------</span>
-<span class="w">  </span><span class="nt">gpt-forward</span><span class="w">                         </span><span class="nt">100</span><span class="w">      </span><span class="nt">1</span><span class="p">.</span><span class="nc">72s</span><span class="w">      </span><span class="nt">3</span><span class="p">.</span><span class="nc">72s</span><span class="w">    </span><span class="nt">37</span><span class="p">.</span><span class="nc">23ms</span>
-<span class="w">  </span><span class="nt">reshape</span><span class="w">                             </span><span class="nt">301</span><span class="w">   </span><span class="nt">900</span><span class="p">.</span><span class="nc">57ms</span><span class="w">   </span><span class="nt">900</span><span class="p">.</span><span class="nc">57ms</span><span class="w">     </span><span class="nt">2</span><span class="p">.</span><span class="nc">99ms</span>
-<span class="w">  </span><span class="nt">choice</span><span class="w">                              </span><span class="nt">100</span><span class="w">   </span><span class="nt">622</span><span class="p">.</span><span class="nc">85ms</span><span class="w">   </span><span class="nt">622</span><span class="p">.</span><span class="nc">85ms</span><span class="w">     </span><span class="nt">6</span><span class="p">.</span><span class="nc">23ms</span>
-<span class="w">  </span><span class="nt">softmax</span><span class="w">                             </span><span class="nt">100</span><span class="w">   </span><span class="nt">158</span><span class="p">.</span><span class="nc">67ms</span><span class="w">   </span><span class="nt">158</span><span class="p">.</span><span class="nc">67ms</span><span class="w">     </span><span class="nt">1</span><span class="p">.</span><span class="nc">59ms</span>
-<span class="w">  </span><span class="nt">generate-token</span><span class="w">                      </span><span class="nt">100</span><span class="w">      </span><span class="nt">5</span><span class="p">.</span><span class="nc">56s</span><span class="w">   </span><span class="nt">158</span><span class="p">.</span><span class="nc">37ms</span><span class="w">    </span><span class="nt">55</span><span class="p">.</span><span class="nc">65ms</span>
-<span class="w">  </span><span class="nt">io</span><span class="w">                                    </span><span class="nt">4</span><span class="w">    </span><span class="nt">45</span><span class="p">.</span><span class="nc">11ms</span><span class="w">    </span><span class="nt">45</span><span class="p">.</span><span class="nc">11ms</span><span class="w">    </span><span class="nt">11</span><span class="p">.</span><span class="nc">28ms</span>
-<span class="w">  </span><span class="o">&lt;</span><span class="nt">lambda</span><span class="o">&gt;</span><span class="w">                            </span><span class="nt">102</span><span class="w">      </span><span class="nt">5</span><span class="p">.</span><span class="nc">58s</span><span class="w">    </span><span class="nt">12</span><span class="p">.</span><span class="nc">88ms</span><span class="w">    </span><span class="nt">54</span><span class="p">.</span><span class="nc">71ms</span>
-<span class="w">  </span><span class="o">...</span><span class="w"> </span><span class="nt">23</span><span class="w"> </span><span class="nt">others</span><span class="w">                      </span><span class="nt">1728</span><span class="w">                </span><span class="nt">5</span><span class="p">.</span><span class="nc">42ms</span>
+<span class="nt">Function</span><span class="w">                          </span><span class="nt">Calls</span><span class="w">      </span><span class="nt">Total</span><span class="w">       </span><span class="nt">Self</span><span class="w">   </span><span class="nt">Avg</span><span class="o">/</span><span class="nt">call</span>
+<span class="w"> </span><span class="nt">------------------------------------------------------------------------</span>
+<span class="w"> </span><span class="nt">gpt-forward</span><span class="w">                         </span><span class="nt">500</span><span class="w">      </span><span class="nt">3</span><span class="p">.</span><span class="nc">17s</span><span class="w">      </span><span class="nt">3</span><span class="p">.</span><span class="nc">17s</span><span class="w">     </span><span class="nt">6</span><span class="p">.</span><span class="nc">35ms</span>
+<span class="w"> </span><span class="nt">softmax</span><span class="w">                             </span><span class="nt">500</span><span class="w">   </span><span class="nt">184</span><span class="p">.</span><span class="nc">70ms</span><span class="w">   </span><span class="nt">184</span><span class="p">.</span><span class="nc">70ms</span><span class="w">    </span><span class="nt">369</span><span class="p">.</span><span class="nc">4μs</span>
+<span class="w"> </span><span class="nt">slide-window</span><span class="w">                        </span><span class="nt">500</span><span class="w">   </span><span class="nt">142</span><span class="p">.</span><span class="nc">79ms</span><span class="w">   </span><span class="nt">142</span><span class="p">.</span><span class="nc">79ms</span><span class="w">    </span><span class="nt">285</span><span class="p">.</span><span class="nc">6μs</span>
+<span class="w"> </span><span class="nt">reshape</span><span class="w">                             </span><span class="nt">501</span><span class="w">   </span><span class="nt">109</span><span class="p">.</span><span class="nc">23ms</span><span class="w">   </span><span class="nt">109</span><span class="p">.</span><span class="nc">23ms</span><span class="w">    </span><span class="nt">218</span><span class="p">.</span><span class="nc">0μs</span>
+<span class="w"> </span><span class="nt">choice</span><span class="w">                              </span><span class="nt">500</span><span class="w">    </span><span class="nt">92</span><span class="p">.</span><span class="nc">11ms</span><span class="w">    </span><span class="nt">92</span><span class="p">.</span><span class="nc">11ms</span><span class="w">    </span><span class="nt">184</span><span class="p">.</span><span class="nc">2μs</span>
+<span class="w"> </span><span class="nt">generate-token</span><span class="w">                      </span><span class="nt">500</span><span class="w">      </span><span class="nt">3</span><span class="p">.</span><span class="nc">59s</span><span class="w">    </span><span class="nt">28</span><span class="p">.</span><span class="nc">62ms</span><span class="w">     </span><span class="nt">7</span><span class="p">.</span><span class="nc">18ms</span>
+<span class="w"> </span><span class="nt">io</span><span class="w">                                    </span><span class="nt">5</span><span class="w">    </span><span class="nt">26</span><span class="p">.</span><span class="nc">76ms</span><span class="w">    </span><span class="nt">26</span><span class="p">.</span><span class="nc">76ms</span><span class="w">     </span><span class="nt">5</span><span class="p">.</span><span class="nc">35ms</span>
+<span class="w"> </span><span class="o">&lt;</span><span class="nt">lambda</span><span class="o">&gt;</span><span class="w">                            </span><span class="nt">502</span><span class="w">      </span><span class="nt">3</span><span class="p">.</span><span class="nc">75s</span><span class="w">    </span><span class="nt">11</span><span class="p">.</span><span class="nc">83ms</span><span class="w">     </span><span class="nt">7</span><span class="p">.</span><span class="nc">46ms</span>
+<span class="w"> </span><span class="o">...</span><span class="w"> </span><span class="nt">21</span><span class="w"> </span><span class="nt">others</span><span class="w">                      </span><span class="nt">7527</span><span class="w">                </span><span class="nt">4</span><span class="p">.</span><span class="nc">86ms</span>
 
-<span class="w">  </span><span class="nt">Call</span><span class="w"> </span><span class="nt">tree</span><span class="o">:</span>
+<span class="w"> </span><span class="nt">Call</span><span class="w"> </span><span class="nt">tree</span><span class="o">:</span>
 
-<span class="w">  </span><span class="err">├──</span><span class="w"> </span><span class="nt">generate</span><span class="w"> </span><span class="o">(</span><span class="nt">3</span><span class="p">.</span><span class="nc">58s</span><span class="o">,</span><span class="w"> </span><span class="nt">1</span><span class="w"> </span><span class="nt">call</span><span class="o">)</span>
-<span class="w">  </span><span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="nt">reduce</span><span class="w"> </span><span class="o">(</span><span class="nt">3</span><span class="p">.</span><span class="nc">58s</span><span class="o">,</span><span class="w"> </span><span class="nt">1</span><span class="w"> </span><span class="nt">call</span><span class="o">)</span>
-<span class="w">  </span><span class="err">│</span><span class="w">   </span><span class="err">│</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="o">&lt;</span><span class="nt">lambda</span><span class="o">&gt;</span><span class="w"> </span><span class="o">(</span><span class="nt">3</span><span class="p">.</span><span class="nc">58s</span><span class="o">,</span><span class="w"> </span><span class="nt">101</span><span class="w"> </span><span class="nt">calls</span><span class="o">)</span>
-<span class="w">  </span><span class="err">│</span><span class="w">   </span><span class="err">│</span><span class="w">       </span><span class="err">├──</span><span class="w"> </span><span class="nt">generate-token</span><span class="w"> </span><span class="o">(</span><span class="nt">3</span><span class="p">.</span><span class="nc">56s</span><span class="o">,</span><span class="w"> </span><span class="nt">100</span><span class="w"> </span><span class="nt">calls</span><span class="o">)</span>
-<span class="w">  </span><span class="err">│</span><span class="w">   </span><span class="err">│</span><span class="w">       </span><span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="nt">gpt-forward</span><span class="w"> </span><span class="o">(</span><span class="nt">1</span><span class="p">.</span><span class="nc">72s</span><span class="o">,</span><span class="w"> </span><span class="nt">100</span><span class="w"> </span><span class="nt">calls</span><span class="o">)</span>
-<span class="w">  </span><span class="err">│</span><span class="w">   </span><span class="err">│</span><span class="w">       </span><span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="nt">reshape</span><span class="w"> </span><span class="o">(</span><span class="nt">900</span><span class="p">.</span><span class="nc">16ms</span><span class="o">,</span><span class="w"> </span><span class="nt">100</span><span class="w"> </span><span class="nt">calls</span><span class="o">)</span>
-<span class="w">  </span><span class="err">│</span><span class="w">   </span><span class="err">│</span><span class="w">       </span><span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="nt">choice</span><span class="w"> </span><span class="o">(</span><span class="nt">622</span><span class="p">.</span><span class="nc">85ms</span><span class="o">,</span><span class="w"> </span><span class="nt">100</span><span class="w"> </span><span class="nt">calls</span><span class="o">)</span>
-<span class="w">  </span><span class="err">│</span><span class="w">   </span><span class="err">│</span><span class="w">       </span><span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="nt">softmax</span><span class="w"> </span><span class="o">(</span><span class="nt">158</span><span class="p">.</span><span class="nc">67ms</span><span class="o">,</span><span class="w"> </span><span class="nt">100</span><span class="w"> </span><span class="nt">calls</span><span class="o">)</span>
-<span class="w">  </span><span class="err">│</span><span class="w">   </span><span class="err">│</span><span class="w">       </span><span class="err">│</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="o">...</span><span class="w"> </span><span class="nt">8</span><span class="w"> </span><span class="nt">others</span><span class="w"> </span><span class="o">(</span><span class="nt">1</span><span class="p">.</span><span class="nc">47ms</span><span class="o">,</span><span class="w"> </span><span class="nt">900</span><span class="w"> </span><span class="nt">calls</span><span class="o">)</span>
-<span class="w">  </span><span class="err">│</span><span class="w">   </span><span class="err">│</span><span class="w">       </span><span class="err">└──</span><span class="w"> </span><span class="o">...</span><span class="w"> </span><span class="nt">5</span><span class="w"> </span><span class="nt">others</span><span class="w"> </span><span class="o">(</span><span class="nt">3</span><span class="p">.</span><span class="nc">37ms</span><span class="o">,</span><span class="w"> </span><span class="nt">1002</span><span class="w"> </span><span class="nt">calls</span><span class="o">)</span>
-<span class="w">  </span><span class="err">│</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="o">...</span><span class="w"> </span><span class="nt">2</span><span class="w"> </span><span class="nt">others</span><span class="w"> </span><span class="o">(</span><span class="nt">1</span><span class="p">.</span><span class="nc">9μs</span><span class="o">,</span><span class="w"> </span><span class="nt">2</span><span class="w"> </span><span class="nt">calls</span><span class="o">)</span>
-<span class="w">  </span><span class="err">└──</span><span class="w"> </span><span class="o">...</span><span class="w"> </span><span class="nt">7</span><span class="w"> </span><span class="nt">others</span><span class="w"> </span><span class="o">(</span><span class="nt">45</span><span class="p">.</span><span class="nc">64ms</span><span class="o">,</span><span class="w"> </span><span class="nt">19</span><span class="w"> </span><span class="nt">calls</span><span class="o">)</span>
+<span class="w"> </span><span class="err">├──</span><span class="w"> </span><span class="nt">generate</span><span class="w"> </span><span class="o">(</span><span class="nt">3</span><span class="p">.</span><span class="nc">75s</span><span class="o">,</span><span class="w"> </span><span class="nt">1</span><span class="w"> </span><span class="nt">call</span><span class="o">)</span>
+<span class="w"> </span><span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="nt">reduce</span><span class="w"> </span><span class="o">(</span><span class="nt">3</span><span class="p">.</span><span class="nc">75s</span><span class="o">,</span><span class="w"> </span><span class="nt">1</span><span class="w"> </span><span class="nt">call</span><span class="o">)</span>
+<span class="w"> </span><span class="err">│</span><span class="w">   </span><span class="err">│</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="o">&lt;</span><span class="nt">lambda</span><span class="o">&gt;</span><span class="w"> </span><span class="o">(</span><span class="nt">3</span><span class="p">.</span><span class="nc">75s</span><span class="o">,</span><span class="w"> </span><span class="nt">501</span><span class="w"> </span><span class="nt">calls</span><span class="o">)</span>
+<span class="w"> </span><span class="err">│</span><span class="w">   </span><span class="err">│</span><span class="w">       </span><span class="err">├──</span><span class="w"> </span><span class="nt">generate-token</span><span class="w"> </span><span class="o">(</span><span class="nt">3</span><span class="p">.</span><span class="nc">59s</span><span class="o">,</span><span class="w"> </span><span class="nt">500</span><span class="w"> </span><span class="nt">calls</span><span class="o">)</span>
+<span class="w"> </span><span class="err">│</span><span class="w">   </span><span class="err">│</span><span class="w">       </span><span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="nt">gpt-forward</span><span class="w"> </span><span class="o">(</span><span class="nt">3</span><span class="p">.</span><span class="nc">17s</span><span class="o">,</span><span class="w"> </span><span class="nt">500</span><span class="w"> </span><span class="nt">calls</span><span class="o">)</span>
+<span class="w"> </span><span class="err">│</span><span class="w">   </span><span class="err">│</span><span class="w">       </span><span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="nt">softmax</span><span class="w"> </span><span class="o">(</span><span class="nt">184</span><span class="p">.</span><span class="nc">70ms</span><span class="o">,</span><span class="w"> </span><span class="nt">500</span><span class="w"> </span><span class="nt">calls</span><span class="o">)</span>
+<span class="w"> </span><span class="err">│</span><span class="w">   </span><span class="err">│</span><span class="w">       </span><span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="nt">reshape</span><span class="w"> </span><span class="o">(</span><span class="nt">109</span><span class="p">.</span><span class="nc">22ms</span><span class="o">,</span><span class="w"> </span><span class="nt">500</span><span class="w"> </span><span class="nt">calls</span><span class="o">)</span>
+<span class="w"> </span><span class="err">│</span><span class="w">   </span><span class="err">│</span><span class="w">       </span><span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="nt">choice</span><span class="w"> </span><span class="o">(</span><span class="nt">92</span><span class="p">.</span><span class="nc">11ms</span><span class="o">,</span><span class="w"> </span><span class="nt">500</span><span class="w"> </span><span class="nt">calls</span><span class="o">)</span>
+<span class="w"> </span><span class="err">│</span><span class="w">   </span><span class="err">│</span><span class="w">       </span><span class="err">│</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="o">...</span><span class="w"> </span><span class="nt">7</span><span class="w"> </span><span class="nt">others</span><span class="w"> </span><span class="o">(</span><span class="nt">1</span><span class="p">.</span><span class="nc">69ms</span><span class="o">,</span><span class="w"> </span><span class="nt">4000</span><span class="w"> </span><span class="nt">calls</span><span class="o">)</span>
+<span class="w"> </span><span class="err">│</span><span class="w">   </span><span class="err">│</span><span class="w">       </span><span class="err">├──</span><span class="w"> </span><span class="nt">slide-window</span><span class="w"> </span><span class="o">(</span><span class="nt">142</span><span class="p">.</span><span class="nc">79ms</span><span class="o">,</span><span class="w"> </span><span class="nt">500</span><span class="w"> </span><span class="nt">calls</span><span class="o">)</span>
+<span class="w"> </span><span class="err">│</span><span class="w">   </span><span class="err">│</span><span class="w">       </span><span class="err">└──</span><span class="w"> </span><span class="o">...</span><span class="w"> </span><span class="nt">4</span><span class="w"> </span><span class="nt">others</span><span class="w"> </span><span class="o">(</span><span class="nt">2</span><span class="p">.</span><span class="nc">04ms</span><span class="o">,</span><span class="w"> </span><span class="nt">3502</span><span class="w"> </span><span class="nt">calls</span><span class="o">)</span>
+<span class="w"> </span><span class="err">│</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="o">...</span><span class="w"> </span><span class="nt">2</span><span class="w"> </span><span class="nt">others</span><span class="w"> </span><span class="o">(</span><span class="nt">1</span><span class="p">.</span><span class="nc">5μs</span><span class="o">,</span><span class="w"> </span><span class="nt">2</span><span class="w"> </span><span class="nt">calls</span><span class="o">)</span>
+<span class="w"> </span><span class="err">└──</span><span class="w"> </span><span class="o">...</span><span class="w"> </span><span class="nt">7</span><span class="w"> </span><span class="nt">others</span><span class="w"> </span><span class="o">(</span><span class="nt">26</span><span class="p">.</span><span class="nc">86ms</span><span class="o">,</span><span class="w"> </span><span class="nt">21</span><span class="w"> </span><span class="nt">calls</span><span class="o">)</span>
 </code></pre></div>
 </div>
 </div>
 </div>
 </div>
 </div>
-<h2 id="resource-efficiency"><strong>Resource Efficiency</strong></h2>
+<h2 id="compact-by-construction"><strong>Compact by Construction</strong></h2>
 <div class="flex-section">
 <div markdown="1">
 
-A complete GPT-2 124M implementation in Sheaf is 1,908 tokens, while the equivalent PyTorch is 7,486. Sheaf's uniform syntax keeps the code concise and unambiguous.
+A complete GPT-2 124M implementation in Sheaf is 1,908 tokens, while the
+equivalent PyTorch is 7,486. Sheaf's uniform syntax keeps the code concise and
+unambiguous.
 <br/><br/>
 
-Context usage counts GPT-4 tokens (tiktoken) across model, training, and sampling code. Deploy size is the minimal runtime required to train and run a model on a CUDA GPU.
+Context usage counts GPT-4 tokens (tiktoken) across model, training, and
+sampling code. Deploy size is the minimal runtime required to train and run a
+model on a CUDA GPU.
 
 </div>
 <div>
@@ -1724,12 +1745,13 @@ Context usage counts GPT-4 tokens (tiktoken) across model, training, and samplin
 </div>
 </div>
 
-<h2 id="clean-implementation"><strong>Clean Implementation</strong></h2>
+<h2 id="native-runtime"><strong>Native Runtime</strong></h2>
 <div class="flex-section">
 <div>
-<p>Sheaf is written in Rust. The complete runtime with GPU backends ships
-as a single 4 MB executable.</p>
-<p>The compiler toolchain is downloaded on first use and is not required to run a compiled model.</p>
+<p>Sheaf is written in Rust. The complete runtime with GPU backends ships as a
+single 4 MB executable.</p>
+<p>The compiler toolchain is downloaded on first use and is not required to run a
+compiled model.</p>
 </div>
 <div>
 <div class="language-text highlight"><pre><span></span><code># Standalone, self-contained deployment
@@ -1744,7 +1766,7 @@ $ du -h *
 </div>
 </div>
 <hr />
-<div ;=";" class="intro-text" style="text-align: center; margin-bottom: 3rem;">
+<div class="intro-text" style="text-align: center; margin-bottom: 3rem;">
 <p><a class="md-button" href="quickstart/">Get started</a></p>
 </div>
 
