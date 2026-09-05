@@ -724,7 +724,7 @@ fn get_nested(val: &Value, indices: &[usize]) -> Result<Value, SheafError> {
     let mut current = val.clone();
     for &idx in indices {
         current = match current {
-            Value::List(items) => {
+            Value::List(items) | Value::Tuple(items) => {
                 items.get(idx).cloned().ok_or_else(|| {
                     runtime_error(format!("Tuple index {} out of bounds (len {})", idx, items.len()))
                 })?

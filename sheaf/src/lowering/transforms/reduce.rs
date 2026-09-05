@@ -136,6 +136,21 @@ fn unroll_reduces_rec(
                 iteration_body = replace_symbol(&iteration_body, elem_p, &elem_expr);
 
                 iteration_body = unroll_reduces_rec(&iteration_body, param_types, let_env);
+                // GetTupleElement refers to a named binding. Preserve lambda parameter
+                // bindings when unrolling.
+                iteration_body = CompiledExpr::Let {
+                    bindings: vec![
+                        (
+                            BindingPattern::Simple(carry_p.clone()),
+                            carry_expr,
+                        ),
+                        (
+                            BindingPattern::Simple(elem_p.clone()),
+                            elem_expr,
+                        ),
+                    ],
+                    body: Box::new(iteration_body),
+                };
 
                 bindings.push((BindingPattern::Simple(var_name), iteration_body));
             }
@@ -229,4 +244,166 @@ enum UnrollColl {
         base_indices: Vec<usize>,
     },
     Vector(Vec<CompiledExpr>),
+}
+
+#[cfg(test)]
+mod tests {
+    use super::unroll_reduces;
+    use crate::core::expr::{BindingPattern, CompiledExpr};
+    use crate::lowering::stablehlo::StableHLOType;
+
+    #[test]
+    fn unrolled_tuple_reduce_binds_lambda_parameters() {
+        let scalar = StableHLOType::scalar_f32();
+        let item_type = StableHLOType::Tuple(vec![scalar.clone(), scalar.clone()], None);
+        let input_type = StableHLOType::Tuple(
+            vec![StableHLOType::Tuple(
+                vec![item_type.clone(), item_type.clone(), item_type],
+                None,
+            )],
+            None,
+        );
+        let reduce = CompiledExpr::FunctionCall {
+            name: "reduce".to_string(),
+            args: vec![
+                CompiledExpr::Lambda {
+                    params: vec!["state".to_string(), "item".to_string()],
+                    body: Box::new(CompiledExpr::Tuple(vec![
+                        CompiledExpr::FunctionCall {
+                            name: "+".to_string(),
+                            args: vec![
+                                CompiledExpr::GetTupleElement {
+                                    param: "state".to_string(),
+                                    indices: vec![0],
+                                },
+                                CompiledExpr::GetTupleElement {
+                                    param: "item".to_string(),
+                                    indices: vec![0],
+                                },
+                            ],
+                            loc: None,
+                        },
+                        CompiledExpr::FunctionCall {
+                            name: "+".to_string(),
+                            args: vec![
+                                CompiledExpr::GetTupleElement {
+                                    param: "state".to_string(),
+                                    indices: vec![1],
+                                },
+                                CompiledExpr::GetTupleElement {
+                                    param: "item".to_string(),
+                                    indices: vec![1],
+                                },
+                            ],
+                            loc: None,
+                        },
+                    ])),
+                },
+                CompiledExpr::Tuple(vec![
+                    CompiledExpr::Float(0.0),
+                    CompiledExpr::Float(0.0),
+                ]),
+                CompiledExpr::GetTupleElement {
+                    param: "input".to_string(),
+                    indices: vec![0],
+                },
+            ],
+            loc: None,
+        };
+
+        let result = unroll_reduces(
+            &reduce,
+            &[("input".to_string(), input_type)],
+        );
+        let CompiledExpr::Let { bindings, .. } = &result else {
+            panic!("tuple reduce should be unrolled");
+        };
+        let CompiledExpr::Let { bindings: iteration, .. } = &bindings[0].1 else {
+            panic!("unrolled iteration must bind lambda parameters");
+        };
+        assert!(matches!(
+            iteration.first(),
+            Some((BindingPattern::Simple(name), CompiledExpr::Tuple(_))) if name == "state"
+        ));
+        assert!(matches!(
+            iteration.get(1),
+            Some((BindingPattern::Simple(name), CompiledExpr::GetTupleElement { param, indices }))
+                if name == "item" && param == "input" && indices == &vec![0, 0]
+        ));
+
+        let registry = std::collections::HashMap::new();
+        let codegen = crate::CodeGenerator::with_function_params(
+            &registry,
+            &["input".to_string()],
+            &[StableHLOType::Tuple(
+                vec![StableHLOType::Tuple(
+                    vec![
+                        StableHLOType::Tuple(
+                            vec![scalar.clone(), scalar.clone()],
+                            None,
+                        ),
+                        StableHLOType::Tuple(
+                            vec![scalar.clone(), scalar.clone()],
+                            None,
+                        ),
+                        StableHLOType::Tuple(
+                            vec![scalar.clone(), scalar.clone()],
+                            None,
+                        ),
+                    ],
+                    None,
+                )],
+                None,
+            )],
+        );
+        let return_type = StableHLOType::Tuple(vec![scalar.clone(), scalar], None);
+        let (mlir, _) = codegen
+            .emit_func_declaration(
+                "tuple_reduce",
+                &result,
+                &[StableHLOType::Tuple(
+                    vec![StableHLOType::Tuple(
+                        vec![StableHLOType::Tuple(
+                            vec![StableHLOType::scalar_f32(), StableHLOType::scalar_f32()],
+                            None,
+                        )],
+                        None,
+                    )],
+                    None,
+                )],
+                &return_type,
+            )
+            .expect("unrolled tuple reduce should codegen");
+        let _ = crate::StableHLOEmitter::emit_module(&[mlir]);
+
+        let mut env = crate::interpreter::env::Env::new();
+        crate::interpreter::builtins::register_builtins(&mut env);
+        env.set(
+            "input",
+            crate::interpreter::value::Value::Tuple(vec![
+                crate::interpreter::value::Value::Tuple(vec![
+                    crate::interpreter::value::Value::Tuple(vec![
+                        crate::interpreter::value::Value::Float(1.0),
+                        crate::interpreter::value::Value::Float(10.0),
+                    ]),
+                    crate::interpreter::value::Value::Tuple(vec![
+                        crate::interpreter::value::Value::Float(2.0),
+                        crate::interpreter::value::Value::Float(20.0),
+                    ]),
+                    crate::interpreter::value::Value::Tuple(vec![
+                        crate::interpreter::value::Value::Float(3.0),
+                        crate::interpreter::value::Value::Float(30.0),
+                    ]),
+                ]),
+            ]),
+        );
+        let value = crate::interpreter::eval(&result, &mut env)
+            .expect("unrolled tuple reduce should evaluate");
+        let crate::interpreter::value::Value::Tuple(values) = value else {
+            panic!("unrolled tuple reduce should return a tuple");
+        };
+        assert_eq!(values.len(), 2);
+        assert!(matches!(values[0], crate::interpreter::value::Value::Float(x) if (x - 6.0).abs() < 1e-6));
+        assert!(matches!(values[1], crate::interpreter::value::Value::Float(x) if (x - 60.0).abs() < 1e-6));
+    }
 }
