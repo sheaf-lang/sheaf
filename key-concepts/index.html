@@ -1893,9 +1893,13 @@
 <p>This page describes the concepts behind the system: what happens when you run a program, how differentiation works, and how the runtime manages GPU execution.</p>
 <h2 id="design-principles">Design Principles</h2>
 <p>Sheaf follows a small set of principles that inform every design decision:</p>
-<p><strong>Pure functions compile automatically.</strong> Any function that takes tensors and returns tensors, without side effects, is eligible for GPU compilation. There are no <code>@jit</code> decorator nor <code>torch.compile()</code>. The compiler decides what to compile based on purity analysis. Functions that perform I/O or print are interpreted; everything else is compiled.</p>
-<p><strong>No Python in the execution path.</strong> The compiler, runtime, and IREE execution engine are statically linked into a single binary. Models ship as <code>.shf</code> source files alongside cached <code>.vmfb</code> compiled artifacts. A standalone deployment consists of the Sheaf binary, the model files (code and data), and its compiled artefacts.</p>
-<p><strong>Functional PRNG.</strong> Random number generation follows the JAX model: keys are explicit values, not implicit global state. <code>(random-key 42)</code> produces a key; <code>(random-split key n)</code> derives sub-keys deterministically. This makes random operations pure (key in, result out), which means they compile to GPU code like any other operation.</p>
+<p><strong>Lisp, not Python</strong>. Lisp programs are built from expressions that a compiler can inspect and transform directly. Sheaf can parse a call or a reduce over layers without tracing Python execution to reconstruct the program.
+This results in fewer moving parts between the Sheaf model and the code that runs on the GPU.</p>
+<p><strong>Explicit, not implicit.</strong> Model parameters are values passed to functions, not mutable fields hidden inside a
+model object. A training step returns updated parameters and optimizer state rather than changing them in place.
+Even random operations are pure (key in, result out), so they can compile to GPU code like any other operation.</p>
+<p><strong>Automatic compilation.</strong> Any function that takes tensors and returns tensors, without side effects, is eligible for GPU compilation. There is no <code>@jit</code> decorator or <code>torch.compile()</code> call.</p>
+<p><strong>Standalone execution.</strong> The compiler, runtime, and IREE execution engine are statically linked into a single binary. Models ship as <code>.shf</code> source files alongside cached <code>.vmfb</code> compiled artifacts. A standalone deployment consists of the Sheaf binary, the model files (code and data), and its compiled artefacts.</p>
 <h2 id="parameter-trees">Parameter Trees</h2>
 <p>Neural network parameters in Sheaf are plain nested dicts:</p>
 <div class="language-clojure highlight"><pre><span></span><code><span class="p">(</span><span class="kd">defn </span><span class="nv">init-params</span><span class="w"> </span><span class="p">[</span><span class="nv">key</span><span class="p">]</span>

@@ -1031,6 +1031,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#v230-2026-09-25" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v2.3.0 — 2026-09-25
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#v220-2026-07-14" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1492,6 +1503,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#v230-2026-09-25" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v2.3.0 — 2026-09-25
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#v220-2026-07-14" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1585,6 +1607,142 @@
   <h1>Version history</h1>
 
 <h2 id="version-history">Version history</h2>
+<h3 id="v230-2026-09-25">v2.3.0 — 2026-09-25</h3>
+<p>This release delivers major performance and memory-use improvements. The
+language, compiler, and runtime have been reworked to scale to larger models,
+both for inference and training. The runtime has been performance-tested with up
+to 1.5 billion parameters, and a Sheaf port of Gemma 4 is already underway to
+push performance further. The release also adds mixed-precision training, more
+robust autodiff, broader support for compiled operations, and numerous bug fixes
+across the compiler and runtime.</p>
+<p><strong>Language improvements</strong></p>
+<ul>
+<li>The new <code>dynamic-update-slice</code> function writes a tensor into another tensor
+  without changing the input to simplify KV-cache updates (383edfa)</li>
+<li><code>dynamic-slice</code> now accepts one runtime start index per axis (383edfa)</li>
+<li><code>concat</code> now supports separate tensor arguments and an optional <code>:axis</code>
+  keyword in compiled functions, in addition to the vector form (a343c8b)</li>
+</ul>
+<p><strong>Examples</strong></p>
+<ul>
+<li>A new <code>macros</code> example uses macros to derive models from a template (d06fff3)</li>
+</ul>
+<p><strong>Runtime</strong></p>
+<ul>
+<li>Reverse-mode autodiff supports differently shaped vector and matrix products
+  (d5ea38e)</li>
+<li>The JIT can compile separate versions of a function for different shapes and
+  dtypes. If one version fails to compile, the others still work (9d8b6c1,
+  624c258, 66654ce)</li>
+<li>f16 tensors can now be copied to and from the device without being converted
+  to f32 (f2e39d3)</li>
+<li>All evaluations in a process now share one IREE session. If a function has
+  already been compiled, a new evaluation can call it without running
+  <code>iree-compile</code> again (5ff2db5, de1cbdf, 624c258)</li>
+<li>One IREE session can load several VMFB modules without mixing up functions
+  that have the same name (4780bb6, 16a7e78)</li>
+<li>JIT cache keys now use the parsed function instead of its formatted text.
+  Different functions can no longer receive the same cache key (d05b9a2)</li>
+<li>Before compiling a function, the JIT now checks every function it calls.
+  Recursive functions and unsupported higher-order calls fall back before they
+  reach the compiler (1979746, 9c73d90)</li>
+<li>Dot products, reductions, elementwise functions, indexing, and shape changes
+  no longer turn f16 or bf16 tensors into f32 tensors. Compiled functions can
+  also cast values to f16 (08d6441, ef34c7f)</li>
+<li>Autodiff now reports an error when an operation has no gradient rule. It used
+  to return zero without warning. Constants, unused values, and <code>stop-gradient</code>
+  still produce zero gradients as expected
+  (<a href="https://github.com/sheaf-lang/sheaf/issues/3">#3</a>)</li>
+<li>A failed recompilation can be retried on the next call. Errors while
+  converting buffers are returned normally instead of leaking IREE values or
+  panicking (45b1d8a, 32a1052)</li>
+<li>Rank-zero tensors no longer lose their dtype when copied back from the device
+  (417331b)</li>
+</ul>
+<p><strong>Performance</strong></p>
+<ul>
+<li>Compiled modules now share cached IREE buffers, so they can reuse device
+  copies of the same model weights (29fc51e, f63c667)</li>
+<li>JIT calls look up compiled versions directly instead of rebuilding a cache key
+  first (e2bdb0a, cf17884)</li>
+<li>The compiler remembers which scalar arguments affect tensor shapes instead of
+  repeating the same analysis on every call (ddc24c3)</li>
+<li>Compiling the same function twice now generates the same ANF and gradient
+  names (b98e7e2)</li>
+<li>Code generation no longer copies the full function registry for every
+  compilation (a5b0bf5)</li>
+</ul>
+<p><strong>Bug fixes</strong></p>
+<ul>
+<li>The interpreter and compiler now use the same dtype and broadcasting rules.
+  Arithmetic with f16 and bf16 tensors no longer widens them to f32 without
+  warning (88cde2c, 2cfcb9e, 1913129, 24da544, 84064fa, 4a98c7f, 913e86e,
+  120f7e3)</li>
+<li>Unused leaves in tuple parameters receive explicit zero gradients, and missing
+  gradient results are reported instead of being treated as zero (48e4467,
+  9efa57e)</li>
+<li>Shape variables no longer leak from one expression into another and produce
+  wrong reshape dimensions (14d3b88)</li>
+<li>Unrolled <code>reduce</code> calls no longer lose tuple bindings or mix up fields in
+  nested parameter tuples (deaacc6, 1e1abcd)</li>
+<li>Tuple destructuring now works when the tuple comes from a <code>let</code> or <code>do</code>
+  expression (f4033be)</li>
+<li>Compiled functions no longer turn dictionaries with string keys, or results
+  from <code>assoc</code>, into raw tuples (c22a702, 1a20907)</li>
+<li><code>value-and-grad</code> can now compile nested reductions over dictionary parameters
+  (2f5f987)</li>
+<li>Shared embedding and output weights now receive gradients with the correct
+  shape (34e8a8a)</li>
+<li>Scalar i32 outputs from IREE are decoded as integers rather than f32 values
+  (d96fa0f)</li>
+<li>Converting a compiled rank-zero tensor with <code>float</code> returns a scalar again,
+  including when the value is still stored in a device buffer (f144062)</li>
+<li>Unsupported calls nested inside tuples and other compound expressions are
+  detected before JIT compilation (8181609)</li>
+<li>Two JIT compilations running at the same time can no longer write or load the
+  same cache file concurrently (9532561)</li>
+<li>The JIT no longer loses static dimensions when a tensor is passed directly to
+  a function (3b5e122)</li>
+<li>The buffer cache no longer releases a device buffer while a returned
+  <code>DeviceBuffer</code> still uses it (77a2eae)</li>
+<li>Symbolic bindings created while tracing a <code>let</code> expression no longer escape
+  their lexical scope (d6fe8f4)</li>
+</ul>
+<p><strong>REPL and CLI</strong></p>
+<ul>
+<li>Grouped inline documentation handles comma-separated headings correctly, and
+  internal primitives are hidden from completion (341bb41)</li>
+<li>Registry listings are now sorted (8608565)</li>
+<li>Multiline values align continuation lines with their first line (d84e4d5)</li>
+<li><code>--jit-profile</code> now works without <code>--blame</code>. It cannot be combined with
+  <code>--trace</code>, and <code>--blame</code> warns when tracing has disabled the JIT (71a1dcd)</li>
+<li><code>--mem-profile</code> no longer reports cumulative Metal allocations as live memory
+  (60efeeb)</li>
+</ul>
+<p><strong>Build and release</strong></p>
+<ul>
+<li>The former build system, which used a mix of Bash, Python, Cargo, CMake and
+  Ninja, has been replaced with Bazel. Bazel now hermetically builds Sheaf,
+  IREE, the standard library, tests, examples, and release binaries
+  (<a href="https://github.com/sheaf-lang/sheaf/issues/9">#9</a>).</li>
+<li>The standard library is now compiled as an artefact during the build process
+  instead of every time Sheaf starts (1a6462f, f9cb32d)</li>
+<li>Example archives published with releases are now built automatically (31ba3b6)</li>
+<li>Nightly builds report a distinct date-stamped version rather than the latest
+  stable release (e828841)</li>
+<li>Linux builds now include Vulkan support by default and automatically enable
+  CUDA when a compatible toolkit is available (8f42f59, 1ac9523)</li>
+<li>Release builds through Bazel use link-time optimization (21ae97c)</li>
+<li>Nightly and release binaries use the same Bazel build as local installations.
+  The Linux x86-64 binary is tested on CUDA before it is published (90fe08b,
+  b27e0eb)</li>
+<li>Nightly releases now include Linux aarch64 binaries, alongside Linux x86-64
+  and Apple Silicon builds (fe5ea2e)</li>
+<li>The test suite now runs the MLP, Hydra, CLEVR, and NanoGPT examples separately
+  on each platform. It also ensures that model forward and training functions
+  are JIT-compiled and do not fall back to the interpreter (599de6c, 5e62abe,
+  4814986)</li>
+</ul>
 <h3 id="v220-2026-07-14">v2.2.0 — 2026-07-14</h3>
 <p>This release improves language correctness, brings new training features to the
 standard library, adds <code>let</code> destructuring, fixes runtime bugs, and improves the

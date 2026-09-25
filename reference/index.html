@@ -2729,6 +2729,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#dynamic-update-slice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        dynamic-update-slice
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5250,6 +5261,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#dynamic-update-slice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        dynamic-update-slice
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -7639,11 +7661,43 @@ and Value projections in Transformer layers.</p>
 <hr />
 <h3 id="dynamic-slice">dynamic-slice</h3>
 <p><strong>Type:</strong> function\
-<strong>Signature:</strong> <code>(dynamic-slice x start length)</code></p>
-<p>Extracts a slice of a fixed <code>length</code> starting from a dynamic <code>start</code> index. The
-output shape (length) remains constant even when the starting position is a
-computed value.</p>
-<div class="language-text highlight"><pre><span></span><code>(dynamic-slice (arange 5) 1 3)  ; =&gt; [1 2 3]
+<strong>Signature:</strong> <code>(dynamic-slice x starts sizes)</code></p>
+<p>Extracts a fixed-size slice from a tensor of non-zero rank. <code>starts</code> is a
+one-dimensional numeric tensor with one start index per axis. Its values may
+be computed at runtime. <code>sizes</code> is a static vector of non-negative integer
+literals with one size per axis. Each size must not exceed the corresponding
+input dimension.</p>
+<p>Start indices are converted to i32 and clamped independently to the interval
+<code>[0, dimension - size]</code>. A slice that would cross an upper bound is shifted
+back to fit. Negative starts are clamped to zero.</p>
+<div class="language-text highlight"><pre><span></span><code>(dynamic-slice (arange 5) [1] &#39;[3])
+;; =&gt; [1 2 3]
+
+(dynamic-slice [[1 2 3]
+                [4 5 6]
+                [7 8 9]]
+               [1 1]
+               &#39;[2 2])
+;; =&gt; [[5. 6.]
+;;     [8. 9.]]
+</code></pre></div>
+<hr />
+<h3 id="dynamic-update-slice">dynamic-update-slice</h3>
+<p><strong>Type:</strong> function\
+<strong>Signature:</strong> <code>(dynamic-update-slice x update starts)</code></p>
+<p>Returns <code>x</code> with <code>update</code> written at the position given by <code>starts</code>. <code>x</code> and
+<code>update</code> must have the same non-zero rank and dtype. Every update dimension
+must fit within the corresponding input dimension. <code>starts</code> follows the same
+conversion and clamping rules as <code>dynamic-slice</code>.</p>
+<p>The operation is functional: it returns an updated tensor and does not mutate
+its input value.</p>
+<div class="language-text highlight"><pre><span></span><code>(dynamic-update-slice (zeros &#39;[3 4])
+                      [[1 2]
+                       [3 4]]
+                      [1 2])
+;; =&gt; [[0. 0. 0. 0.]
+;;     [0. 0. 1. 2.]
+;;     [0. 0. 3. 4.]]
 </code></pre></div>
 <hr />
 <h2 id="utilities">Utilities</h2>
