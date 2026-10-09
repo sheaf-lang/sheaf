@@ -753,8 +753,10 @@ impl<'a> CodeGenerator<'a> {
         if let CompiledExpr::Integer(seed) = &args[0] {
             let (reg, ty) = self.emitter.emit_random_key( *seed);
             Ok((reg, ty))
-        } else if let CompiledExpr::Float(f) = &args[0] {
-            let (reg, ty) = self.emitter.emit_random_key( *f as i64);
+        } else if let CompiledExpr::Float(f) = &args[0]
+            && f.is_finite() && f.fract() == 0.0
+            && (-9223372036854775808.0..9223372036854775808.0).contains(f) {
+            let (reg, ty) = self.emitter.emit_random_key(*f as i64);
             Ok((reg, ty))
         } else {
             Err(SheafError::Compile {
@@ -764,82 +766,97 @@ impl<'a> CodeGenerator<'a> {
         }
     }
 
-    fn gen_random_normal(&mut self, args: &[CompiledExpr]) -> SheafResult<(Register, StableHLOType)> {
-        if let CompiledExpr::Vector(shape_elems) = &args[1] {
-            let shape = self.parse_shape_vec(shape_elems)?;
-            let (key_reg, key_ty) = self.generate(&args[0])?;
-            let (reg, ty) = self.emitter.emit_random_normal(&key_reg, &key_ty, &shape);
-            Ok((reg, ty))
-        } else {
-            Err(SheafError::Compile {
-                message: "random-normal expects a vector shape argument".to_string(),
-                location: crate::core::error::SourceLocation::unknown(),
-            })
+    fn gen_prng_arg(&mut self, key: &CompiledExpr) -> SheafResult<(Register, StableHLOType)> {
+        if let CompiledExpr::Integer(seed) = key {
+            return Ok(self.emitter.emit_random_key(*seed));
         }
+        let (reg, ty) = self.generate(key)?;
+        if ty.shape() != [crate::core::prng::KEY_SIZE as i64] || ty.dtype() != "f32" {
+            return Err(SheafError::Compile {
+                message: "expected a PRNG key from random-key or random-split".to_string(),
+                location: crate::core::error::SourceLocation::unknown(),
+            });
+        }
+        Ok((reg, ty))
+    }
+
+    fn random_tensor_args(
+        &mut self, name: &str, args: &[CompiledExpr],
+    ) -> SheafResult<(Register, StableHLOType, Vec<i64>)> {
+        let shape = match &args[1] {
+            CompiledExpr::Vector(elements) => self.parse_shape_vec(elements)?,
+            CompiledExpr::Quoted(_) => self.parse_static_shape_arg(&args[1], name)?,
+            _ => return Err(SheafError::Compile {
+                message: format!("{name} expects a vector shape argument"),
+                location: crate::core::error::SourceLocation::unknown(),
+            }),
+        };
+        let total = shape.iter().try_fold(1u64, |n, &d| {
+            u64::try_from(d).ok().and_then(|d| n.checked_mul(d))
+        });
+        if total.is_none_or(|n| n > 1u64 << 32) {
+            return Err(SheafError::Compile {
+                message: "random tensor exceeds PRNG counter capacity".to_string(),
+                location: crate::core::error::SourceLocation::unknown(),
+            });
+        }
+        let (key, ty) = self.gen_prng_arg(&args[0])?;
+        Ok((key, ty, shape))
+    }
+
+    fn gen_random_normal(&mut self, args: &[CompiledExpr]) -> SheafResult<(Register, StableHLOType)> {
+        let (key, ty, shape) = self.random_tensor_args("random-normal", args)?;
+        Ok(self.emitter.emit_random_normal(&key, &ty, &shape))
     }
 
     fn gen_random_uniform(&mut self, args: &[CompiledExpr]) -> SheafResult<(Register, StableHLOType)> {
-        if let CompiledExpr::Vector(shape_elems) = &args[1] {
-            let shape = self.parse_shape_vec(shape_elems)?;
-            let (key_reg, key_ty) = self.generate(&args[0])?;
-            let (reg, ty) = self.emitter.emit_random_uniform(&key_reg, &key_ty, &shape);
-            Ok((reg, ty))
-        } else {
-            Err(SheafError::Compile {
-                message: "random-uniform expects a vector shape argument".to_string(),
-                location: crate::core::error::SourceLocation::unknown(),
-            })
-        }
+        let (key, ty, shape) = self.random_tensor_args("random-uniform", args)?;
+        Ok(self.emitter.emit_random_uniform(&key, &ty, &shape))
     }
 
     fn gen_random_randint(&mut self, args: &[CompiledExpr]) -> SheafResult<(Register, StableHLOType)> {
-        if let CompiledExpr::Vector(shape_elems) = &args[1] {
-            let shape = self.parse_shape_vec(shape_elems)?;
-            let (key_reg, key_ty) = self.generate(&args[0])?;
-            let low = match &args[2] {
+        let (key, ty, shape) = self.random_tensor_args("random-randint", args)?;
+        let mut bounds = [0; 2];
+        for (bound, arg) in bounds.iter_mut().zip(&args[2..4]) {
+            *bound = match arg {
                 CompiledExpr::Integer(n) => *n,
-                CompiledExpr::Float(f) => *f as i64,
+                CompiledExpr::Float(f) if f.is_finite() && f.fract() == 0.0
+                    && (-9223372036854775808.0..9223372036854775808.0).contains(f) => *f as i64,
                 _ => return Err(SheafError::Compile {
-                    message: "random-randint: low must be an integer literal".to_string(),
+                    message: "random-randint: bounds must be integer literals".to_string(),
                     location: crate::core::error::SourceLocation::unknown(),
                 }),
             };
-            let high = match &args[3] {
-                CompiledExpr::Integer(n) => *n,
-                CompiledExpr::Float(f) => *f as i64,
-                _ => return Err(SheafError::Compile {
-                    message: "random-randint: high must be an integer literal".to_string(),
-                    location: crate::core::error::SourceLocation::unknown(),
-                }),
-            };
-            let (reg, ty) = self.emitter.emit_random_randint(&key_reg, &key_ty, &shape, low, high);
-            Ok((reg, ty))
-        } else {
-            Err(SheafError::Compile {
-                message: "random-randint expects a vector shape argument".to_string(),
-                location: crate::core::error::SourceLocation::unknown(),
-            })
         }
+        if bounds[1] <= bounds[0] {
+            return Err(SheafError::Compile {
+                message: "random-randint: high must be > low".to_string(),
+                location: crate::core::error::SourceLocation::unknown(),
+            });
+        }
+        Ok(self.emitter.emit_random_randint(&key, &ty, &shape, bounds[0], bounds[1]))
     }
 
     fn gen_random_split(&mut self, args: &[CompiledExpr]) -> SheafResult<(Register, StableHLOType)> {
         let n = if args.len() == 2 {
             match &args[1] {
-                CompiledExpr::Integer(n) => *n as usize,
+                CompiledExpr::Integer(n) if *n >= 0 && *n as u64 <= 1u64 << 32 => *n as usize,
+                CompiledExpr::Float(n) if n.is_finite() && n.fract() == 0.0
+                    && (0.0..=4294967296.0).contains(n) => *n as usize,
                 _ => return Err(SheafError::Compile {
-                    message: "random-split: N must be an integer literal".to_string(),
+                    message: "random-split: N must fit the PRNG counter capacity".to_string(),
                     location: crate::core::error::SourceLocation::unknown(),
                 }),
             }
         } else {
             2
         };
-        let (key_reg, key_ty) = self.generate(&args[0])?;
+        let (key_reg, key_ty) = self.gen_prng_arg(&args[0])?;
         Ok(self.emitter.emit_random_split_n(&key_reg, &key_ty, n))
     }
 
     fn gen_choice(&mut self, args: &[CompiledExpr]) -> SheafResult<(Register, StableHLOType)> {
-        let (key_reg, key_ty) = self.generate(&args[0])?;
+        let (key_reg, key_ty) = self.gen_prng_arg(&args[0])?;
         let mut probs_expr = None;
         let mut i = 1;
         while i < args.len() {

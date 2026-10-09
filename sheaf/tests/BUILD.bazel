@@ -40,6 +40,11 @@ sheaf_integration_test(
 sheaf_integration_test(name = "mem_attribution")
 sheaf_integration_test(name = "parser_tests")
 sheaf_integration_test(name = "polymorphic_jit_reuse")
+sheaf_integration_test(
+    name = "prng_tests",
+    data = ["@iree_compiler//:iree-compile"],
+    env = {"IREE_COMPILE": "$(rootpath @iree_compiler//:iree-compile)"},
+)
 sheaf_integration_test(name = "shared_session")
 
 sheaf_program_test(
@@ -174,6 +179,7 @@ test_suite(
         ":mem_attribution",
         ":parser_tests",
         ":polymorphic_jit_reuse",
+        ":prng_tests",
         ":shared_session",
         ":unit",
     ],

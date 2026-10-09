@@ -104,7 +104,7 @@ pub struct FunctionDef {
 }
 
 impl FunctionDef {
-    /// Stable identity of the original AST body for manifest validation.
+    /// Compiler identity and original AST body for manifest validation.
     /// Source locations do not affect compiled output and are excluded.
     pub fn body_hash(&self) -> String {
         canonical_ast_hash(&self.body)
@@ -181,7 +181,7 @@ fn canonical_ast_hash(value: &SheafValue) -> String {
         }
     }
 
-    let mut encoded = String::new();
+    let mut encoded = format!("{};", super::prng::VERSION);
     write_value(&mut encoded, value);
 
     fn fnv1a(text: &str, seed: u64) -> u64 {

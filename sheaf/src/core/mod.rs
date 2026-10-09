@@ -14,6 +14,7 @@ pub mod inference;
 pub mod macro_engine;
 pub mod parser;
 pub mod prelude;
+pub mod prng;
 pub mod shape;
 pub mod signature;
 #[cfg(not(sheaf_frontend))]

@@ -1,4 +1,5 @@
 use super::*;
+use crate::core::prng::{self, Host};
 use std::sync::Arc;
 
 pub(super) fn register(env: &mut Env) {
@@ -11,208 +12,139 @@ pub(super) fn register(env: &mut Env) {
     register_native_builtin(env, OpId::TopK, builtin_top_k);
 }
 
-fn seed_to_key(seed: u64) -> Value {
-    let lo = (seed & 0xFFFFFFFF) as f32;
-    let hi = ((seed >> 32) & 0xFFFFFFFF) as f32;
-    let arr = ArrayD::from_shape_vec(IxDyn(&[2]), vec![lo, hi]).unwrap();
-    Value::tensor_f32(arr)
+fn scalar_integer(value: &Value, name: &str) -> Result<i64, SheafError> {
+    let value = value.ensure_host_cow()?;
+    if let Value::Int(n) = &*value { return Ok(*n); }
+    if !matches!(&*value, Value::Tensor { dtype: Dtype::Bool, .. })
+        && let Some(n) = value.to_f64()
+        && n.is_finite() && n.fract() == 0.0
+        && (-9223372036854775808.0..9223372036854775808.0).contains(&n) {
+        return Ok(n as i64);
+    }
+    Err(runtime_error(format!("{name}: expected an integer")))
+}
+
+fn words_to_key(words: [u32; 2]) -> Value {
+    let limbs = prng::encode(&mut Host, words);
+    Value::tensor_f32(ArrayD::from_shape_vec(IxDyn(&[prng::KEY_SIZE]), limbs.to_vec()).unwrap())
+}
+
+fn normalize_key(key: &Value) -> R {
+    let key = key.ensure_host()?;
+    match &key {
+        Value::Int(seed) => Ok(words_to_key(prng::seed(*seed))),
+        Value::Tensor { data, dtype: Dtype::F32 } if data.shape() == [prng::KEY_SIZE] => {
+            let limbs = std::array::from_fn::<_, { prng::KEY_SIZE }, _>(|i| data[IxDyn(&[i])]);
+            if prng::valid_key(&limbs) { return Ok(key); }
+            Err(runtime_error("expected a PRNG key with four unsigned 16-bit limbs"))
+        }
+        Value::List(items) if matches!(items.as_slice(), [Value::Int(_), Value::Int(_)]) => {
+            let [Value::Int(lo), Value::Int(hi)] = items.as_slice() else { unreachable!() };
+            match (u32::try_from(*lo), u32::try_from(*hi)) {
+                (Ok(lo), Ok(hi)) => Ok(words_to_key([lo, hi])),
+                _ => Err(runtime_error("expected a PRNG key with two unsigned 32-bit words")),
+            }
+        }
+        _ => Err(runtime_error(format!("expected a PRNG key, got {}", key.type_name()))),
+    }
+}
+
+fn key_words(key: &Value) -> Result<[u32; 2], SheafError> {
+    let Value::Tensor { data, .. } = normalize_key(key)? else { unreachable!() };
+    let limbs = std::array::from_fn(|i| data[IxDyn(&[i])]);
+    Ok(prng::decode(&mut Host, limbs))
 }
 
 fn builtin_random_key(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
-    let seed = match args.first() {
-        Some(Value::Int(n)) => *n as u64,
-        Some(Value::Float(f)) => *f as u64,
-        _ => return Err(runtime_error("random-key: expected integer seed")),
-    };
-    Ok(seed_to_key(seed))
-}
-
-fn key_to_seed(key: &Value) -> Result<u64, crate::core::error::SheafError> {
-    let key = key.ensure_host()?;
-    match &key {
-        Value::Tensor { data, dtype } if data.shape() == [2] && *dtype != Dtype::Bool
-            && data.iter().all(|&word| word.is_finite() && word.fract() == 0.0) => {
-            let lo = data[IxDyn(&[0])] as u64;
-            let hi = data[IxDyn(&[1])] as u64;
-            Ok(lo | (hi << 32))
-        }
-        Value::List(items) => match items.as_slice() {
-            [Value::Int(lo), Value::Int(hi)] => Ok(*lo as u64 | ((*hi as u64) << 32)),
-            _ => Err(runtime_error("expected a PRNG key with two integer words")),
-        },
-        Value::Int(n) => Ok(*n as u64),
-        _ => Err(runtime_error(format!("expected a PRNG key, got {}", key.type_name()))),
-    }
+    if args.len() != 1 { return Err(arity_error("random-key", 1, args.len())); }
+    let seed = scalar_integer(&args[0], "random-key")?;
+    Ok(words_to_key(prng::seed(seed)))
 }
 
 fn builtin_random_split(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
     if args.is_empty() || args.len() > 2 {
         return Err(runtime_error("random-split: expected (random-split key) or (random-split key n)"));
     }
-    let seed = key_to_seed(&args[0])?;
-    let n = if args.len() == 2 {
-        match &args[1] {
-            Value::Int(n) => usize::try_from(*n)
-                .map_err(|_| runtime_error("random-split: count must be nonnegative"))?,
-            Value::Float(n) => checked_dimension(*n as f64)
-                .map_err(|error| runtime_error(format!("random-split: count: {error}")))?,
-            _ => return Err(runtime_error("random-split: n must be an integer")),
-        }
-    } else {
-        2
+    let key = key_words(&args[0])?;
+    let n = match args.get(1) {
+        Some(Value::Int(n)) => usize::try_from(*n)
+            .map_err(|_| runtime_error("random-split: count must be nonnegative"))?,
+        Some(Value::Float(n)) => checked_dimension(*n as f64)
+            .map_err(|error| runtime_error(format!("random-split: count: {error}")))?,
+        None => 2,
+        _ => return Err(runtime_error("random-split: count must be an integer")),
     };
     if n > isize::MAX as usize / std::mem::size_of::<Value>() {
         return Err(runtime_error("random-split: count exceeds addressable memory"));
     }
-    let mut keys = Vec::new();
-    keys.try_reserve_exact(n)
-        .map_err(|_| runtime_error("random-split: cannot allocate keys"))?;
-    for i in 0..n {
-        let child_seed = seed.wrapping_add(i as u64).wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
-        keys.push(seed_to_key(child_seed));
+    if n as u128 > 1u128 << 32 {
+        return Err(runtime_error("random-split: count exceeds PRNG counter capacity"));
     }
+    let mut keys = Vec::new();
+    keys.try_reserve_exact(n).map_err(|_| runtime_error("random-split: cannot allocate keys"))?;
+    keys.extend((0..n).map(|i| words_to_key(prng::split(&mut Host, key, i as u32))));
     Ok(Value::List(keys))
 }
 
-fn splitmix64(state: &mut u64) -> f32 {
-    *state = state.wrapping_add(0x9e3779b97f4a7c15);
-    let mut z = *state;
-    z = (z ^ (z >> 30)).wrapping_mul(0xbf58476d1ce4e5b9);
-    z = (z ^ (z >> 27)).wrapping_mul(0x94d049bb133111eb);
-    z = z ^ (z >> 31);
-    (z >> 11) as f32 / (1u64 << 53) as f32
+fn random_tensor(
+    args: &[Value], dtype: Dtype, mut sample: impl FnMut([u32; 2]) -> f32,
+) -> R {
+    let key = key_words(&args[0])?;
+    let shape = shape_from_value(&args[1])?;
+    let n: usize = shape.iter().product();
+    if n as u128 > 1u128 << 32 {
+        return Err(runtime_error("random tensor exceeds PRNG counter capacity"));
+    }
+    let data = (0..n).map(|i| sample(prng::bits(&mut Host, key, i as u32))).collect();
+    let arr = ArrayD::from_shape_vec(IxDyn(&shape), data)
+        .map_err(|e| runtime_error(format!("random tensor: shape error: {e}")))?;
+    Ok(Value::tensor(arr, dtype))
 }
 
 fn builtin_random_normal(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
-    if args.len() != 2 {
-        return Err(runtime_error("random-normal: expected (random-normal key shape)"));
-    }
-    let mut state = key_to_seed(&args[0])?;
-    let shape = shape_from_value(&args[1])?;
-    let n: usize = shape.iter().product();
-    let mut data = Vec::with_capacity(n);
-    let mut i = 0;
-    while i < n {
-        let u1 = splitmix64(&mut state).max(1e-10);
-        let u2 = splitmix64(&mut state);
-        let r = (-2.0f32 * u1.ln()).sqrt();
-        let theta = 2.0f32 * std::f32::consts::PI * u2;
-        data.push(r * theta.cos());
-        if i + 1 < n { data.push(r * theta.sin()); }
-        i += 2;
-    }
-    data.truncate(n);
-    let arr = ArrayD::from_shape_vec(IxDyn(&shape), data)
-        .map_err(|e| runtime_error(format!("random-normal: shape error: {}", e)))?;
-    Ok(Value::tensor_f32(arr))
+    if args.len() != 2 { return Err(arity_error("random-normal", 2, args.len())); }
+    random_tensor(args, Dtype::F32, |bits| prng::normal(&mut Host, bits))
 }
 
 fn builtin_random_uniform(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
-    if args.len() != 2 {
-        return Err(runtime_error("random-uniform: expected (random-uniform key shape)"));
-    }
-    let mut state = key_to_seed(&args[0])?;
-    let shape = shape_from_value(&args[1])?;
-    let n: usize = shape.iter().product();
-    let data: Vec<f32> = (0..n).map(|_| splitmix64(&mut state)).collect();
-    let arr = ArrayD::from_shape_vec(IxDyn(&shape), data)
-        .map_err(|e| runtime_error(format!("random-uniform: shape error: {}", e)))?;
-    Ok(Value::tensor_f32(arr))
+    if args.len() != 2 { return Err(arity_error("random-uniform", 2, args.len())); }
+    random_tensor(args, Dtype::F32, |bits| prng::uniform(&mut Host, bits[0]))
 }
 
 fn builtin_random_randint(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
-    if args.len() != 4 {
-        return Err(runtime_error("random-randint: expected (random-randint key shape low high)"));
-    }
-    let mut state = key_to_seed(&args[0])?;
-    let shape = shape_from_value(&args[1])?;
-    let low = match &args[2] {
-        Value::Int(n) => *n,
-        Value::Float(f) => *f as i64,
-        _ => return Err(runtime_error("random-randint: low must be integer")),
-    };
-    let high = match &args[3] {
-        Value::Int(n) => *n,
-        Value::Float(f) => *f as i64,
-        _ => return Err(runtime_error("random-randint: high must be integer")),
-    };
-    if high <= low {
-        return Err(runtime_error("random-randint: high must be > low"));
-    }
-    let range = (high - low) as u64;
-    let n: usize = shape.iter().product();
-    let data: Vec<f32> = (0..n)
-        .map(|_| {
-            let u = splitmix64(&mut state);
-            let idx = (u * range as f32) as i64;
-            (low + idx.min(high - low - 1)) as f32
-        })
-        .collect();
-    let arr = ArrayD::from_shape_vec(IxDyn(&shape), data)
-        .map_err(|e| runtime_error(format!("random-randint: shape error: {}", e)))?;
-    Ok(Value::tensor_i32(arr))
+    if args.len() != 4 { return Err(arity_error("random-randint", 4, args.len())); }
+    let low = scalar_integer(&args[2], "random-randint: low")?;
+    let high = scalar_integer(&args[3], "random-randint: high")?;
+    if high <= low { return Err(runtime_error("random-randint: high must be > low")); }
+    random_tensor(args, Dtype::I32, |bits| prng::randint(&mut Host, bits[0], low, high))
 }
 
 fn builtin_choice(args: &[Value], kw: &BTreeMap<String, Value>) -> R {
-    if args.len() < 2 {
+    if !(2..=3).contains(&args.len()) {
         return Err(runtime_error("choice: expected (choice key n :p probs)"));
     }
-    let seed = key_to_seed(&args[0])?;
-    let n = match &args[1] {
-        Value::Int(n) => *n as usize,
-        Value::Float(f) => *f as usize,
-        _ => return Err(runtime_error("choice: n must be integer")),
+    let key = key_words(&args[0])?;
+    let bits = prng::bits(&mut Host, key, 0);
+    let u = prng::uniform(&mut Host, bits[0]);
+    let n = args[1].to_f64().ok_or_else(|| runtime_error("choice: n must be integer"))? as usize;
+    let Some(probs) = kw.get("p").or_else(|| args.get(2)) else {
+        return Ok(Value::Int((u * n as f32) as i64));
     };
-    let probs = kw.get("p").or_else(|| args.get(2));
-    let mut state = seed;
-    let u = splitmix64(&mut state);
-    match probs {
-        Some(Value::Tensor { data, .. }) => {
-            if data.is_empty() {
-                return Err(runtime_error("choice: empty probability tensor"));
-            }
-            let mut cumsum = 0.0f32;
-            for (i, &p) in data.iter().enumerate() {
-                cumsum += p;
-                if u < cumsum {
-                    return Ok(Value::Int(i as i64));
-            }
-        }
-            Ok(Value::Int((data.len() - 1) as i64))
-        }
-        Some(Value::DeviceBuffer(db)) => {
-            let data = db.to_host().map_err(|e| runtime_error(format!("choice: {}", e)))?;
-            if data.is_empty() {
-                return Err(runtime_error("choice: empty probability tensor"));
-            }
-            let mut cumsum = 0.0f32;
-            for (i, &p) in data.iter().enumerate() {
-                cumsum += p;
-                if u < cumsum {
-                    return Ok(Value::Int(i as i64));
-            }
-        }
-            Ok(Value::Int((data.len() - 1) as i64))
-        }
-        Some(Value::List(items)) => {
-            let flat: Vec<f32> = items.iter().filter_map(|v| v.to_f64().map(|x| x as f32)).collect();
-            if flat.is_empty() {
-                return Err(runtime_error("choice: empty probability list"));
-            }
-            let mut cumsum = 0.0f32;
-            for (i, &p) in flat.iter().enumerate() {
-                cumsum += p;
-                if u < cumsum {
-                    return Ok(Value::Int(i as i64));
-            }
-        }
-            Ok(Value::Int((flat.len() - 1) as i64))
-        }
-        None => {
-            Ok(Value::Int((u * n as f32) as i64))
-        }
-        _ => Err(runtime_error("choice: :p must be a tensor or list of probabilities")),
+    let probs = probs.ensure_host()?;
+    let values: Vec<f32> = match &probs {
+        Value::Tensor { data, .. } => data.iter().copied().collect(),
+        Value::List(items) => items.iter().map(|v| {
+            v.to_f32().ok_or_else(|| runtime_error("choice: probabilities must be numbers"))
+        }).collect::<Result<_, _>>()?,
+        _ => return Err(runtime_error("choice: :p must be a tensor or list of probabilities")),
+    };
+    if values.is_empty() { return Err(runtime_error("choice: empty probability tensor")); }
+    let mut cumsum = 0.0f32;
+    for (i, p) in values.iter().enumerate() {
+        cumsum += p;
+        if u < cumsum { return Ok(Value::Int(i as i64)); }
     }
+    Ok(Value::Int((values.len() - 1) as i64))
 }
 
 fn builtin_top_k(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {

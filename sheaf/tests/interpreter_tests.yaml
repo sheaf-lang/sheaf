@@ -840,7 +840,7 @@
           y (random-normal (random-key 2) '[3 2])
           [loss grad] ((value-and-grad (fn [p] (mean (** (- (+ (@ x (get p :W)) (get p :b)) y) 2)))) p)]
       loss)
-  expected: "4.080512"
+  expected: "2.961008"
 - name: vag-mlp-grad-shapes
   test: >
     (let [p {:W (random-normal (random-key 0) '[4 2]) :b (zeros '[2])}
