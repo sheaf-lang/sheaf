@@ -9,7 +9,7 @@ use std::collections::{BTreeMap, HashMap};
 /// Resolve scalar constants.
 pub fn resolve_static_constants(
     expr: &CompiledExpr,
-    constants: &HashMap<(String, Vec<usize>), f64>,
+    constants: &HashMap<(String, Vec<usize>), i64>,
     param_shapes: &HashMap<String, Vec<i64>>,
     skip_lambda: bool,
 ) -> CompiledExpr {
@@ -20,7 +20,7 @@ pub fn resolve_static_constants(
 
 fn resolve_constants_rec(
     expr: &CompiledExpr,
-    constants: &HashMap<(String, Vec<usize>), f64>,
+    constants: &HashMap<(String, Vec<usize>), i64>,
     locals: &mut HashMap<String, CompiledExpr>,
     shapes: &mut HashMap<String, Vec<i64>>,
     skip_lambda: bool,
@@ -29,7 +29,7 @@ fn resolve_constants_rec(
         CompiledExpr::GetTupleElement { param, indices } => {
             let key = (param.clone(), indices.clone());
             match constants.get(&key) {
-                Some(&val) => f64_to_const(val),
+                Some(&val) => CompiledExpr::Integer(val),
                 None => expr.clone(),
             }
         }
@@ -330,112 +330,12 @@ fn resolve_constants_rec(
     }
 }
 
-/// Replace free occurrences of a symbol with a scalar constant.
-pub fn substitute_scalar_param(expr: &CompiledExpr, name: &str, value: f64) -> CompiledExpr {
-    match expr {
-        CompiledExpr::Symbol(s) if s == name => f64_to_const(value),
-        CompiledExpr::Lambda { params, body } => {
-            if params.iter().any(|p| p == name) {
-                expr.clone()
-            } else {
-                CompiledExpr::Lambda {
-                    params: params.clone(),
-                    body: Box::new(substitute_scalar_param(body, name, value)),
-                }
-            }
-        }
-        CompiledExpr::Let { bindings, body } => {
-            let mut new_bindings = Vec::new();
-            let mut shadowed = false;
-            for (bname, bexpr) in bindings {
-                let new_expr = if shadowed {
-                    bexpr.clone()
-                } else {
-                    substitute_scalar_param(bexpr, name, value)
-                };
-                if let BindingPattern::Simple(bname_str) = bname
-                    && bname_str == name
-                {
-                    shadowed = true;
-                }
-                new_bindings.push((bname.clone(), new_expr));
-            }
-            CompiledExpr::Let {
-                bindings: new_bindings,
-                body: if shadowed {
-                    body.clone()
-                } else {
-                    Box::new(substitute_scalar_param(body, name, value))
-                },
-            }
-        }
-        CompiledExpr::FunctionCall {
-            name: fn_name,
-            args,
-            ..
-        } => CompiledExpr::FunctionCall {
-            name: fn_name.clone(),
-            args: args
-                .iter()
-                .map(|a| substitute_scalar_param(a, name, value))
-                .collect(),
-            loc: None,
-        },
-        CompiledExpr::LambdaCall { callee, args } => CompiledExpr::LambdaCall {
-            callee: Box::new(substitute_scalar_param(callee, name, value)),
-            args: args
-                .iter()
-                .map(|a| substitute_scalar_param(a, name, value))
-                .collect(),
-        },
-        CompiledExpr::If {
-            condition,
-            then_branch,
-            else_branch,
-        } => CompiledExpr::If {
-            condition: Box::new(substitute_scalar_param(condition, name, value)),
-            then_branch: Box::new(substitute_scalar_param(then_branch, name, value)),
-            else_branch: else_branch
-                .as_ref()
-                .map(|e| Box::new(substitute_scalar_param(e, name, value))),
-        },
-        CompiledExpr::Vector(elems) => CompiledExpr::Vector(
-            elems
-                .iter()
-                .map(|e| substitute_scalar_param(e, name, value))
-                .collect(),
-        ),
-        CompiledExpr::Repeat {
-            index_var,
-            count,
-            acc_var,
-            acc_init,
-            body,
-        } => {
-            let new_init = Box::new(substitute_scalar_param(acc_init, name, value));
-            let shadowed = index_var == name || acc_var == name;
-            CompiledExpr::Repeat {
-                index_var: index_var.clone(),
-                count: count.clone(),
-                acc_var: acc_var.clone(),
-                acc_init: new_init,
-                body: if shadowed {
-                    body.clone()
-                } else {
-                    Box::new(substitute_scalar_param(body, name, value))
-                },
-            }
-        }
-        _ => expr.clone(),
-    }
-}
-
 /// Extract scalar values from a dict Value for compile-time constant propagation.
 pub fn extract_scalar_constants(
     val: &Value,
     param_name: &str,
     index_map: &BTreeMap<Vec<String>, Vec<usize>>,
-    out: &mut HashMap<(String, Vec<usize>), f64>,
+    out: &mut HashMap<(String, Vec<usize>), i64>,
 ) {
     extract_scalars_rec(val, param_name, &mut vec![], index_map, out);
 }
@@ -445,15 +345,10 @@ fn extract_scalars_rec(
     param_name: &str,
     path: &mut Vec<String>,
     index_map: &BTreeMap<Vec<String>, Vec<usize>>,
-    out: &mut HashMap<(String, Vec<usize>), f64>,
+    out: &mut HashMap<(String, Vec<usize>), i64>,
 ) {
     let scalar = match val {
-        Value::Int(n) => Some(*n as f64),
-        Value::Float(f) => Some(*f as f64),
-        Value::Tensor { data, .. } if data.is_empty() => None,
-        Value::Tensor { data, .. } if data.len() == 1 => {
-            Some(data.iter().next().copied().unwrap() as f64)
-        }
+        Value::Int(n) => Some(*n),
         Value::Dict(map) => {
             for (key, child) in map {
                 path.push(key.clone());
@@ -739,17 +634,31 @@ fn try_infer_sequence_element_shape(
     }
 }
 
-fn f64_to_const(val: f64) -> CompiledExpr {
-    if val.fract() == 0.0 && val.abs() < i64::MAX as f64 {
-        CompiledExpr::Integer(val as i64)
-    } else {
-        CompiledExpr::Float(val)
-    }
-}
-
 fn try_fold_arithmetic(name: &str, args: &[CompiledExpr]) -> Option<CompiledExpr> {
     if args.len() != 2 {
         return None;
+    }
+    if let [CompiledExpr::Integer(a), CompiledExpr::Integer(b)] = args {
+        let result = match name {
+            "+" => a.checked_add(*b),
+            "-" => a.checked_sub(*b),
+            "*" => a.checked_mul(*b),
+            "//" if *b != 0 => a.checked_div(*b).and_then(|quotient| {
+                let remainder = a.checked_rem(*b)?;
+                if remainder != 0 && (*a < 0) != (*b < 0) {
+                    quotient.checked_sub(1)
+                } else {
+                    Some(quotient)
+                }
+            }),
+            _ => None,
+        };
+        if let Some(result) = result {
+            return Some(CompiledExpr::Integer(result));
+        }
+        if name != "/" {
+            return None;
+        }
     }
     let a = extract_numeric(&args[0])?;
     let b = extract_numeric(&args[1])?;
@@ -761,7 +670,7 @@ fn try_fold_arithmetic(name: &str, args: &[CompiledExpr]) -> Option<CompiledExpr
         "//" => (a / b).floor(),
         _ => return None,
     };
-    Some(f64_to_const(result))
+    Some(CompiledExpr::Float(result))
 }
 
 fn extract_numeric(expr: &CompiledExpr) -> Option<f64> {
@@ -952,9 +861,9 @@ pub(crate) fn collect_shape_gtes(
 
 /// Keep captured scalars used as static shape arguments.
 pub(crate) fn filter_constants_for_shape_positions(
-    constants: &HashMap<(String, Vec<usize>), f64>,
+    constants: &HashMap<(String, Vec<usize>), i64>,
     body: &crate::core::expr::CompiledExpr,
-) -> HashMap<(String, Vec<usize>), f64> {
+) -> HashMap<(String, Vec<usize>), i64> {
     let shape_gtes = collect_shape_gtes(body);
     constants
         .iter()
@@ -965,6 +874,36 @@ pub(crate) fn filter_constants_for_shape_positions(
 
 #[cfg(test)]
 mod shape_classifier_tests {
+    #[test]
+    fn arithmetic_folding_preserves_integer_precision_and_float_types() {
+        use super::try_fold_arithmetic;
+        use crate::core::expr::CompiledExpr::{Float, Integer};
+        for (op, a, b, expected) in [
+            ("+", Integer(9_007_199_254_740_993), Integer(2), Integer(9_007_199_254_740_995)),
+            ("-", Integer(i64::MAX), Integer(1), Integer(i64::MAX - 1)),
+            ("*", Integer(3), Integer(7), Integer(21)),
+            ("//", Integer(3), Integer(-2), Integer(-2)),
+            ("//", Integer(-3), Integer(2), Integer(-2)),
+            ("//", Integer(-4), Integer(2), Integer(-2)),
+            ("/", Integer(4), Integer(2), Float(2.0)),
+            ("+", Float(1.0), Float(1.0), Float(2.0)),
+            ("*", Integer(2), Float(3.0), Float(6.0)),
+            ("//", Float(3.0), Float(2.0), Float(1.0)),
+        ] {
+            match (try_fold_arithmetic(op, &[a, b]), expected) {
+                (Some(Integer(actual)), Integer(expected)) => assert_eq!(actual, expected, "{op}"),
+                (Some(Float(actual)), Float(expected)) => assert_eq!(actual, expected, "{op}"),
+                (actual, expected) => panic!("{op}: expected {expected:?}, got {actual:?}"),
+            }
+        }
+        for (op, a, b) in [
+            ("+", i64::MAX, 1), ("-", i64::MIN, 1), ("*", i64::MAX, 2),
+            ("//", i64::MIN, -1), ("//", 1, 0),
+        ] {
+            assert!(try_fold_arithmetic(op, &[Integer(a), Integer(b)]).is_none(), "{op}");
+        }
+    }
+
     use super::{
         collect_shape_gtes, filter_constants_for_shape_positions, resolve_static_constants,
         try_infer_shape,
@@ -1114,11 +1053,11 @@ mod shape_classifier_tests {
             call("*", vec![sym("scale"), sym("r")]),
         );
         let mut constants = HashMap::new();
-        constants.insert(("cfg".to_string(), vec![0]), 8.0); // n
-        constants.insert(("cfg".to_string(), vec![1]), 2.0); // scale
+        constants.insert(("cfg".to_string(), vec![0]), 8); // n
+        constants.insert(("cfg".to_string(), vec![1]), 2); // scale
         let filtered = filter_constants_for_shape_positions(&constants, &body);
         assert_eq!(filtered.len(), 1);
-        assert_eq!(filtered.get(&("cfg".to_string(), vec![0])), Some(&8.0));
+        assert_eq!(filtered.get(&("cfg".to_string(), vec![0])), Some(&8));
     }
 
     #[test]

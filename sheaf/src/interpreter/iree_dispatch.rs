@@ -403,6 +403,7 @@ mod tests {
     #[test]
     fn jit_dispatch_name_uses_catalogued_variant_namespace() {
         let module = CompiledModuleInfo {
+            static_inputs: Vec::new(),
             function_name: "predict-value?".to_string(),
             module_name: "jit_variant_42".to_string(),
             sig: signature(),

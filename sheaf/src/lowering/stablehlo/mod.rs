@@ -99,6 +99,21 @@ impl StableHLOEmitter {
         self.virtual_tuples.get(reg).map(Vec::as_slice)
     }
 
+    pub(crate) fn replace_virtual_leaf(
+        &mut self, mut root: Register, indices: &[usize], reg: Register, ty: StableHLOType,
+    ) -> bool {
+        let Some((&last, parents)) = indices.split_last() else { return false };
+        for &index in parents {
+            let Some((child, _)) = self.virtual_tuples.get(&root)
+                .and_then(|elements| elements.get(index)) else { return false };
+            root = *child;
+        }
+        let Some(element) = self.virtual_tuples.get_mut(&root)
+            .and_then(|elements| elements.get_mut(last)) else { return false };
+        *element = (reg, ty);
+        true
+    }
+
     pub fn collect_virtual_leaves(&self, reg: Register, ty: &StableHLOType) -> Vec<(Register, StableHLOType)> {
         if let Some(constituents) = self.virtual_tuples.get(&reg) {
             constituents.iter()

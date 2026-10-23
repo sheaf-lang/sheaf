@@ -10,7 +10,7 @@ mod tuples;
 
 pub(crate) use constants::{collect_shape_gtes, filter_constants_for_shape_positions};
 pub use constants::{
-    extract_scalar_constants, resolve_static_constants, substitute_scalar_param, try_infer_shape,
+    extract_scalar_constants, resolve_static_constants, try_infer_shape,
 };
 pub use dict_layout::{lower_inlined_gets, propagate_let_layouts};
 pub use reduce::unroll_reduces;

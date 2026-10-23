@@ -128,6 +128,82 @@ fn assoc_can_add_a_field_in_a_direct_vmfb() {
     }
 }
 
+#[test]
+fn static_integer_arguments_and_dict_fields_are_exact_in_vmfb() {
+    initialize_device();
+    let mut interpreter = interpreter_only();
+    for (name, body, nested) in [
+        ("exact_scalar", "(* x (- option 9007199254740992))", false),
+        ("exact_field", "(* x (- (get-in option [:nested :n]) 9007199254740992))", true),
+    ] {
+        interpreter.eval(&format!("(defn {name} [x option] {body})")).unwrap();
+        let mut names = Vec::new();
+        for n in [9_007_199_254_740_993, 9_007_199_254_740_994, 9_007_199_254_740_993] {
+            let option = if nested {
+                Value::Dict(BTreeMap::from([("nested".into(), Value::Dict(BTreeMap::from([("n".into(), Value::Int(n))])))]))
+            } else { Value::Int(n) };
+            let args = [interpreter.eval("[1.0 2.0]").unwrap(), option];
+            let compiled = compile_call(&interpreter, name, &args).unwrap();
+            names.push(compiled.qualified_name.clone());
+            let expected = if n == 9_007_199_254_740_993 { "[1.0 2.0]" } else { "[2.0 4.0]" };
+            compare_values(&compiled.execute(&args).unwrap(), &interpreter.eval(expected).unwrap(), name).unwrap();
+        }
+        assert_ne!(names[0], names[1]);
+        assert_eq!(names[0], names[2]);
+    }
+}
+
+#[test]
+fn float_arguments_and_dict_fields_remain_dynamic_in_vmfb() {
+    initialize_device();
+    let mut interpreter = interpreter_only();
+    for (name, body, nested) in [
+        ("dynamic_scalar", "(* x option)", false),
+        ("dynamic_field", "(* x (get option :n))", true),
+    ] {
+        interpreter.eval(&format!("(defn {name} [x option] {body})")).unwrap();
+        let mut names = Vec::new();
+        for (n, expected) in [(2.0, "[2.0 4.0]"), (3.0, "[3.0 6.0]")] {
+            let option = if nested {
+                Value::Dict(BTreeMap::from([("n".into(), Value::Float(n))]))
+            } else { Value::Float(n) };
+            let args = [interpreter.eval("[1.0 2.0]").unwrap(), option];
+            let compiled = compile_call(&interpreter, name, &args).unwrap();
+            names.push(compiled.qualified_name.clone());
+            compare_values(&compiled.execute(&args).unwrap(), &interpreter.eval(expected).unwrap(), name).unwrap();
+        }
+        assert_eq!(names[0], names[1]);
+    }
+}
+
+#[test]
+fn vag_integer_captures_preserve_exact_differences_in_vmfb() {
+    initialize_device();
+    let mut interpreter = interpreter_only();
+    let symbol = |name: &str| CompiledExpr::Symbol(name.into());
+    let call = |name: &str, args| CompiledExpr::FunctionCall { name: name.into(), args, loc: None };
+    let function = Value::Function {
+        name: None, params: vec!["x".into()],
+        body: call("*", vec![call("-", vec![symbol("a"), symbol("b")]), call("sum", vec![symbol("x")])]),
+        closure: vec![("a".into(), Value::Int(9_007_199_254_740_993)),
+                      ("b".into(), Value::Int(9_007_199_254_740_992))],
+    };
+    let x = interpreter.eval("[1.0 2.0]").unwrap();
+    let session = shared_session().unwrap();
+    let mut jit = JitCompiler::new();
+    let (module, signature, order) = jit.try_jit_value_and_grad(
+        &function, &x, &interpreter.env().registry, &session,
+    ).expect("VAG must compile without interpreter fallback");
+    assert_eq!(order.len(), 1);
+    let result = session.call_typed_device(
+        &format!("{module}.value_and_grad"), &[x], &signature.return_type,
+    ).unwrap();
+    let Value::Tuple(values) = result else { panic!("expected loss and gradient") };
+    assert_eq!(values.len(), 2);
+    compare_values(&values[0], &Value::Float(3.0), "captured integers/loss").unwrap();
+    compare_values(&values[1], &interpreter.eval("[1.0 1.0]").unwrap(), "captured integers/gradient").unwrap();
+}
+
 fn initialize_device() {
     let device = std::env::var("SHEAF_SIGNATURE_DEVICE").unwrap_or_else(|_| "cpu".to_string());
     config::init(0, Some(device), false);

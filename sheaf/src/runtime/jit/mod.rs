@@ -78,7 +78,7 @@ use crate::lowering::jit_eligibility;
 use crate::lowering::stablehlo::{Register, StableHLOEmitter};
 use crate::lowering::transforms::{
     extract_scalar_constants, filter_constants_for_shape_positions, lower_inlined_gets,
-    propagate_let_layouts, resolve_static_constants, substitute_scalar_param, unroll_reduces,
+    propagate_let_layouts, resolve_static_constants, unroll_reduces,
 };
 use crate::sheaf_msg;
 
@@ -96,6 +96,7 @@ pub struct JitCacheKey {
     argument_types: Vec<String>,
     argument_layouts: Vec<ArgumentLayout>,
     captured_scalars: Vec<(String, Vec<usize>, u64)>,
+    static_inputs: Vec<static_inputs::StaticInput>,
 }
 
 type ArgumentLayout = (String, Vec<(Vec<String>, Vec<i64>, Vec<usize>)>);
@@ -278,7 +279,7 @@ fn shape_bearing_scalars(
             .filter(|(path, _)| positions.contains(path))
             .collect::<BTreeMap<_, _>>()
             .into_iter()
-            .map(|((param, indices), value)| (param, indices, value.to_bits()))
+            .map(|((param, indices), value)| (param, indices, value as u64))
             .collect(),
     )
 }
@@ -300,7 +301,7 @@ fn cache_key_for_with_identity(
         .collect();
     let argument_layouts = runtime_argument_layouts(args);
 
-    let mut constants: HashMap<(String, Vec<usize>), f64> = HashMap::new();
+    let mut constants: HashMap<(String, Vec<usize>), i64> = HashMap::new();
     for (i, arg) in args.iter().enumerate() {
         let param_name = params
             .get(i)
@@ -319,7 +320,7 @@ fn cache_key_for_with_identity(
         .into_iter()
         .collect::<BTreeMap<_, _>>()
         .into_iter()
-        .map(|((param, indices), value)| (param, indices, value.to_bits()))
+        .map(|((param, indices), value)| (param, indices, value as u64))
         .collect();
 
     JitCacheKey {
@@ -328,6 +329,7 @@ fn cache_key_for_with_identity(
         argument_types,
         argument_layouts,
         captured_scalars,
+        static_inputs: static_inputs::collect(args),
     }
 }
 
@@ -455,6 +457,7 @@ pub struct JitCompiler {
 /// Dispatch metadata for a module loaded in the shared IREE session.
 #[derive(Debug, Clone)]
 pub struct CompiledModuleInfo {
+    pub(crate) static_inputs: Vec<static_inputs::StaticInput>,
     pub function_name: String,
     pub module_name: String,
     pub sig: FunctionSignature,
@@ -468,6 +471,7 @@ fn runtime_args_match(
 ) -> bool {
     if args.len() != info.sig.param_types.len()
         || args.len() != info.argument_layouts.len()
+        || static_inputs::collect(args) != info.static_inputs
     {
         return false;
     }
@@ -768,6 +772,7 @@ pub enum JitVagOutcome {
 
 mod compile;
 mod preprocess;
+mod static_inputs;
 mod support;
 mod vag;
 
@@ -785,7 +790,7 @@ mod cache_key_tests {
     use crate::core::trace::value_to_stablehlo_type;
     use crate::interpreter::value::{Dtype, Value};
     use ndarray::ArrayD;
-    use std::collections::{HashMap, HashSet};
+    use std::collections::{BTreeMap, HashMap, HashSet};
     use std::rc::Rc;
     use std::sync::Arc;
 
@@ -859,6 +864,7 @@ mod cache_key_tests {
         captured_scalars: HashMap<(String, Vec<usize>), f64>,
     ) -> CompiledModuleInfo {
         CompiledModuleInfo {
+            static_inputs: super::static_inputs::collect(args),
             function_name: "f".to_string(),
             module_name: "f__variant".to_string(),
             sig: FunctionSignature {
@@ -929,6 +935,30 @@ mod cache_key_tests {
 
     /// Distinct runtime shapes produce distinct variants.
     #[test]
+    fn all_integer_and_boolean_inputs_are_exact_static_variant_facts() {
+        let params = vec!["x".to_string(), "option".to_string()];
+        let tensor = tensor_f32(vec![2], 0.0);
+        let body = body_no_shape_scalar();
+        let key = |option| cache_key_for("static-input", &params, &[tensor.clone(), option], &body);
+        assert_ne!(key(Value::Int(1)), key(Value::Bool(true)));
+        assert_ne!(key(Value::Int(1)), key(Value::Float(1.0)));
+        assert_ne!(key(Value::Int(0)), key(Value::Bool(false)));
+        assert_ne!(key(Value::Int(1)), key(Value::Int(2)));
+        assert_ne!(key(Value::Int(9_007_199_254_740_992)), key(Value::Int(9_007_199_254_740_993)));
+        assert_eq!(key(Value::Float(1.0)), key(Value::Float(2.0)));
+        let original = vec![tensor.clone(), Value::Int(1)];
+        let info = compiled_module_for_args(&original, HashMap::new());
+        assert!(runtime_args_match(&original, &params, &info));
+        for option in [Value::Int(2), Value::Bool(true), Value::Float(1.0)] {
+            assert!(!runtime_args_match(&[tensor.clone(), option], &params, &info));
+        }
+        let original = vec![tensor.clone(), Value::Float(1.0)];
+        let info = compiled_module_for_args(&original, HashMap::new());
+        assert!(runtime_args_match(&[tensor.clone(), Value::Float(2.0)], &params, &info));
+        assert!(!runtime_args_match(&[tensor, Value::Int(1)], &params, &info));
+    }
+
+    #[test]
     fn cache_key_for_distinguishes_consecutive_distinct_shapes() {
         let body = body_no_shape_scalar();
         let params = vec!["x".to_string()];
@@ -991,8 +1021,9 @@ mod cache_key_tests {
         let body = body_with_shape_scalar_on_cfg();
         let params = vec!["x".to_string(), "cfg".to_string()];
         // Two cfg dicts with different `:n` -- the shape-bearing scalar of `cfg`.
-        let args_a = vec![tensor_f32(vec![4, 4], 0.0), dict_cfg(4.0)];
-        let args_b = vec![tensor_f32(vec![4, 4], 0.0), dict_cfg(8.0)];
+        let cfg = |n| Value::Dict(BTreeMap::from([("n".to_string(), Value::Int(n))]));
+        let args_a = vec![tensor_f32(vec![4, 4], 0.0), cfg(4)];
+        let args_b = vec![tensor_f32(vec![4, 4], 0.0), cfg(8)];
         let key_a = cache_key_for("my_reshape", &params, &args_a, &body);
         let key_b = cache_key_for("my_reshape", &params, &args_b, &body);
         assert_ne!(
@@ -1193,9 +1224,9 @@ mod cache_key_tests {
             (caller.name.clone(), caller.clone()),
         ]);
         let tensor = tensor_f32(vec![4, 4], 0.0);
-        let first =
-            cache_key_for_function(&caller, &[tensor.clone(), dict_cfg(4.0)], &registry).unwrap();
-        let second = cache_key_for_function(&caller, &[tensor, dict_cfg(8.0)], &registry).unwrap();
+        let cfg = |n| Value::Dict(BTreeMap::from([("n".to_string(), Value::Int(n))]));
+        let first = cache_key_for_function(&caller, &[tensor.clone(), cfg(4)], &registry).unwrap();
+        let second = cache_key_for_function(&caller, &[tensor, cfg(8)], &registry).unwrap();
         assert_ne!(first, second);
     }
 
@@ -1495,14 +1526,20 @@ mod cache_key_tests {
     }
 
     #[test]
-    fn runtime_scalar_does_not_become_a_static_tuple_index() {
+    fn integer_tuple_indices_are_static_but_float_values_remain_dynamic() {
         let blocks = Value::List(vec![Value::Dict(std::collections::BTreeMap::from([(
             "w".to_string(), tensor_f32(vec![2], 1.0),
         )]))]);
         let outcome = compile_jit_case(
             "(defn regression-dynamic-index [blocks i x] (get blocks i))",
             "regression-dynamic-index",
-            &[blocks, Value::Int(0), tensor_f32(vec![2], 0.0)],
+            &[blocks.clone(), Value::Int(0), tensor_f32(vec![2], 0.0)],
+        );
+        assert!(matches!(outcome, JitCompileOutcome::Compiled(_)), "{outcome:?}");
+        let outcome = compile_jit_case(
+            "(defn regression-float-index [blocks i x] (get blocks i))",
+            "regression-float-index",
+            &[blocks, Value::Float(0.0), tensor_f32(vec![2], 0.0)],
         );
         assert!(matches!(
             outcome,

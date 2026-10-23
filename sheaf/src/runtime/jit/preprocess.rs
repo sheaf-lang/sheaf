@@ -8,7 +8,7 @@ use super::*;
 
 pub(super) struct VagPreprocessContext<'a> {
     pub(super) registry: &'a HashMap<String, FunctionDef>,
-    pub(super) constants: &'a HashMap<(String, Vec<usize>), f64>,
+    pub(super) constants: &'a HashMap<(String, Vec<usize>), i64>,
     pub(super) param_shapes: &'a HashMap<String, Vec<i64>>,
     pub(super) param_index_maps: &'a [ParamIndexMap],
     pub(super) known_types: &'a [(String, StableHLOType)],
@@ -118,7 +118,7 @@ fn preprocess_body(
     body: &CompiledExpr,
     registry: &HashMap<String, FunctionDef>,
     param_index_maps: &[ParamIndexMap],
-    constants: &HashMap<(String, Vec<usize>), f64>,
+    constants: &HashMap<(String, Vec<usize>), i64>,
     param_shapes: &HashMap<String, Vec<i64>>,
     skip_lambda: bool,
 ) -> Result<CompiledExpr, SheafError> {

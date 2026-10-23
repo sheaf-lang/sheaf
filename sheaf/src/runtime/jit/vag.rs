@@ -120,7 +120,7 @@ impl JitCompiler {
 
         let mut all_param_names: Vec<String> = Vec::new();
         let mut all_arg_values: Vec<Value> = Vec::new();
-        let mut scalar_substitutions: Vec<(String, f64)> = Vec::new();
+        let mut scalar_substitutions: Vec<(String, CompiledExpr)> = Vec::new();
 
         for p in fn_params {
             all_param_names.push(p.clone());
@@ -136,10 +136,10 @@ impl JitCompiler {
             }
             match cap_val {
                 Value::Float(f) => {
-                    scalar_substitutions.push((cap_name.clone(), *f as f64));
+                    scalar_substitutions.push((cap_name.clone(), CompiledExpr::Float(*f as f64)));
                 }
                 Value::Int(n) => {
-                    scalar_substitutions.push((cap_name.clone(), *n as f64));
+                    scalar_substitutions.push((cap_name.clone(), CompiledExpr::Integer(*n)));
                 }
                 Value::Function {
                     params: fp,
@@ -177,12 +177,12 @@ impl JitCompiler {
 
         let mut body = body.clone();
         for (name, val) in &scalar_substitutions {
-            body = substitute_scalar_param(&body, name, *val);
+            body = crate::core::bindings::replace_local(&body, name, val);
         }
 
         let mut known_types: Vec<(String, StableHLOType)> = Vec::new();
         let mut param_index_maps = ParamIndexMaps::new();
-        let mut constants: HashMap<(String, Vec<usize>), f64> = HashMap::new();
+        let mut constants: HashMap<(String, Vec<usize>), i64> = HashMap::new();
 
         for (param_name, arg_val) in all_param_names.iter().zip(all_arg_values.iter()) {
             let ty = match value_to_stablehlo_type(arg_val) {

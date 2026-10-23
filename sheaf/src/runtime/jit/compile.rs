@@ -130,6 +130,7 @@ impl JitCompiler {
             }
         };
         let info = CompiledModuleInfo {
+            static_inputs: static_inputs::collect(args),
             function_name: name.to_string(),
             module_name: module_name.clone(),
             sig: sig.clone(),
@@ -235,7 +236,7 @@ impl JitCompiler {
         let mut body = func_def.body_compiled.clone()?;
         let mut known_types: Vec<(String, StableHLOType)> = Vec::new();
         let mut param_index_maps = ParamIndexMaps::new();
-        let mut constants: HashMap<(String, Vec<usize>), f64> = HashMap::new();
+        let mut constants: HashMap<(String, Vec<usize>), i64> = HashMap::new();
 
         for (param_name, arg_val) in func_def.params.iter().zip(args) {
             let ty = match value_to_stablehlo_type(arg_val) {
@@ -257,6 +258,7 @@ impl JitCompiler {
             known_types.push((param_name.clone(), ty));
         }
 
+        body = static_inputs::specialize(&body, &func_def.params, args);
         let mut signature = match infer_function_signature_with_known(
             &func_def.params,
             &body,
@@ -284,6 +286,7 @@ impl JitCompiler {
             known_types,
             param_index_maps,
             constants,
+            static_inputs: static_inputs::collect(args),
         })
     }
 
@@ -300,6 +303,7 @@ impl JitCompiler {
             known_types,
             param_index_maps,
             constants,
+            static_inputs,
         } = prepared;
 
         body = crate::autodiff::inline_function_calls(&body, registry);
@@ -307,6 +311,7 @@ impl JitCompiler {
             body = lower_get_calls(&body, param_name, index_map);
         }
         body = lower_inlined_gets(&body, &param_index_maps);
+        body = static_inputs::apply(&body, &func_def.params, &static_inputs);
 
         let param_shapes: HashMap<String, Vec<i64>> = func_def
             .params
@@ -373,7 +378,7 @@ impl JitCompiler {
             param_index_maps,
             filtered_constants,
         } = lowered;
-        let metadata = prepare_codegen_metadata(func_def, args, &body, &param_index_maps);
+        let metadata = prepare_codegen_metadata(&body, &param_index_maps);
 
         let codegen_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
             let mut codegen = CodeGenerator::with_function_params(
@@ -383,11 +388,15 @@ impl JitCompiler {
             );
             codegen.set_tuple_key_layouts(metadata.tuple_key_layouts);
             codegen.set_idx_to_key(metadata.idx_to_key);
-            codegen.set_scalar_param_values(&metadata.scalar_param_values);
             let layouts = args.iter()
                 .map(crate::core::inference::ValueLayout::from_value)
                 .collect::<Vec<_>>();
             codegen.set_parameter_value_layouts(&func_def.params, &layouts);
+            for input in static_inputs::collect(args) {
+                codegen.specialize_parameter_leaf(
+                    &func_def.params[input.argument], &input.indices, &input.value.expression(),
+                )?;
+            }
             codegen.emit_func_declaration_with_layout(
                 &func_def.name,
                 &body,
@@ -433,7 +442,8 @@ impl JitCompiler {
             );
         }
 
-        signature.captured_scalars = filtered_constants;
+        signature.captured_scalars = filtered_constants.into_iter()
+            .map(|(path, value)| (path, value as f64)).collect();
         Some(EmittedFunction { signature, mlir })
     }
 
@@ -511,20 +521,20 @@ struct PreparedFunction {
     signature: FunctionSignature,
     known_types: Vec<(String, StableHLOType)>,
     param_index_maps: ParamIndexMaps,
-    constants: HashMap<(String, Vec<usize>), f64>,
+    constants: HashMap<(String, Vec<usize>), i64>,
+    static_inputs: Vec<static_inputs::StaticInput>,
 }
 
 struct LoweredFunction {
     body: CompiledExpr,
     signature: FunctionSignature,
     param_index_maps: ParamIndexMaps,
-    filtered_constants: HashMap<(String, Vec<usize>), f64>,
+    filtered_constants: HashMap<(String, Vec<usize>), i64>,
 }
 
 struct CodegenMetadata {
     tuple_key_layouts: HashMap<String, BTreeMap<String, usize>>,
     idx_to_key: HashMap<(String, usize), String>,
-    scalar_param_values: Vec<(String, f64)>,
 }
 
 struct EmittedFunction {
@@ -595,8 +605,6 @@ fn capture_argument_layouts(args: &[Value], signature: &mut FunctionSignature) {
 }
 
 fn prepare_codegen_metadata(
-    func_def: &FunctionDef,
-    args: &[Value],
     body: &CompiledExpr,
     param_index_maps: &ParamIndexMaps,
 ) -> CodegenMetadata {
@@ -625,21 +633,9 @@ fn prepare_codegen_metadata(
     }
     propagate_let_layouts(body, &idx_to_key, &mut tuple_key_layouts);
 
-    let scalar_param_values = func_def
-        .params
-        .iter()
-        .zip(args)
-        .filter_map(|(name, value)| match value {
-            Value::Float(value) => Some((name.clone(), *value as f64)),
-            Value::Int(value) => Some((name.clone(), *value as f64)),
-            _ => None,
-        })
-        .collect();
-
     CodegenMetadata {
         tuple_key_layouts,
         idx_to_key,
-        scalar_param_values,
     }
 }
 

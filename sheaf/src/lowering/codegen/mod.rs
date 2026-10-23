@@ -152,12 +152,25 @@ impl<'a> CodeGenerator<'a> {
         }
     }
 
-    pub fn set_scalar_param_values(&mut self, values: &[(String, f64)]) {
-        for (name, value) in values {
-            if let Some(&(reg, _)) = self.bindings.get(name) {
-                self.emitter.set_known_scalar(reg, *value);
-            }
+    pub fn specialize_parameter_leaf(
+        &mut self, name: &str, indices: &[usize], value: &CompiledExpr,
+    ) -> SheafResult<()> {
+        let Some(&(root, _)) = self.bindings.get(name) else {
+            return Err(crate::SheafError::Compile {
+                message: format!("static input references unknown parameter '{name}'"),
+                location: SourceLocation::unknown(),
+            });
+        };
+        let (reg, ty) = self.generate(value)?;
+        if indices.is_empty() {
+            self.bind_symbol(name, reg, ty);
+        } else if !self.emitter.replace_virtual_leaf(root, indices, reg, ty) {
+            return Err(crate::SheafError::Compile {
+                message: format!("invalid static input projection for parameter '{name}'"),
+                location: SourceLocation::unknown(),
+            });
         }
+        Ok(())
     }
 
     pub fn bind_symbol(&mut self, name: &str, reg: Register, ty: StableHLOType) {
@@ -297,6 +310,11 @@ impl<'a> CodeGenerator<'a> {
             CompiledExpr::Float(x) => {
                 let reg = self.emitter.emit_constant_f32(*x);
                 self.weak_scalars.insert(reg);
+                Ok((reg, StableHLOType::scalar_f32()))
+            }
+
+            CompiledExpr::Boolean(value) => {
+                let reg = self.emitter.emit_constant_f32(if *value { 1.0 } else { 0.0 });
                 Ok((reg, StableHLOType::scalar_f32()))
             }
 
