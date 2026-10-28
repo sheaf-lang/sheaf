@@ -204,6 +204,83 @@ fn vag_integer_captures_preserve_exact_differences_in_vmfb() {
     compare_values(&values[1], &interpreter.eval("[1.0 1.0]").unwrap(), "captured integers/gradient").unwrap();
 }
 
+#[test]
+fn shape_dimensions_reject_floats_in_interpreter_and_direct_vmfb() {
+    initialize_device();
+    let mut interpreter = interpreter_only();
+    for (index, body) in [
+        "(zeros [2.0])", "(ones '[2.0])", "(zeros [(/ 4 2)])",
+        "(eye 2.0)", "(eye 2 3.0)", "(one-hot 0 2.0)",
+        "(reshape x [2.0])", "(reshape x [(/ 4 2)])",
+        "(let [n 2.0] (reshape x [n]))", "(reshape x [true])", "(reshape x '[true])",
+        "(let [dims [2]] (reshape x dims))",
+        "(let [dims [(/ 4 2)]] (reshape x dims))",
+    ].iter().enumerate() {
+        let name = format!("invalid_dimension_{index}");
+        interpreter.eval(&format!("(defn {name} [x] {body})")).unwrap();
+        let error = interpreter.eval(&format!("({name} [1.0 2.0])")).expect_err(body);
+        assert!(error.to_string().contains("integer"), "{body}: {error}");
+        let args = [interpreter.eval("[1.0 2.0]").unwrap()];
+        assert!(compile_call(&interpreter, &name, &args).is_err(), "{body}");
+    }
+    interpreter.eval("(defn vector_identity [v] v)").unwrap();
+    interpreter.eval("(defn returned_dimensions [x] (reshape x (vector_identity [2])))").unwrap();
+    let args = [interpreter.eval("[1.0 2.0]").unwrap()];
+    assert!(interpreter.eval("(returned_dimensions [1.0 2.0])").is_err());
+    assert!(compile_call(&interpreter, "returned_dimensions", &args).is_err());
+    interpreter.eval("(defn argument_dimension [x n] (reshape x [n]))").unwrap();
+    for value in [Value::Float(2.0), Value::Bool(true)] {
+        let args = [interpreter.eval("[1.0 2.0]").unwrap(), value];
+        assert!(compile_call(&interpreter, "argument_dimension", &args).is_err());
+    }
+}
+
+#[test]
+fn shape_argument_context_keeps_numeric_data_vectors_as_f32() {
+    let mut interpreter = interpreter_only();
+    for source in ["[2]", "(let [dims [2]] dims)", "(let [zeros (fn [x] x)] (zeros [2]))"] {
+        let value = interpreter.eval(source).unwrap();
+        assert!(matches!(value, Value::Tensor { dtype: Dtype::F32, .. }), "{source}: {value:?}");
+    }
+    for source in ["(let [make zeros] (make [2]))", "((if true zeros ones) [2])"] {
+        let value = interpreter.eval(source).unwrap();
+        compare_values(&value, &interpreter.eval("[0.0 0.0]").unwrap(), source).unwrap();
+    }
+    interpreter.eval("(defn forwarded_shape [dims] (zeros dims))").unwrap();
+    assert!(interpreter.eval("(forwarded_shape [2])").is_err());
+    assert!(interpreter.eval("(forwarded_shape '[2])").is_ok());
+}
+
+#[test]
+fn computed_integer_dimensions_work_without_jit() {
+    let mut interpreter = interpreter_only();
+    for source in ["(zeros [2])", "(zeros [(// 4 2)])", "(reshape [1.0 2.0] [(// 4 2)])",
+                   "(let [n 2] (zeros [n]))", "(let [dims '[2]] (zeros dims))",
+                   "(let [dims (shape [1.0 2.0])] (zeros dims))"] {
+        interpreter.eval(source).unwrap_or_else(|error| panic!("{source}: {error}"));
+    }
+}
+
+#[test]
+fn computed_integer_dimensions_compile_to_direct_vmfb() {
+    initialize_device();
+    let mut interpreter = interpreter_only();
+    for (index, body) in [
+        "(reshape x [(// 4 2)])", "(reshape x [(int (/ 4 2))])",
+        "(reshape x [(get (shape x) 0)])", "(reshape x [(first (shape x))])",
+        "(reshape x [(last (shape x))])", "(reshape x [(len x)])",
+        "(let [n (get (shape x) 0)] (reshape x [n]))",
+        "(reshape x [(get (shape x) 0) -1])",
+    ].iter().enumerate() {
+        let name = format!("computed_dimension_{index}");
+        interpreter.eval(&format!("(defn {name} [x] {body})")).unwrap();
+        let expected = interpreter.eval(if index == 7 { "[[1.0] [2.0]]" } else { "[1.0 2.0]" }).unwrap();
+        let args = [interpreter.eval("[1.0 2.0]").unwrap()];
+        let result = compile_call(&interpreter, &name, &args).unwrap().execute(&args).unwrap();
+        compare_values(&result, &expected, body).unwrap();
+    }
+}
+
 fn initialize_device() {
     let device = std::env::var("SHEAF_SIGNATURE_DEVICE").unwrap_or_else(|_| "cpu".to_string());
     config::init(0, Some(device), false);
@@ -391,7 +468,8 @@ fn invalid_call_signatures() {
 #[test]
 fn invalid_allocation_arguments() {
     let cases = [
-        ("fractional-shape", "(zeros '[2.5])", "dimension"),
+        ("fractional-shape", "(zeros '[2.5])", "integer"),
+        ("integral-float-shape", "(zeros '[2.0])", "integer"),
         ("negative-shape", "(zeros '[-1])", "dimension"),
         ("shape-overflow", "(ones '[9223372036854775807 2])", "memory"),
         ("shape-byte-overflow", "(ones '[2305843009213693952])", "memory"),
@@ -399,8 +477,8 @@ fn invalid_allocation_arguments() {
         ("fractional-tensor-shape", "(zeros [2.5])", "dimension"),
         ("negative-tensor-shape", "(zeros [-1])", "dimension"),
         ("nonfinite-shape", "(zeros [(exp 1000)])", "dimension"),
-        ("shape-rank", "(zeros [[2 3]])", "numeric vector"),
-        ("boolean-shape", "(let [dims [1 0] :bool] (zeros dims))", "numeric vector"),
+        ("shape-rank", "(zeros [[2 3]])", "integer"),
+        ("boolean-shape", "(let [dims [1 0] :bool] (zeros dims))", "integer"),
         ("normal-negative-shape", "(random-normal (random-key 1) '[-1])", "dimension"),
         ("uniform-fractional-shape", "(random-uniform (random-key 1) '[2.5])", "dimension"),
         ("randint-shape-overflow", "(random-randint (random-key 1) '[9223372036854775807 2] 0 10)", "memory"),
@@ -602,8 +680,7 @@ fn valid_call_signatures() {
         ("time-zero-arguments", "(>= (time) 0)", "true", Expectation::Pass),
         ("unexecuted-time-call", "(if false (time 1) 7)", "7", Expectation::Pass),
         ("scalar-shape", "(zeros '[])", "0.0", Expectation::Pass),
-        ("empty-shape", "(shape (zeros '[2 0]))", "[2.0 0.0]", Expectation::Pass),
-        ("integral-float-shape", "(zeros '[2.0])", "[0.0 0.0]", Expectation::Pass),
+        ("empty-shape", "(shape (zeros '[2 0]))", "(let [dims [2 0] :i32] dims)", Expectation::Pass),
         ("split-zero", "(len (random-split (random-key 1) 0))", "0", Expectation::Pass),
         ("split-integral-scalar", "(len (random-split (random-key 1) 3.0))", "3", Expectation::Pass),
         ("integer-key", "(random-uniform 42 '[2])", "(random-uniform '[42 0] '[2])", Expectation::Pass),

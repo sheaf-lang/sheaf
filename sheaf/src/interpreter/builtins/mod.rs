@@ -486,13 +486,36 @@ fn checked_dimension(number: f64) -> Result<usize, crate::core::error::SheafErro
     Ok(number as usize)
 }
 
+fn integer_dimensions(val: &Value) -> Result<Vec<i64>, SheafError> {
+    match val {
+        Value::List(items) | Value::Tuple(items) => items.iter().map(|value| match value {
+            Value::Int(value) => Ok(*value),
+            _ => Err(runtime_error(format!(
+                "shape dimension must be an integer, got {}", value.type_name(),
+            ))),
+        }).collect(),
+        Value::Tensor { data, dtype } if data.ndim() == 1 && dtype.is_integer() => {
+            data.iter().map(|&value| {
+                if value.is_finite() && value.fract() == 0.0
+                    && (value as f64) >= i64::MIN as f64 && (value as f64) < i64::MAX as f64 {
+                    Ok(value as i64)
+                } else {
+                    Err(runtime_error("invalid integer shape dimension"))
+                }
+            }).collect()
+        }
+        _ => Err(runtime_error(format!(
+            "shape dimensions must be integers, got {}", val.type_name(),
+        ))),
+    }
+}
+
 fn shape_from_value(val: &Value) -> Result<Vec<usize>, crate::core::error::SheafError> {
     let shape: Vec<usize> = match val {
-        Value::List(items) => {
+        Value::List(items) | Value::Tuple(items) => {
             items.iter().map(|v| match v {
                 Value::Int(n) => usize::try_from(*n)
                     .map_err(|_| runtime_error(format!("invalid shape dimension {n}"))),
-                Value::Float(f) => checked_dimension(*f as f64),
                 Value::BuiltinFn { name, .. } => Err(runtime_error(format!(
                     "shape must contain integers, got function '{}'.\n  = hint: Arithmetic inside vectors needs parentheses: e.g, [(* 2 n)], not [* 2 n]",
                     name
@@ -502,15 +525,15 @@ fn shape_from_value(val: &Value) -> Result<Vec<usize>, crate::core::error::Sheaf
                     s, s
                 ))),
                 _ => Err(runtime_error(format!(
-                    "shape must contain integers, got {}",
+                    "shape dimension must be an integer, got {}",
                     v.type_name()
                 ))),
             }).collect()
         }
-        Value::Tensor { data, dtype } if data.ndim() == 1 && *dtype != Dtype::Bool => {
+        Value::Tensor { data, dtype } if data.ndim() == 1 && dtype.is_integer() => {
             data.iter().map(|&x| checked_dimension(x as f64)).collect()
         }
-        _ => Err(runtime_error(format!("Expected shape list or numeric vector, got {}", val.type_name()))),
+        _ => Err(runtime_error(format!("shape dimensions must be integers, got {}", val.type_name()))),
     }?;
     let max_elements = isize::MAX as usize / std::mem::size_of::<f32>();
     shape.iter().try_fold(1usize, |size, &dimension| {

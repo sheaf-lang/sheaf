@@ -85,48 +85,16 @@ impl<'a> CodeGenerator<'a> {
     }
 
     fn gen_eye(&mut self, args: &[CompiledExpr]) -> SheafResult<(Register, StableHLOType)> {
-        let n = match &args[0] {
-            CompiledExpr::Integer(v) => *v,
-            _ => return Err(SheafError::Compile {
-                message: "eye expects integer arguments".to_string(),
-                location: crate::core::error::SourceLocation::unknown(),
-            }),
-        };
-        let m = if args.len() == 2 {
-            match &args[1] {
-                CompiledExpr::Integer(v) => *v,
-                _ => n,
-            }
-        } else {
-            n
-        };
+        let dimensions = self.parse_shape_vec("eye", args)?;
+        let n = dimensions[0];
+        let m = dimensions.get(1).copied().unwrap_or(n);
         let (reg, ty) = self.emitter.emit_eye(n, m);
         Ok((reg, ty))
     }
 
     fn gen_one_hot(&mut self, args: &[CompiledExpr]) -> SheafResult<(Register, StableHLOType)> {
         let (indices_reg, indices_ty) = self.generate(&args[0])?;
-        let num_classes = match &args[1] {
-            CompiledExpr::Integer(v) => *v,
-            CompiledExpr::Float(f) => *f as i64,
-            _ => {
-                if let Ok((reg, _)) = self.generate(&args[1]) {
-                    if let Some(v) = self.emitter.known_scalar_value(&reg) {
-                        v as i64
-                    } else {
-                        return Err(SheafError::Compile {
-                            message: "one-hot expects a constant integer for num_classes".to_string(),
-                            location: crate::core::error::SourceLocation::unknown(),
-                        });
-                    }
-                } else {
-                    return Err(SheafError::Compile {
-                        message: "one-hot expects a constant integer for num_classes".to_string(),
-                        location: crate::core::error::SourceLocation::unknown(),
-                    });
-                }
-            }
-        };
+        let num_classes = self.parse_shape_vec("one-hot", std::slice::from_ref(&args[1]))?[0];
         let (reg, ty) = self.emitter.emit_one_hot(&indices_reg, &indices_ty, num_classes);
         Ok((reg, ty))
     }
@@ -139,10 +107,14 @@ impl<'a> CodeGenerator<'a> {
         } else if let CompiledExpr::Quoted(val) = &args[1] {
             if let SheafValue::Vector(elems, _) = val.as_ref() {
                 shape_elems_owned = elems.iter().map(|e| match e {
-                    SheafValue::Integer(n, _) => CompiledExpr::Integer(*n),
-                    SheafValue::Float(f, _) => CompiledExpr::Float(*f),
-                    _ => CompiledExpr::Integer(0),
-                }).collect::<Vec<_>>();
+                    SheafValue::Integer(n, _) => Ok(CompiledExpr::Integer(*n)),
+                    SheafValue::Float(f, _) => Ok(CompiledExpr::Float(*f)),
+                    SheafValue::Boolean(value, _) => Ok(CompiledExpr::Boolean(*value)),
+                    _ => Err(SheafError::InvalidShapeDimension {
+                        message: "reshape: shape dimension must be an integer".to_string(),
+                        location: crate::core::error::SourceLocation::unknown(),
+                    }),
+                }).collect::<SheafResult<Vec<_>>>()?;
                 &shape_elems_owned
             } else {
                 return Err(SheafError::Compile {

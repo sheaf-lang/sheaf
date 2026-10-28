@@ -413,6 +413,7 @@ impl<'a> CodeGenerator<'a> {
                     .and_then(|start| i64::try_from(i).ok()?.checked_add(start))
             {
                 self.emitter.set_known_scalar(elem_reg, value as f64);
+                self.known_integers.insert(elem_reg, value);
                 self.static_tuple_indices.insert(elem_reg);
             }
 

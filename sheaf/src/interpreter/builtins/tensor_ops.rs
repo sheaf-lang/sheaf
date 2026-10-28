@@ -19,15 +19,7 @@ pub(super) fn register(env: &mut Env) {
 
 fn builtin_reshape(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
     let (arr, dt) = to_array(&args[0])?;
-    let raw_shape: Vec<i64> = match &args[1] {
-        Value::List(items) => items.iter().map(|v| match v {
-            Value::Int(n) => *n,
-            Value::Float(f) => *f as i64,
-            _ => -999,
-        }).collect(),
-        Value::Tensor { data, .. } => data.iter().map(|&x| x as i64).collect(),
-        _ => return Err(runtime_error("reshape: expected a shape list. Usage: (reshape x '[2 3])")),
-    };
+    let raw_shape = integer_dimensions(&args[1])?;
     let total = arr.len() as i64;
     let neg_idx = raw_shape.iter().position(|&x| x < 0);
     let new_shape: Vec<usize> = if let Some(_ni) = neg_idx {

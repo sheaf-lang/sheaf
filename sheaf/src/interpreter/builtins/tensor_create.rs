@@ -47,8 +47,9 @@ fn builtin_arange(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
 }
 
 fn builtin_eye(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
-    let n = args[0].to_f64().ok_or_else(|| runtime_error("eye: size must be a number"))? as usize;
-    let m = if args.len() > 1 { args[1].to_f64().ok_or_else(|| runtime_error("eye: second dimension must be a number"))? as usize } else { n };
+    let dimensions = shape_from_value(&Value::List(args.to_vec()))?;
+    let n = dimensions[0];
+    let m = dimensions.get(1).copied().unwrap_or(n);
     let mut data = vec![0.0; n * m];
     for i in 0..n.min(m) {
         data[i * m + i] = 1.0;
@@ -63,12 +64,7 @@ fn builtin_one_hot(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
             args.len()
         )));
     }
-    let num_classes = args[1].to_f64().ok_or_else(|| {
-        runtime_error(format!(
-            "one-hot: num_classes must be an integer, got {}. Example: (one-hot [0 1 2] 10)",
-            args[1].type_name()
-        ))
-    })? as usize;
+    let num_classes = shape_from_value(&Value::List(vec![args[1].clone()]))?[0];
     match &args[0] {
         Value::Int(idx) => {
             let idx_u = *idx as usize;

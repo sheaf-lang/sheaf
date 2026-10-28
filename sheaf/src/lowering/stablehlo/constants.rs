@@ -126,6 +126,16 @@ impl StableHLOEmitter {
         (reg, ty)
     }
 
+    pub fn emit_integer_vector_constant(&mut self, values: &[i64]) -> (Register, StableHLOType) {
+        let reg = self.fresh_register();
+        let ty = StableHLOType::i32_tensor(vec![values.len() as i64]);
+        let values = values.iter().map(ToString::to_string).collect::<Vec<_>>().join(", ");
+        self.body.push(format!(
+            "    {} = stablehlo.constant dense<[{}]> : {}", reg.to_mlir(), values, ty.to_mlir(),
+        ));
+        (reg, ty)
+    }
+
     pub fn emit_nd_tensor_constant(
         &mut self,
         data: &[f64],

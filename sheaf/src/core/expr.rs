@@ -470,8 +470,7 @@ impl CompilerContext {
             match &val {
                 SheafValue::Integer(_, _)
                 | SheafValue::Float(_, _)
-                | SheafValue::String(_, _)
-                | SheafValue::Vector(_, _) => return self.compile(&val),
+                | SheafValue::String(_, _) => return self.compile(&val),
                 SheafValue::List(elems, _)
                     if elems.first().and_then(|e| e.as_symbol()) == Some("fn") =>
                 {

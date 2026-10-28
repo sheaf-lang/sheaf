@@ -142,7 +142,7 @@
 
 - name: one-hot-2d-shape
   test: (shape (one-hot [[0 1] [2 0]] 3))
-  expected: "[2. 2. 3.]"
+  expected: "[2 2 3]"
 
 - name: vag-matmul-batched-transpose
   test: >

@@ -252,7 +252,7 @@
   expected: "[1. 2. 3.]"
 - name: dropout-shape
   test: (shape (dropout (ones '[4 4]) (random-key 1) 0.5))
-  expected: "[4. 4.]"
+  expected: "[4 4]"
 - name: dropout-scales-kept
   test: (max (dropout (ones '[50]) (random-key 0) 0.5))
   expected: "2.0"
@@ -312,7 +312,7 @@
   expected: "[[0 1 2]\n [3 4 5]\n [6 7 8]]"
 - name: swapaxes
   test: (shape (swapaxes [[1 2 3] [4 5 6]] 0 1))
-  expected: "[3. 2.]"
+  expected: "[3 2]"
 - name: slice
   test: (slice [0 1 2 3 4] 1 4)
   expected: "[1. 2. 3.]"
@@ -378,19 +378,19 @@
   expected: "[1. 2. 3.]"
 - name: random-normal-shape
   test: (shape (random-normal (random-key 0) '[10 5]))
-  expected: "[10. 5.]"
+  expected: "[10  5]"
 - name: random-normal-nonzero
   test: (!= (sum (random-normal (random-key 42) '[10])) 0.0)
   expected: true
 - name: random-uniform-shape
   test: (shape (random-uniform (random-key 0) '[3 4]))
-  expected: "[3. 4.]"
+  expected: "[3 4]"
 - name: random-uniform-nonzero
   test: (> (sum (random-uniform (random-key 42) '[10])) 0.0)
   expected: true
 - name: random-randint-shape
   test: (shape (random-randint (random-key 0) [100] 0 10))
-  expected: "[100.]"
+  expected: "[100]"
 - name: random-randint-nonzero
   test: (> (sum (random-randint (random-key 42) [10] 1 10)) 0.0)
   expected: true
@@ -848,7 +848,7 @@
           y (random-normal (random-key 2) '[3 2])
           [loss grad] ((value-and-grad (fn [p] (mean (** (- (+ (@ x (get p :W)) (get p :b)) y) 2)))) p)]
       [(shape (get grad :W)) (shape (get grad :b))])
-  expected: "[[4. 2.], [2.]]"
+  expected: "[[4 2], [2]]"
 - name: vag-mlp-grad-nonzero
   test: >
     (let [p {:W (random-normal (random-key 0) '[4 2]) :b (zeros '[2])}
@@ -896,16 +896,16 @@
 # Regression: keepdims on reductions (stdlib softmax depends on this)
 - name: max-axis-keepdims
   test: (shape (max [[1 2 3] [4 5 6]] :axis -1 :keepdims))
-  expected: "[2. 1.]"
+  expected: "[2 1]"
 - name: min-axis-keepdims
   test: (shape (min [[1 2 3] [4 5 6]] :axis -1 :keepdims))
-  expected: "[2. 1.]"
+  expected: "[2 1]"
 - name: sum-axis-keepdims
   test: (shape (sum [[1 2 3] [4 5 6]] :axis -1 :keepdims))
-  expected: "[2. 1.]"
+  expected: "[2 1]"
 - name: mean-axis-keepdims
   test: (shape (mean [[1 2 3] [4 5 6]] :axis -1 :keepdims))
-  expected: "[2. 1.]"
+  expected: "[2 1]"
 - name: max-axis-keepdims-value
   test: (max [[1 2 3] [4 5 6]] :axis -1 :keepdims)
   expected: "[[3.] [6.]]"

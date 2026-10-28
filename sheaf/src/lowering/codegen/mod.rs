@@ -47,6 +47,8 @@ pub struct CodeGenerator<'a> {
     emitter: StableHLOEmitter,
     bindings: HashMap<String, (Register, StableHLOType)>,
     weak_scalars: HashSet<Register>,
+    known_integers: HashMap<Register, i64>,
+    known_integer_vectors: HashMap<Register, Vec<i64>>,
     lambda_bindings: HashMap<String, CompiledExpr>,
     function_registry: Option<&'a HashMap<String, crate::core::expr::FunctionDef>>,
     tuple_key_layouts: HashMap<String, std::collections::BTreeMap<String, usize>>,
@@ -62,6 +64,8 @@ impl<'a> CodeGenerator<'a> {
             emitter: StableHLOEmitter::new(),
             bindings: HashMap::new(),
             weak_scalars: HashSet::new(),
+            known_integers: HashMap::new(),
+            known_integer_vectors: HashMap::new(),
             lambda_bindings: HashMap::new(),
             function_registry: None,
             tuple_key_layouts: HashMap::new(),
@@ -79,6 +83,8 @@ impl<'a> CodeGenerator<'a> {
             emitter: StableHLOEmitter::new(),
             bindings: HashMap::new(),
             weak_scalars: HashSet::new(),
+            known_integers: HashMap::new(),
+            known_integer_vectors: HashMap::new(),
             lambda_bindings: HashMap::new(),
             function_registry: Some(registry),
             tuple_key_layouts: HashMap::new(),
@@ -107,6 +113,8 @@ impl<'a> CodeGenerator<'a> {
             emitter,
             bindings,
             weak_scalars: HashSet::new(),
+            known_integers: HashMap::new(),
+            known_integer_vectors: HashMap::new(),
             lambda_bindings: HashMap::new(),
             function_registry: Some(registry),
             tuple_key_layouts: HashMap::new(),
@@ -303,6 +311,7 @@ impl<'a> CodeGenerator<'a> {
         match expr {
             CompiledExpr::Integer(n) => {
                 let reg = self.emitter.emit_constant_f32(*n as f64);
+                self.known_integers.insert(reg, *n);
                 self.weak_scalars.insert(reg);
                 Ok((reg, StableHLOType::scalar_f32()))
             }
@@ -594,10 +603,9 @@ impl<'a> CodeGenerator<'a> {
         }
     }
 
-    fn parse_shape_vec(&self, operation: &str, elems: &[CompiledExpr]) -> SheafResult<Vec<i64>> {
+    fn parse_shape_vec(&mut self, operation: &str, elems: &[CompiledExpr]) -> SheafResult<Vec<i64>> {
         elems.iter().map(|e| match e {
             CompiledExpr::Integer(n) => Ok(*n),
-            CompiledExpr::Float(f) if *f == f.floor() => Ok(*f as i64),
             CompiledExpr::Float(value) => Err(SheafError::InvalidShapeDimension {
                 message: format!("{operation}: shape dimension is float ({value:?}), expected an integer"),
                 location: SourceLocation::unknown(),
@@ -608,8 +616,8 @@ impl<'a> CodeGenerator<'a> {
             }),
             CompiledExpr::Symbol(name) => {
                 if let Some(&(reg, _)) = self.bindings.get(name.as_str()) {
-                    if let Some(v) = self.emitter.known_scalar_value(&reg) {
-                        Ok(v as i64)
+                    if let Some(&value) = self.known_integers.get(&reg) {
+                        Ok(value)
                     } else {
                         Err(SheafError::Compile {
                             message: format!(
@@ -629,13 +637,13 @@ impl<'a> CodeGenerator<'a> {
                     })
                 }
             }
-            other => Err(SheafError::Compile {
-                message: format!(
-                    "shape element must be a constant integer, got: {:?}",
-                    other
-                ),
-                location: crate::core::error::SourceLocation::unknown(),
-            }),
+            other => {
+                let (register, _) = self.generate(other)?;
+                self.known_integers.get(&register).copied().ok_or_else(|| SheafError::Compile {
+                    message: "shape dimension must be a constant integer".to_string(),
+                    location: SourceLocation::unknown(),
+                })
+            }
         }).collect()
     }
 

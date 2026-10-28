@@ -10,7 +10,7 @@
 (defn causal-self-attention [x attn-p config]
   (let [D  (get config :n_embd)
         H  (get config :n_head)
-        Hd (/ D H)
+        Hd (int (/ D H))
         T  (get (shape x) -2)
         W  (get-in attn-p [:c_attn :weight])
         Wq (slice W 0 D)

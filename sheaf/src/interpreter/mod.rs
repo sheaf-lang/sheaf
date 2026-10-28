@@ -140,8 +140,12 @@ pub fn eval(expr: &CompiledExpr, env: &mut Env) -> Result<Value, SheafError> {
         CompiledExpr::LambdaCall { callee, args } => {
             let func = eval(callee, env)?;
             let mut arg_vals = Vec::new();
-            for arg in args {
-                arg_vals.push(eval(arg, env)?);
+            let operation = match &func {
+                Value::BuiltinFn { name, .. } => crate::core::signature::OpId::resolve(name),
+                _ => None,
+            };
+            for (index, arg) in args.iter().enumerate() {
+                arg_vals.push(eval_argument(operation, index, arg, env)?);
             }
             call_function(&func, &arg_vals, env)
         }
@@ -447,11 +451,16 @@ let has_kwargs = matches!(name,
             | "print" | "choice" | "flip"
         );
 
+    let operation = match env.get(name) {
+        Ok(Value::BuiltinFn { name, .. }) => crate::core::signature::OpId::resolve(&name),
+        _ => None,
+    };
     // Evaluate args, splitting kwargs only for functions that use them
     let (pos_args, kwargs) = if has_kwargs {
-        split_kwargs(args, env)?
+        split_kwargs(args, operation, env)?
     } else {
-        let pos: Result<Vec<Value>, _> = args.iter().map(|a| eval(a, env)).collect();
+        let pos: Result<Vec<Value>, _> = args.iter().enumerate()
+            .map(|(index, arg)| eval_argument(operation, index, arg, env)).collect();
         (pos?, BTreeMap::new())
     };
 
@@ -655,7 +664,21 @@ fn eval_or(args: &[CompiledExpr], env: &mut Env) -> Result<Value, SheafError> {
     eval(&args[args.len() - 1], env)
 }
 
-fn split_kwargs(args: &[CompiledExpr], env: &mut Env) -> Result<(Vec<Value>, BTreeMap<String, Value>), SheafError> {
+fn eval_argument(
+    operation: Option<crate::core::signature::OpId>, index: usize,
+    expr: &CompiledExpr, env: &mut Env,
+) -> Result<Value, SheafError> {
+    if operation.is_some_and(|op| op.is_shape_vector_argument(index))
+        && let CompiledExpr::Vector(elements) = expr {
+        return elements.iter().map(|element| eval(element, env))
+            .collect::<Result<Vec<_>, _>>().map(Value::List);
+    }
+    eval(expr, env)
+}
+
+fn split_kwargs(
+    args: &[CompiledExpr], operation: Option<crate::core::signature::OpId>, env: &mut Env,
+) -> Result<(Vec<Value>, BTreeMap<String, Value>), SheafError> {
     let mut pos = Vec::new();
     let mut kwargs = BTreeMap::new();
     let mut i = 0;
@@ -675,7 +698,7 @@ fn split_kwargs(args: &[CompiledExpr], env: &mut Env) -> Result<(Vec<Value>, BTr
                 kwargs.insert(k.clone(), Value::Bool(true));
             }
         } else {
-            pos.push(eval(&args[i], env)?);
+            pos.push(eval_argument(operation, pos.len(), &args[i], env)?);
         }
         i += 1;
     }

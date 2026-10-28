@@ -132,7 +132,7 @@ fn builtin_shape(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
                 Ok(Value::Int(data.shape()[axis] as i64))
             } else {
                 let shape: Vec<f32> = data.shape().iter().map(|&s| s as f32).collect();
-                Ok(Value::tensor_f32(ArrayD::from_shape_vec(IxDyn(&[shape.len()]), shape).unwrap()))
+                Ok(Value::tensor_i32(ArrayD::from_shape_vec(IxDyn(&[shape.len()]), shape).unwrap()))
         }
         }
         Value::DeviceBuffer(db) => {
@@ -142,7 +142,7 @@ fn builtin_shape(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
                 Ok(Value::Int(db.shape[axis] as i64))
             } else {
                 let shape: Vec<f32> = db.shape.iter().map(|&s| s as f32).collect();
-                Ok(Value::tensor_f32(ArrayD::from_shape_vec(IxDyn(&[shape.len()]), shape).unwrap()))
+                Ok(Value::tensor_i32(ArrayD::from_shape_vec(IxDyn(&[shape.len()]), shape).unwrap()))
         }
         }
         Value::List(items) => Ok(Value::Int(items.len() as i64)),

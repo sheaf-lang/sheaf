@@ -163,6 +163,17 @@ operations! {
     }
 }
 
+impl OpId {
+    pub const fn is_shape_vector_argument(self, index: usize) -> bool {
+        match self {
+            Self::Zeros | Self::Ones => index == 0,
+            Self::Reshape | Self::RandomNormal | Self::RandomUniform | Self::RandomRandint
+            | Self::Broadcast | Self::SumToShape | Self::SliceGrad => index == 1,
+            _ => false,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::OpId;

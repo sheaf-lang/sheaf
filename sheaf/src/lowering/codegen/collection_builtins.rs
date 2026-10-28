@@ -93,6 +93,7 @@ impl<'a> CodeGenerator<'a> {
                 let dim_val = dims[idx] as f64;
                 let reg = self.emitter.emit_constant_f32(dim_val);
                 self.emitter.set_known_scalar(reg, dim_val);
+                self.known_integers.insert(reg, dims[idx]);
                 Ok((reg, StableHLOType::ScalarF32))
             } else {
                 Err(SheafError::Compile {
@@ -102,9 +103,9 @@ impl<'a> CodeGenerator<'a> {
             }
         } else {
         let data: Vec<f64> = dims.iter().map(|&d| d as f64).collect();
-        let shape = vec![data.len() as i64];
-        let (reg, ty) = self.emitter.emit_nd_tensor_constant(&data, &shape);
+        let (reg, ty) = self.emitter.emit_integer_vector_constant(dims);
         self.emitter.set_known_tensor(reg, data);
+        self.known_integer_vectors.insert(reg, dims.to_vec());
         Ok((reg, ty))
         }
     }
@@ -117,6 +118,7 @@ impl<'a> CodeGenerator<'a> {
     let ndim = operand_ty.shape().len() as f64;
     let reg = self.emitter.emit_constant_f32(ndim);
     self.emitter.set_known_scalar(reg, ndim);
+    self.known_integers.insert(reg, operand_ty.shape().len() as i64);
     Ok((reg, StableHLOType::ScalarF32))
     }
 
@@ -138,6 +140,7 @@ impl<'a> CodeGenerator<'a> {
         };
         let reg = self.emitter.emit_constant_f32(len);
         self.emitter.set_known_scalar(reg, len);
+        self.known_integers.insert(reg, len as i64);
         Ok((reg, StableHLOType::ScalarF32))
     }
 
@@ -162,6 +165,10 @@ impl<'a> CodeGenerator<'a> {
             let val = vals[0];
             let reg = self.emitter.emit_constant_f32(val);
             self.emitter.set_known_scalar(reg, val);
+            if let Some(&value) = self.known_integer_vectors.get(&operand_reg)
+                .and_then(|values| values.first()) {
+                self.known_integers.insert(reg, value);
+            }
             return Ok((reg, StableHLOType::ScalarF32));
         }
                 let (reg, ty) = self.emitter.emit_index_axis0(&operand_reg, &operand_ty, 0);
@@ -212,6 +219,10 @@ impl<'a> CodeGenerator<'a> {
             let val = vals[vals.len() - 1];
             let reg = self.emitter.emit_constant_f32(val);
             self.emitter.set_known_scalar(reg, val);
+            if let Some(&value) = self.known_integer_vectors.get(&operand_reg)
+                .and_then(|values| values.last()) {
+                self.known_integers.insert(reg, value);
+            }
             return Ok((reg, StableHLOType::ScalarF32));
         }
         let last_idx = shape[0] - 1;
@@ -348,6 +359,11 @@ impl<'a> CodeGenerator<'a> {
                         let (reg, ty) = self.emitter.emit_index_axis0(&operand_reg, &operand_ty, actual_idx);
                         if let Some(value) = known_value {
                             self.emitter.set_known_scalar(reg, value);
+                        }
+                        if let Some(value) = usize::try_from(actual_idx).ok()
+                            .and_then(|index| self.known_integer_vectors.get(&operand_reg)
+                                .and_then(|values| values.get(index))).copied() {
+                            self.known_integers.insert(reg, value);
                         }
                         Ok((reg, ty))
                     }
