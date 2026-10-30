@@ -229,21 +229,31 @@ run_example () {
     # Run with timeout. Redirect to per-example log files.
     local base_log
     base_log="$ROOT_LOG/${group}_$(basename "$entry" .shf)"
+    if [[ "$validator" == "nanoGPT-resume" ]]; then
+        base_log="${base_log}_resume"
+    fi
     local stdout_log="$base_log.stdout"
     local stderr_log="$base_log.stderr"
     : >"$stdout_log"; : >"$stderr_log"
 
-    # nanoGPT/train: clean the checkpoint so we always test the
-    # from-scratch path, not the training resume path. 
-    # Special-case: if both train.shf and sample.shf are in the same
-    # group, train is the first entry, so cleanup just happens here once
-    # (before train).
+    if [[ "$validator" == "nanoGPT-train" || "$validator" == "nanoGPT-resume" ]]; then
+        local checkpoint="$workdir/out-shakespeare-char/ckpt.safetensors"
+        if [[ "$validator" == "nanoGPT-train" && -e "$checkpoint" ]]; then
+            record_fail "fresh training already has a checkpoint"
+            return
+        fi
+        if [[ "$validator" == "nanoGPT-resume" && ! -f "$checkpoint" ]]; then
+            record_fail "resume checkpoint is missing"
+            return
+        fi
+        rm -rf -- "$workdir/__sheaf__"
+    fi
 
     log_info "→ $group/$entry  (device=$DEVICE, timeout=${timeout}s)"
 
     local -a sheaf_args=(--device "$DEVICE")
     # NanoGPT model and training functions must compile instead of falling back.
-    if [[ "$validator" == "nanoGPT-sample" || "$validator" == "nanoGPT-train" ]]; then
+    if [[ "$validator" == "nanoGPT-sample" || "$validator" == "nanoGPT-train" || "$validator" == "nanoGPT-resume" ]]; then
         sheaf_args+=(-v)
     fi
 
@@ -297,13 +307,21 @@ run_example () {
             fi ;;
         nanoGPT-sample)
             val_out="$(validate_nanoGPT_sample "$stdout_log" "$stderr_log")" ;;
-        nanoGPT-train)
+        nanoGPT-train|nanoGPT-resume)
+            local marker="No checkpoint; initializing"
+            if [[ "$validator" == "nanoGPT-resume" ]]; then marker="Resuming from"; fi
+            if ! grep -Fq -- "$marker" "$stdout_log"; then
+                record_fail "expected training path was not taken: $validator"
+                return
+            fi
             if grep -q -- 'jit: train-step skipped' "$stderr_log"; then
                 record_fail "train-step fell back to the interpreter"
                 return
             fi
-            if ! grep -Eq -- 'jit: compiling train-step \[|jit: train-step \(cached\)' "$stderr_log"; then
-                record_fail "train-step did not compile through JIT"
+            local compilations
+            compilations="$(grep -Fc -- 'jit: compiling train-step [' "$stderr_log" || true)"
+            if [[ "$compilations" -ne 1 ]]; then
+                record_fail "expected one train-step compilation, got $compilations"
                 return
             fi
             val_out="$( cd "$workdir" && \

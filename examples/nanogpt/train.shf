@@ -46,7 +46,7 @@
       ckpt-path "out-shakespeare-char/ckpt.safetensors"
       state     (if (io "exists" ckpt-path)
                   (do (print "Resuming from" ckpt-path)
-                      (io "load" ckpt-path))
+                      (assoc (io "load" ckpt-path) :loss 0.0))
                   (let [params (init-gpt-params (random-key (io "entropy")) config)]
                     (print "No checkpoint; initializing from scratch |"
                            (get config :n_layer) "layers,"
@@ -55,7 +55,7 @@
                     {:params params
                      :m (tree-map-zeros params)
                      :v (tree-map-zeros params)
-                     :t 0
+                     :t 0.0
                      :loss 0.0}))
       state     (assoc state :key (random-key (io "entropy")))
 

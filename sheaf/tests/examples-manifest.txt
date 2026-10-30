@@ -30,4 +30,5 @@ mlp	run.shf	none	none	mlp	30
 hydra	run.shf	none	none	hydra	30
 clevr	run.shf	params.pkl	none	clevr	30
 nanogpt	train.shf	out-shakespeare-char/config.json,data/shakespeare_char	out-shakespeare-char/ckpt.safetensors	nanoGPT-train	300
+nanogpt	train.shf		out-shakespeare-char/ckpt.safetensors	nanoGPT-resume	300
 nanogpt	sample.shf		none	nanoGPT-sample	120

@@ -37,6 +37,21 @@ sheaf_integration_test(
         "vag_tests.yaml",
     ],
 )
+sheaf_integration_test(
+    name = "nanogpt_state_tests",
+    data = [
+        "//sheaf:bin",
+        "@iree_compiler//:iree-compile",
+        "//examples/nanogpt:model.shf",
+        "//examples/nanogpt:train.shf",
+    ],
+    env = {
+        "IREE_COMPILE": "$(rootpath @iree_compiler//:iree-compile)",
+        "SHEAF_TEST_BINARY": "$(rootpath //sheaf:bin)",
+        "NANOGPT_MODEL_SOURCE": "$(rootpath //examples/nanogpt:model.shf)",
+        "NANOGPT_TRAIN_SOURCE": "$(rootpath //examples/nanogpt:train.shf)",
+    },
+)
 sheaf_integration_test(name = "mem_attribution")
 sheaf_integration_test(name = "parser_tests")
 sheaf_integration_test(name = "polymorphic_jit_reuse")
@@ -174,6 +189,7 @@ test_suite(
         ":regression_macros",
         ":regression_mlp",
         ":regression_nanogpt",
+        ":nanogpt_state_tests",
         ":regression_runtime_dtypes",
         ":interpreter_tests",
         ":mem_attribution",
