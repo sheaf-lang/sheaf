@@ -139,11 +139,166 @@ fn replace_in_scope(expr: &CompiledExpr, replacements: &Scope<'_>) -> CompiledEx
     }
 }
 
+/// Assign distinct names to lexical binders before moving bodies across scopes.
+#[derive(Default)]
+pub struct FreshBindings {
+    reserved: HashSet<String>,
+    next: usize,
+}
+
+impl FreshBindings {
+    pub fn reserve(&mut self, expr: &CompiledExpr) {
+        match expr {
+            CompiledExpr::Symbol(name) | CompiledExpr::GetTupleElement { param: name, .. } => {
+                self.reserved.insert(name.clone());
+            }
+            CompiledExpr::Lambda { params, .. } => {
+                self.reserved.extend(params.iter().cloned());
+            }
+            CompiledExpr::Let { bindings, .. } => {
+                for (pattern, _) in bindings { pattern_names(pattern, &mut self.reserved); }
+            }
+            CompiledExpr::Repeat { index_var, acc_var, .. } => {
+                self.reserved.insert(index_var.clone());
+                self.reserved.insert(acc_var.clone());
+            }
+            CompiledExpr::While { acc_var, .. } => { self.reserved.insert(acc_var.clone()); }
+            _ => {}
+        }
+        expr.for_each_child(|child| self.reserve(child));
+    }
+
+    pub fn reserve_name(&mut self, name: &str) {
+        self.reserved.insert(name.to_string());
+    }
+
+    pub fn fresh_name(&mut self, name: &str) -> String {
+        loop {
+            let fresh = format!("__lexical_{}_{}", self.next, name);
+            self.next += 1;
+            if self.reserved.insert(fresh.clone()) { return fresh; }
+        }
+    }
+
+    fn bind(&mut self, name: &str, scope: &mut HashMap<String, String>) -> String {
+        let fresh = self.fresh_name(name);
+        scope.insert(name.to_string(), fresh.clone());
+        fresh
+    }
+
+    fn pattern(&mut self, pattern: &BindingPattern, scope: &mut HashMap<String, String>) -> BindingPattern {
+        match pattern {
+            BindingPattern::Simple(name) => BindingPattern::Simple(self.bind(name, scope)),
+            BindingPattern::Destructure(patterns) => BindingPattern::Destructure(
+                patterns.iter().map(|pattern| self.pattern(pattern, scope)).collect(),
+            ),
+        }
+    }
+
+    pub fn rename(&mut self, expr: &CompiledExpr) -> CompiledExpr {
+        self.rename_in_scope(expr, &HashMap::new())
+    }
+
+    fn rename_in_scope(&mut self, expr: &CompiledExpr, scope: &HashMap<String, String>) -> CompiledExpr {
+        match expr {
+            CompiledExpr::Symbol(name) => CompiledExpr::Symbol(scope.get(name).unwrap_or(name).clone()),
+            CompiledExpr::GetTupleElement { param, indices } => CompiledExpr::GetTupleElement {
+                param: scope.get(param).unwrap_or(param).clone(), indices: indices.clone(),
+            },
+            CompiledExpr::FunctionCall { name, args, .. } if scope.contains_key(name) => {
+                CompiledExpr::LambdaCall {
+                    callee: Box::new(CompiledExpr::Symbol(scope[name].clone())),
+                    args: args.iter().map(|arg| self.rename_in_scope(arg, scope)).collect(),
+                }
+            }
+            CompiledExpr::Let { bindings, body } => {
+                let mut scoped = scope.clone();
+                let mut renamed = Vec::with_capacity(bindings.len());
+                for (pattern, value) in bindings {
+                    let value = self.rename_in_scope(value, &scoped);
+                    renamed.push((self.pattern(pattern, &mut scoped), value));
+                }
+                CompiledExpr::Let { bindings: renamed, body: Box::new(self.rename_in_scope(body, &scoped)) }
+            }
+            CompiledExpr::Lambda { params, body, .. } => {
+                let mut scoped = scope.clone();
+                let params = params.iter().map(|param| self.bind(param, &mut scoped)).collect();
+                CompiledExpr::Lambda { params, body: Box::new(self.rename_in_scope(body, &scoped)) }
+            }
+            CompiledExpr::Repeat { index_var, count, acc_var, acc_init, body } => {
+                let mut scoped = scope.clone();
+                let index_var = self.bind(index_var, &mut scoped);
+                let acc_var = self.bind(acc_var, &mut scoped);
+                CompiledExpr::Repeat {
+                    index_var, count: Box::new(self.rename_in_scope(count, scope)), acc_var,
+                    acc_init: Box::new(self.rename_in_scope(acc_init, scope)),
+                    body: Box::new(self.rename_in_scope(body, &scoped)),
+                }
+            }
+            CompiledExpr::While { condition, acc_var, acc_init, body } => {
+                let mut scoped = scope.clone();
+                let acc_var = self.bind(acc_var, &mut scoped);
+                CompiledExpr::While {
+                    condition: Box::new(self.rename_in_scope(condition, &scoped)), acc_var,
+                    acc_init: Box::new(self.rename_in_scope(acc_init, scope)),
+                    body: Box::new(self.rename_in_scope(body, &scoped)),
+                }
+            }
+            _ => expr.map_children(|child| self.rename_in_scope(child, scope)),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     fn symbol(name: &str) -> CompiledExpr { CompiledExpr::Symbol(name.to_string()) }
+
+    #[test]
+    fn fresh_names_preserve_loop_scopes_and_free_references() {
+        let expr = CompiledExpr::Let {
+            bindings: vec![(BindingPattern::Simple("x".into()), symbol("x"))],
+            body: Box::new(CompiledExpr::Tuple(vec![
+                symbol("__lexical_0_x"),
+                CompiledExpr::Repeat {
+                    index_var: "x".into(), count: Box::new(symbol("x")), acc_var: "a".into(),
+                    acc_init: Box::new(symbol("a")), body: Box::new(symbol("x")),
+                },
+                CompiledExpr::While {
+                    acc_var: "x".into(), acc_init: Box::new(symbol("x")),
+                    condition: Box::new(symbol("x")), body: Box::new(symbol("x")),
+                },
+            ])),
+        };
+        let mut fresh = FreshBindings::default();
+        fresh.reserve(&expr);
+        let renamed = fresh.rename(&expr);
+        assert_eq!(free_locals(&renamed), free_locals(&expr));
+        let CompiledExpr::Let { bindings, .. } = renamed else { panic!() };
+        assert_ne!(bindings[0].0.as_simple().unwrap(), "__lexical_0_x");
+        assert_ne!(bindings[0].0.as_simple().unwrap(), "x");
+    }
+
+    #[test]
+    fn fresh_names_distinguish_local_calls_from_module_references() {
+        let expr = CompiledExpr::Lambda {
+            params: vec!["f".into()],
+            body: Box::new(CompiledExpr::Tuple(vec![
+                CompiledExpr::FunctionCall { name: "f".into(), args: vec![symbol("outside")], loc: None },
+                CompiledExpr::FunctionRef("f".into()),
+            ])),
+        };
+        let mut fresh = FreshBindings::default();
+        fresh.reserve(&expr);
+        let renamed = fresh.rename(&expr);
+        assert_eq!(free_locals(&renamed), free_locals(&expr));
+        let CompiledExpr::Lambda { params, body } = renamed else { panic!() };
+        let CompiledExpr::Tuple(values) = *body else { panic!() };
+        assert!(matches!(&values[0], CompiledExpr::LambdaCall { callee, .. }
+            if matches!(callee.as_ref(), CompiledExpr::Symbol(name) if name == &params[0])));
+        assert!(matches!(&values[1], CompiledExpr::FunctionRef(name) if name == "f"));
+    }
 
     #[test]
     fn replacements_preserve_scalar_types_and_call_locations() {

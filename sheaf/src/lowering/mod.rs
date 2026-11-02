@@ -9,7 +9,7 @@ pub mod config;
 pub mod effects;
 pub mod stablehlo;
 pub mod transforms;
-mod walk;
+pub(crate) mod walk;
 
 pub use call_graph::jit_eligibility;
 pub use codegen::CodeGenerator;

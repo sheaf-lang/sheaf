@@ -1,162 +1,147 @@
 // Copyright (c) 2025 Damien Boureille
 // Licensed under the MIT License.
 
-//! IR transforms: function inlining and common subexpression elimination.
+//! Function inlining and dictionary access folding.
 
+use crate::core::bindings::{FreshBindings, pattern_names};
 use crate::core::expr::{BindingPattern, CompiledExpr, FunctionDef};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
-/// Inline user-defined function calls so that autodiff can see through them.
-///
-/// Replaces `FunctionCall("f", [a, b])` where `f` is in `registry` with:
-//   `Let { bindings: [(p1, a), (p2, b)], body: f.body_compiled }`
-///
-/// Recurses into the result (the inlined body may itself contain calls).
-/// `depth` guards against infinite recursion (mutual/self-recursive functions).
 pub fn inline_function_calls(
     expr: &CompiledExpr,
     registry: &HashMap<String, FunctionDef>,
 ) -> CompiledExpr {
-    inline_calls_rec(expr, registry, &HashMap::new(), 0)
+    let mut fresh = FreshBindings::default();
+    let mut pending = vec![expr];
+    let mut seen = HashSet::new();
+    while let Some(body) = pending.pop() {
+        fresh.reserve(body);
+        crate::lowering::walk::walk_expr(body, &mut |node| {
+            let name = match node {
+                CompiledExpr::FunctionCall { name, .. } | CompiledExpr::FunctionRef(name) => name,
+                _ => return,
+            };
+            if seen.insert(name.clone()) && let Some(function) = registry.get(name) {
+                for param in &function.params { fresh.reserve_name(param); }
+                if let Some(body) = &function.body_compiled { pending.push(body); }
+            }
+        });
+    }
+    let expr = fresh.rename(expr);
+    Inliner { registry, fresh }.inline(&expr, &HashMap::new(), 0)
 }
 
 const MAX_INLINE_DEPTH: usize = 16;
+type LocalFunctions = HashMap<String, CompiledExpr>;
 
-fn inline_calls_rec(
-    expr: &CompiledExpr,
-    registry: &HashMap<String, FunctionDef>,
-    local_lambdas: &HashMap<String, CompiledExpr>,
-    depth: usize,
-) -> CompiledExpr {
-    if depth > MAX_INLINE_DEPTH {
-        return expr.clone();
-    }
+struct Inliner<'a> {
+    registry: &'a HashMap<String, FunctionDef>,
+    fresh: FreshBindings,
+}
 
-    match expr {
-        CompiledExpr::FunctionCall { name, args, loc } => {
-            // First, inline in arguments
-            let inlined_args: Vec<CompiledExpr> = args
-                .iter()
-                .map(|a| inline_calls_rec(a, registry, local_lambdas, depth))
-                .collect();
+fn shadow_pattern(pattern: &BindingPattern, locals: &mut LocalFunctions) {
+    let mut names = HashSet::new();
+    pattern_names(pattern, &mut names);
+    for name in names { locals.remove(&name); }
+}
 
-            // Try to inline: check local lambda bindings first, then registry
-            if let Some(CompiledExpr::Lambda { params, body }) = local_lambdas.get(name.as_str()) {
-                let bindings: Vec<(BindingPattern, CompiledExpr)> = params
-                    .iter()
-                    .zip(inlined_args.iter())
-                    .map(|(p, a)| (BindingPattern::Simple(p.clone()), a.clone()))
-                    .collect();
-                let inlined = CompiledExpr::Let {
-                    bindings,
-                    body: body.clone(),
-                };
-                return inline_calls_rec(&inlined, registry, local_lambdas, depth + 1);
+impl Inliner<'_> {
+    fn inline(&mut self, expr: &CompiledExpr, locals: &LocalFunctions, depth: usize) -> CompiledExpr {
+        if depth > MAX_INLINE_DEPTH { return expr.clone(); }
+        match expr {
+            CompiledExpr::Symbol(name) => match locals.get(name) {
+                Some(function @ CompiledExpr::Lambda { .. }) => function.clone(),
+                _ => expr.clone(),
+            },
+            CompiledExpr::FunctionCall { name, args, loc } => {
+                let args: Vec<_> = args.iter().map(|arg| self.inline(arg, locals, depth)).collect();
+                if let Some(function) = self.registry.get(name)
+                    && let Some(body) = &function.body_compiled {
+                    let lambda = CompiledExpr::Lambda { params: function.params.clone(), body: Box::new(body.clone()) };
+                    let CompiledExpr::Lambda { params, body, .. } = self.fresh.rename(&lambda) else { unreachable!() };
+                    let bindings = params.into_iter().zip(args)
+                        .map(|(param, arg)| (BindingPattern::Simple(param), arg)).collect();
+                    return self.inline(&CompiledExpr::Let {
+                        bindings, body: Box::new(body.as_ref().clone()),
+                    }, locals, depth + 1);
+                }
+                CompiledExpr::FunctionCall { name: name.clone(), args, loc: loc.clone() }
             }
-
-            if let Some(func_def) = registry.get(name.as_str())
-                && let Some(body) = &func_def.body_compiled
-            {
-                let bindings: Vec<(BindingPattern, CompiledExpr)> = func_def
-                    .params
-                    .iter()
-                    .zip(inlined_args.iter())
-                    .map(|(p, a)| (BindingPattern::Simple(p.clone()), a.clone()))
-                    .collect();
-                let inlined = CompiledExpr::Let {
-                    bindings,
-                    body: Box::new(body.clone()),
-                };
-                return inline_calls_rec(&inlined, registry, local_lambdas, depth + 1);
-            }
-
-            CompiledExpr::FunctionCall {
-                name: name.clone(),
-                args: inlined_args,
-                loc: loc.clone(),
-            }
-        }
-
-        CompiledExpr::Let { bindings, body } => {
-            let mut new_lambdas = local_lambdas.clone();
-            let new_bindings: Vec<(BindingPattern, CompiledExpr)> = bindings
-                .iter()
-                .map(|(k, v)| {
-                    let inlined_v = inline_calls_rec(v, registry, &new_lambdas, depth);
-                    if let BindingPattern::Simple(name) = k
-                        && matches!(&inlined_v, CompiledExpr::Lambda { .. })
-                    {
-                        new_lambdas.insert(name.clone(), inlined_v.clone());
+            CompiledExpr::Let { bindings, body } => {
+                let mut scoped = locals.clone();
+                let mut new_bindings = Vec::with_capacity(bindings.len());
+                for (pattern, value) in bindings {
+                    let mut value = self.inline(value, &scoped, depth);
+                    if let CompiledExpr::Symbol(name) = &value
+                        && let Some(function) = scoped.get(name) {
+                        value = function.clone();
                     }
-                    (k.clone(), inlined_v)
-                })
-                .collect();
-            CompiledExpr::Let {
-                bindings: new_bindings,
-                body: Box::new(inline_calls_rec(body, registry, &new_lambdas, depth)),
+                    shadow_pattern(pattern, &mut scoped);
+                    if let BindingPattern::Simple(name) = pattern
+                        && matches!(value, CompiledExpr::Lambda { .. }
+                            | CompiledExpr::FunctionRef(_)) {
+                        scoped.insert(name.clone(), value.clone());
+                    }
+                    new_bindings.push((pattern.clone(), value));
+                }
+                CompiledExpr::Let {
+                    bindings: new_bindings,
+                    body: Box::new(self.inline(body, &scoped, depth)),
+                }
             }
+            CompiledExpr::Lambda { params, body, .. } => {
+                let mut scoped = locals.clone();
+                for param in params { scoped.remove(param); }
+                CompiledExpr::Lambda { params: params.clone(), body: Box::new(self.inline(body, &scoped, depth)) }
+            }
+            CompiledExpr::LambdaCall { callee, args } => {
+                let args: Vec<_> = args.iter().map(|arg| self.inline(arg, locals, depth)).collect();
+                let mut callee = self.inline(callee, locals, depth);
+                if let CompiledExpr::Symbol(name) = &callee
+                    && let Some(function) = locals.get(name) {
+                    callee = function.clone();
+                }
+                match &callee {
+                    CompiledExpr::FunctionRef(name) => {
+                        self.inline(&CompiledExpr::FunctionCall {
+                            name: name.clone(), args, loc: None,
+                        }, locals, depth + 1)
+                    }
+                    CompiledExpr::Lambda { params, body, .. } if params.len() == args.len() => {
+                        let bindings = params.iter().zip(args)
+                            .map(|(param, arg)| (BindingPattern::Simple(param.clone()), arg)).collect();
+                        self.inline(&CompiledExpr::Let {
+                            bindings, body: Box::new(body.as_ref().clone()),
+                        }, locals, depth + 1)
+                    }
+                    CompiledExpr::Let { bindings, body } => self.inline(&CompiledExpr::Let {
+                        bindings: bindings.clone(),
+                        body: Box::new(CompiledExpr::LambdaCall { callee: body.clone(), args }),
+                    }, locals, depth + 1),
+                    _ => CompiledExpr::LambdaCall { callee: Box::new(callee), args },
+                }
+            }
+            CompiledExpr::Repeat { index_var, count, acc_var, acc_init, body } => {
+                let mut scoped = locals.clone();
+                scoped.remove(index_var);
+                scoped.remove(acc_var);
+                CompiledExpr::Repeat {
+                    index_var: index_var.clone(), count: Box::new(self.inline(count, locals, depth)),
+                    acc_var: acc_var.clone(), acc_init: Box::new(self.inline(acc_init, locals, depth)),
+                    body: Box::new(self.inline(body, &scoped, depth)),
+                }
+            }
+            CompiledExpr::While { condition, acc_var, acc_init, body } => {
+                let mut scoped = locals.clone();
+                scoped.remove(acc_var);
+                CompiledExpr::While {
+                    condition: Box::new(self.inline(condition, &scoped, depth)),
+                    acc_var: acc_var.clone(), acc_init: Box::new(self.inline(acc_init, locals, depth)),
+                    body: Box::new(self.inline(body, &scoped, depth)),
+                }
+            }
+            _ => expr.map_children(|child| self.inline(child, locals, depth)),
         }
-
-        CompiledExpr::Do(exprs) => CompiledExpr::Do(
-            exprs
-                .iter()
-                .map(|e| inline_calls_rec(e, registry, local_lambdas, depth))
-                .collect(),
-        ),
-
-        CompiledExpr::If {
-            condition,
-            then_branch,
-            else_branch,
-        } => CompiledExpr::If {
-            condition: Box::new(inline_calls_rec(condition, registry, local_lambdas, depth)),
-            then_branch: Box::new(inline_calls_rec(then_branch, registry, local_lambdas, depth)),
-            else_branch: else_branch
-                .as_ref()
-                .map(|e| Box::new(inline_calls_rec(e, registry, local_lambdas, depth))),
-        },
-
-        CompiledExpr::Lambda { params, body } => CompiledExpr::Lambda {
-            params: params.clone(),
-            body: Box::new(inline_calls_rec(body, registry, local_lambdas, depth)),
-        },
-
-        CompiledExpr::LambdaCall { callee, args } => {
-            let inlined_args: Vec<CompiledExpr> = args
-                .iter()
-                .map(|a| inline_calls_rec(a, registry, local_lambdas, depth))
-                .collect();
-            let inlined_callee = inline_calls_rec(callee, registry, local_lambdas, depth);
-
-            // If callee is a direct lambda, inline it as a Let binding
-            if let CompiledExpr::Lambda { params, body } = &inlined_callee {
-                let bindings: Vec<(BindingPattern, CompiledExpr)> = params
-                    .iter()
-                    .zip(inlined_args.iter())
-                    .map(|(p, a)| (BindingPattern::Simple(p.clone()), a.clone()))
-                    .collect();
-                let inlined = CompiledExpr::Let {
-                    bindings,
-                    body: body.clone(),
-                };
-                return inline_calls_rec(&inlined, registry, local_lambdas, depth + 1);
-            }
-
-            CompiledExpr::LambdaCall {
-                callee: Box::new(inlined_callee),
-                args: inlined_args,
-            }
-        }
-
-        CompiledExpr::Vector(elems) => CompiledExpr::Vector(
-            elems
-                .iter()
-                .map(|e| inline_calls_rec(e, registry, local_lambdas, depth))
-                .collect(),
-        ),
-
-        // Leaves: no recursion needed
-        _ => expr.clone(),
     }
 }
 
@@ -237,5 +222,26 @@ fn fold_dict_gets_rec(
         ),
 
         _ => expr.clone(),
+    }
+}
+
+#[cfg(test)]
+mod scope_tests {
+    use super::*;
+
+    #[test]
+    fn unrelated_definitions_do_not_change_local_names() {
+        let expr = CompiledExpr::Let {
+            bindings: vec![(BindingPattern::Simple("x".into()), CompiledExpr::Integer(1))],
+            body: Box::new(CompiledExpr::Symbol("x".into())),
+        };
+        let mut compiler = crate::core::expr::CompilerContext::new();
+        let source = crate::core::parse("(defn unused [__lexical_0_x] __lexical_0_x)", "<test>").unwrap();
+        compiler.compile(&source[0]).unwrap();
+        let without = inline_function_calls(&expr, &HashMap::new());
+        let with = inline_function_calls(&expr, &compiler.registry);
+        let (CompiledExpr::Let { bindings: a, .. }, CompiledExpr::Let { bindings: b, .. }) = (without, with)
+            else { panic!() };
+        assert_eq!(a[0].0, b[0].0);
     }
 }

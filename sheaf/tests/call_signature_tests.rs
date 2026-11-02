@@ -281,6 +281,30 @@ fn computed_integer_dimensions_compile_to_direct_vmfb() {
     }
 }
 
+#[test]
+fn inlined_parameters_do_not_capture_caller_arguments_in_vmfb() {
+    initialize_device();
+    let mut interpreter = interpreter_only();
+    interpreter.eval("(defn scope_subtract [x y] (- x y))
+        (defn scope_swap [x y] (scope_subtract y x))").unwrap();
+    let args = [interpreter.eval("[1.0 2.0]").unwrap(), interpreter.eval("[4.0 6.0]").unwrap()];
+    let expected = interpreter.eval("[3.0 4.0]").unwrap();
+    compare_values(&interpreter.eval("(scope_swap [1.0 2.0] [4.0 6.0])").unwrap(), &expected, "interpreter").unwrap();
+    let result = compile_call(&interpreter, "scope_swap", &args).unwrap().execute(&args).unwrap();
+    compare_values(&result, &expected, "swapped arguments/VMFB").unwrap();
+}
+
+#[test]
+fn inlining_returned_lambdas_preserves_outer_arguments_in_vmfb() {
+    initialize_device();
+    let mut interpreter = interpreter_only();
+    interpreter.eval("(defn scope_closure [x] (((fn [x] (fn [y] (+ x y))) (* 2 x)) x))").unwrap();
+    let args = [interpreter.eval("[1.0 2.0]").unwrap()];
+    let expected = interpreter.eval("[3.0 6.0]").unwrap();
+    let result = compile_call(&interpreter, "scope_closure", &args).unwrap().execute(&args).unwrap();
+    compare_values(&result, &expected, "returned lambda/VMFB").unwrap();
+}
+
 fn initialize_device() {
     let device = std::env::var("SHEAF_SIGNATURE_DEVICE").unwrap_or_else(|_| "cpu".to_string());
     config::init(0, Some(device), false);
