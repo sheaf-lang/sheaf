@@ -267,6 +267,7 @@ fn anf_expr_depends_on_wrt(expr: &CompiledExpr, dependencies: &HashMap<String, b
         | CompiledExpr::Keyword(_)
         | CompiledExpr::Quoted(_)
         | CompiledExpr::FunctionRef(_)
+        | CompiledExpr::GlobalRef(_)
         | CompiledExpr::ValueAndGrad { .. } => false,
         CompiledExpr::Symbol(name) => dependencies.get(name).copied().unwrap_or(false),
         CompiledExpr::GetTupleElement { param, .. } => {
@@ -410,6 +411,7 @@ fn anf_form_name(expr: &CompiledExpr) -> &'static str {
         CompiledExpr::Dict(_) => "dict",
         CompiledExpr::Quoted(_) => "quoted",
         CompiledExpr::FunctionRef(_) => "function reference",
+        CompiledExpr::GlobalRef(_) => "module reference",
         CompiledExpr::Let { .. } => "let",
         CompiledExpr::If { .. } => "if",
         CompiledExpr::Do(_) => "do",

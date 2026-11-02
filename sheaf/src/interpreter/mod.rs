@@ -8,12 +8,15 @@ pub mod env;
 pub mod eval;
 #[cfg(iree_runtime)]
 mod iree_dispatch;
+mod specialize;
 pub(crate) mod hof;
 pub mod profiler;
 pub mod mem_profile;
 mod vag;
 pub mod tracer;
 pub mod value;
+#[cfg(test)]
+mod capture_tests;
 
 use crate::core::ast::SheafValue;
 use crate::core::expr::{BindingPattern, CompiledExpr, CompilerContext};
@@ -48,23 +51,7 @@ pub fn eval(expr: &CompiledExpr, env: &mut Env) -> Result<Value, SheafError> {
 
         CompiledExpr::Quoted(sv) => sheaf_value_to_value(sv),
 
-        CompiledExpr::FunctionRef(name) => {
-            if let Ok(val) = env.get(name) {
-                return Ok(val);
-            }
-            if let Some(func_def) = env.registry.get(name) {
-                if let Some(ref body) = func_def.body_compiled {
-                    return Ok(Value::Function {
-                        name: Some(name.to_string()),
-                        params: func_def.params.clone(),
-                        body: body.clone(),
-                        closure: vec![],
-                    });
-                }
-                return Ok(Value::Nil);
-            }
-            Err(runtime_error(format!("Undefined function: {}", name)))
-        }
+        CompiledExpr::FunctionRef(name) | CompiledExpr::GlobalRef(name) => env.module_value(name),
 
         CompiledExpr::FunctionCall { name, args, loc } => {
             eval_call(name, args, env).map_err(|e| match e {
@@ -93,18 +80,24 @@ pub fn eval(expr: &CompiledExpr, env: &mut Env) -> Result<Value, SheafError> {
         }
 
         CompiledExpr::Def { name, value } => {
-            let val = eval(value, env)?;
+            let mut val = eval(value, env)?;
+            if let Value::Function { name: function_name, .. } = &mut val
+                && function_name.is_none() {
+                *function_name = Some(name.clone());
+            }
             env.set_global(name, val.clone());
             Ok(val)
         }
 
         CompiledExpr::Let { bindings, body } => {
             env.push_scope();
-            for (pattern, expr) in bindings {
-                let val = eval(expr, env)?;
-                bind_pattern(pattern, val, env)?;
-            }
-            let result = eval(body, env);
+            let result = (|| {
+                for (pattern, expr) in bindings {
+                    let val = eval(expr, env)?;
+                    bind_pattern(pattern, val, env)?;
+                }
+                eval(body, env)
+            })();
             env.pop_scope();
             result
         }
@@ -128,12 +121,13 @@ pub fn eval(expr: &CompiledExpr, env: &mut Env) -> Result<Value, SheafError> {
             Ok(result)
         }
 
-        CompiledExpr::Lambda { params, body } => {
+        CompiledExpr::Lambda { params, captures, body } => {
+            let closure = captures.iter().map(|name| {
+                env.get(name).map(|value| (name.clone(), value))
+            }).collect::<Result<Vec<_>, _>>()?;
             Ok(Value::Function {
-                name: None,
-                params: params.clone(),
-                body: *body.clone(),
-                closure: vec![],
+                kind: value::FunctionKind::User,
+                name: None, params: params.clone(), body: body.clone(), closure,
             })
         }
 
@@ -443,16 +437,10 @@ fn eval_call(name: &str, args: &[CompiledExpr], env: &mut Env) -> Result<Value, 
 
     // Only functions that declare keyword params consume :kw val pairs.
     // All others treat keywords as positional values (Clojure semantics).
-let has_kwargs = matches!(name,
-            "softmax" | "log-softmax" | "sum" | "mean" | "product"
-            | "min" | "max" | "argmax" | "argmin" | "concat"
-            | "leaky-relu" | "celu" | "var" | "normalize"
-            | "range" | "tensor-split" | "slice" | "sort"
-            | "print" | "choice" | "flip"
-        );
+    let has_kwargs = uses_kwargs(name);
 
-    let operation = match env.get(name) {
-        Ok(Value::BuiltinFn { name, .. }) => crate::core::signature::OpId::resolve(&name),
+    let operation = match env.get_global(name) {
+        Some(Value::BuiltinFn { name, .. }) => crate::core::signature::OpId::resolve(&name),
         _ => None,
     };
     // Evaluate args, splitting kwargs only for functions that use them
@@ -491,7 +479,7 @@ let has_kwargs = matches!(name,
     }
 
     // Try builtin from env
-    if let Ok(Value::BuiltinFn { func, .. }) = env.get(name) {
+    if let Some(Value::BuiltinFn { func, .. }) = env.get_global(name) {
         if let Some(ref mut p) = env.profiler { p.enter(name); }
         let result = func(&pos_args, &kwargs);
         if let Some(ref mut p) = env.profiler { p.exit(); }
@@ -499,7 +487,23 @@ let has_kwargs = matches!(name,
     }
 
     // Try user-defined function from registry
-    if let Some(func_def) = env.registry.get(name).cloned() {
+    if let Some(mut func_def) = env.registry.get(name).cloned() {
+        if func_def.requires_initialization && env.get_global(name).is_none() {
+            return Err(runtime_error(format!("Undefined symbol: {}", name)));
+        }
+        if let Some(value) = env.get_global(name) {
+            match value {
+                Value::Function { params, body, closure, .. } if closure.is_empty() => {
+                    if !func_def.body_compiled.as_ref().is_some_and(|original| std::rc::Rc::ptr_eq(original, &body)) {
+                        func_def.signature = None;
+                        func_def.known_param_types.clear();
+                    }
+                    func_def.params = params;
+                    func_def.body_compiled = Some(body);
+                }
+                value => return call_function(&value, &pos_args, env),
+            }
+        }
         // Arity check before any JIT or interpreter dispatch
         if pos_args.len() != func_def.params.len() {
             let got = pos_args.iter().map(|a| a.short_desc()).collect::<Vec<_>>().join(", ");
@@ -554,8 +558,12 @@ let has_kwargs = matches!(name,
         // VMFB/JIT dispatch: skip when tracing so the interpreter runs
         // and exposes the full call tree
         #[cfg(iree_runtime)]
-        if env.tracer.is_none() {
-            if let Some(result) = iree_dispatch::try_iree_dispatch(&func_def, &pos_args, env) {
+        if env.tracer.is_none()
+            && let Some((prepared_def, prepared_args)) =
+                specialize::prepare_function(&func_def, &pos_args, env)?.ready() {
+            let func_def = &prepared_def;
+            let pos_args = &prepared_args;
+            if let Some(result) = iree_dispatch::try_iree_dispatch(func_def, pos_args, env) {
                 if let Some(ref mut p) = env.profiler { p.exit(); }
                 return result;
             }
@@ -570,10 +578,10 @@ let has_kwargs = matches!(name,
                     }
                 };
                 if let crate::runtime::jit::JitCompileOutcome::Compiled(_) =
-                    jit.try_jit_compile(&func_def, &pos_args, &env.registry, &shared_session)
+                    jit.try_jit_compile(func_def, pos_args, &env.registry, &shared_session)
                 {
                     recompiled = true;
-                    if let Some(result) = iree_dispatch::try_iree_dispatch(&func_def, &pos_args, env) {
+                    if let Some(result) = iree_dispatch::try_iree_dispatch(func_def, pos_args, env) {
                         if let Some(ref mut p) = env.profiler { p.exit(); }
                         return result;
                     }
@@ -599,7 +607,7 @@ let has_kwargs = matches!(name,
                 env.tracer = Some(tracer);
             }
 
-            env.push_scope();
+            env.push_function_scope();
             for (param, val) in func_def.params.iter().zip(pos_args.iter()) {
                 env.set(param, val.clone());
             }
@@ -631,11 +639,11 @@ let has_kwargs = matches!(name,
     }
 
     // Try function value in env
-    if let Ok(func_val) = env.get(name) {
+    if let Ok(func_val) = env.module_value(name) {
         return call_function(&func_val, &pos_args, env);
     }
 
-    Err(runtime_error(format!("Unknown function: {}", name)))
+    Err(runtime_error(format!("Undefined symbol: {}", name)))
 }
 
 fn eval_and(args: &[CompiledExpr], env: &mut Env) -> Result<Value, SheafError> {
@@ -662,6 +670,16 @@ fn eval_or(args: &[CompiledExpr], env: &mut Env) -> Result<Value, SheafError> {
         }
     }
     eval(&args[args.len() - 1], env)
+}
+
+pub(crate) fn uses_kwargs(name: &str) -> bool {
+    matches!(name,
+        "softmax" | "log-softmax" | "sum" | "mean" | "product"
+        | "min" | "max" | "argmax" | "argmin" | "concat"
+        | "leaky-relu" | "celu" | "var" | "normalize"
+        | "range" | "tensor-split" | "slice" | "sort"
+        | "print" | "choice" | "flip"
+    )
 }
 
 fn eval_argument(
@@ -707,23 +725,29 @@ fn split_kwargs(
 
 pub(crate) fn call_function(func: &Value, args: &[Value], env: &mut Env) -> Result<Value, SheafError> {
     match func {
-        Value::Function { closure, .. } => {
-            // Detect vmap HOF closure: contains __vmap_fn__
-            if let Some((_, vmap_fn)) = closure.iter().find(|(k, _)| k == "__vmap_fn__") {
+        Value::Function { kind, closure, .. } => {
+            if *kind == value::FunctionKind::Vmap {
+                let (_, vmap_fn) = closure.iter().find(|(k, _)| k == "__vmap_fn__")
+                    .ok_or_else(|| runtime_error("vmap: missing function"))?;
                 let axes = closure.iter().find(|(k, _)| k == "__vmap_axes__").map(|(_, v)| v.clone());
                 return hof::eval_vmap_call(vmap_fn, axes.as_ref(), args, env);
             }
-            // Detect value-and-grad HOF closure: contains __vag_fn__
-            if let Some((_, vag_fn)) = closure.iter().find(|(k, _)| k == "__vag_fn__") {
+            if *kind == value::FunctionKind::ValueAndGrad {
+                let (_, vag_fn) = closure.iter().find(|(k, _)| k == "__vag_fn__")
+                    .ok_or_else(|| runtime_error("value-and-grad: missing function"))?;
                 if args.len() != 1 {
                     return Err(runtime_error("value-and-grad: expected exactly 1 argument (params)"));
                 }
                 return vag::eval_value_and_grad_call(vag_fn, &args[0], env);
             }
             // Normal function call
-            let Value::Function { params, body, closure, .. } = func else { unreachable!() };
+            let Value::Function { name, params, body, closure, .. } = func else { unreachable!() };
+            if params.len() != args.len() {
+                return Err(runtime_error(format!("{} expects {} arguments, got {}",
+                    name.as_deref().unwrap_or("fn"), params.len(), args.len())));
+            }
             if let Some(ref mut p) = env.profiler { p.enter("<lambda>"); }
-            env.push_scope();
+            env.push_function_scope();
             for (name, val) in closure {
                 env.set(name, val.clone());
             }

@@ -201,7 +201,7 @@ fn grad_with(expr: &CompiledExpr, wrt: &str, g: CompiledExpr) -> SheafResult<Com
 
     let result = match expr {
         // Constants and irrelevant symbols -> zero
-        CompiledExpr::Float(_) | CompiledExpr::Integer(_) => float(0.0),
+        CompiledExpr::Float(_) | CompiledExpr::Integer(_) | CompiledExpr::GlobalRef(_) => float(0.0),
 
         CompiledExpr::Symbol(name) => {
             if name == wrt {
@@ -927,10 +927,7 @@ mod tests {
                 "dict",
             ),
             (CompiledExpr::LambdaCall {
-                callee: Box::new(CompiledExpr::Lambda {
-                    params: vec!["y".into()],
-                    body: Box::new(CompiledExpr::Symbol("y".into())),
-                }),
+                callee: Box::new(CompiledExpr::lambda(vec!["y".into()], CompiledExpr::Symbol("y".into()))),
                 args: vec![x()],
             }, "lambda-call"),
         ];

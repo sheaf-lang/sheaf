@@ -230,13 +230,17 @@ impl SpecialForm for UseForm {
         let pre_fns: std::collections::HashSet<String> =
             compiler.registry.keys().cloned().collect();
 
-        // Collect def expressions so they get evaluated at runtime (binds globals).
+        // Keep the scopes and control flow surrounding imported initializers.
+        fn has_initializer(expr: &CompiledExpr) -> bool {
+            if matches!(expr, CompiledExpr::Def { .. }) { return true; }
+            let mut found = false;
+            expr.for_each_child(|child| found |= has_initializer(child));
+            found
+        }
         let mut defs = Vec::new();
         for expr in &exprs {
             let compiled = compiler.compile(expr)?;
-            if matches!(&compiled, CompiledExpr::Def { .. }) {
-                defs.push(compiled);
-            }
+            if has_initializer(&compiled) { defs.push(compiled); }
         }
 
         // Try to load companion VMFB for the imported module

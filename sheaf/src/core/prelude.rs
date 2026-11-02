@@ -11,7 +11,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
 const MAGIC: &[u8; 8] = b"SHFPREL\0";
-pub const SCHEMA_VERSION: u32 = 2;
+pub const SCHEMA_VERSION: u32 = 3;
 
 #[cfg(not(any(sheaf_frontend, cargo_source_prelude)))]
 mod embedded {
@@ -42,6 +42,7 @@ struct PreludePayload {
     env: BTreeMap<String, SheafValue>,
     registry: BTreeMap<String, FunctionDef>,
     local_vars: BTreeMap<String, SheafValue>,
+    global_names: BTreeSet<String>,
     param_types: BTreeMap<String, ParamLayout>,
     param_scope: BTreeMap<String, (String, Vec<usize>)>,
     macros: BTreeMap<String, MacroDef>,
@@ -87,6 +88,7 @@ pub fn encode(
         env: context.env.clone().into_iter().collect(),
         registry: context.registry.clone().into_iter().collect(),
         local_vars: context.local_vars.clone().into_iter().collect(),
+        global_names: context.global_names.clone().into_iter().collect(),
         param_types: context.param_types.clone().into_iter().collect(),
         param_scope: context.param_scope.clone().into_iter().collect(),
         macros: context.macro_engine.macros.clone().into_iter().collect(),
@@ -138,6 +140,7 @@ pub fn decode_and_install(
     context.env = payload.env.into_iter().collect();
     context.registry = payload.registry.into_iter().collect();
     context.local_vars = payload.local_vars.into_iter().collect();
+    context.global_names = payload.global_names.into_iter().collect();
     context.param_types = payload.param_types.into_iter().collect();
     context.param_scope = payload.param_scope.into_iter().collect();
     context.macro_engine = MacroEngine::new();

@@ -408,9 +408,10 @@ pub(super) fn eval_vmap(args: &[Value], _env: &mut Env) -> Result<Value, SheafEr
         closure.push(("__vmap_axes__".to_string(), args[1].clone()));
     }
     Ok(Value::Function {
+        kind: super::value::FunctionKind::Vmap,
         name: None,
         params: vec!["__vmap_arg__".to_string()],
-        body: crate::core::expr::CompiledExpr::Symbol("__vmap_arg__".to_string()),
+        body: crate::core::expr::CompiledExpr::Symbol("__vmap_arg__".to_string()).into(),
         closure,
     })
 }
@@ -510,9 +511,10 @@ mod tests {
     fn tensor_iteration_preserves_scalar_types_and_row_dtypes() {
         fn function(params: &[&str], body: CompiledExpr, closure: Vec<(String, Value)>) -> Value {
             Value::Function {
+                kind: super::super::value::FunctionKind::User,
                 name: None,
                 params: params.iter().map(|name| (*name).to_string()).collect(),
-                body,
+                body: std::rc::Rc::new(body),
                 closure,
             }
         }

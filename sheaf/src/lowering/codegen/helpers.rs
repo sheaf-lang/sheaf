@@ -85,10 +85,9 @@ pub(crate) fn expand_tuple_to_symbols(expr: &CompiledExpr, param_name: &str) -> 
             then_branch: Box::new(expand_tuple_to_symbols(then_branch, param_name)),
             else_branch: else_branch.as_ref().map(|e| Box::new(expand_tuple_to_symbols(e, param_name))),
         },
-        CompiledExpr::Lambda { params, body } => CompiledExpr::Lambda {
-            params: params.clone(),
-            body: Box::new(expand_tuple_to_symbols(body, param_name)),
-        },
+        CompiledExpr::Lambda { params, body, .. } => CompiledExpr::lambda(
+            params.clone(), expand_tuple_to_symbols(body, param_name),
+        ),
         CompiledExpr::LambdaCall { callee, args } => CompiledExpr::LambdaCall {
             callee: Box::new(expand_tuple_to_symbols(callee, param_name)),
             args: args.iter().map(|a| expand_tuple_to_symbols(a, param_name)).collect(),

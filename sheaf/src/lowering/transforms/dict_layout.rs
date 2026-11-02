@@ -26,6 +26,22 @@ fn lower_inlined_gets_rec(
     reverse: &HashMap<(String, Vec<usize>), Vec<String>>,
 ) -> CompiledExpr {
     match expr {
+        CompiledExpr::GetTupleElement { param, indices } => {
+            if let Some((root, prefix)) = aliases.get(param) {
+                let mut full_indices = if prefix.is_empty() {
+                    Vec::new()
+                } else if let Some(indices) = index_maps.iter()
+                    .find(|(name, _)| name == root).and_then(|(_, map)| map.get(prefix)) {
+                    indices.clone()
+                } else {
+                    return expr.clone();
+                };
+                full_indices.extend(indices);
+                CompiledExpr::GetTupleElement { param: root.clone(), indices: full_indices }
+            } else {
+                expr.clone()
+            }
+        }
         CompiledExpr::FunctionCall { name, args, loc }
             if (name == "get" || name == "get-in") && args.len() >= 2 =>
         {
@@ -197,10 +213,9 @@ fn lower_inlined_gets_rec(
                 .as_ref()
                 .map(|e| Box::new(lower_inlined_gets_rec(e, index_maps, aliases, reverse))),
         },
-        CompiledExpr::Lambda { params, body } => CompiledExpr::Lambda {
-            params: params.clone(),
-            body: Box::new(lower_inlined_gets_rec(body, index_maps, aliases, reverse)),
-        },
+        CompiledExpr::Lambda { params, body, .. } => CompiledExpr::lambda(
+            params.clone(), lower_inlined_gets_rec(body, index_maps, aliases, reverse),
+        ),
         CompiledExpr::LambdaCall { callee, args } => CompiledExpr::LambdaCall {
             callee: Box::new(lower_inlined_gets_rec(callee, index_maps, aliases, reverse)),
             args: args

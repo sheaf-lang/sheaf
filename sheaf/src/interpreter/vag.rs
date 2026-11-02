@@ -22,9 +22,10 @@ pub(super) fn eval_value_and_grad_hof(args: &[Value], _env: &mut Env) -> Result<
     let func = args[0].clone();
 
     Ok(Value::Function {
+        kind: super::value::FunctionKind::ValueAndGrad,
         name: None,
         params: vec!["__vag_params__".to_string()],
-        body: crate::core::expr::CompiledExpr::Symbol("__vag_params__".to_string()),
+        body: crate::core::expr::CompiledExpr::Symbol("__vag_params__".to_string()).into(),
         closure: vec![("__vag_fn__".to_string(), func)],
     })
 }
@@ -34,8 +35,10 @@ pub(super) fn eval_value_and_grad_hof(args: &[Value], _env: &mut Env) -> Result<
 /// Tries JIT first. Falls back to tracing (resolves non-tensor ops, then
 /// symbolic AD) for functions the JIT cannot compile (e.g. string captures).
 pub(super) fn eval_value_and_grad_call(func: &Value, params: &Value, env: &mut Env) -> Result<Value, SheafError> {
+    let prepared = super::specialize::prepare_vag(func, env)?.ready();
+    let func = prepared.as_ref().unwrap_or(func);
     #[cfg(iree_runtime)]
-    if env.tracer.is_none() {
+    if env.tracer.is_none() && prepared.is_some() {
         use crate::runtime::jit::JitVagOutcome;
         match super::iree_dispatch::try_jit_vag(func, params, env) {
             JitVagOutcome::Success(result) => return result,
@@ -100,6 +103,7 @@ pub(super) fn eval_value_and_grad_call(func: &Value, params: &Value, env: &mut E
                             crate::core::error::SourceLocation::new(0, 0, "".into()),
                         ),
                         body_compiled: Some(fb.clone()),
+                        requires_initialization: false,
                         signature: None,
                         vmfb_module_name: None,
                         known_param_types: Vec::new(),
@@ -145,6 +149,7 @@ pub(super) fn eval_value_and_grad_call(func: &Value, params: &Value, env: &mut E
             env.set(param_name, params.clone());
 
             let mut leaf_map = LeafMap::new();
+            leaf_map.track_input(param_name);
         match trace_expr(&inlined, env, &mut leaf_map) {
             Ok(traced) => {
                 if !contains_undiffable_ops(&traced) {

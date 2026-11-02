@@ -10,6 +10,7 @@ use crate::core::error::{SheafError, SheafResult};
 use crate::core::macro_engine::MacroEngine;
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
+use std::rc::Rc;
 
 /// A leaf field in a parameter layout: a named tensor with its shape
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -56,6 +57,10 @@ pub struct CompilerContext {
 
     /// Local variables (for let bindings, function params)
     pub local_vars: HashMap<String, SheafValue>,
+
+    /// Names declared by def in the module namespace.
+    pub global_names: HashSet<String>,
+
     pub(crate) function_depth: usize,
 
     /// Parameter type registry (structured dict layouts)
@@ -85,6 +90,9 @@ pub struct CompilerContext {
 
     /// Macro expansion engine
     pub macro_engine: MacroEngine,
+
+    /// Enabled only while compiling the embedded standard library from source.
+    allow_internal_ops: bool,
 }
 
 /// Function definition
@@ -93,7 +101,10 @@ pub struct FunctionDef {
     pub name: String,
     pub params: Vec<String>,
     pub body: SheafValue,
-    pub body_compiled: Option<CompiledExpr>,
+    #[serde(with = "shared_body::optional")]
+    pub body_compiled: Option<Rc<CompiledExpr>>,
+    /// Code registered by def is not a runtime binding until its initializer runs.
+    pub requires_initialization: bool,
     pub signature: Option<crate::core::inference::FunctionSignature>,
     /// IREE module name used for qualified dispatch.
     pub vmfb_module_name: Option<String>,
@@ -232,17 +243,6 @@ fn lower_quasiquote(node: &SheafValue) -> SheafValue {
     }
 }
 
-fn is_builtin_name(name: &str) -> bool {
-    if crate::core::signature::OpId::resolve(name).is_some_and(|op| op.is_public()) {
-        return true;
-    }
-    // These stdlib names are also accepted while compiling the prelude.
-    matches!(name,
-        "relu" | "leaky-relu" | "sigmoid" | "gelu" | "selu" | "celu" | "silu"
-        | "softmax" | "log-softmax" | "mse-loss" | "mae-loss"
-    )
-}
-
 const STDLIB: &[(&str, &str)] = &[
     ("macros.shf", include_str!("../../lib/macros.shf")),
     ("misc.shf", include_str!("../../lib/misc.shf")),
@@ -270,9 +270,10 @@ impl CompilerContext {
             env: Self::init_env(),
             registry: HashMap::new(),
             local_vars: HashMap::new(),
-            function_depth: 0,
+            global_names: HashSet::new(),
             param_types: HashMap::new(),
             param_scope: HashMap::new(),
+            function_depth: 0,
             load_path: Self::default_load_path(),
             loaded_modules: HashSet::new(),
             prelude_modules: HashSet::new(),
@@ -280,6 +281,7 @@ impl CompilerContext {
             disable_vmfb: false,
             checked_vmfb_dirs: HashSet::new(),
             macro_engine: MacroEngine::new(),
+            allow_internal_ops: false,
         }
     }
 
@@ -288,9 +290,16 @@ impl CompilerContext {
     pub fn compile_prelude_module(&mut self, name: &str, source: &str) -> SheafResult<()> {
         crate::core::error_format::register_source(name, source);
         let exprs = crate::core::parse(source, name)?;
-        for expr in &exprs {
-            self.compile(expr)?;
-        }
+        let saved = self.allow_internal_ops;
+        self.allow_internal_ops = true;
+        let result = (|| {
+            for expr in &exprs {
+                self.compile(expr)?;
+            }
+            Ok(())
+        })();
+        self.allow_internal_ops = saved;
+        result?;
         self.prelude_modules.insert(
             name.strip_suffix(".shf").unwrap_or(name).to_string()
         );
@@ -464,47 +473,19 @@ impl CompilerContext {
             });
         }
 
-        // Check local variables
-        if let Some(val) = self.local_vars.get(name).cloned() {
-            // Inline constants so JIT-traced functions can use `def` values.
-            match &val {
-                SheafValue::Integer(_, _)
-                | SheafValue::Float(_, _)
-                | SheafValue::String(_, _) => return self.compile(&val),
-                SheafValue::List(elems, _)
-                    if elems.first().and_then(|e| e.as_symbol()) == Some("fn") =>
-                {
-                    return self.compile(&val);
-                }
-                _ => {}
-            }
+        if self.local_vars.contains_key(name) {
             return Ok(CompiledExpr::Symbol(name.to_string()));
         }
-
-        // Check environment
-        if let Some(value) = self.env.get(name).cloned() {
+        // Compiler-generated field getters are expressions, not module bindings.
+        if !self.global_names.contains(name)
+            && let Some(value) = self.env.get(name).cloned() {
             return self.compile(&value);
         }
-
-        // Check registry (user-defined functions)
-        if self.registry.contains_key(name) {
-            return Ok(CompiledExpr::FunctionRef(name.to_string()));
-        }
-
-        // Allow interpreter builtin names as runtime-resolved symbols
-        if is_builtin_name(name) {
-            return Ok(CompiledExpr::Symbol(name.to_string()));
-        }
-
-        // Ellipsis marker for advanced indexing: (get tensor ... idx)
+        self.check_operation_visibility(name, loc)?;
         if name == "..." {
-            return Ok(CompiledExpr::Symbol("...".to_string()));
+            return Ok(CompiledExpr::Keyword("...".to_string()));
         }
-
-        Err(SheafError::Compile {
-            message: format!("Undefined symbol: {}", name),
-            location: loc.clone(),
-        })
+        Ok(CompiledExpr::GlobalRef(name.to_string()))
     }
 
     // Special form compilation methods have been moved to src/forms/
@@ -550,6 +531,21 @@ impl CompilerContext {
         Some(result)
     }
 
+    fn check_operation_visibility(
+        &self,
+        name: &str,
+        loc: &crate::core::error::SourceLocation,
+    ) -> SheafResult<()> {
+        if !self.allow_internal_ops
+            && crate::core::signature::OpId::resolve(name).is_some_and(|op| !op.is_public()) {
+            return Err(SheafError::Compile {
+                message: format!("{name}: internal operation cannot be referenced in source"),
+                location: loc.clone(),
+            });
+        }
+        Ok(())
+    }
+
     /// Compile function call (op arg1 arg2 ...)
     fn compile_function_call(
         &mut self,
@@ -565,21 +561,21 @@ impl CompilerContext {
             location: loc.clone(),
         })?;
 
+        if !self.local_vars.contains_key(func_name) {
+            self.check_operation_visibility(func_name, loc)?;
+        }
+
         // Compile arguments
         let compiled_args: SheafResult<Vec<CompiledExpr>> =
             args.iter().map(|arg| self.compile(arg)).collect();
         let compiled_args = compiled_args?;
 
-        // If the symbol is a locally-bound lambda, emit a LambdaCall.
-        // e.g. (let [f (fn [x] x)] (f 5))
+        // Calls through a binding use that value, not a registry entry with the same name.
         if self.local_vars.contains_key(func_name) {
-            let callee = self.resolve_symbol(func_name, loc)?;
-            if matches!(callee, CompiledExpr::Lambda { .. }) {
-                return Ok(CompiledExpr::LambdaCall {
-                    callee: Box::new(callee),
-                    args: compiled_args,
-                });
-            }
+            return Ok(CompiledExpr::LambdaCall {
+                callee: Box::new(self.resolve_symbol(func_name, loc)?),
+                args: compiled_args,
+            });
         }
 
         Ok(CompiledExpr::FunctionCall {
@@ -636,6 +632,8 @@ pub enum CompiledExpr {
     Dict(Vec<(CompiledExpr, CompiledExpr)>),
     Quoted(Box<SheafValue>),
     FunctionRef(String),
+    /// Reference in the current compilation module, independent of caller scopes.
+    GlobalRef(String),
     FunctionCall {
         name: String,
         args: Vec<CompiledExpr>,
@@ -661,13 +659,12 @@ pub enum CompiledExpr {
         /// Sequence of indices for nested tuple access
         indices: Vec<usize>,
     },
-    /// Anonymous function (lambda). Pure -- captures no external state.
-    /// Always inlined at call sites; never emitted as a separate MLIR function.
-    ///
-    /// Corresponds to (fn [params] body) in Sheaf.
+    /// Anonymous function with a fixed layout of lexical captures.
     Lambda {
         params: Vec<String>,
-        body: Box<CompiledExpr>,
+        captures: Vec<String>,
+        #[serde(with = "shared_body")]
+        body: Rc<CompiledExpr>,
     },
     /// Call of a lambda or a locally-bound function value.
     /// Generated when the callee is not a static function name but an expression.
@@ -720,16 +717,59 @@ pub enum CompiledExpr {
     },
 }
 
+pub(crate) mod shared_body {
+    use super::CompiledExpr;
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+    use std::rc::Rc;
+
+    pub fn serialize<S: Serializer>(body: &Rc<CompiledExpr>, serializer: S) -> Result<S::Ok, S::Error> {
+        body.as_ref().serialize(serializer)
+    }
+
+    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Rc<CompiledExpr>, D::Error> {
+        CompiledExpr::deserialize(deserializer).map(Rc::new)
+    }
+
+    pub mod optional {
+        use super::*;
+
+        pub fn serialize<S: Serializer>(body: &Option<Rc<CompiledExpr>>, serializer: S) -> Result<S::Ok, S::Error> {
+            body.as_deref().serialize(serializer)
+        }
+
+        pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Option<Rc<CompiledExpr>>, D::Error> {
+            Option::<CompiledExpr>::deserialize(deserializer).map(|body| body.map(Rc::new))
+        }
+    }
+}
+
 impl CompiledExpr {
-    /// Visit direct child expressions without cloning them.
-    pub fn for_each_child<'a>(&'a self, mut visit: impl FnMut(&'a CompiledExpr)) {
+    /// Build closure metadata after compilation or a body transform.
+    pub fn lambda(params: Vec<String>, body: CompiledExpr) -> Self {
+        Self::lambda_with_shared_body(params, Rc::new(body))
+    }
+
+    pub fn lambda_with_shared_body(params: Vec<String>, body: Rc<CompiledExpr>) -> Self {
+        let captures = crate::core::bindings::free_locals(&body)
+            .into_iter()
+            .filter(|name| !params.contains(name))
+            .collect();
+        Self::Lambda { params, captures, body }
+    }
+
+    pub fn for_each_child(&self, mut visit: impl FnMut(&CompiledExpr)) {
         match self {
-            Self::FunctionCall { args, .. } => args.iter().for_each(&mut visit),
+            Self::Vector(values) | Self::Tuple(values) | Self::Do(values)
+            | Self::FunctionCall { args: values, .. } => {
+                for value in values { visit(value); }
+            }
+            Self::Dict(values) => {
+                for (key, value) in values { visit(key); visit(value); }
+            }
             Self::Let { bindings, body } => {
                 for (_, value) in bindings { visit(value); }
                 visit(body);
             }
-            Self::Do(exprs) | Self::Vector(exprs) | Self::Tuple(exprs) => exprs.iter().for_each(&mut visit),
             Self::If { condition, then_branch, else_branch } => {
                 visit(condition);
                 visit(then_branch);
@@ -738,10 +778,7 @@ impl CompiledExpr {
             Self::Lambda { body, .. } => visit(body),
             Self::LambdaCall { callee, args } => {
                 visit(callee);
-                args.iter().for_each(&mut visit);
-            }
-            Self::Dict(pairs) => {
-                for (key, value) in pairs { visit(key); visit(value); }
+                for arg in args { visit(arg); }
             }
             Self::Repeat { count, acc_init, body, .. } => {
                 visit(count); visit(acc_init); visit(body);
@@ -752,8 +789,9 @@ impl CompiledExpr {
             Self::Guard { expr, .. } => visit(expr),
             Self::Def { value, .. } => visit(value),
             Self::Integer(_) | Self::Float(_) | Self::Boolean(_) | Self::Nil
-            | Self::String(_) | Self::Keyword(_) | Self::Symbol(_) | Self::FunctionRef(_)
-            | Self::Quoted(_) | Self::GetTupleElement { .. } | Self::ValueAndGrad { .. } => {}
+            | Self::String(_) | Self::Keyword(_) | Self::Quoted(_) | Self::Symbol(_)
+            | Self::FunctionRef(_) | Self::GlobalRef(_) | Self::GetTupleElement { .. }
+            | Self::ValueAndGrad { .. } => {}
         }
     }
 
@@ -766,6 +804,7 @@ impl CompiledExpr {
             | CompiledExpr::String(_)
             | CompiledExpr::Keyword(_)
             | CompiledExpr::FunctionRef(_)
+            | CompiledExpr::GlobalRef(_)
             | CompiledExpr::Symbol(_)
             | CompiledExpr::GetTupleElement { .. }
             | CompiledExpr::Quoted(_)
@@ -790,10 +829,7 @@ impl CompiledExpr {
                 else_branch: else_branch.as_ref().map(|e| Box::new(f(e))),
             },
             CompiledExpr::Do(exprs) => CompiledExpr::Do(exprs.iter().map(&mut f).collect()),
-            CompiledExpr::Lambda { params, body } => CompiledExpr::Lambda {
-                params: params.clone(),
-                body: Box::new(f(body)),
-            },
+            CompiledExpr::Lambda { params, body, .. } => Self::lambda(params.clone(), f(body)),
             CompiledExpr::LambdaCall { callee, args } => CompiledExpr::LambdaCall {
                 callee: Box::new(f(callee)),
                 args: args.iter().map(&mut f).collect(),
@@ -838,6 +874,7 @@ impl std::fmt::Debug for CompiledExpr {
             Self::Dict(v) => f.debug_tuple("Dict").field(v).finish(),
             Self::Quoted(v) => f.debug_tuple("Quoted").field(v).finish(),
             Self::FunctionRef(s) => write!(f, "FunctionRef({:?})", s),
+            Self::GlobalRef(s) => write!(f, "GlobalRef({:?})", s),
             Self::FunctionCall { name, args, .. } => {
                 f.debug_struct("FunctionCall")
                     .field("name", name)
@@ -859,8 +896,9 @@ impl std::fmt::Debug for CompiledExpr {
             Self::GetTupleElement { param, indices } => {
                 f.debug_struct("GetTupleElement").field("param", param).field("indices", indices).finish()
             }
-            Self::Lambda { params, body } => {
-                f.debug_struct("Lambda").field("params", params).field("body", body).finish()
+            Self::Lambda { params, captures, body } => {
+                f.debug_struct("Lambda").field("params", params).field("captures", captures)
+                    .field("body", body).finish()
             }
             Self::LambdaCall { callee, args } => {
                 f.debug_struct("LambdaCall").field("callee", callee).field("args", args).finish()

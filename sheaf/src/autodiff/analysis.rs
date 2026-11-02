@@ -6,9 +6,10 @@
 use crate::core::expr::{BindingPattern, CompiledExpr};
 use std::collections::{HashMap, HashSet};
 
-/// Collect all symbol names referenced in a CompiledExpr (not bound by inner let/lambda).
+/// Collect lexical inputs and module dependencies for derivative analysis.
 pub fn collect_free_vars(expr: &CompiledExpr, out: &mut HashSet<String>) {
     out.extend(crate::core::bindings::free_locals(expr));
+    out.extend(crate::core::bindings::global_names(expr));
 }
 
 /// Return whether an autodiff expression may depend on `symbol`.
@@ -44,7 +45,8 @@ fn depends_on_in_env(expr: &CompiledExpr, env: &HashMap<String, bool>) -> bool {
         | CompiledExpr::String(_)
         | CompiledExpr::Keyword(_)
         | CompiledExpr::Quoted(_)
-        | CompiledExpr::FunctionRef(_) => false,
+        | CompiledExpr::FunctionRef(_)
+        | CompiledExpr::GlobalRef(_) => false,
         // Deferred value-and-grad does not evaluate to a numeric expression here.
         CompiledExpr::ValueAndGrad { .. } => false,
         CompiledExpr::Def { value, .. } => depends_on_in_env(value, env),
@@ -81,7 +83,7 @@ fn depends_on_in_env(expr: &CompiledExpr, env: &HashMap<String, bool>) -> bool {
         CompiledExpr::Do(exprs) => exprs
             .last()
             .is_some_and(|expr| depends_on_in_env(expr, env)),
-        CompiledExpr::Lambda { params, body } => {
+        CompiledExpr::Lambda { params, body, .. } => {
             let mut scoped = env.clone();
             for param in params {
                 scoped.insert(param.clone(), false);
@@ -89,7 +91,7 @@ fn depends_on_in_env(expr: &CompiledExpr, env: &HashMap<String, bool>) -> bool {
             depends_on_in_env(body, &scoped)
         }
         CompiledExpr::LambdaCall { callee, args } => {
-            if let CompiledExpr::Lambda { params, body } = callee.as_ref() {
+            if let CompiledExpr::Lambda { params, body, .. } = callee.as_ref() {
                 // Do not truncate mismatched lambda arguments. Until arity is
                 // rejected by the frontend, retain a conservative dependency.
                 if params.len() != args.len() {
@@ -392,14 +394,8 @@ mod tests {
 
     #[test]
     fn lambda_masks_parameters_and_preserves_captures() {
-        let shadowed = CompiledExpr::Lambda {
-            params: vec!["x".to_string()],
-            body: Box::new(symbol("x")),
-        };
-        let captured = CompiledExpr::Lambda {
-            params: vec!["y".to_string()],
-            body: Box::new(symbol("x")),
-        };
+        let shadowed = CompiledExpr::lambda(vec!["x".to_string()], symbol("x"));
+        let captured = CompiledExpr::lambda(vec!["y".to_string()], symbol("x"));
 
         assert!(!depends_on(&shadowed, "x"));
         assert!(depends_on(&captured, "x"));
@@ -408,17 +404,11 @@ mod tests {
     #[test]
     fn direct_lambda_call_binds_parameter_dependencies() {
         let ignores_argument = CompiledExpr::LambdaCall {
-            callee: Box::new(CompiledExpr::Lambda {
-                params: vec!["y".to_string()],
-                body: Box::new(CompiledExpr::Float(1.0)),
-            }),
+            callee: Box::new(CompiledExpr::lambda(vec!["y".to_string()], CompiledExpr::Float(1.0))),
             args: vec![symbol("x")],
         };
         let uses_argument = CompiledExpr::LambdaCall {
-            callee: Box::new(CompiledExpr::Lambda {
-                params: vec!["y".to_string()],
-                body: Box::new(symbol("y")),
-            }),
+            callee: Box::new(CompiledExpr::lambda(vec!["y".to_string()], symbol("y"))),
             args: vec![symbol("x")],
         };
         let opaque_callee = CompiledExpr::LambdaCall {
@@ -426,10 +416,9 @@ mod tests {
             args: vec![CompiledExpr::Float(1.0)],
         };
         let mismatched_arity = CompiledExpr::LambdaCall {
-            callee: Box::new(CompiledExpr::Lambda {
-                params: vec!["y".to_string(), "z".to_string()],
-                body: Box::new(CompiledExpr::Float(1.0)),
-            }),
+            callee: Box::new(CompiledExpr::lambda(
+                vec!["y".to_string(), "z".to_string()], CompiledExpr::Float(1.0),
+            )),
             args: vec![symbol("x")],
         };
 

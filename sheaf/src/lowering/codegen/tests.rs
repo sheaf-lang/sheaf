@@ -374,10 +374,7 @@ fn vag_call(loss: CompiledExpr, argument: &str) -> CompiledExpr {
     CompiledExpr::LambdaCall {
         callee: Box::new(call(
             "__value-and-grad-hof__",
-            vec![CompiledExpr::Lambda {
-                params: vec!["p".to_string()],
-                body: Box::new(loss),
-            }],
+            vec![CompiledExpr::lambda(vec!["p".to_string()], loss)],
         )),
         args: vec![CompiledExpr::Symbol(argument.to_string())],
     }

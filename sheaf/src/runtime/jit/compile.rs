@@ -55,7 +55,7 @@ impl JitCompiler {
 
         // (1) Success cache hit: the module is already loaded into the shared
         // session; return its signature without recompiling.
-        if let Some(info) = self.module_for_key(&cache_key) {
+        if let Some(info) = self.module_for_key(&cache_key, func_def) {
             JIT_CATALOG_HITS.fetch_add(1, Ordering::Relaxed);
             return JitCompileOutcome::Compiled(info.sig);
         }
@@ -153,8 +153,7 @@ impl JitCompiler {
             }
             catalogue.compiling.remove(&cache_key);
         }
-        self.definition_identities
-            .insert(name.clone(), cache_key.definition_hash.clone());
+        self.remember_definition(&cache_key, func_def);
         reservation.finish();
         // Module unloading is unavailable, so report excessive catalogue growth.
         let threshold = crate::core::config::jit_module_warning_threshold();
@@ -233,7 +232,7 @@ impl JitCompiler {
         args: &[Value],
     ) -> Option<PreparedFunction> {
         let name = &func_def.name;
-        let mut body = func_def.body_compiled.clone()?;
+        let mut body = func_def.body_compiled.as_deref()?.clone();
         let mut known_types: Vec<(String, StableHLOType)> = Vec::new();
         let mut param_index_maps = ParamIndexMaps::new();
         let mut constants: HashMap<(String, Vec<usize>), i64> = HashMap::new();

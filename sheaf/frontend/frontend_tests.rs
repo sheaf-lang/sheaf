@@ -38,7 +38,7 @@ fn parses_special_forms_into_compiled_ir() {
     assert!(matches!(compiled, CompiledExpr::FunctionRef(ref name) if name == "add-one"));
 
     let function = &context.registry["add-one"];
-    assert!(matches!(&function.body_compiled, Some(CompiledExpr::Let { .. })));
+    assert!(matches!(function.body_compiled.as_deref(), Some(CompiledExpr::Let { .. })));
 }
 
 #[test]

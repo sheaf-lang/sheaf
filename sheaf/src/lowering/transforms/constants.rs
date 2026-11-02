@@ -250,13 +250,9 @@ fn resolve_constants_rec(
                 ))
             }),
         },
-        CompiledExpr::Lambda { params, body } => {
+        CompiledExpr::Lambda { params, body, .. } => {
             if skip_lambda {
-                let _ = (constants, locals, shapes);
-                CompiledExpr::Lambda {
-                    params: params.clone(),
-                    body: body.clone(),
-                }
+                expr.clone()
             } else {
                 let mut scoped_locals = locals.clone();
                 let mut scoped_shapes = shapes.clone();
@@ -264,16 +260,9 @@ fn resolve_constants_rec(
                     scoped_locals.remove(param);
                     scoped_shapes.remove(param);
                 }
-                CompiledExpr::Lambda {
-                    params: params.clone(),
-                    body: Box::new(resolve_constants_rec(
-                        body,
-                        constants,
-                        &mut scoped_locals,
-                        &mut scoped_shapes,
-                        skip_lambda,
-                    )),
-                }
+                CompiledExpr::lambda(params.clone(), resolve_constants_rec(
+                    body, constants, &mut scoped_locals, &mut scoped_shapes, skip_lambda,
+                ))
             }
         }
         CompiledExpr::LambdaCall { callee, args } => CompiledExpr::LambdaCall {
@@ -698,21 +687,24 @@ const SHAPE_BEARING_OPS: &[(&str, &[usize])] = &[
 ];
 
 /// Resolve a `Let` alias to a tuple element.
-fn resolve_to_gte<'a>(
-    e: &'a crate::core::expr::CompiledExpr,
-    locals: &'a HashMap<String, crate::core::expr::CompiledExpr>,
-) -> Option<(&'a str, &'a Vec<usize>)> {
+fn resolve_to_gte(
+    e: &crate::core::expr::CompiledExpr,
+    locals: &HashMap<String, crate::core::expr::CompiledExpr>,
+) -> Option<(String, Vec<usize>)> {
     use crate::core::expr::CompiledExpr;
     let mut current = e;
     let mut visited = std::collections::HashSet::new();
     loop {
         match current {
-            CompiledExpr::GetTupleElement { param, indices } => return Some((param, indices)),
+            CompiledExpr::GetTupleElement { param, indices } => return Some((param.clone(), indices.clone())),
             CompiledExpr::Symbol(name) => {
                 if !visited.insert(name.as_str()) {
                     return None;
                 }
-                current = locals.get(name)?;
+                match locals.get(name) {
+                    Some(value) => current = value,
+                    None => return Some((name.clone(), Vec::new())),
+                }
             }
             _ => return None,
         }
@@ -788,8 +780,12 @@ pub(crate) fn collect_shape_gtes(
                     visit(v, shape_gtes, locals);
                 }
             }
-            CompiledExpr::Lambda { body: b, .. } => {
-                visit(b, shape_gtes, locals);
+            CompiledExpr::Lambda { params, body: b, .. } => {
+                let mut scope = locals.clone();
+                for param in params {
+                    scope.insert(param.clone(), CompiledExpr::Nil);
+                }
+                visit(b, shape_gtes, &scope);
             }
             CompiledExpr::LambdaCall { callee, args } => {
                 visit(callee, shape_gtes, locals);
@@ -803,8 +799,10 @@ pub(crate) fn collect_shape_gtes(
                 else_branch: e,
             } => {
                 visit(c, shape_gtes, locals);
-                visit(t, shape_gtes, locals);
-                if let Some(e) = e {
+                if !matches!(c.as_ref(), CompiledExpr::Boolean(false)) {
+                    visit(t, shape_gtes, locals);
+                }
+                if !matches!(c.as_ref(), CompiledExpr::Boolean(true)) && let Some(e) = e {
                     visit(e, shape_gtes, locals);
                 }
             }
@@ -849,6 +847,7 @@ pub(crate) fn collect_shape_gtes(
             | CompiledExpr::String(_)
             | CompiledExpr::Keyword(_)
             | CompiledExpr::FunctionRef(_)
+            | CompiledExpr::GlobalRef(_)
             | CompiledExpr::Symbol(_)
             | CompiledExpr::GetTupleElement { .. }
             | CompiledExpr::Quoted(_) => {}
@@ -1023,6 +1022,29 @@ mod shape_classifier_tests {
     }
 
     #[test]
+    fn dimension_constants_preserve_integer_types_and_exact_values() {
+        use super::{extract_scalar_constants, try_fold_arithmetic};
+        use crate::interpreter::value::Value;
+        let values = Value::Dict(std::collections::BTreeMap::from([
+            ("integer".to_string(), Value::Int(9_007_199_254_740_993)),
+            ("float".to_string(), Value::Float(2.0)),
+        ]));
+        let index_map = std::collections::BTreeMap::from([
+            (vec!["float".to_string()], vec![0]), (vec!["integer".to_string()], vec![1]),
+        ]);
+        let mut constants = HashMap::new();
+        extract_scalar_constants(&values, "cfg", &index_map, &mut constants);
+        assert_eq!(constants.len(), 1);
+        assert_eq!(constants[&("cfg".to_string(), vec![1])], 9_007_199_254_740_993);
+        assert!(matches!(try_fold_arithmetic("+", &[CompiledExpr::Float(1.0), CompiledExpr::Float(1.0)]),
+            Some(CompiledExpr::Float(2.0))));
+        assert!(matches!(try_fold_arithmetic("/", &[CompiledExpr::Integer(4), CompiledExpr::Integer(2)]),
+            Some(CompiledExpr::Float(2.0))));
+        assert!(matches!(try_fold_arithmetic("//", &[CompiledExpr::Integer(3), CompiledExpr::Integer(-2)]),
+            Some(CompiledExpr::Integer(-2))));
+    }
+
+    #[test]
     fn arithmetic_only_scalar_is_not_collected() {
         let body = let_(
             vec![("lr", gte("cfg", 0))],
@@ -1110,10 +1132,7 @@ mod shape_classifier_tests {
 
     #[test]
     fn lambda_parameter_does_not_inherit_an_outer_shape() {
-        let body = CompiledExpr::Lambda {
-            params: vec!["x".to_string()],
-            body: Box::new(call("shape", vec![sym("x")])),
-        };
+        let body = CompiledExpr::lambda(vec!["x".to_string()], call("shape", vec![sym("x")]));
         let shapes = HashMap::from([("x".to_string(), vec![1, 8, 1600])]);
 
         let resolved = resolve_static_constants(&body, &HashMap::new(), &shapes, false);

@@ -114,7 +114,7 @@ impl<'a> CodeGenerator<'a> {
         };
 
         let (params, body) = match lambda {
-            CompiledExpr::Lambda { params, body } => (params, *body),
+            CompiledExpr::Lambda { params, body, .. } => (params, std::rc::Rc::unwrap_or_clone(body)),
             _ => unreachable!(),
         };
 
@@ -176,7 +176,7 @@ impl<'a> CodeGenerator<'a> {
             }
             _ => {
                 let (params, body) = match lambda {
-                    CompiledExpr::Lambda { params, body } => (params, body),
+                    CompiledExpr::Lambda { params, body, .. } => (params, body),
                     _ => {
                         return Err(SheafError::Compile {
                             message: "tree-map: first argument must be a lambda".to_string(),
@@ -231,7 +231,7 @@ impl<'a> CodeGenerator<'a> {
             }
             _ => {
                 match lambda {
-                    CompiledExpr::Lambda { params, body } => {
+                    CompiledExpr::Lambda { params, body, .. } => {
                         if params.len() != 2 {
                             return Err(SheafError::Compile {
                                 message: format!(
@@ -248,7 +248,7 @@ impl<'a> CodeGenerator<'a> {
                         self.bindings = saved;
                         result
                     }
-                    CompiledExpr::Symbol(name) => {
+                    CompiledExpr::Symbol(name) | CompiledExpr::FunctionRef(name) => {
                         let call = CompiledExpr::FunctionCall {
                             name: name.clone(),
                             args: vec![
@@ -312,8 +312,8 @@ impl<'a> CodeGenerator<'a> {
             }),
         };
         let (carry_param, elem_param, body) = match lambda_resolved {
-            CompiledExpr::Lambda { params, body } if params.len() == 2 => {
-                (params[0].clone(), params[1].clone(), *body)
+            CompiledExpr::Lambda { params, body, .. } if params.len() == 2 => {
+                (params[0].clone(), params[1].clone(), std::rc::Rc::unwrap_or_clone(body))
             }
             _ => return Err(SheafError::Compile {
                 message: "reduce/scan: lambda must have exactly 2 parameters (carry, elem)".to_string(),
@@ -555,8 +555,8 @@ impl<'a> CodeGenerator<'a> {
             }),
         };
         let (carry_param, elem_param, body) = match lambda {
-            CompiledExpr::Lambda { params, body } if params.len() == 2 => {
-                (params[0].clone(), params[1].clone(), *body)
+            CompiledExpr::Lambda { params, body, .. } if params.len() == 2 => {
+                (params[0].clone(), params[1].clone(), std::rc::Rc::unwrap_or_clone(body))
             }
             _ => return Err(SheafError::Compile {
                 message: "scan VJP: lambda must have exactly 2 parameters".to_string(),

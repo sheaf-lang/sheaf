@@ -99,20 +99,10 @@ pub struct JitCacheKey {
     static_inputs: Vec<static_inputs::StaticInput>,
 }
 
-type ArgumentLayout = (String, Vec<(Vec<String>, Vec<i64>, Vec<usize>)>);
+type ArgumentLayout = ValueLayout;
 
 fn runtime_argument_layouts(args: &[Value]) -> Vec<ArgumentLayout> {
-    args.iter()
-        .filter_map(|arg| value_to_param_layout("", arg))
-        .map(|layout| {
-            let fields = layout
-                .fields
-                .into_iter()
-                .map(|field| (field.path, field.shape, field.tuple_index))
-                .collect();
-            (layout.name, fields)
-        })
-        .collect()
+    args.iter().map(ValueLayout::from_value).collect()
 }
 
 struct StableHasher(u64);
@@ -141,10 +131,16 @@ fn function_definition_identity(
         if !seen.insert(name.clone()) {
             continue;
         }
-        let Some(definition) = registry.get(&name) else {
+        let definition = if name == func_def.name {
+            func_def
+        } else if let Some(definition) = registry.get(&name) {
+            definition
+        } else {
             continue;
         };
-        identities.push((name, definition.body_hash()));
+        let compiled = format!("{:?};{:?}", definition.params, definition.body_compiled);
+        let compiled_hash = crate::core::prelude::content_identity([("compiled", compiled.as_bytes())]);
+        identities.push((name, format!("{};{}", definition.body_hash(), compiled_hash)));
         if let Some(body) = &definition.body_compiled {
             let mut callees: Vec<_> = crate::lowering::call_graph::direct_callees(body)
                 .into_iter()
@@ -216,8 +212,24 @@ fn shape_bearing_scalars(
     args: &[Value],
     registry: &HashMap<String, FunctionDef>,
 ) -> Option<Vec<(String, Vec<usize>, u64)>> {
-    let mut body = func_def.body_compiled.clone()?;
+    let positions = shape_argument_positions(func_def, args, registry)?;
     let mut constants = HashMap::new();
+    for (index, arg) in args.iter().enumerate() {
+        let param = func_def.params.get(index)?;
+        let index_map = value_to_param_layout(param, arg)
+            .map(|layout| layout_to_index_map(&layout))
+            .unwrap_or_else(|| std::iter::once((Vec::new(), Vec::new())).collect());
+        extract_scalar_constants(arg, param, &index_map, &mut constants);
+    }
+    Some(constants.into_iter().filter(|(path, _)| positions.contains(path))
+        .collect::<BTreeMap<_, _>>().into_iter()
+        .map(|((param, indices), value)| (param, indices, value as u64)).collect())
+}
+
+pub(crate) fn shape_argument_positions(
+    func_def: &FunctionDef, args: &[Value], registry: &HashMap<String, FunctionDef>,
+) -> Option<Vec<(String, Vec<usize>)>> {
+    let mut body = func_def.body_compiled.as_deref()?.clone();
     let mut index_maps = Vec::new();
     let structural_signature = args
         .iter()
@@ -244,7 +256,6 @@ fn shape_bearing_scalars(
         } else {
             std::iter::once((Vec::new(), vec![])).collect()
         };
-        extract_scalar_constants(arg, &param, &index_map, &mut constants);
         body = lower_get_calls(&body, &param, &index_map);
         index_maps.push((param, index_map));
     }
@@ -273,15 +284,29 @@ fn shape_bearing_scalars(
         positions
     };
 
-    Some(
-        constants
-            .into_iter()
-            .filter(|(path, _)| positions.contains(path))
-            .collect::<BTreeMap<_, _>>()
-            .into_iter()
-            .map(|((param, indices), value)| (param, indices, value as u64))
-            .collect(),
-    )
+    Some(positions)
+}
+
+pub(crate) fn validate_shape_positions(
+    params: &[String], args: &[Value], positions: impl IntoIterator<Item = (String, Vec<usize>)>,
+) -> Result<(), SheafError> {
+    for (name, indices) in positions {
+        let Some(index) = params.iter().position(|param| param == &name) else { continue };
+        let Some(mut value) = args.get(index) else { continue };
+        for index in indices {
+            value = match value {
+                Value::Dict(values) => values.values().nth(index),
+                Value::List(values) | Value::Tuple(values) => values.get(index),
+                _ => None,
+            }.ok_or_else(|| crate::interpreter::env::runtime_error("invalid shape parameter projection"))?;
+        }
+        if matches!(value, Value::Float(_) | Value::Bool(_)) {
+            return Err(crate::interpreter::env::runtime_error(format!(
+                "shape dimension must be an integer, got {} in parameter '{name}'", value.type_name(),
+            )));
+        }
+    }
+    Ok(())
 }
 
 fn cache_key_for_with_identity(
@@ -437,6 +462,13 @@ fn shape_analysis_cache() -> &'static ShapeAnalysisCache {
     SHAPE_ANALYSIS_CACHE.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
+struct DefinitionIdentity {
+    name: String,
+    params: Vec<String>,
+    body: std::rc::Weak<CompiledExpr>,
+    hash: String,
+}
+
 pub struct JitCompiler {
     iree_compile_path: Option<String>,
     target_backend: String,
@@ -451,17 +483,17 @@ pub struct JitCompiler {
     /// Cache compiled VAG sessions: vag_key -> (session_idx, signature, param_names)
     vag_cache: HashMap<String, (String, FunctionSignature, Vec<String>)>,
     /// Definition identities already validated by the full compilation-key path.
-    definition_identities: HashMap<String, String>,
+    definition_identities: HashMap<usize, DefinitionIdentity>,
 }
 
 /// Dispatch metadata for a module loaded in the shared IREE session.
 #[derive(Debug, Clone)]
 pub struct CompiledModuleInfo {
-    pub(crate) static_inputs: Vec<static_inputs::StaticInput>,
     pub function_name: String,
     pub module_name: String,
     pub sig: FunctionSignature,
     pub(crate) argument_layouts: Vec<ValueLayout>,
+    pub(crate) static_inputs: Vec<static_inputs::StaticInput>,
 }
 
 fn runtime_args_match(
@@ -471,7 +503,6 @@ fn runtime_args_match(
 ) -> bool {
     if args.len() != info.sig.param_types.len()
         || args.len() != info.argument_layouts.len()
-        || static_inputs::collect(args) != info.static_inputs
     {
         return false;
     }
@@ -487,6 +518,9 @@ fn runtime_args_match(
         .zip(&info.sig.param_types)
         .all(|(value, ty)| runtime_type_matches(value, ty))
     {
+        return false;
+    }
+    if static_inputs::collect(args) != info.static_inputs {
         return false;
     }
     info.sig.captured_scalars.iter().all(|((param, indices), expected)| {
@@ -509,14 +543,15 @@ fn runtime_layout_matches(value: &Value, layout: &ValueLayout) -> bool {
                     },
                 )
         }
-        (Value::List(values), ValueLayout::List(entries)) => {
+        (Value::List(values), ValueLayout::List(entries))
+        | (Value::Tuple(values), ValueLayout::Tuple(entries)) => {
             values.len() == entries.len()
                 && values
                     .iter()
                     .zip(entries)
                     .all(|(actual, expected)| runtime_layout_matches(actual, expected))
         }
-        (Value::Dict(_) | Value::List(_), ValueLayout::Leaf) => false,
+        (Value::Dict(_) | Value::List(_) | Value::Tuple(_), ValueLayout::Leaf) => false,
         (_, ValueLayout::Leaf) => true,
         _ => false,
     }
@@ -549,9 +584,7 @@ fn runtime_type_matches(value: &Value, expected: &StableHLOType) -> bool {
         (Value::List(values), StableHLOType::Tensor { shape, dtype }) => {
             *dtype == ElementType::F32
                 && shape.as_slice() == [values.len() as i64]
-                && values
-                    .iter()
-                    .all(|value| matches!(value, Value::Float(_) | Value::Int(_)))
+                && value.numeric_list_elements().is_some()
         }
         (Value::Dict(values), StableHLOType::Tuple(types, Some(keys))) => {
             values.len() == types.len()
@@ -685,18 +718,26 @@ impl JitCompiler {
 
     /// Obtain shared module metadata without exposing the catalogue lock to
     /// dispatch callers.
-    pub(crate) fn module_for_key(&mut self, key: &JitCacheKey) -> Option<CompiledModuleInfo> {
+    pub(crate) fn module_for_key(&mut self, key: &JitCacheKey, function: &FunctionDef) -> Option<CompiledModuleInfo> {
         let info = shared_module_catalog()
             .lock()
             .expect("JIT catalogue lock poisoned")
             .modules
             .get(key)
             .cloned();
-        if info.is_some() {
-            self.definition_identities
-                .insert(key.function_name.clone(), key.definition_hash.clone());
-        }
+        if info.is_some() { self.remember_definition(key, function); }
         info
+    }
+
+    pub(crate) fn remember_definition(&mut self, key: &JitCacheKey, function: &FunctionDef) {
+        if let Some(body) = &function.body_compiled {
+            if self.definition_identities.len() >= 64 {
+                self.definition_identities.retain(|_, identity| identity.body.strong_count() != 0);
+            }
+            self.definition_identities.insert(std::rc::Rc::as_ptr(body) as usize,
+                DefinitionIdentity { name: function.name.clone(), params: function.params.clone(),
+                    body: std::rc::Rc::downgrade(body), hash: key.definition_hash.clone() });
+        }
     }
 
     /// Find an already compiled variant without rebuilding its compilation key.
@@ -705,7 +746,10 @@ impl JitCompiler {
         func_def: &FunctionDef,
         args: &[Value],
     ) -> Option<CompiledModuleInfo> {
-        let definition_identity = self.definition_identities.get(&func_def.name)?;
+        let body = func_def.body_compiled.as_ref()?;
+        let identity = self.definition_identities.get(&(std::rc::Rc::as_ptr(body) as usize))?;
+        if identity.name != func_def.name || identity.params != func_def.params
+            || !std::rc::Rc::ptr_eq(&identity.body.upgrade()?, body) { return None }
         let catalog = shared_module_catalog()
             .lock()
             .expect("JIT catalogue lock poisoned");
@@ -715,7 +759,7 @@ impl JitCompiler {
             .iter()
             .find_map(|key| {
                 let info = catalog.modules.get(key)?;
-                if key.definition_hash == *definition_identity
+                if key.definition_hash == identity.hash
                     && runtime_args_match(args, &func_def.params, info)
                 {
                     Some(info.clone())
@@ -771,8 +815,8 @@ pub enum JitVagOutcome {
 }
 
 mod compile;
+pub(crate) mod static_inputs;
 mod preprocess;
-mod static_inputs;
 mod support;
 mod vag;
 
@@ -838,7 +882,8 @@ mod cache_key_tests {
             name: name.into(),
             params: params.iter().map(|param| (*param).to_string()).collect(),
             body: SheafValue::Nil(SourceLocation::unknown()),
-            body_compiled: Some(body),
+            body_compiled: Some(body.into()),
+            requires_initialization: false,
             signature: None,
             vmfb_module_name: None,
             known_param_types: Vec::new(),
@@ -864,7 +909,6 @@ mod cache_key_tests {
         captured_scalars: HashMap<(String, Vec<usize>), f64>,
     ) -> CompiledModuleInfo {
         CompiledModuleInfo {
-            static_inputs: super::static_inputs::collect(args),
             function_name: "f".to_string(),
             module_name: "f__variant".to_string(),
             sig: FunctionSignature {
@@ -879,6 +923,7 @@ mod cache_key_tests {
                 captured_scalars,
             },
             argument_layouts: args.iter().map(ValueLayout::from_value).collect(),
+            static_inputs: super::static_inputs::collect(args),
         }
     }
 
@@ -1055,7 +1100,7 @@ mod cache_key_tests {
             name: "relu".into(),
             args: vec![CompiledExpr::Symbol("x".into())],
             loc: None,
-        });
+        }.into());
         let second = cache_key_for_function(&caller, &args, &registry).unwrap();
         assert_ne!(first, second);
     }

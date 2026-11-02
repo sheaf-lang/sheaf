@@ -108,10 +108,7 @@ fn preprocess_one_vag_lambda(
         }
     };
 
-    CompiledExpr::Lambda {
-        params,
-        body: Box::new(body),
-    }
+    CompiledExpr::lambda(params, body)
 }
 
 fn preprocess_body(

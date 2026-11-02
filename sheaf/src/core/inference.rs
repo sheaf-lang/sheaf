@@ -11,7 +11,7 @@ use crate::core::expr::{BindingPattern, CompiledExpr};
 use crate::core::error::{SheafError, SheafResult};
 
 /// Layout of a flattened value.
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, Eq, Hash, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum ValueLayout {
     Dict(Vec<(String, ValueLayout)>),
     List(Vec<ValueLayout>),

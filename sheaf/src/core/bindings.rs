@@ -61,6 +61,36 @@ fn collect_locals(expr: &CompiledExpr, bound: &HashSet<String>, names: &mut Hash
     }
 }
 
+pub fn global_names(expr: &CompiledExpr) -> Vec<String> {
+    let mut names = HashSet::new();
+    visit_module_references(expr, &mut |name, _| { names.insert(name.to_string()); });
+    let mut names: Vec<_> = names.into_iter().collect();
+    names.sort();
+    names
+}
+
+#[derive(Clone, Copy, PartialEq)]
+pub enum ModuleReference { Value, Call }
+
+pub fn visit_module_references(expr: &CompiledExpr, visit: &mut impl FnMut(&str, ModuleReference)) {
+    match expr {
+        CompiledExpr::GlobalRef(name) | CompiledExpr::FunctionRef(name) => visit(name, ModuleReference::Value),
+        CompiledExpr::FunctionCall { name, .. } => visit(name, ModuleReference::Call),
+        _ => {}
+    }
+    expr.for_each_child(|child| visit_module_references(child, visit));
+}
+
+#[cfg(not(sheaf_frontend))]
+pub(crate) fn constant_branch<'a>(
+    condition: &CompiledExpr, then_branch: &'a CompiledExpr, else_branch: Option<&'a CompiledExpr>,
+) -> Option<std::borrow::Cow<'a, CompiledExpr>> {
+    let CompiledExpr::Boolean(taken) = condition else { return None };
+    Some(if *taken { std::borrow::Cow::Borrowed(then_branch) } else {
+        else_branch.map(std::borrow::Cow::Borrowed).unwrap_or(std::borrow::Cow::Owned(CompiledExpr::Nil))
+    })
+}
+
 pub fn pattern_binds(pattern: &BindingPattern, name: &str) -> bool {
     match pattern {
         BindingPattern::Simple(binding) => binding == name,
@@ -119,9 +149,9 @@ fn replace_in_scope(expr: &CompiledExpr, replacements: &Scope<'_>) -> CompiledEx
             }).collect();
             CompiledExpr::Let { bindings, body: Box::new(replace_in_scope(body, &scope)) }
         }
-        CompiledExpr::Lambda { params, body } => CompiledExpr::Lambda {
-            params: params.clone(), body: Box::new(replace_in_scope(body, &scoped(params))),
-        },
+        CompiledExpr::Lambda { params, body, .. } => {
+            CompiledExpr::lambda(params.clone(), replace_in_scope(body, &scoped(params)))
+        }
         CompiledExpr::Repeat { index_var, count, acc_var, acc_init, body } => CompiledExpr::Repeat {
             index_var: index_var.clone(), count: Box::new(replace(count)),
             acc_var: acc_var.clone(), acc_init: Box::new(replace(acc_init)),
@@ -152,8 +182,9 @@ impl FreshBindings {
             CompiledExpr::Symbol(name) | CompiledExpr::GetTupleElement { param: name, .. } => {
                 self.reserved.insert(name.clone());
             }
-            CompiledExpr::Lambda { params, .. } => {
+            CompiledExpr::Lambda { params, captures, .. } => {
                 self.reserved.extend(params.iter().cloned());
+                self.reserved.extend(captures.iter().cloned());
             }
             CompiledExpr::Let { bindings, .. } => {
                 for (pattern, _) in bindings { pattern_names(pattern, &mut self.reserved); }
@@ -223,7 +254,7 @@ impl FreshBindings {
             CompiledExpr::Lambda { params, body, .. } => {
                 let mut scoped = scope.clone();
                 let params = params.iter().map(|param| self.bind(param, &mut scoped)).collect();
-                CompiledExpr::Lambda { params, body: Box::new(self.rename_in_scope(body, &scoped)) }
+                CompiledExpr::lambda(params, self.rename_in_scope(body, &scoped))
             }
             CompiledExpr::Repeat { index_var, count, acc_var, acc_init, body } => {
                 let mut scoped = scope.clone();
@@ -282,19 +313,16 @@ mod tests {
 
     #[test]
     fn fresh_names_distinguish_local_calls_from_module_references() {
-        let expr = CompiledExpr::Lambda {
-            params: vec!["f".into()],
-            body: Box::new(CompiledExpr::Tuple(vec![
-                CompiledExpr::FunctionCall { name: "f".into(), args: vec![symbol("outside")], loc: None },
-                CompiledExpr::FunctionRef("f".into()),
-            ])),
-        };
+        let expr = CompiledExpr::lambda(vec!["f".into()], CompiledExpr::Tuple(vec![
+            CompiledExpr::FunctionCall { name: "f".into(), args: vec![symbol("outside")], loc: None },
+            CompiledExpr::FunctionRef("f".into()),
+        ]));
         let mut fresh = FreshBindings::default();
         fresh.reserve(&expr);
         let renamed = fresh.rename(&expr);
         assert_eq!(free_locals(&renamed), free_locals(&expr));
-        let CompiledExpr::Lambda { params, body } = renamed else { panic!() };
-        let CompiledExpr::Tuple(values) = *body else { panic!() };
+        let CompiledExpr::Lambda { params, body, .. } = renamed else { panic!() };
+        let CompiledExpr::Tuple(values) = body.as_ref() else { panic!() };
         assert!(matches!(&values[0], CompiledExpr::LambdaCall { callee, .. }
             if matches!(callee.as_ref(), CompiledExpr::Symbol(name) if name == &params[0])));
         assert!(matches!(&values[1], CompiledExpr::FunctionRef(name) if name == "f"));
@@ -365,11 +393,11 @@ mod tests {
 
     #[test]
     fn lambda_parameters_do_not_hide_outer_container_inputs() {
-        let body = CompiledExpr::Lambda { params: vec!["x".into()], body: Box::new(CompiledExpr::Tuple(vec![
+        let body = CompiledExpr::lambda(vec!["x".into()], CompiledExpr::Tuple(vec![
             symbol("x"), CompiledExpr::Dict(vec![(symbol("key"), symbol("outer"))]),
             CompiledExpr::GetTupleElement { param: "params".into(), indices: vec![0] },
             CompiledExpr::FunctionRef("module-function".into()),
-        ])) };
+        ]));
         assert_eq!(free_locals(&body), ["key", "outer", "params"]);
     }
 

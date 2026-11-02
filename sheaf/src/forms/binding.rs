@@ -9,6 +9,7 @@ use crate::core::error::{SheafError, SheafResult, SourceLocation};
 use crate::core::macro_engine::MacroDef;
 use crate::forms::base::{SpecialForm, check_min_arity, expect_symbol, expect_vector};
 
+// AST-only helper errors must not hide invalid forms later in the body.
 fn validate_function_body(expr: &SheafValue) -> SheafResult<()> {
     match expr {
         SheafValue::List(values, loc) => {
@@ -193,6 +194,9 @@ impl SpecialForm for DefnForm {
         // they resolve to CompiledExpr::Symbol nodes (not the body itself,
         // which would cause infinite recompilation). Mirrors FnForm.
         let saved_locals = compiler.local_vars.clone();
+        let was_global = compiler.global_names.contains(name);
+        compiler.global_names.insert(name.to_string());
+        compiler.local_vars.remove(name);
         for param in &params {
             compiler.local_vars.insert(
                 param.clone(),
@@ -268,13 +272,29 @@ impl SpecialForm for DefnForm {
 
                 (Some(body_compiled), signature, known_param_types, None)
             }
-            Err(error @ SheafError::InvalidSourceForm { .. }) => return Err(error),
+            Err(error @ SheafError::InvalidSourceForm { .. }) => {
+                if !was_global {
+                    compiler.global_names.remove(name);
+                }
+                return Err(error);
+            }
             Err(_) => {
                 // Body compilation failed -- register as AST-only function.
                 // The mini-eval can still call it via its AST body (macro helpers).
                 (None, None, vec![], None)
             }
         };
+
+        let body_compiled = body_compiled_opt.map(std::rc::Rc::new);
+        let definition = body_compiled.as_ref().map(|body| {
+            CompiledExpr::lambda_with_shared_body(params.clone(), body.clone())
+        });
+        let initialization = definition.filter(|value| {
+            matches!(value, CompiledExpr::Lambda { captures, .. } if !captures.is_empty())
+        }).map(|value| CompiledExpr::Def {
+            name: name.to_string(),
+            value: Box::new(value),
+        });
 
         // Register the function in the compiler with compiled body and signature
         compiler.registry.insert(
@@ -283,15 +303,16 @@ impl SpecialForm for DefnForm {
                 name: name.to_string(),
                 params,
                 body: body_ast,
-                body_compiled: body_compiled_opt,
-                signature: signature_opt,
+                body_compiled,
+                requires_initialization: initialization.is_some(),
+                signature: signature_opt.filter(|_| initialization.is_none()),
                 vmfb_module_name: None,
                 known_param_types,
                 compile_error: compile_err,
             },
         );
 
-        Ok(CompiledExpr::FunctionRef(name.to_string()))
+        Ok(initialization.unwrap_or_else(|| CompiledExpr::FunctionRef(name.to_string())))
     }
 }
 
@@ -319,7 +340,8 @@ impl SpecialForm for DefForm {
 
         let name = expect_symbol(&args[0], "def name", loc)?;
 
-        if compiler.registry.contains_key(name) || compiler.local_vars.contains_key(name) {
+        if compiler.registry.contains_key(name) || compiler.global_names.contains(name)
+            || compiler.local_vars.contains_key(name) {
             return Err(SheafError::Compile {
                 message: format!(
                     "'{}' is already defined. Redefinition is not allowed.",
@@ -331,9 +353,22 @@ impl SpecialForm for DefForm {
 
         let value = compiler.compile(&args[1])?;
 
-        // Store the original AST value so the compiler can inline it at reference sites.
-        // This allows def constants to work inside JIT-traced functions.
-        compiler.local_vars.insert(name.to_string(), args[1].clone());
+        compiler.global_names.insert(name.to_string());
+        compiler.env.insert(name.to_string(), args[1].clone());
+        if let CompiledExpr::Lambda { params, captures, body } = &value
+            && captures.is_empty() {
+            compiler.registry.insert(name.to_string(), FunctionDef {
+                name: name.to_string(),
+                params: params.clone(),
+                body: args[1].clone(),
+                body_compiled: Some(body.clone()),
+                requires_initialization: true,
+                signature: None,
+                vmfb_module_name: None,
+                known_param_types: Vec::new(),
+                compile_error: None,
+            });
+        }
 
         Ok(CompiledExpr::Def {
             name: name.to_string(),
@@ -546,10 +581,7 @@ impl SpecialForm for FnForm {
         });
         compiler.function_depth -= 1;
         compiler.local_vars = saved_locals;
-        result.map(|body| CompiledExpr::Lambda {
-            params: param_names,
-            body: Box::new(body),
-        })
+        result.map(|body| CompiledExpr::lambda(param_names, body))
     }
 }
 

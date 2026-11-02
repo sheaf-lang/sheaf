@@ -224,7 +224,7 @@ fn compile_with_destructure(source: &str, fn_name: &str) -> String {
         ctx.compile(e).unwrap();
     }
     let func_def = ctx.registry.get(fn_name).unwrap().clone();
-    let body = func_def.body_compiled.clone().unwrap();
+    let body = func_def.body_compiled.as_deref().unwrap().clone();
     let sig = func_def.signature.clone().unwrap();
     let mut param_shapes: HashMap<String, Vec<i64>> = HashMap::new();
     for (p, ty) in func_def.params.iter().zip(sig.param_types.iter()) {
@@ -277,7 +277,7 @@ fn compile_typed_param_destructure(source: &str, fn_name: &str) -> String {
         ctx.compile(e).unwrap();
     }
     let func_def = ctx.registry.get(fn_name).unwrap().clone();
-    let body = func_def.body_compiled.clone().unwrap();
+    let body = func_def.body_compiled.as_deref().unwrap().clone();
     assert_eq!(
         func_def.params.len(),
         1,

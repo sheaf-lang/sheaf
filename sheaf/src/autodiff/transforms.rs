@@ -57,7 +57,7 @@ impl Inliner<'_> {
                 let args: Vec<_> = args.iter().map(|arg| self.inline(arg, locals, depth)).collect();
                 if let Some(function) = self.registry.get(name)
                     && let Some(body) = &function.body_compiled {
-                    let lambda = CompiledExpr::Lambda { params: function.params.clone(), body: Box::new(body.clone()) };
+                    let lambda = CompiledExpr::lambda_with_shared_body(function.params.clone(), body.clone());
                     let CompiledExpr::Lambda { params, body, .. } = self.fresh.rename(&lambda) else { unreachable!() };
                     let bindings = params.into_iter().zip(args)
                         .map(|(param, arg)| (BindingPattern::Simple(param), arg)).collect();
@@ -79,7 +79,7 @@ impl Inliner<'_> {
                     shadow_pattern(pattern, &mut scoped);
                     if let BindingPattern::Simple(name) = pattern
                         && matches!(value, CompiledExpr::Lambda { .. }
-                            | CompiledExpr::FunctionRef(_)) {
+                            | CompiledExpr::GlobalRef(_) | CompiledExpr::FunctionRef(_)) {
                         scoped.insert(name.clone(), value.clone());
                     }
                     new_bindings.push((pattern.clone(), value));
@@ -92,7 +92,7 @@ impl Inliner<'_> {
             CompiledExpr::Lambda { params, body, .. } => {
                 let mut scoped = locals.clone();
                 for param in params { scoped.remove(param); }
-                CompiledExpr::Lambda { params: params.clone(), body: Box::new(self.inline(body, &scoped, depth)) }
+                CompiledExpr::lambda(params.clone(), self.inline(body, &scoped, depth))
             }
             CompiledExpr::LambdaCall { callee, args } => {
                 let args: Vec<_> = args.iter().map(|arg| self.inline(arg, locals, depth)).collect();
@@ -102,7 +102,7 @@ impl Inliner<'_> {
                     callee = function.clone();
                 }
                 match &callee {
-                    CompiledExpr::FunctionRef(name) => {
+                    CompiledExpr::GlobalRef(name) | CompiledExpr::FunctionRef(name) => {
                         self.inline(&CompiledExpr::FunctionCall {
                             name: name.clone(), args, loc: None,
                         }, locals, depth + 1)
@@ -212,10 +212,9 @@ fn fold_dict_gets_rec(
             else_branch: else_branch.as_ref().map(|e| Box::new(fold_dict_gets_rec(e, dict_bindings))),
         },
 
-        CompiledExpr::Lambda { params, body } => CompiledExpr::Lambda {
-            params: params.clone(),
-            body: Box::new(fold_dict_gets_rec(body, dict_bindings)),
-        },
+        CompiledExpr::Lambda { params, body, .. } => CompiledExpr::lambda(
+            params.clone(), fold_dict_gets_rec(body, dict_bindings),
+        ),
 
         CompiledExpr::Vector(elems) => CompiledExpr::Vector(
             elems.iter().map(|e| fold_dict_gets_rec(e, dict_bindings)).collect(),

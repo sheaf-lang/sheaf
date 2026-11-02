@@ -80,7 +80,7 @@ pub(super) fn try_iree_dispatch(
                     args,
                     &env.registry,
                 )?;
-                jit.module_for_key(&key)?
+                jit.module_for_key(&key, func_def)?
             };
             (jit_dispatch_name(&info, &func_def.name), info.sig)
         }
@@ -143,9 +143,12 @@ pub(super) fn try_jit_vag(
     if let Err(error) = validate_device_dtypes(std::slice::from_ref(params)) {
         return JitVagOutcome::Success(Err(error));
     }
-    let augmented_func = match augment_closure_with_free_vars(func, env) {
-        Some(f) => f,
-        None => return JitVagOutcome::Unsupported,
+    let augmented_func = match super::specialize::prepare_vag(func, env) {
+        Ok(preparation) => match preparation.ready() {
+            Some(function) => function,
+            None => return JitVagOutcome::Unsupported,
+        },
+        Err(error) => return JitVagOutcome::Success(Err(error)),
     };
 
     let jit = match env.jit_compiler.as_mut() {
@@ -231,40 +234,6 @@ pub(super) fn try_jit_vag(
     };
 
     JitVagOutcome::Success(Ok(unpacked))
-}
-
-fn augment_closure_with_free_vars(func: &Value, env: &Env) -> Option<Value> {
-    let (fn_params, body, closure) = match func {
-        Value::Function { params, body, closure, .. } => (params, body, closure),
-        _ => return None,
-    };
-
-    let mut free_set = std::collections::HashSet::new();
-    crate::autodiff::collect_free_vars(body, &mut free_set);
-
-    for p in fn_params {
-        free_set.remove(p.as_str());
-    }
-    for (k, _) in closure {
-        free_set.remove(k.as_str());
-    }
-
-    let mut free: Vec<&str> = free_set.iter().map(|s| s.as_str()).collect();
-    free.sort();
-
-    let mut augmented_closure = closure.clone();
-    for name in &free {
-        if let Ok(val) = env.get(name) {
-            augmented_closure.push((name.to_string(), val.clone()));
-        }
-    }
-
-    Some(Value::Function {
-        name: None,
-        params: fn_params.clone(),
-        body: body.clone(),
-        closure: augmented_closure,
-    })
 }
 
 fn unpack_vag_result(result: &Value, original_params: &Value) -> Option<Value> {
@@ -403,9 +372,9 @@ mod tests {
     #[test]
     fn jit_dispatch_name_uses_catalogued_variant_namespace() {
         let module = CompiledModuleInfo {
-            static_inputs: Vec::new(),
             function_name: "predict-value?".to_string(),
             module_name: "jit_variant_42".to_string(),
+            static_inputs: Vec::new(),
             sig: signature(),
             argument_layouts: vec![crate::core::inference::ValueLayout::Leaf],
         };

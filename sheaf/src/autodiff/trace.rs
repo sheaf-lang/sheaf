@@ -9,11 +9,12 @@ use crate::interpreter::env::{runtime_error, Env};
 use crate::interpreter::value::Value;
 use crate::interpreter::eval;
 use crate::interpreter::hof::{dict_scan_length, slice_dict};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 /// Values stored under temporary names while tracing.
 pub struct LeafMap {
     pub leaves: Vec<(String, Value)>,
+    inputs: HashSet<String>,
     counter: usize,
 }
 
@@ -25,7 +26,11 @@ impl Default for LeafMap {
 
 impl LeafMap {
     pub fn new() -> Self {
-        Self { leaves: Vec::new(), counter: 0 }
+        Self { leaves: Vec::new(), inputs: HashSet::new(), counter: 0 }
+    }
+
+    pub fn track_input(&mut self, name: &str) {
+        self.inputs.insert(name.to_string());
     }
 
     pub fn register(&mut self, val: Value) -> String {
@@ -80,10 +85,19 @@ fn trace_rec(
             Ok(expr.clone())
         }
 
-        CompiledExpr::Symbol(name) => Ok(sym_env
-            .get(name)
-            .cloned()
-            .unwrap_or_else(|| CompiledExpr::Symbol(name.clone()))),
+        CompiledExpr::Symbol(name) => {
+            if let Some(expr) = sym_env.get(name) {
+                return Ok(expr.clone());
+            }
+            if leaf_map.inputs.contains(name)
+                && let Ok(value) = env.get(name)
+                && is_tensor_leaf(&value) {
+                    let symbol = CompiledExpr::Symbol(leaf_map.register(value));
+                    sym_env.insert(name.clone(), symbol.clone());
+                    return Ok(symbol);
+                }
+            Ok(CompiledExpr::Symbol(name.clone()))
+        }
 
         CompiledExpr::FunctionCall { name, args, .. } => {
             if name == "mean" && args.len() == 1 {
@@ -250,7 +264,7 @@ fn trace_reduce(
     let coll = &args[2];
 
     let (lambda_params, lambda_body) = match lambda {
-        CompiledExpr::Lambda { params, body } => (params.clone(), body.as_ref().clone()),
+        CompiledExpr::Lambda { params, body, .. } => (params.clone(), body.as_ref().clone()),
         _ => return Err(runtime_error("trace: reduce function must be a lambda")),
     };
 

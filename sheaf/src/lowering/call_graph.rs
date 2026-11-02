@@ -5,17 +5,14 @@
 
 use crate::core::expr::{CompiledExpr, FunctionDef};
 use crate::lowering::effects::{collect_effects, collect_hof_calls};
-use crate::lowering::walk::walk_expr;
 use std::collections::{HashMap, HashSet};
 
 pub type NodeId = usize;
 
 pub fn direct_callees(body: &CompiledExpr) -> HashSet<String> {
     let mut callees = HashSet::new();
-    walk_expr(body, &mut |expr| {
-        if let CompiledExpr::FunctionCall { name, .. } = expr {
-            callees.insert(name.clone());
-        }
+    crate::core::bindings::visit_module_references(body, &mut |name, kind| {
+        if kind == crate::core::bindings::ModuleReference::Call { callees.insert(name.to_string()); }
     });
     callees
 }
@@ -264,7 +261,8 @@ mod tests {
             name: name.to_string(),
             params: vec!["x".to_string()],
             body: nil_body(),
-            body_compiled: Some(body),
+            body_compiled: Some(body.into()),
+            requires_initialization: false,
             signature: None,
             vmfb_module_name: None,
             known_param_types: Vec::new(),
@@ -390,10 +388,7 @@ mod tests {
     #[test]
     fn lambda_within_hof_is_detected_via_root_body() {
         let g_body = sym("x");
-        let lambda = CompiledExpr::Lambda {
-            params: vec!["y".to_string()],
-            body: Box::new(call("g", sym("y"))),
-        };
+        let lambda = CompiledExpr::lambda(vec!["y".to_string()], call("g", sym("y")));
         let f_body = CompiledExpr::FunctionCall {
             name: "map".to_string(),
             args: vec![sym("x"), lambda],

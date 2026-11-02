@@ -183,8 +183,9 @@ fn vag_integer_captures_preserve_exact_differences_in_vmfb() {
     let symbol = |name: &str| CompiledExpr::Symbol(name.into());
     let call = |name: &str, args| CompiledExpr::FunctionCall { name: name.into(), args, loc: None };
     let function = Value::Function {
+        kind: sheaf_compiler::interpreter::value::FunctionKind::User,
         name: None, params: vec!["x".into()],
-        body: call("*", vec![call("-", vec![symbol("a"), symbol("b")]), call("sum", vec![symbol("x")])]),
+        body: call("*", vec![call("-", vec![symbol("a"), symbol("b")]), call("sum", vec![symbol("x")])]).into(),
         closure: vec![("a".into(), Value::Int(9_007_199_254_740_993)),
                       ("b".into(), Value::Int(9_007_199_254_740_992))],
     };
@@ -194,9 +195,13 @@ fn vag_integer_captures_preserve_exact_differences_in_vmfb() {
     let (module, signature, order) = jit.try_jit_value_and_grad(
         &function, &x, &interpreter.env().registry, &session,
     ).expect("VAG must compile without interpreter fallback");
-    assert_eq!(order.len(), 1);
+    let Value::Function { closure, .. } = &function else { panic!() };
+    let args = order.iter().map(|name| {
+        if name == "x" { x.clone() }
+        else { closure.iter().find(|(capture, _)| capture == name).unwrap().1.clone() }
+    }).collect::<Vec<_>>();
     let result = session.call_typed_device(
-        &format!("{module}.value_and_grad"), &[x], &signature.return_type,
+        &format!("{module}.value_and_grad"), &args, &signature.return_type,
     ).unwrap();
     let Value::Tuple(values) = result else { panic!("expected loss and gradient") };
     assert_eq!(values.len(), 2);
@@ -363,11 +368,11 @@ fn invalid_call_signatures() {
         },
         InvalidCall {
             name: "lambda-extra", source: "((fn [x] x) 1 2)",
-            diagnostic: "argument", expectation: ACCEPTED_INVALID,
+            diagnostic: "argument", expectation: Expectation::Pass,
         },
         InvalidCall {
             name: "apply-lambda-extra", source: "(apply (fn [x] x) '[1 2])",
-            diagnostic: "argument", expectation: ACCEPTED_INVALID,
+            diagnostic: "argument", expectation: Expectation::Pass,
         },
         InvalidCall {
             name: "named-function-extra",
@@ -432,25 +437,17 @@ fn invalid_call_signatures() {
         InvalidCall {
             name: "private-matmul-gradient",
             source: "(@-grad-lhs [[1.0]] [[2.0]] [[3.0]])",
-            diagnostic: "internal operation", expectation: ACCEPTED_INVALID,
+            diagnostic: "internal operation", expectation: Expectation::Pass,
         },
         InvalidCall {
             name: "private-sum-to-shape", source: "(sum_to_shape 1 '[1])",
             diagnostic: "internal operation",
-            expectation: Expectation::KnownFailure {
-                kind: FailureKind::WrongDiagnostic,
-                reason: "sum_to_shape is rejected as an unknown function, not an internal operation",
-                detail_contains: "Unknown function: sum_to_shape",
-            },
+            expectation: Expectation::Pass,
         },
         InvalidCall {
             name: "private-scan-gradient", source: "(__scan_vjp__ 1 2 3)",
             diagnostic: "internal operation",
-            expectation: Expectation::KnownFailure {
-                kind: FailureKind::WrongDiagnostic,
-                reason: "__scan_vjp__ is rejected as an unknown function, not an internal operation",
-                detail_contains: "Unknown function: __scan_vjp__",
-            },
+            expectation: Expectation::Pass,
         },
         InvalidCall {
             name: "user-function-redefinition",
@@ -970,7 +967,7 @@ fn broadcast_gradient_reductions_match_their_target_shapes() {
             args: vec![CompiledExpr::Symbol("x".to_string()), CompiledExpr::Vector(
                 target.iter().map(|&dim| CompiledExpr::Integer(dim as i64)).collect(),
             )],
-        });
+        }.into());
         let args = [Value::tensor_f32(ndarray::ArrayD::ones(ndarray::IxDyn(&source)))];
         let mut jit = JitCompiler::new();
         let outcome = jit.try_jit_compile(&function, &args, &interpreter.env().registry, &session);

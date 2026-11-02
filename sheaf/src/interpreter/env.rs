@@ -52,6 +52,7 @@ pub struct CallRecord {
 
 pub struct Env {
     scopes: Vec<HashMap<String, Value>>,
+    function_frames: Vec<usize>,
     pub registry: HashMap<String, FunctionDef>,
     /// When set, records the first call to each registry function.
     /// Used by `sheaf build --trace-with` to discover concrete param shapes.
@@ -75,6 +76,8 @@ pub struct Env {
     /// JIT compiler for transparent on-demand compilation of pure functions.
     #[cfg(iree_runtime)]
     pub jit_compiler: Option<crate::runtime::jit::JitCompiler>,
+    #[cfg(iree_runtime)]
+    pub(super) preparation_cache: std::cell::RefCell<std::collections::VecDeque<super::specialize::CachedPreparation>>,
 }
 
 impl Default for Env {
@@ -87,6 +90,7 @@ impl Env {
     pub fn new() -> Self {
         Self {
             scopes: vec![HashMap::new()],
+            function_frames: Vec::new(),
             registry: HashMap::new(),
             call_records: None,
             tracer: None,
@@ -98,31 +102,41 @@ impl Env {
             mem_profiler: None,
             #[cfg(iree_runtime)]
             jit_compiler: Some(crate::runtime::jit::JitCompiler::new()),
+            #[cfg(iree_runtime)]
+            preparation_cache: Default::default(),
         }
     }
 
     pub fn with_registry(registry: HashMap<String, FunctionDef>) -> Self {
-        Self {
-            scopes: vec![HashMap::new()],
-            registry,
-            call_records: None,
-            tracer: None,
-            profiler: None,
-            iree_mismatch_warned: std::collections::HashSet::new(),
-            eval_deadline: None,
-            trace_targets: None,
-            trace_stale_calls: 0,
-            mem_profiler: None,
-            #[cfg(iree_runtime)]
-            jit_compiler: Some(crate::runtime::jit::JitCompiler::new()),
-        }
+        Self { registry, ..Self::new() }
     }
 
     pub fn get(&self, name: &str) -> Result<Value, SheafError> {
-        for scope in self.scopes.iter().rev() {
+        let start = self.function_frames.last().copied().unwrap_or(0);
+        for scope in self.scopes[start..].iter().rev() {
             if let Some(val) = scope.get(name) {
                 return Ok(val.clone());
             }
+        }
+        Err(runtime_error(format!("Undefined symbol: {}", name)))
+    }
+
+    pub(crate) fn get_global(&self, name: &str) -> Option<Value> {
+        self.scopes.first().and_then(|scope| scope.get(name)).cloned()
+    }
+
+    pub(crate) fn module_value(&self, name: &str) -> Result<Value, SheafError> {
+        if let Some(value) = self.get_global(name) {
+            return Ok(value);
+        }
+        if let Some(function) = self.registry.get(name)
+            && !function.requires_initialization
+            && let Some(body) = &function.body_compiled {
+            return Ok(Value::Function {
+                kind: super::value::FunctionKind::User,
+                name: Some(name.to_string()), params: function.params.clone(),
+                body: body.clone(), closure: Vec::new(),
+            });
         }
         Err(runtime_error(format!("Undefined symbol: {}", name)))
     }
@@ -150,8 +164,16 @@ impl Env {
         self.scopes.push(HashMap::new());
     }
 
+    pub fn push_function_scope(&mut self) {
+        self.push_scope();
+        self.function_frames.push(self.scopes.len() - 1);
+    }
+
     pub fn pop_scope(&mut self) {
         if self.scopes.len() > 1 {
+            if self.function_frames.last() == Some(&(self.scopes.len() - 1)) {
+                self.function_frames.pop();
+            }
             self.scopes.pop();
         }
     }

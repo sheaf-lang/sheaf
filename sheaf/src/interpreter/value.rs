@@ -11,10 +11,18 @@ use ndarray::{ArrayD, IxDyn};
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::fmt;
+use std::rc::Rc;
 use std::sync::Arc;
 use unicode_width::UnicodeWidthStr;
 
 pub type BuiltinFnPtr = fn(&[Value], &BTreeMap<String, Value>) -> Result<Value, crate::core::error::SheafError>;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum FunctionKind {
+    User,
+    ValueAndGrad,
+    Vmap,
+}
 
 #[derive(Clone)]
 pub enum Value {
@@ -31,9 +39,10 @@ pub enum Value {
     Tuple(Vec<Value>),
     Dict(BTreeMap<String, Value>),
     Function {
+        kind: FunctionKind,
         name: Option<String>,
         params: Vec<String>,
-        body: CompiledExpr,
+        body: Rc<CompiledExpr>,
         closure: Vec<(String, Value)>,
     },
     BuiltinFn {

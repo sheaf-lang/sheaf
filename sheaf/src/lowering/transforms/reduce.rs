@@ -47,7 +47,7 @@ fn unroll_reduces_rec(
     match expr {
         CompiledExpr::FunctionCall { name, args, loc } if name == "reduce" && args.len() == 3 => {
             let (carry_p, elem_p, body) = match &args[0] {
-                CompiledExpr::Lambda { params, body } if params.len() == 2 => {
+                CompiledExpr::Lambda { params, body, .. } if params.len() == 2 => {
                     (&params[0], &params[1], body.as_ref())
                 }
                 _ => {
@@ -204,10 +204,9 @@ fn unroll_reduces_rec(
                 .as_ref()
                 .map(|e| Box::new(unroll_reduces_rec(e, param_types, let_env))),
         },
-        CompiledExpr::Lambda { params, body } => CompiledExpr::Lambda {
-            params: params.clone(),
-            body: Box::new(unroll_reduces_rec(body, param_types, let_env)),
-        },
+        CompiledExpr::Lambda { params, body, .. } => CompiledExpr::lambda(
+            params.clone(), unroll_reduces_rec(body, param_types, let_env),
+        ),
         CompiledExpr::LambdaCall { callee, args } => CompiledExpr::LambdaCall {
             callee: Box::new(unroll_reduces_rec(callee, param_types, let_env)),
             args: args
@@ -266,9 +265,9 @@ mod tests {
         let reduce = CompiledExpr::FunctionCall {
             name: "reduce".to_string(),
             args: vec![
-                CompiledExpr::Lambda {
-                    params: vec!["state".to_string(), "item".to_string()],
-                    body: Box::new(CompiledExpr::Tuple(vec![
+                CompiledExpr::lambda(
+                    vec!["state".to_string(), "item".to_string()],
+                    CompiledExpr::Tuple(vec![
                         CompiledExpr::FunctionCall {
                             name: "+".to_string(),
                             args: vec![
@@ -297,8 +296,8 @@ mod tests {
                             ],
                             loc: None,
                         },
-                    ])),
-                },
+                    ]),
+                ),
                 CompiledExpr::Tuple(vec![
                     CompiledExpr::Float(0.0),
                     CompiledExpr::Float(0.0),

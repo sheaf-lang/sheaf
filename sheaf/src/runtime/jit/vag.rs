@@ -56,7 +56,7 @@ fn zero_gradient_expr(ty: &StableHLOType) -> CompiledExpr {
 impl JitCompiler {
     /// JIT-compile a value-and-grad closure into a single VMFB.
     ///
-    /// Tensor captures become MLIR parameters; scalar captures are constants.
+    /// Floating-point captures remain runtime inputs; integers and booleans are specialized.
     ///
     /// Returns `(module_name, signature, param_order)` for dispatch.
     pub fn try_jit_value_and_grad(
@@ -85,23 +85,14 @@ impl JitCompiler {
         let wrt_type_str = value_to_stablehlo_type(wrt_arg)
             .map(|t| t.to_mlir())
             .unwrap_or_default();
-        // Same AST + different scalar values produces a different VMFB.
-        let mut scalar_captures_key: Vec<(String, String)> = closure
-            .iter()
-            .filter(|(name, _)| !name.starts_with("__"))
-            .filter_map(|(name, val)| match val {
-                Value::Float(f) => Some((name.clone(), format!("f{}", f))),
-                Value::Int(n) => Some((name.clone(), format!("i{}", n))),
-                _ => None,
-            })
-            .collect();
-        scalar_captures_key.sort();
-        let scalars_suffix: String = scalar_captures_key
-            .iter()
-            .map(|(n, v)| format!("{}={}", n, v))
-            .collect::<Vec<_>>()
-            .join(",");
-        let vag_key = format!("__vag_{:?}_{}_{}", body, wrt_type_str, scalars_suffix);
+        let mut keyed_values = vec![wrt_arg.clone(); fn_params.len()];
+        keyed_values.extend(closure.iter().map(|(_, value)| value.clone()));
+        let static_values = static_inputs::collect(&keyed_values);
+        let capture_types: Vec<_> = closure.iter().map(|(name, value)| {
+            (name, value_to_stablehlo_type(value).map(|ty| ty.to_mlir()).ok(),
+                crate::core::inference::ValueLayout::from_value(value))
+        }).collect();
+        let vag_key = format!("__vag_{:?}_{}_{:?}_{:?}", body, wrt_type_str, static_values, capture_types);
         if self.failed_vag.contains(&vag_key) {
             return None;
         }
@@ -120,7 +111,7 @@ impl JitCompiler {
 
         let mut all_param_names: Vec<String> = Vec::new();
         let mut all_arg_values: Vec<Value> = Vec::new();
-        let mut scalar_substitutions: Vec<(String, CompiledExpr)> = Vec::new();
+
 
         for p in fn_params {
             all_param_names.push(p.clone());
@@ -128,57 +119,19 @@ impl JitCompiler {
         }
         let wrt_indices: Vec<usize> = (0..fn_params.len()).collect();
 
-        let mut aug_registry = registry.clone();
+        let aug_registry = registry;
 
         for (cap_name, cap_val) in closure {
-            if cap_name.starts_with("__") {
-                continue;
-            }
-            match cap_val {
-                Value::Float(f) => {
-                    scalar_substitutions.push((cap_name.clone(), CompiledExpr::Float(*f as f64)));
-                }
-                Value::Int(n) => {
-                    scalar_substitutions.push((cap_name.clone(), CompiledExpr::Integer(*n)));
-                }
-                Value::Function {
-                    params: fp,
-                    body: fb,
-                    ..
-                } => {
-                    aug_registry.entry(cap_name.clone()).or_insert_with(|| FunctionDef {
-                        name: cap_name.clone(),
-                        params: fp.clone(),
-                        body: crate::core::ast::SheafValue::Nil(
-                            crate::core::error::SourceLocation::new(0, 0, "".into()),
-                        ),
-                        body_compiled: Some(fb.clone()),
-                        signature: None,
-                        vmfb_module_name: None,
-                        known_param_types: Vec::new(),
-                        compile_error: None,
-                    });
-                }
-                _ => {
-                    // Tensor, Dict, Tuple etc. -> promote to MLIR parameter
-                    if value_to_stablehlo_type(cap_val).is_ok() {
-                        all_param_names.push(cap_name.clone());
-                        all_arg_values.push(cap_val.clone());
-                    } else {
-                        self.jit_fail(
-                            &vag_key,
-                            &format!("unsupported capture type for '{}'", cap_name),
-                        );
-                        return None;
-                    }
-                }
+            if value_to_stablehlo_type(cap_val).is_ok() {
+                all_param_names.push(cap_name.clone());
+                all_arg_values.push(cap_val.clone());
+            } else {
+                self.jit_fail(&vag_key, &format!("unsupported capture type for '{}'", cap_name));
+                return None;
             }
         }
 
-        let mut body = body.clone();
-        for (name, val) in &scalar_substitutions {
-            body = crate::core::bindings::replace_local(&body, name, val);
-        }
+        let mut body = body.as_ref().clone();
 
         let mut known_types: Vec<(String, StableHLOType)> = Vec::new();
         let mut param_index_maps = ParamIndexMaps::new();
@@ -206,6 +159,18 @@ impl JitCompiler {
             known_types.push((param_name.clone(), ty));
         }
 
+        if let Err(error) = super::validate_shape_positions(
+            &all_param_names, &all_arg_values, crate::lowering::transforms::collect_shape_gtes(&body),
+        ) {
+            self.last_vag_error = Some(error);
+            return None;
+        }
+        let all_static_inputs = static_inputs::collect(&all_arg_values);
+        let capture_static_inputs: Vec<_> = all_static_inputs.iter()
+            .filter(|input| input.argument >= fn_params.len()).cloned().collect();
+        body = static_inputs::specialize(
+            &body, &all_param_names[fn_params.len()..], &all_arg_values[fn_params.len()..],
+        );
         let mut sig = match infer_function_signature_with_known(
             &all_param_names,
             &body,
@@ -265,15 +230,12 @@ impl JitCompiler {
                     sheaf_msg!("jit: value-and-grad | {}: {}", pname, pty.to_mlir());
                 }
             }
-            if !scalar_substitutions.is_empty() {
-                sheaf_msg!(
-                    "jit: value-and-grad | {} scalar captures",
-                    scalar_substitutions.len()
-                );
+            if !capture_static_inputs.is_empty() {
+                sheaf_msg!("jit: value-and-grad | {} static captures", capture_static_inputs.len());
             }
         }
 
-        body = crate::autodiff::inline_function_calls(&body, &aug_registry);
+        body = crate::autodiff::inline_function_calls(&body, aug_registry);
 
         // Bail out if inlining produced a graph that is too large
         let node_count = expr_node_count(&body);
@@ -339,6 +301,7 @@ impl JitCompiler {
         }
         body = lower_inlined_gets(&body, &param_index_maps);
 
+        body = static_inputs::apply(&body, &all_param_names, &capture_static_inputs);
         // Filter constants: only bake scalars used in shape-bearing positions
         // (see the main JIT path above for rationale).
         let filtered_vag_constants = filter_constants_for_shape_positions(&constants, &body);
@@ -418,6 +381,11 @@ impl JitCompiler {
                     CodeGenerator::with_function_params(registry, &param_names, &param_types);
                 codegen.set_tuple_key_layouts(tuple_key_layouts);
                 codegen.set_idx_to_key(idx_to_key);
+                for input in &all_static_inputs {
+                    codegen.specialize_parameter_leaf(
+                        &param_names[input.argument], &input.indices, &input.value.expression(),
+                    )?;
+                }
 
                 let inlined_body = body_clone;
 

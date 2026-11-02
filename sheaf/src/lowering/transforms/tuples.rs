@@ -48,7 +48,7 @@ fn classify_vectors_rec(
                 body: Box::new(body_classified),
             }
         }
-        CompiledExpr::Lambda { params, body } => {
+        CompiledExpr::Lambda { params, body, .. } => {
             let mut saved = Vec::new();
             for param in &params {
                 let old_ty = symbol_types.remove(param);
@@ -58,7 +58,7 @@ fn classify_vectors_rec(
                 symbol_types.insert(param.clone(), active);
                 saved.push((param.clone(), old_ty));
             }
-            let body_classified = classify_vectors_rec(*body, symbol_types);
+            let body_classified = classify_vectors_rec(std::rc::Rc::unwrap_or_clone(body), symbol_types);
             for (param, old_ty) in saved {
                 match old_ty {
                     Some(old) => {
@@ -69,10 +69,7 @@ fn classify_vectors_rec(
                     }
                 }
             }
-            CompiledExpr::Lambda {
-                params,
-                body: Box::new(body_classified),
-            }
+            CompiledExpr::lambda(params, body_classified)
         }
         CompiledExpr::Vector(elems) => {
             let mut elems_classified = Vec::with_capacity(elems.len());
@@ -172,6 +169,7 @@ fn classify_vectors_rec(
         | CompiledExpr::Dict(_)
         | CompiledExpr::Quoted(_)
         | CompiledExpr::FunctionRef(_)
+        | CompiledExpr::GlobalRef(_)
         | CompiledExpr::Symbol(_)
         | CompiledExpr::GetTupleElement { .. }
         | CompiledExpr::ValueAndGrad { .. }
@@ -368,10 +366,9 @@ pub fn desugar_destructuring_lets(
                 loc,
             })
         }
-        CompiledExpr::Lambda { params, body } => Ok(CompiledExpr::Lambda {
-            params,
-            body: Box::new(desugar_destructuring_lets(*body, symbol_types)?),
-        }),
+        CompiledExpr::Lambda { params, body, .. } => Ok(CompiledExpr::lambda(
+            params, desugar_destructuring_lets(std::rc::Rc::unwrap_or_clone(body), symbol_types)?,
+        )),
         CompiledExpr::LambdaCall { callee, args } => {
             let new_args: Vec<CompiledExpr> = args
                 .into_iter()
