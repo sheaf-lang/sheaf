@@ -45,9 +45,14 @@ fn resolve_constants_rec(
                 try_infer_shape(&resolved, shapes)
             });
             if let Some(sh) = shape {
-                return CompiledExpr::Vector(
-                    sh.iter().map(|&d| CompiledExpr::Integer(d)).collect(),
-                );
+                return CompiledExpr::FunctionCall {
+                    name: "cast".to_string(),
+                    args: vec![
+                        CompiledExpr::Vector(sh.into_iter().map(CompiledExpr::Integer).collect()),
+                        CompiledExpr::Keyword("i32".to_string()),
+                    ],
+                    loc: loc.clone(),
+                };
             }
             CompiledExpr::FunctionCall {
                 name: name.clone(),
@@ -61,7 +66,7 @@ fn resolve_constants_rec(
         CompiledExpr::FunctionCall { name, args, loc } if name == "get" && args.len() == 2 => {
             let recv = resolve_constants_rec(&args[0], constants, locals, shapes, skip_lambda);
             let idx = resolve_constants_rec(&args[1], constants, locals, shapes, skip_lambda);
-            if let (CompiledExpr::Vector(elems), CompiledExpr::Integer(i)) = (&recv, &idx) {
+            if let (Some(elems), CompiledExpr::Integer(i)) = (constant_vector_elements(&recv), &idx) {
                 let len = elems.len() as i64;
                 let norm = if *i < 0 { len + i } else { *i };
                 if norm >= 0 && norm < len {
@@ -77,9 +82,9 @@ fn resolve_constants_rec(
         CompiledExpr::FunctionCall { name, args, loc } if name == "cons" && args.len() == 2 => {
             let head = resolve_constants_rec(&args[0], constants, locals, shapes, skip_lambda);
             let tail = resolve_constants_rec(&args[1], constants, locals, shapes, skip_lambda);
-            let tail_elems = match &tail {
-                CompiledExpr::Vector(v) => Some(v.clone()),
-                CompiledExpr::Quoted(inner) => {
+            let tail_elems = match (&tail, constant_vector_elements(&tail)) {
+                (_, Some(elements)) => Some(elements.to_vec()),
+                (CompiledExpr::Quoted(inner), None) => {
                     use crate::core::ast::SheafValue;
                     match inner.as_ref() {
                         SheafValue::Vector(v, _loc) => {
@@ -133,9 +138,19 @@ fn resolve_constants_rec(
             push_first_last(name, recv, loc.clone())
         }
         CompiledExpr::FunctionCall { name, args, loc } => {
+            let operation = crate::core::signature::OpId::resolve(name);
             let resolved: Vec<_> = args
                 .iter()
-                .map(|a| resolve_constants_rec(a, constants, locals, shapes, skip_lambda))
+                .enumerate()
+                .map(|(index, arg)| {
+                    let value = resolve_constants_rec(arg, constants, locals, shapes, skip_lambda);
+                    if operation.is_some_and(|op| op.is_shape_vector_argument(index))
+                        && let Some(elements) = constant_vector_elements(&value)
+                    {
+                        return CompiledExpr::Vector(elements.to_vec());
+                    }
+                    value
+                })
                 .collect();
             try_fold_arithmetic(name, &resolved).unwrap_or_else(|| CompiledExpr::FunctionCall {
                 name: name.clone(),
@@ -171,25 +186,18 @@ fn resolve_constants_rec(
                     CompiledExpr::Vector(elems)
                         if elems.iter().all(|e| matches!(e, CompiledExpr::Integer(_))) =>
                     {
-                        let sh: Vec<i64> = elems
-                            .iter()
-                            .filter_map(|e| {
-                                if let CompiledExpr::Integer(n) = e {
-                                    Some(*n)
-                                } else {
-                                    None
-                                }
-                            })
-                            .collect();
                         if let BindingPattern::Simple(k_str) = k {
-                            scoped_shapes.insert(k_str.clone(), sh);
+                            scoped_shapes.insert(k_str.clone(), vec![elems.len() as i64]);
                         }
                     }
                     _ => {
-                        if let BindingPattern::Simple(k_str) = k
-                            && let Some(sh) = try_infer_shape(&resolved, &scoped_shapes)
-                        {
-                            scoped_shapes.insert(k_str.clone(), sh);
+                        if let BindingPattern::Simple(k_str) = k {
+                            if constant_vector_elements(&resolved).is_some() {
+                                scoped_locals.insert(k_str.clone(), resolved.clone());
+                            }
+                            if let Some(sh) = try_infer_shape(&resolved, &scoped_shapes) {
+                                scoped_shapes.insert(k_str.clone(), sh);
+                            }
                         }
                     }
                 }
@@ -353,14 +361,32 @@ fn extract_scalars_rec(
     }
 }
 
-fn push_first_last(name: &str, expr: CompiledExpr, loc: Option<SourceLocation>) -> CompiledExpr {
+fn constant_vector_elements(expr: &CompiledExpr) -> Option<&[CompiledExpr]> {
     match expr {
-        CompiledExpr::Vector(elems) => if name == "first" {
-            elems.into_iter().next()
-        } else {
-            elems.into_iter().last()
+        CompiledExpr::Vector(elements) => Some(elements),
+        CompiledExpr::FunctionCall { name, args, .. }
+            if name == "cast" && args.len() == 2
+                && matches!(&args[1], CompiledExpr::Keyword(dtype) if dtype == "i32") =>
+        {
+            match &args[0] {
+                CompiledExpr::Vector(elements)
+                    if elements.iter().all(|element| matches!(element, CompiledExpr::Integer(_))) =>
+                {
+                    Some(elements)
+                }
+                _ => None,
+            }
         }
-        .unwrap_or_else(|| CompiledExpr::Vector(vec![])),
+        _ => None,
+    }
+}
+
+fn push_first_last(name: &str, expr: CompiledExpr, loc: Option<SourceLocation>) -> CompiledExpr {
+    if let Some(elements) = constant_vector_elements(&expr) {
+        return if name == "first" { elements.first() } else { elements.last() }
+            .cloned().unwrap_or_else(|| CompiledExpr::Vector(vec![]));
+    }
+    match expr {
         CompiledExpr::Let { bindings, body } => CompiledExpr::Let {
             bindings,
             body: Box::new(push_first_last(name, *body, loc)),
@@ -435,7 +461,7 @@ pub fn try_infer_shape(
             | "<=" | ">" | ">=" | "and" | "or" | "not" | "where" => {
                 args.iter().find_map(|a| try_infer_shape(a, shapes))
             }
-            "layer-norm" | "softmax" | "normalize" | "log-softmax" => {
+            "layer-norm" | "softmax" | "normalize" | "log-softmax" | "cast" => {
                 args.first().and_then(|a| try_infer_shape(a, shapes))
             }
             "transpose" | "tr" if args.len() == 1 || args.len() == 2 => {

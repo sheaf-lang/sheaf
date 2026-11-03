@@ -486,7 +486,23 @@ fn checked_dimension(number: f64) -> Result<usize, crate::core::error::SheafErro
     Ok(number as usize)
 }
 
+fn invalid_shape_type(val: &Value) -> SheafError {
+    let mut message = format!("shape dimensions must be integers, got {}", val.type_name());
+    if let Value::Tensor { data, dtype } = val
+        && data.ndim() == 1
+        && dtype.is_float()
+    {
+        message.push_str(&format!(
+            " ({}).\n  = hint: Quote your shape, e.g. '[4 3], when passing it to a function.",
+            dtype.name(),
+        ));
+    }
+    runtime_error(message)
+}
+
 fn integer_dimensions(val: &Value) -> Result<Vec<i64>, SheafError> {
+    let host = val.ensure_host_cow()?;
+    let val = host.as_ref();
     match val {
         Value::List(items) | Value::Tuple(items) => items.iter().map(|value| match value {
             Value::Int(value) => Ok(*value),
@@ -504,13 +520,13 @@ fn integer_dimensions(val: &Value) -> Result<Vec<i64>, SheafError> {
                 }
             }).collect()
         }
-        _ => Err(runtime_error(format!(
-            "shape dimensions must be integers, got {}", val.type_name(),
-        ))),
+        _ => Err(invalid_shape_type(val)),
     }
 }
 
 fn shape_from_value(val: &Value) -> Result<Vec<usize>, crate::core::error::SheafError> {
+    let host = val.ensure_host_cow()?;
+    let val = host.as_ref();
     let shape: Vec<usize> = match val {
         Value::List(items) | Value::Tuple(items) => {
             items.iter().map(|v| match v {
@@ -533,7 +549,7 @@ fn shape_from_value(val: &Value) -> Result<Vec<usize>, crate::core::error::Sheaf
         Value::Tensor { data, dtype } if data.ndim() == 1 && dtype.is_integer() => {
             data.iter().map(|&x| checked_dimension(x as f64)).collect()
         }
-        _ => Err(runtime_error(format!("shape dimensions must be integers, got {}", val.type_name()))),
+        _ => Err(invalid_shape_type(val)),
     }?;
     let max_elements = isize::MAX as usize / std::mem::size_of::<f32>();
     shape.iter().try_fold(1usize, |size, &dimension| {

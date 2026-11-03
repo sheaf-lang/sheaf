@@ -90,6 +90,24 @@ impl DeviceBufferInner {
                         .map(|&bits| crate::core::dtype::bf16_bits_to_f32(bits))
                         .collect()
                 }
+                Dtype::I32 => {
+                    let byte_len = n_elems * 4;
+                    let mut raw: Vec<i32> = vec![0; n_elems];
+                    let status = iree_hal_device_transfer_d2h(
+                        self.device.device,
+                        buf,
+                        0,
+                        raw.as_mut_ptr() as *mut c_void,
+                        byte_len as u64,
+                        0,
+                        iree_timeout_t::infinite(),
+                    );
+                    if !iree_status_is_ok(status) {
+                        iree_status_fprint(libc_stderr(), status);
+                        return Err(super::buffer_convert::iree_err("d2h transfer failed (i32)"));
+                    }
+                    raw.into_iter().map(|value| value as f32).collect()
+                }
                 _ => {
                     let byte_len = n_elems * 4;
                     let mut data: Vec<f32> = vec![0.0; n_elems];

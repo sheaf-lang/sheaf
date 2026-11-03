@@ -941,6 +941,88 @@ impl CompiledCall {
 }
 
 #[test]
+fn compiled_shape_results_keep_integer_values_on_host_and_device() {
+    initialize_device();
+    for (body, expected) in [
+        ("(shape x)", [3.0, 2.0]),
+        ("(let [dims (shape x)] dims)", [3.0, 2.0]),
+        ("(shape (transpose x))", [2.0, 3.0]),
+        ("(shape (zeros (shape x)))", [3.0, 2.0]),
+        ("{:dims (shape x) :values x}", [3.0, 2.0]),
+    ] {
+        let mut interpreter = interpreter_only();
+        interpreter.eval(&format!("(defn returned_shape [x] {body})")).unwrap();
+        let input = interpreter.eval("(ones '[3 2])").unwrap();
+        let call = compile_call(&interpreter, "returned_shape", std::slice::from_ref(&input)).unwrap();
+        let host = call.session.call_typed(
+            &call.qualified_name, std::slice::from_ref(&input), &call.signature.return_type,
+        ).unwrap();
+        let device = call.execute(std::slice::from_ref(&input)).unwrap();
+        for result in [host, device] {
+            let dims = match result {
+                Value::Dict(mut values) => values.remove("dims").unwrap(),
+                other => other,
+            }.ensure_host().unwrap();
+            let Value::Tensor { data, dtype } = &dims else {
+                panic!("{dims:?}");
+            };
+            assert_eq!(*dtype, Dtype::I32, "{body}");
+            assert_eq!(data.shape(), &[2]);
+            assert_eq!(data.as_slice().unwrap(), &expected, "{body}");
+            interpreter.env_mut().set_global("dims", dims);
+            let zeros = interpreter.eval("(zeros dims)").unwrap();
+            let Value::Tensor { data, .. } = zeros else {
+                panic!("{zeros:?}");
+            };
+            assert_eq!(data.shape(), &expected.map(|dim| dim as usize));
+        }
+    }
+    let mut interpreter = interpreter_only();
+    interpreter.eval("(defn ordinary_vector [x] [3 2])").unwrap();
+    let input = interpreter.eval("(ones '[3 2])").unwrap();
+    let result = compile_call(&interpreter, "ordinary_vector", std::slice::from_ref(&input))
+        .unwrap().execute(&[input]).unwrap().ensure_host().unwrap();
+    assert!(matches!(result, Value::Tensor { dtype: Dtype::F32, .. }), "{result:?}");
+}
+
+#[test]
+fn automatically_compiled_shapes_can_be_used_without_materializing_them_first() {
+    initialize_device();
+    let mut interpreter = Interpreter::new();
+    let dims = interpreter.eval("(defn automatic_shape [x] (shape x))
+        (automatic_shape (ones '[3 2]))").unwrap();
+    assert!(matches!(&dims, Value::DeviceBuffer(buffer) if buffer.dtype == Dtype::I32), "{dims:?}");
+    interpreter.env_mut().set_global("dims", dims);
+    for source in ["(zeros dims)", "(reshape (ones '[6]) dims)"] {
+        let value = interpreter.eval(source).unwrap().ensure_host().unwrap();
+        let Value::Tensor { data, .. } = value else {
+            panic!("{value:?}");
+        };
+        assert_eq!(data.shape(), &[3, 2], "{source}");
+    }
+    let shape = interpreter.eval("(defn local_vector_shape [x] (let [v [3 2]] (shape v)))
+        (local_vector_shape (ones '[3 2]))").unwrap().ensure_host().unwrap();
+    let Value::Tensor { data, dtype } = shape else {
+        panic!("{shape:?}");
+    };
+    assert_eq!(dtype, Dtype::I32);
+    assert_eq!(data.as_slice().unwrap(), &[2.0]);
+}
+
+#[test]
+fn floating_shape_tensors_explain_how_to_pass_literal_shapes() {
+    let mut interpreter = interpreter_only();
+    let error = interpreter.eval("(xavier-uniform (random-key 42) [4 3])").unwrap_err();
+    let message = error.to_string();
+    assert!(message.contains("integers"), "{message}");
+    assert!(message.contains("f32"), "{message}");
+    assert!(message.contains("Quote your shape"), "{message}");
+    interpreter.eval("(xavier-uniform (random-key 42) '[4 3])").unwrap();
+    let error = interpreter.eval("(zeros '[4.0 3.0])").unwrap_err().to_string();
+    assert!(!error.contains("Quote your shape"), "{error}");
+}
+
+#[test]
 fn broadcast_gradient_reductions_match_their_target_shapes() {
     initialize_device();
     let mut interpreter = interpreter_only();
