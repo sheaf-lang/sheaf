@@ -292,7 +292,7 @@ impl<'a> CodeGenerator<'a> {
             StableHLOType::Tuple(..) => {
                 let leaves = collect_tuple_type_leaves(param_name, &wrt_ty);
                 let references = collect_tuple_references(&fn_body, param_name);
-                let expanded = expand_tuple_to_symbols(&fn_body, param_name);
+                let expanded = expand_tuple_to_symbols(&fn_body, param_name, &wrt_ty);
                 (leaves, references, expanded)
             }
             _ => (

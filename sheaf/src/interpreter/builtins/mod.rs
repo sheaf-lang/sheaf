@@ -4,6 +4,7 @@
 //! Built-in functions for the Sheaf interpreter.
 
 mod arithmetic;
+mod autodiff;
 mod activations;
 pub(crate) mod pickle;
 mod safetensors;
@@ -11,6 +12,7 @@ mod comparison;
 mod reductions;
 mod tensor_ops;
 mod tensor_create;
+pub(crate) use tensor_create::cast_like;
 mod collections;
 mod io;
 mod random;
@@ -31,6 +33,7 @@ pub use losses::tree_zeros;
 
 pub fn register_builtins(env: &mut Env) {
     arithmetic::register(env);
+    autodiff::register(env);
     activations::register(env);
     comparison::register(env);
     reductions::register(env);

@@ -941,6 +941,199 @@ impl CompiledCall {
 }
 
 #[test]
+fn list_parameter_gradients_keep_leaf_identity_in_runtime() {
+    initialize_device();
+    for jit_enabled in [false, true] {
+        let mut interpreter = if jit_enabled { Interpreter::new() } else { interpreter_only() };
+        let result = interpreter.eval("((value-and-grad
+            (fn [p] (* 2.0 (sum (first p))))) [(ones '[2]) (ones '[2])])").unwrap();
+        let values = match result {
+            Value::List(values) | Value::Tuple(values) => values,
+            other => panic!("{other:?}"),
+        };
+        assert_eq!(values[0].to_f64().unwrap(), 4.0);
+        let expected = interpreter.eval("[(* 2.0 (ones '[2])) (zeros '[2])]").unwrap();
+        compare_values(&values[1], &expected, "list parameter gradients/runtime").unwrap();
+    }
+}
+
+#[test]
+fn list_parameter_gradients_keep_leaf_identity_in_direct_vmfb() {
+    initialize_device();
+    let mut interpreter = interpreter_only();
+    let function = interpreter.eval("(fn [p] (* 2.0 (sum (first p))))").unwrap();
+    let params = interpreter.eval("[(ones '[2]) (ones '[2])]").unwrap();
+    let session = shared_session().unwrap();
+    let mut jit = JitCompiler::new();
+    let (module, signature, order) = jit.try_jit_value_and_grad(
+        &function, &params, &interpreter.env().registry, &session,
+    ).expect("list VAG must compile without interpreter fallback");
+    assert_eq!(order, ["p"]);
+    let result = session.call_typed_device(
+        &format!("{module}.value_and_grad"), &[params], &signature.return_type,
+    ).unwrap();
+    let result = reconstruct_jit_result(result, &signature.return_type, &signature.arg_type_layouts);
+    let Value::Tuple(values) = result else { panic!("{result:?}") };
+    assert_eq!(values[0].to_f64().unwrap(), 4.0);
+    let expected = interpreter.eval("[(* 2.0 (ones '[2])) (zeros '[2])]").unwrap();
+    let Value::Tuple(leaves) = &values[1] else { panic!("{:?}", values[1]) };
+    for (leaf, expected) in leaves.iter().zip([2.0, 0.0]) {
+        let value = leaf.ensure_host().unwrap();
+        let Value::Tensor { data, .. } = value else { panic!("{value:?}") };
+        assert!(data.iter().all(|value| *value == expected), "{data:?}, expected {expected}");
+    }
+    let Value::List(expected) = expected else { panic!() };
+    compare_values(&values[1], &Value::Tuple(expected), "list parameter gradients/VMFB ABI").unwrap();
+}
+
+#[test]
+fn aggregate_gradients_preserve_aliases_and_unused_leaves() {
+    initialize_device();
+    for jit_enabled in [false, true] {
+        for (source, expected) in [
+            ("(let [x (ones '[2])] ((value-and-grad (fn [p] (* 2.0 (sum (first p))))) [x x]))",
+             "[(* 2.0 (ones '[2])) (zeros '[2])]"),
+            ("((value-and-grad (fn [p] (let [q p] (* 3.0 (sum (last q)))))) [(ones '[2]) (ones '[2])])",
+             "[(zeros '[2]) (* 3.0 (ones '[2]))]"),
+            ("(let [fixed (ones '[2])] ((value-and-grad (fn [p] (sum (* fixed (first p))))) [(ones '[2]) (ones '[2])]))",
+             "[(ones '[2]) (zeros '[2])]"),
+            ("((value-and-grad (fn [p] (sum (get (first p) :w)))) [{:w (ones '[2])} {:w (ones '[2])}])",
+             "[{:w (ones '[2])} {:w (zeros '[2])}]"),
+        ] {
+            let mut interpreter = if jit_enabled { Interpreter::new() } else { interpreter_only() };
+            let result = interpreter.eval(source).unwrap();
+            let values = match result {
+                Value::List(values) | Value::Tuple(values) => values,
+                other => panic!("{other:?}"),
+            };
+            let expected = interpreter.eval(expected).unwrap();
+            compare_values(&values[1], &expected, source).unwrap();
+        }
+    }
+}
+
+#[test]
+fn interpreted_trace_preserves_scalar_gradients_and_restores_scope_on_error() {
+    let mut interpreter = interpreter_only();
+    let result = interpreter.eval("((value-and-grad (fn [p] (sum p))) 2.0)").unwrap();
+    let Value::List(values) = result else { panic!("{result:?}") };
+    assert!(matches!(values[1], Value::Float(1.0)), "{:?}", values[1]);
+    let before = interpreter.env().all_names().into_iter().collect::<std::collections::HashSet<_>>();
+    let error = interpreter.eval("((value-and-grad (fn [p] \"not a scalar loss\")) [1.0 2.0])")
+        .unwrap_err();
+    assert!(error.to_string().contains("loss must return a scalar"), "{error}");
+    let after = interpreter.env().all_names().into_iter().collect::<std::collections::HashSet<_>>();
+    assert_eq!(before, after);
+}
+
+#[test]
+fn traced_lists_keep_collection_semantics_for_len_and_tensor() {
+    initialize_device();
+    for jit_enabled in [false, true] {
+        for (source, loss, expected) in [
+            ("((value-and-grad (fn [p] (* (len p) (sum (first p))))) [(ones '[2]) (ones '[2])])",
+             4.0, "[(* 2.0 (ones '[2])) (zeros '[2])]"),
+            ("((value-and-grad (fn [p] (sum (tensor (map (fn [x] (* x x)) p))))) '(1.0 2.0))",
+             5.0, "'(2.0 4.0)"),
+        ] {
+            let mut interpreter = if jit_enabled { Interpreter::new() } else { interpreter_only() };
+            let result = interpreter.eval(source).unwrap();
+            let values = match result {
+                Value::List(values) | Value::Tuple(values) => values,
+                other => panic!("{other:?}"),
+            };
+            assert_eq!(values[0].to_f64().unwrap(), loss, "{source}");
+            let expected = interpreter.eval(expected).unwrap();
+            compare_values(&values[1], &expected, source).unwrap();
+        }
+    }
+}
+
+#[test]
+fn unsupported_trace_forms_use_language_names() {
+    let mut interpreter = interpreter_only();
+    let error = interpreter.eval("((value-and-grad (fn [p] (repeat [i 1] [acc p] acc))) 2.0)")
+        .unwrap_err().to_string();
+    assert!(error.contains("tracing repeat is not supported"), "{error}");
+    assert!(!error.contains("Repeat {"), "{error}");
+}
+
+#[test]
+fn active_list_dependencies_do_not_disappear_through_opaque_operations() {
+    fn custom_sum(args: &[Value], _: &BTreeMap<String, Value>) -> Result<Value, sheaf_compiler::SheafError> {
+        let Value::List(values) = &args[0] else { panic!() };
+        Ok(Value::Float(values.iter().map(|value| value.to_f32().unwrap()).sum()))
+    }
+    let mut interpreter = interpreter_only();
+    interpreter.env_mut().set_builtin("custom-list-sum", custom_sum);
+    let error = interpreter.eval("((value-and-grad (fn [p] (custom-list-sum p))) '(1.0 2.0))")
+        .unwrap_err();
+    assert!(matches!(error, sheaf_compiler::core::error::SheafError::AutodiffMissingRule {
+        operation, ..
+    } if operation == "custom-list-sum"));
+}
+
+#[test]
+fn interpreted_scan_outputs_keep_their_list_length() {
+    let mut interpreter = interpreter_only();
+    let result = interpreter.eval("((value-and-grad (fn [p]
+        (let [r (scan (fn [carry x] [carry carry]) p (ones '[3 1]))]
+          (* (len (second r)) (sum (first r)))))) (ones '[2]))").unwrap();
+    let Value::List(values) = result else { panic!("{result:?}") };
+    assert_eq!(values[0].to_f64().unwrap(), 6.0);
+    let expected = interpreter.eval("(* 3.0 (ones '[2]))").unwrap();
+    compare_values(&values[1], &expected, "scan output list/interpreter").unwrap();
+}
+
+#[test]
+fn concat_adjoints_slice_each_operand_in_direct_vmfb() {
+    initialize_device();
+    for (axis, left, right) in [(0, "[2 1]", "[1 1]"), (1, "[2 1]", "[2 2]"), (-1, "[2 1]", "[2 2]")] {
+        let mut interpreter = interpreter_only();
+        let source = format!("(fn [p] (let [joined (concat (first p) (last p) :axis {axis})] (sum (* joined joined))))");
+        let function = interpreter.eval(&source).unwrap();
+        let params = interpreter.eval(&format!("[(ones '{left}) (ones '{right})]")).unwrap();
+        let session = shared_session().unwrap();
+        let mut jit = JitCompiler::new();
+        let (module, signature, order) = jit.try_jit_value_and_grad(
+            &function, &params, &interpreter.env().registry, &session,
+        ).expect("concat VAG must compile without fallback");
+        assert_eq!(order, ["p"]);
+        let result = session.call_typed_device(
+            &format!("{module}.value_and_grad"), &[params], &signature.return_type,
+        ).unwrap();
+        let Value::Tuple(values) = result else { panic!("{result:?}") };
+        let expected = interpreter.eval(&format!("[(* 2.0 (ones '{left})) (* 2.0 (ones '{right}))]")).unwrap();
+        let Value::List(expected) = expected else { panic!() };
+        compare_values(&values[1], &Value::Tuple(expected), "concat VJP/VMFB").unwrap();
+    }
+}
+
+#[test]
+fn tracing_does_not_make_tuple_inputs_into_lists() {
+    let mut interpreter = interpreter_only();
+    interpreter.env_mut().set_global("actual-tuple", Value::Tuple(vec![Value::Float(1.0)]));
+    for source in [
+        "((value-and-grad (fn [p] (* (len actual-tuple) p))) 2.0)",
+        "((value-and-grad (fn [p] (+ (sum (tensor actual-tuple)) p))) 2.0)",
+    ] {
+        let error = interpreter.eval(source).unwrap_err().to_string();
+        assert!(error.contains("got tuple"), "{error}");
+    }
+}
+
+#[test]
+fn interpreted_vmap_keeps_dependencies_on_the_primal() {
+    let mut interpreter = interpreter_only();
+    let result = interpreter.eval("(let [mapped (vmap (fn [x] (* x x)))]
+        ((value-and-grad (fn [p] (sum (mapped p)))) [1.0 2.0]))").unwrap();
+    let Value::List(values) = result else { panic!("{result:?}") };
+    assert_eq!(values[0].to_f64().unwrap(), 5.0);
+    let expected = interpreter.eval("[2.0 4.0]").unwrap();
+    compare_values(&values[1], &expected, "vmap derivative/interpreter").unwrap();
+}
+
+#[test]
 fn compiled_shape_results_keep_integer_values_on_host_and_device() {
     initialize_device();
     for (body, expected) in [

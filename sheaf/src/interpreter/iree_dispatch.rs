@@ -263,6 +263,7 @@ fn unpack_vag_result(result: &Value, original_params: &Value) -> Option<Value> {
     let grad = if elems.len() == 2 {
         match original_params {
             Value::Dict(map) => tuple_to_dict(&elems[1], map)?,
+            Value::List(values) => tuple_to_list(&elems[1], values)?,
             _ => elems[1].clone(),
         }
     } else {

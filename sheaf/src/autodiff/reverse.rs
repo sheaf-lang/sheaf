@@ -165,8 +165,8 @@ pub fn gradient_output<'a>(
     })
 }
 
-#[derive(Default)]
-struct AdjointState {
+struct AdjointState<'a> {
+    dependencies: &'a HashMap<String, bool>,
     names: HashMap<String, String>,
     reached_by_vjp: HashSet<String>,
     zero_contributions: HashSet<String>,
@@ -181,11 +181,18 @@ pub fn reverse_grad(
     wrt: &[String],
     shapes: &HashMap<String, Vec<i64>>,
 ) -> SheafResult<ReverseGradResult> {
-    let dependencies = analyze_anf_dependencies(anf_bindings, wrt);
-    let mut adj_names = AdjointState::default();
+    let requested: HashSet<String> = wrt.iter().cloned().collect();
+    let dependencies = analyze_anf_dependencies(anf_bindings, &requested);
+    let mut adj_names = AdjointState {
+        dependencies: &dependencies,
+        names: HashMap::new(),
+        reached_by_vjp: HashSet::new(),
+        zero_contributions: HashSet::new(),
+    };
     let mut backward_bindings: Vec<(String, CompiledExpr)> = Vec::new();
 
-    if let CompiledExpr::Symbol(s) = anf_body {
+    if let CompiledExpr::Symbol(s) = anf_body
+        && dependencies.get(s).copied().unwrap_or(false) {
         let seed_name = fresh_grad_name(&backward_bindings);
         backward_bindings.push((
             seed_name.clone(),
@@ -195,6 +202,10 @@ pub fn reverse_grad(
     }
 
     for (name, value) in anf_bindings.iter().rev() {
+        // A requested binding is a differentiation input, even when defined by an alias.
+        if requested.contains(name) {
+            continue;
+        }
         let adj_sym = match adj_names.names.get(name) {
             Some(s) => CompiledExpr::Symbol(s.clone()),
             None => continue,
@@ -230,19 +241,36 @@ pub fn reverse_grad(
         })
         .collect::<SheafResult<_>>()?;
 
+    retain_gradient_bindings(&mut backward_bindings, &grad_map);
     Ok(ReverseGradResult {
         backward_bindings,
         gradients: grad_map,
     })
 }
 
+/// Keep only the pure backward operations used by a requested gradient.
+fn retain_gradient_bindings(
+    bindings: &mut Vec<(String, CompiledExpr)>,
+    gradients: &HashMap<String, GradientOutput>,
+) {
+    let mut live: HashSet<String> = gradients.values().filter_map(|gradient| match gradient {
+        GradientOutput::Computed(name) => Some(name.clone()),
+        GradientOutput::ProvenZero => None,
+    }).collect();
+    for (name, expr) in bindings.iter().rev() {
+        if live.contains(name) {
+            crate::autodiff::collect_free_vars(expr, &mut live);
+        }
+    }
+    bindings.retain(|(name, _)| live.contains(name));
+}
+
 /// Mark every binding that depends on a parameter being differentiated.
 ///
-/// If an expression is not understood here, assume it depends on the parameter.
-/// This reports a missing derivative instead of silently returning zero.
+/// Propagate dependencies through each binding using the shared scope analysis.
 fn analyze_anf_dependencies(
     anf_bindings: &[(String, CompiledExpr)],
-    wrt: &[String],
+    wrt: &HashSet<String>,
 ) -> HashMap<String, bool> {
     let mut dependencies: HashMap<String, bool> = wrt
         .iter()
@@ -250,50 +278,12 @@ fn analyze_anf_dependencies(
         .collect();
 
     for (name, value) in anf_bindings {
-        let depends = anf_expr_depends_on_wrt(value, &dependencies);
+        let depends = wrt.contains(name)
+            || crate::autodiff::analysis::depends_on_in_env(value, &dependencies);
         dependencies.insert(name.clone(), depends);
     }
 
     dependencies
-}
-
-fn anf_expr_depends_on_wrt(expr: &CompiledExpr, dependencies: &HashMap<String, bool>) -> bool {
-    match expr {
-        CompiledExpr::Integer(_)
-        | CompiledExpr::Float(_)
-        | CompiledExpr::Boolean(_)
-        | CompiledExpr::Nil
-        | CompiledExpr::String(_)
-        | CompiledExpr::Keyword(_)
-        | CompiledExpr::Quoted(_)
-        | CompiledExpr::FunctionRef(_)
-        | CompiledExpr::GlobalRef(_)
-        | CompiledExpr::ValueAndGrad { .. } => false,
-        CompiledExpr::Symbol(name) => dependencies.get(name).copied().unwrap_or(false),
-        CompiledExpr::GetTupleElement { param, .. } => {
-            dependencies.get(param).copied().unwrap_or(false)
-        }
-        CompiledExpr::Vector(elems) | CompiledExpr::Tuple(elems) => elems
-            .iter()
-            .any(|elem| anf_expr_depends_on_wrt(elem, dependencies)),
-        CompiledExpr::Dict(pairs) => pairs.iter().any(|(key, value)| {
-            anf_expr_depends_on_wrt(key, dependencies)
-                || anf_expr_depends_on_wrt(value, dependencies)
-        }),
-        CompiledExpr::FunctionCall { name, .. } if name == "shape" => false,
-        CompiledExpr::FunctionCall { args, .. } => args
-            .iter()
-            .any(|arg| anf_expr_depends_on_wrt(arg, dependencies)),
-        CompiledExpr::Def { value, .. } => anf_expr_depends_on_wrt(value, dependencies),
-        CompiledExpr::Let { .. }
-        | CompiledExpr::If { .. }
-        | CompiledExpr::Do(_)
-        | CompiledExpr::Lambda { .. }
-        | CompiledExpr::LambdaCall { .. }
-        | CompiledExpr::Repeat { .. }
-        | CompiledExpr::While { .. }
-        | CompiledExpr::Guard { .. } => true,
-    }
 }
 
 fn accumulate_named(
@@ -302,6 +292,9 @@ fn accumulate_named(
     adj_names: &mut AdjointState,
     bindings: &mut Vec<(String, CompiledExpr)>,
 ) {
+    if !adj_names.dependencies.get(var_name).copied().unwrap_or(false) {
+        return;
+    }
     adj_names.reached_by_vjp.insert(var_name.to_string());
     if is_zero(&contribution) {
         adj_names.zero_contributions.insert(var_name.to_string());
@@ -443,6 +436,9 @@ fn distribute_adjoint_named(
 ) -> SheafResult<()> {
     let fwd_name = context.fwd_name;
     let dependencies = context.dependencies;
+    if !dependencies.get(fwd_name).copied().unwrap_or(true) {
+        return Ok(());
+    }
     match expr {
         CompiledExpr::Symbol(s) => {
             accumulate_named(s, adj_sym.clone(), adj_names, bindings);
@@ -625,7 +621,9 @@ fn distribute_fn_adjoint_named(
                         adj.clone(),
                         CompiledExpr::Vector(vec![CompiledExpr::Integer(1), CompiledExpr::Integer(n)]),
                     ]));
-                    let bt = emit_binding(bindings, call("transpose", vec![args[1].clone()]));
+                    let bt = emit_binding(bindings, call("swapaxes", vec![
+                        args[1].clone(), CompiledExpr::Integer(-1), CompiledExpr::Integer(-2),
+                    ]));
                     let da_2d = emit_binding(bindings, call("@", vec![sym(&adj_row), sym(&bt)]));
                     let m = b_shape[0];
                     let da = emit_binding(bindings, call("reshape", vec![
@@ -634,13 +632,17 @@ fn distribute_fn_adjoint_named(
                     ]));
                     acc_arg(&args[0], sym(&da), adj_names, bindings);
                 } else {
-                    let bt = emit_binding(bindings, call("transpose", vec![args[1].clone()]));
+                    let bt = emit_binding(bindings, call("swapaxes", vec![
+                        args[1].clone(), CompiledExpr::Integer(-1), CompiledExpr::Integer(-2),
+                    ]));
                     let da = emit_binding(bindings, call("@", vec![adj.clone(), sym(&bt)]));
                     let da_ub = maybe_unbroadcast(sym(&da), &args[0], shapes, bindings);
                     acc_arg(&args[0], da_ub, adj_names, bindings);
                 }
             } else {
-                let bt = emit_binding(bindings, call("transpose", vec![args[1].clone()]));
+                let bt = emit_binding(bindings, call("swapaxes", vec![
+                    args[1].clone(), CompiledExpr::Integer(-1), CompiledExpr::Integer(-2),
+                ]));
                 let da = emit_binding(bindings, call("@", vec![adj.clone(), sym(&bt)]));
                 let da_ub = maybe_unbroadcast(sym(&da), &args[0], shapes, bindings);
                 acc_arg(&args[0], da_ub, adj_names, bindings);
@@ -669,13 +671,17 @@ fn distribute_fn_adjoint_named(
                     let db_ub = maybe_unbroadcast(sym(&db), &args[1], shapes, bindings);
                     acc_arg(&args[1], db_ub, adj_names, bindings);
                 } else {
-                    let at = emit_binding(bindings, call("transpose", vec![args[0].clone()]));
+                    let at = emit_binding(bindings, call("swapaxes", vec![
+                        args[0].clone(), CompiledExpr::Integer(-1), CompiledExpr::Integer(-2),
+                    ]));
                     let db = emit_binding(bindings, call("@", vec![sym(&at), adj.clone()]));
                     let db_ub = maybe_unbroadcast(sym(&db), &args[1], shapes, bindings);
                     acc_arg(&args[1], db_ub, adj_names, bindings);
                 }
             } else {
-                let at = emit_binding(bindings, call("transpose", vec![args[0].clone()]));
+                let at = emit_binding(bindings, call("swapaxes", vec![
+                    args[0].clone(), CompiledExpr::Integer(-1), CompiledExpr::Integer(-2),
+                ]));
                 let db = emit_binding(bindings, call("@", vec![sym(&at), adj.clone()]));
                 let db_ub = maybe_unbroadcast(sym(&db), &args[1], shapes, bindings);
                 acc_arg(&args[1], db_ub, adj_names, bindings);
@@ -729,6 +735,33 @@ fn distribute_fn_adjoint_named(
                 call("__cast-like", vec![adj.clone(), args[0].clone()]),
             );
             acc_arg(&args[0], sym(&cast), adj_names, bindings);
+        }
+
+        "concat" if !args.is_empty() => {
+            let Some(shape) = arg_shape(&args[0], shapes) else {
+                return reject_missing_rule_if_dependent(name, fwd_name, dependencies, location);
+            };
+            let axis = parse_keyword_int(args, "axis").unwrap_or(0);
+            let axis = if axis < 0 { shape.len() as i64 + axis } else { axis };
+            let Some(axis) = usize::try_from(axis).ok().filter(|&axis| axis < shape.len()) else {
+                return reject_missing_rule_if_dependent(name, fwd_name, dependencies, location);
+            };
+            let mut start = 0;
+            for arg in args.iter().take_while(|arg| !matches!(arg, CompiledExpr::Keyword(_))) {
+                let Some(shape) = arg_shape(arg, shapes) else {
+                    return reject_missing_rule_if_dependent(name, fwd_name, dependencies, location);
+                };
+                let Some(&width) = shape.get(axis) else {
+                    return reject_missing_rule_if_dependent(name, fwd_name, dependencies, location);
+                };
+                let end = start + width;
+                let gradient = emit_binding(bindings, call("slice", vec![
+                    adj.clone(), CompiledExpr::Integer(start), CompiledExpr::Integer(end),
+                    CompiledExpr::Keyword("axis".into()), CompiledExpr::Integer(axis as i64),
+                ]));
+                acc_arg(arg, sym(&gradient), adj_names, bindings);
+                start = end;
+            }
         }
 
         "reshape" => {
@@ -811,33 +844,45 @@ fn distribute_fn_adjoint_named(
             acc_arg(&args[0], sym(&dr), adj_names, bindings);
         }
 
-        "sum" => {
-            if let Some(input_shape) = arg_shape(&args[0], shapes) {
-                let sv = shape_vec(&input_shape);
-                let dr = emit_binding(bindings, call("broadcast", vec![adj.clone(), sv]));
-                acc_arg(&args[0], sym(&dr), adj_names, bindings);
-            } else {
-                acc_arg(&args[0], adj.clone(), adj_names, bindings);
+        "sum" | "mean" if !args.is_empty() => {
+            let Some(input_shape) = arg_shape(&args[0], shapes) else {
+                if parse_keyword_int(args, "axis").is_some() {
+                    return reject_missing_rule_if_dependent(name, fwd_name, dependencies, location);
+                }
+                let ones = emit_binding(bindings, call("__ones-like", vec![args[0].clone()]));
+                let contribution = if name == "mean" {
+                    let count = emit_binding(bindings, call("sum", vec![sym(&ones)]));
+                    let scaled = emit_binding(bindings, call("/", vec![adj.clone(), sym(&count)]));
+                    sym(&scaled)
+                } else { adj.clone() };
+                let gradient = emit_binding(bindings, call("*", vec![contribution, sym(&ones)]));
+                acc_arg(&args[0], sym(&gradient), adj_names, bindings);
+                return Ok(());
+            };
+            let axis = parse_keyword_int(args, "axis").map(|axis| {
+                let axis = if axis < 0 { axis + input_shape.len() as i64 } else { axis };
+                usize::try_from(axis).ok().filter(|&axis| axis < input_shape.len())
+                    .ok_or_else(|| SheafError::Compile {
+                        message: format!("{name}: reduction axis out of range"),
+                        location: location.clone().unwrap_or_else(crate::core::error::SourceLocation::unknown),
+                    })
+            }).transpose()?;
+            let mut contribution = adj.clone();
+            if let Some(axis) = axis
+                && shapes.get(fwd_name).is_some_and(|shape| shape.len() < input_shape.len()) {
+                let mut expanded = input_shape.clone();
+                expanded[axis] = 1;
+                let reshaped = emit_binding(bindings, call("reshape", vec![contribution, shape_vec(&expanded)]));
+                contribution = sym(&reshaped);
             }
-        }
-
-        "mean" => {
-            if let Some(input_shape) = arg_shape(&args[0], shapes) {
-                let axis = parse_keyword_int(args, "axis");
-                let n: i64 = if let Some(ax) = axis {
-                    let ndim = input_shape.len();
-                    let ax_usize = if ax < 0 { (ndim as i64 + ax) as usize } else { ax as usize };
-                    input_shape[ax_usize]
-                } else {
-                    input_shape.iter().product()
-                };
-                let scale = emit_binding(bindings, call("/", vec![adj.clone(), float(n as f64)]));
-                let sv = shape_vec(&input_shape);
-                let dr = emit_binding(bindings, call("broadcast", vec![sym(&scale), sv]));
-                acc_arg(&args[0], sym(&dr), adj_names, bindings);
-            } else {
-                acc_arg(&args[0], adj.clone(), adj_names, bindings);
+            if name == "mean" {
+                let count = axis.map(|axis| input_shape[axis]).unwrap_or_else(|| input_shape.iter().product());
+                let scaled = emit_binding(bindings, call("/", vec![contribution, float(count as f64)]));
+                contribution = sym(&scaled);
             }
+            let broadcast = emit_binding(bindings, call("broadcast", vec![contribution, shape_vec(&input_shape)]));
+            let cast = emit_binding(bindings, call("__cast-like", vec![sym(&broadcast), args[0].clone()]));
+            acc_arg(&args[0], sym(&cast), adj_names, bindings);
         }
 
         "var" => {
@@ -880,9 +925,11 @@ fn distribute_fn_adjoint_named(
             }
             let fwd_val = emit_binding(bindings, call(name, fwd_args));
             let mask = emit_binding(bindings, call("==", vec![args[0].clone(), sym(&fwd_val)]));
+            let mask = emit_binding(bindings, call("__cast-like", vec![sym(&mask), args[0].clone()]));
             if let Some(input_shape) = arg_shape(&args[0], shapes) {
                 let sv = shape_vec(&input_shape);
                 let adj_bc = emit_binding(bindings, call("broadcast", vec![adj.clone(), sv]));
+                let adj_bc = emit_binding(bindings, call("__cast-like", vec![sym(&adj_bc), args[0].clone()]));
                 let dr = emit_binding(bindings, call("*", vec![sym(&adj_bc), sym(&mask)]));
                 acc_arg(&args[0], sym(&dr), adj_names, bindings);
             } else {
@@ -1041,7 +1088,12 @@ fn distribute_fn_adjoint_named(
                 call("__cast-like", vec![sym(&oh_f32), adj.clone()]),
             );
 
-            if is_scalar_index {
+            if is_scalar_index && arg_shape(&args[0], shapes).is_some_and(|shape| shape.len() == 1) {
+                let input_shape = arg_shape(&args[0], shapes).unwrap();
+                let mask = emit_binding(bindings, call("reshape", vec![sym(&oh), shape_vec(&input_shape)]));
+                let gradient = emit_binding(bindings, call("*", vec![sym(&mask), adj.clone()]));
+                acc_arg(&args[0], sym(&gradient), adj_names, bindings);
+            } else if is_scalar_index {
                 let oh_col = emit_binding(bindings, call("reshape", vec![
                     sym(&oh),
                     CompiledExpr::Vector(vec![sym(&v), CompiledExpr::Integer(1)]),
@@ -1054,10 +1106,18 @@ fn distribute_fn_adjoint_named(
                 let grad = maybe_unbroadcast(sym(&grad), &args[0], shapes, bindings);
                 acc_arg(&args[0], grad, adj_names, bindings);
             } else {
-                let oh_t = emit_binding(bindings, call("tr", vec![sym(&oh)]));
-                let grad = emit_binding(bindings, call("@", vec![sym(&oh_t), adj.clone()]));
-                let grad = maybe_unbroadcast(sym(&grad), &args[0], shapes, bindings);
-                acc_arg(&args[0], grad, adj_names, bindings);
+                let Some(input_shape) = arg_shape(&args[0], shapes) else {
+                    return reject_missing_rule_if_dependent(name, fwd_name, dependencies, location);
+                };
+                let width = input_shape[1..].iter().product();
+                let oh_flat = emit_binding(bindings, call("reshape", vec![sym(&oh),
+                    CompiledExpr::Vector(vec![CompiledExpr::Integer(-1), sym(&v)])]));
+                let oh_t = emit_binding(bindings, call("tr", vec![sym(&oh_flat)]));
+                let adj_flat = emit_binding(bindings, call("reshape", vec![adj.clone(),
+                    CompiledExpr::Vector(vec![CompiledExpr::Integer(-1), CompiledExpr::Integer(width)])]));
+                let grad = emit_binding(bindings, call("@", vec![sym(&oh_t), sym(&adj_flat)]));
+                let grad = emit_binding(bindings, call("reshape", vec![sym(&grad), shape_vec(&input_shape)]));
+                acc_arg(&args[0], sym(&grad), adj_names, bindings);
             }
         }
 
@@ -1106,6 +1166,17 @@ fn parse_keyword_int(args: &[CompiledExpr], key: &str) -> Option<i64> {
 fn arg_shape(arg: &CompiledExpr, shapes: &HashMap<String, Vec<i64>>) -> Option<Vec<i64>> {
     match arg {
         CompiledExpr::Symbol(s) => shapes.get(s).cloned(),
+        CompiledExpr::Integer(_) | CompiledExpr::Float(_) | CompiledExpr::Boolean(_) => Some(Vec::new()),
+        CompiledExpr::Vector(values) => {
+            let element_shape = match values.first() {
+                Some(value) => arg_shape(value, shapes)?,
+                None => Vec::new(),
+            };
+            if values.iter().any(|value| arg_shape(value, shapes).as_ref() != Some(&element_shape)) { return None; }
+            let mut shape = vec![values.len() as i64];
+            shape.extend(element_shape);
+            Some(shape)
+        }
         _ => None,
     }
 }
@@ -1163,6 +1234,41 @@ mod tests {
                 operation: actual, ..
             } if actual == operation
         ));
+    }
+
+    #[test]
+    fn only_requested_operands_receive_adjoints() {
+        let bindings = vec![("result".to_string(), call("*", vec![symbol("x"), symbol("weight")]))];
+        let shapes = HashMap::from([
+            ("x".to_string(), Vec::new()),
+            ("weight".to_string(), Vec::new()),
+            ("result".to_string(), Vec::new()),
+        ]);
+        let requested = reverse_grad(&bindings, &symbol("result"), &["x".to_string()], &shapes).unwrap();
+        assert!(matches!(requested.gradients["x"], GradientOutput::Computed(_)));
+        assert!(!requested.backward_bindings.iter().any(|(_, expr)| {
+            matches!(expr, CompiledExpr::FunctionCall { name, args, .. }
+                if name == "*" && args.iter().any(|arg| matches!(arg, CompiledExpr::Symbol(name) if name == "x")))
+        }));
+        // The constant weight is still a primal operand of the requested gradient.
+        assert!(requested.backward_bindings.iter().any(|(_, expr)| {
+            matches!(expr, CompiledExpr::FunctionCall { name, args, .. }
+                if name == "*" && args.iter().any(|arg| matches!(arg, CompiledExpr::Symbol(name) if name == "weight")))
+        }));
+        let both = reverse_grad(
+            &bindings, &symbol("result"), &["x".to_string(), "weight".to_string()], &shapes,
+        ).unwrap();
+        assert!(matches!(both.gradients["weight"], GradientOutput::Computed(_)));
+    }
+
+    #[test]
+    fn a_parameter_independent_output_needs_no_backward_bindings() {
+        let bindings = vec![("result".to_string(), call("unknown", vec![symbol("constant")]))];
+        let result = reverse_grad(
+            &bindings, &symbol("result"), &["x".to_string()], &HashMap::new(),
+        ).unwrap();
+        assert!(result.backward_bindings.is_empty());
+        assert_eq!(result.gradients["x"], GradientOutput::ProvenZero);
     }
 
     #[test]
@@ -1259,7 +1365,7 @@ mod tests {
             &HashMap::new(),
         ).unwrap();
 
-        assert_eq!(backward_bindings.len(), 1);
+        assert!(backward_bindings.is_empty());
         assert!(matches!(
             gradients.get("x"),
             Some(GradientOutput::ProvenZero)

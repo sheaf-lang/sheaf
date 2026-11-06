@@ -36,7 +36,7 @@ fn bind_pattern(pattern: &BindingPattern, depends: bool, env: &mut HashMap<Strin
     }
 }
 
-fn depends_on_in_env(expr: &CompiledExpr, env: &HashMap<String, bool>) -> bool {
+pub(crate) fn depends_on_in_env(expr: &CompiledExpr, env: &HashMap<String, bool>) -> bool {
     match expr {
         CompiledExpr::Integer(_)
         | CompiledExpr::Float(_)
@@ -58,6 +58,8 @@ fn depends_on_in_env(expr: &CompiledExpr, env: &HashMap<String, bool>) -> bool {
         CompiledExpr::Dict(pairs) => pairs
             .iter()
             .any(|(key, value)| depends_on_in_env(key, env) || depends_on_in_env(value, env)),
+        CompiledExpr::FunctionCall { name, .. }
+            if matches!(name.as_str(), "shape" | "ndim") => false,
         CompiledExpr::FunctionCall { args, .. } => {
             args.iter().any(|arg| depends_on_in_env(arg, env))
         }

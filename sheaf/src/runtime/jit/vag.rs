@@ -407,7 +407,7 @@ impl JitCompiler {
                                     leaves.len()
                                 );
                             }
-                            expanded_body = expand_tuple_to_symbols(&expanded_body, param_name);
+                            expanded_body = expand_tuple_to_symbols(&expanded_body, param_name, param_ty);
                             for leaf in &leaves {
                                 all_wrt_symbols.push(leaf.symbol.clone());
                             }

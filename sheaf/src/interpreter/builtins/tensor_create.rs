@@ -206,7 +206,11 @@ fn builtin_cast_like(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
     if args.len() != 2 {
         return Err(runtime_error("__cast-like expects two arguments"));
     }
-    let target = match &args[1] {
+    cast_like(&args[0], &args[1])
+}
+
+pub(crate) fn cast_like(value: &Value, reference: &Value) -> R {
+    let target = match reference {
         Value::Tensor { dtype, .. } => *dtype,
         Value::DeviceBuffer(buffer) => buffer.dtype,
         Value::Float(_) => Dtype::F32,
@@ -216,5 +220,5 @@ fn builtin_cast_like(args: &[Value], _kw: &BTreeMap<String, Value>) -> R {
             other.type_name()
         ))),
     };
-    cast_value(&args[0], target)
+    cast_value(value, target)
 }
