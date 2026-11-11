@@ -210,6 +210,28 @@ fn vag_integer_captures_preserve_exact_differences_in_vmfb() {
 }
 
 #[test]
+fn ellipsis_get_slices_the_last_axis_in_direct_vmfb() {
+    initialize_device();
+    let mut interpreter = interpreter_only();
+    interpreter.eval("(defn ellipsis_last_axis [x i] (get x ... i))").unwrap();
+    let body = interpreter.registry_get("ellipsis_last_axis").unwrap().body_compiled.as_deref().unwrap();
+    assert!(matches!(body, CompiledExpr::FunctionCall { name, args, .. }
+        if name == "get" && matches!(&args[1], CompiledExpr::Keyword(value) if value == "...")));
+    for (input, index, expected) in [
+        ("(tensor '[1.0 2.0 3.0])", 1, "2.0"),
+        ("(reshape (tensor '[1.0 2.0 3.0 4.0 5.0 6.0]) '[2 3])", 0, "[1.0 4.0]"),
+        ("(reshape (tensor '[1.0 2.0 3.0 4.0 5.0 6.0]) '[2 3])", -1, "[3.0 6.0]"),
+        ("(reshape (tensor '[1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0 11.0 12.0]) '[2 2 3])",
+            1, "(reshape (tensor '[2.0 5.0 8.0 11.0]) '[2 2])"),
+    ] {
+        let args = [interpreter.eval(input).unwrap(), Value::Int(index)];
+        let expected = interpreter.eval(expected).unwrap();
+        let actual = compile_call(&interpreter, "ellipsis_last_axis", &args).unwrap().execute(&args).unwrap();
+        compare_values(&actual, &expected, "ellipsis get/VMFB").unwrap();
+    }
+}
+
+#[test]
 fn shape_dimensions_reject_floats_in_interpreter_and_direct_vmfb() {
     initialize_device();
     let mut interpreter = interpreter_only();

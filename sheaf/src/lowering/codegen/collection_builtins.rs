@@ -367,7 +367,7 @@ impl<'a> CodeGenerator<'a> {
                         }
                         Ok((reg, ty))
                     }
-                    CompiledExpr::Symbol(s) if s == "..." => {
+                    CompiledExpr::Symbol(s) | CompiledExpr::Keyword(s) if s == "..." => {
                         if args.len() >= 3 {
                             if let CompiledExpr::Integer(idx) = &args[2] {
                                 let shape = operand_ty.shape();
