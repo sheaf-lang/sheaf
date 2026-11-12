@@ -6,7 +6,14 @@ package(default_visibility = ["//visibility:public"])
 rust_test(
     name = "unit",
     crate = "//sheaf:compiler_lib",
-    data = ["@iree_compiler//:iree-compile"],
+    data = [
+        "@iree_compiler//:iree-compile",
+        "//:examples/clevr/data.shf",
+        "//:examples/clevr/model.shf",
+        "//:examples/clevr/utils.shf",
+        "//:examples/clevr/params.pkl",
+        "regressions.shf",
+    ],
     env = {
         "IREE_COMPILE": "$(rootpath @iree_compiler//:iree-compile)",
         "RUST_TEST_THREADS": "1",

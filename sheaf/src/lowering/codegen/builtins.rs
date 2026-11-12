@@ -159,10 +159,14 @@ impl<'a> CodeGenerator<'a> {
             self.generate_tree_reduce(lambda, tree_reg, &tree_ty, acc_reg, &acc_ty)
         }
         else {
-            Err(SheafError::Compile {
-                message: format!("Function call not yet supported: {} (arity {})", name, args.len()),
-                location: crate::core::error::SourceLocation::unknown(),
-            })
+            let message = format!("{name} is not supported by the compiler with {} arguments", args.len());
+            let location = crate::core::error::SourceLocation::unknown();
+            match crate::core::signature::OpId::resolve(name) {
+                Some(op) => Err(SheafError::CompilerUnsupported {
+                    construct: crate::core::jit_diagnostic::Construct::Operation(op), message, location,
+                }),
+                None => Err(SheafError::Compile { message, location }),
+            }
         }
     }
 

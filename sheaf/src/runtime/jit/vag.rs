@@ -29,15 +29,6 @@ fn leaf_type_at(
     Ok(current.clone())
 }
 
-fn preserves_structured_vag_error(error: &crate::core::error::SheafError) -> bool {
-    matches!(
-        error,
-        crate::core::error::SheafError::AutodiffMissingGradientOutput { .. }
-            | crate::core::error::SheafError::AutodiffMissingRule { .. }
-            | crate::core::error::SheafError::InvalidShapeDimension { .. }
-    )
-}
-
 fn zero_gradient_expr(ty: &StableHLOType) -> CompiledExpr {
     let shape = ty.shape();
     if shape.is_empty() {
@@ -65,9 +56,10 @@ impl JitCompiler {
         wrt_arg: &Value,
         registry: &HashMap<String, FunctionDef>,
         shared_session: &std::sync::Arc<crate::runtime::iree_session::IreeSession>,
-    ) -> Option<(String, FunctionSignature, Vec<String>)> {
-        self.last_vag_error = None;
-        let iree_compile = self.iree_compile_path.clone()?;
+    ) -> Result<(String, FunctionSignature, Vec<String>), JitDiagnostic> {
+        let iree_compile = self.iree_compile_path.clone().ok_or(JitDiagnostic::Environment {
+            message: "Compiler toolchain unavailable".into(), hint: "Install curl and unzip, or set IREE_COMPILE.",
+        })?;
 
         let (fn_params, body, closure) = match func {
             Value::Function {
@@ -76,10 +68,8 @@ impl JitCompiler {
                 closure,
                 ..
             } => (params, body, closure),
-            _ => return None,
+            _ => return Err(JitDiagnostic::UserError(crate::interpreter::env::runtime_error("value-and-grad expects a function"))),
         };
-
-        let vag_fn_name = outermost_call_name(body).unwrap_or("anonymous".to_string());
 
         // Include wrt_arg type so shape changes (e.g. after grow-hydra) cause a cache miss.
         let wrt_type_str = value_to_stablehlo_type(wrt_arg)
@@ -93,20 +83,40 @@ impl JitCompiler {
                 crate::core::inference::ValueLayout::from_value(value))
         }).collect();
         let vag_key = format!("__vag_{:?}_{}_{:?}_{:?}", body, wrt_type_str, static_values, capture_types);
-        if self.failed_vag.contains(&vag_key) {
-            return None;
+        if let Some(diagnostic) = self.failed_vag.get(&vag_key) {
+            return Err(diagnostic.clone());
         }
-
         if let Some(cached) = self.vag_cache.get(&vag_key) {
-            return Some(cached.clone());
+            return Ok(cached.clone());
         }
+        let result = self.compile_vag(func, wrt_arg, registry, shared_session, &iree_compile, &vag_key);
+        if let Err(diagnostic) = &result {
+            self.failed_vag.insert(vag_key, diagnostic.clone());
+        }
+        result
+    }
 
+    fn compile_vag(
+        &mut self, func: &Value, wrt_arg: &Value, registry: &HashMap<String, FunctionDef>,
+        shared_session: &std::sync::Arc<crate::runtime::iree_session::IreeSession>,
+        iree_compile: &str, vag_key: &str,
+    ) -> Result<(String, FunctionSignature, Vec<String>), JitDiagnostic> {
+        let Value::Function { params: fn_params, body, closure, .. } = func else {
+            return Err(JitDiagnostic::Internal("Prepared value-and-grad function is not a function".into()));
+        };
+        let vag_fn_name = outermost_call_name(body).unwrap_or("anonymous".into());
         // Skip impure or HOF-containing bodies
-        if !collect_effects(body).is_empty() {
-            return None;
+        let effects = collect_effects(body);
+        if !effects.is_empty() {
+            let constructs = effects.iter().map(|site| Construct::named(&site.name)
+                .ok_or_else(|| JitDiagnostic::Internal(format!("Unknown effect '{}'", site.name))))
+                .collect::<Result<Vec<_>, _>>()?;
+            return Err(JitDiagnostic::Interpreted(InterpretedReason::Effects(constructs)));
         }
-        if !collect_hof_calls(body).is_empty() {
-            return None;
+        if let Some(name) = collect_hof_calls(body).first() {
+            let construct = Construct::named(name)
+                .ok_or_else(|| JitDiagnostic::Internal(format!("Unknown higher-order operation '{name}'")))?;
+            return Err(JitDiagnostic::from_hof(construct));
         }
 
         let mut all_param_names: Vec<String> = Vec::new();
@@ -126,8 +136,7 @@ impl JitCompiler {
                 all_param_names.push(cap_name.clone());
                 all_arg_values.push(cap_val.clone());
             } else {
-                self.jit_fail(&vag_key, &format!("unsupported capture type for '{}'", cap_name));
-                return None;
+                return Err(JitDiagnostic::Interpreted(InterpretedReason::NonTensorArgument(cap_name.clone())));
             }
         }
 
@@ -140,13 +149,7 @@ impl JitCompiler {
         for (param_name, arg_val) in all_param_names.iter().zip(all_arg_values.iter()) {
             let ty = match value_to_stablehlo_type(arg_val) {
                 Ok(ty) => ty,
-                Err(e) => {
-                    self.jit_fail(
-                        &vag_key,
-                        &format!("arg '{}' has {}", param_name, e.short_message()),
-                    );
-                    return None;
-                }
+                Err(_) => return Err(JitDiagnostic::Interpreted(InterpretedReason::NonTensorArgument(param_name.clone()))),
             };
 
             if let Some(layout) = value_to_param_layout(param_name, arg_val) {
@@ -162,8 +165,7 @@ impl JitCompiler {
         if let Err(error) = super::validate_shape_positions(
             &all_param_names, &all_arg_values, crate::lowering::transforms::collect_shape_gtes(&body),
         ) {
-            self.last_vag_error = Some(error);
-            return None;
+            return Err(JitDiagnostic::UserError(error));
         }
         let all_static_inputs = static_inputs::collect(&all_arg_values);
         let capture_static_inputs: Vec<_> = all_static_inputs.iter()
@@ -177,10 +179,7 @@ impl JitCompiler {
             &known_types,
         ) {
             Ok(s) => s,
-            Err(e) => {
-                self.jit_fail(&vag_key, &format!("signature inference: {}", e));
-                return None;
-            }
+            Err(error) => return Err(JitDiagnostic::from_codegen(error)),
         };
 
         for (param_name, ty) in &known_types {
@@ -240,14 +239,9 @@ impl JitCompiler {
         // Bail out if inlining produced a graph that is too large
         let node_count = expr_node_count(&body);
         if node_count > MAX_VAG_GRAPH_NODES {
-            self.jit_fail(
-                &vag_key,
-                &format!(
-                    "graph too large after inlining ({} nodes, limit {})",
-                    node_count, MAX_VAG_GRAPH_NODES
-                ),
-            );
-            return None;
+            return Err(JitDiagnostic::Unsupported(UnsupportedReason::GraphLimit {
+                phase: GraphPhase::Inlining, nodes: node_count, limit: MAX_VAG_GRAPH_NODES,
+            }, None));
         }
 
         // Fold dict literal gets: (get {:gamma g :beta b} :gamma) -> g
@@ -285,14 +279,9 @@ impl JitCompiler {
         // Bail out if unrolling produced a graph that is too large
         let node_count = expr_node_count(&body);
         if node_count > MAX_VAG_GRAPH_NODES {
-            self.jit_fail(
-                &vag_key,
-                &format!(
-                    "graph too large after unrolling ({} nodes, limit {})",
-                    node_count, MAX_VAG_GRAPH_NODES
-                ),
-            );
-            return None;
+            return Err(JitDiagnostic::Unsupported(UnsupportedReason::GraphLimit {
+                phase: GraphPhase::Unrolling, nodes: node_count, limit: MAX_VAG_GRAPH_NODES,
+            }, None));
         }
 
         // Re-lower dict access introduced by unrolling (get on GetTupleElement elements)
@@ -329,10 +318,7 @@ impl JitCompiler {
             &param_shapes,
         ) {
             Ok(b) => b,
-            Err(e) => {
-                self.jit_fail("value_and_grad", &e.short_message());
-                return None;
-            }
+            Err(error) => return Err(JitDiagnostic::from_codegen(error)),
         };
 
         // Build key layouts for codegen
@@ -591,18 +577,8 @@ impl JitCompiler {
 
         let (mlir_decl, return_type) = match codegen_result {
             Ok(Ok(result)) => result,
-            Ok(Err(e)) if preserves_structured_vag_error(&e) => {
-                self.last_vag_error = Some(e);
-                return None;
-            }
-            Ok(Err(e)) => {
-                self.jit_fail(&vag_key, &format!("codegen: {}", e));
-                return None;
-            }
-            Err(_) => {
-                self.jit_fail(&vag_key, "codegen: internal panic");
-                return None;
-            }
+            Ok(Err(error)) => return Err(JitDiagnostic::from_codegen(error)),
+            Err(payload) => return Err(JitDiagnostic::codegen_panic(payload)),
         };
 
         sig.return_type = return_type;
@@ -648,10 +624,7 @@ impl JitCompiler {
                     }
                     d
                 }
-                Err(_) => {
-                    self.jit_fail(&vag_key, "failed to read cached compilation");
-                    return None;
-                }
+                Err(_) => self.run_iree_compile(iree_compile, "value_and_grad", &mlir, &backend)?,
             }
         } else {
             // Debug: save a copy for inspection
@@ -661,18 +634,11 @@ impl JitCompiler {
                 sheaf_msg!("jit: value-and-grad | saved {}", debug_path.display());
             }
 
-            let data = match self.run_iree_compile(&iree_compile, "value_and_grad", &mlir, &backend)
-            {
-                Some(d) => d,
-                None => {
-                    self.jit_fail(&vag_key, "compilation failed on all backends");
-                    return None;
-                }
-            };
-
-            let _ = std::fs::create_dir_all(&cache_dir);
-            let _ = std::fs::write(&cached_vmfb, &data);
-            update_manifest(&cache_dir, &vag_cache_name, &content_hash);
+            let data = self.run_iree_compile(iree_compile, "value_and_grad", &mlir, &backend)?;
+            std::fs::create_dir_all(&cache_dir).map_err(|e| JitDiagnostic::io("Cannot create compilation cache", e))?;
+            std::fs::write(&cached_vmfb, &data).map_err(|e| JitDiagnostic::io("Cannot write compilation cache", e))?;
+            update_manifest(&cache_dir, &vag_cache_name, &content_hash)
+                .map_err(|e| JitDiagnostic::io("Cannot write compilation manifest", e))?;
 
             data
         };
@@ -681,13 +647,12 @@ impl JitCompiler {
         // same rationale as `compile_function`).
         if let Err(e) = shared_session.load_vmfb(vmfb_data) {
             let _ = std::fs::remove_file(&cached_vmfb);
-            self.jit_fail(&vag_key, &format!("JIT load: {}", e));
-            return None;
+            return Err(JitDiagnostic::Internal(format!("Cannot load compiled module: {e}")));
         }
 
         let result = (vag_module_name, sig, all_param_names);
-        self.vag_cache.insert(vag_key, result.clone());
-        Some(result)
+        self.vag_cache.insert(vag_key.into(), result.clone());
+        Ok(result)
     }
 
     /// Run iree-compile on MLIR source for the given backend.
@@ -698,7 +663,7 @@ impl JitCompiler {
         name: &str,
         mlir: &str,
         backend: &str,
-    ) -> Option<Vec<u8>> {
+    ) -> Result<Vec<u8>, JitDiagnostic> {
         if crate::core::config::verbosity() >= 1 {
             sheaf_msg!("jit: compiling {} [{}]...", name, backend);
         }
@@ -706,27 +671,18 @@ impl JitCompiler {
         let safe_name = name.replace('?', "_q").replace('!', "_b");
         let stamp = std::process::id();
         let cache_dir = std::path::PathBuf::from("__sheaf__");
-        let _ = std::fs::create_dir_all(&cache_dir);
+        std::fs::create_dir_all(&cache_dir).map_err(|e| JitDiagnostic::io("Cannot create compilation cache", e))?;
         let mlir_path = cache_dir.join(format!("{}-{}.mlir", safe_name, stamp));
         let vmfb_path = cache_dir.join(format!("{}-{}.vmfb", safe_name, stamp));
 
-        if std::fs::write(&mlir_path, mlir).is_err() {
-            sheaf_msg!("sheaf: failed to write temp MLIR, aborting");
-            std::process::exit(1);
-        }
-
-        let stderr_cfg = if crate::core::config::verbosity() >= 2 {
-            std::process::Stdio::inherit()
-        } else {
-            std::process::Stdio::null()
-        };
+        std::fs::write(&mlir_path, mlir).map_err(|e| JitDiagnostic::io("Cannot write compiler input", e))?;
 
         let mut cmd = std::process::Command::new(iree_compile);
         cmd.arg(&mlir_path)
             .arg(format!("--iree-hal-target-backends={}", backend))
             .arg("-o")
             .arg(&vmfb_path)
-            .stderr(stderr_cfg);
+            .stderr(std::process::Stdio::piped());
         if backend == "metal-spirv" {
             cmd.arg("--iree-metal-compile-to-metallib=false");
         }
@@ -742,7 +698,7 @@ impl JitCompiler {
             cmd.arg("--iree-llvmcpu-enable-ukernels=all");
             cmd.arg("--iree-opt-data-tiling");
         }
-        let status = cmd.status();
+        let output = cmd.output();
 
         if crate::core::config::verbosity() >= 2 {
             let debug_mlir = cache_dir.join(format!("{}-debug.mlir", safe_name));
@@ -752,56 +708,18 @@ impl JitCompiler {
             let _ = std::fs::remove_file(&mlir_path);
         }
 
-        let ok = match &status {
-            Ok(s) => s.success(),
-            Err(_) => false,
+        let output = output.map_err(|e| JitDiagnostic::Environment {
+            message: format!("Cannot execute iree-compile: {e}"),
+            hint: "Check the toolchain installation or set IREE_COMPILE.",
+        })?;
+        let result = if output.status.success() {
+            std::fs::read(&vmfb_path).map_err(|e| JitDiagnostic::io("Cannot read compiler output", e))
+        } else {
+            Err(JitDiagnostic::Internal(format!("iree-compile failed ({}): {}",
+                output.status, String::from_utf8_lossy(&output.stderr).trim())))
         };
-
-        if ok && let Ok(data) = std::fs::read(&vmfb_path) {
-            let _ = std::fs::remove_file(&vmfb_path);
-            return Some(data);
-        }
         let _ = std::fs::remove_file(&vmfb_path);
-        None
+        result
     }
 
-    pub(super) fn jit_fail(&mut self, name: &str, reason: &str) {
-        if name.starts_with("__vag_") {
-            self.failed_vag.insert(name.to_string());
-            self.last_vag_fail_reason = Some(reason.to_string());
-        } else {
-            self.last_compile_failure = Some(reason.to_string());
-        }
-        let display_name = if name.starts_with("__vag_") {
-            "value-and-grad"
-        } else {
-            name
-        };
-        if crate::core::config::verbosity() >= 1 {
-            sheaf_msg!("jit: {} skipped ({})", display_name, reason);
-        }
-    }
-
-    /// Classify the last VAG skip reason as legitimate (unsupported pattern)
-    /// or a bug (JIT should handle but failed).
-    pub fn classify_vag_skip(&self) -> JitVagOutcome {
-        if let Some(error) = &self.last_vag_error {
-            return JitVagOutcome::Success(Err(error.clone()));
-        }
-        match &self.last_vag_fail_reason {
-            None => JitVagOutcome::Unsupported,
-            Some(reason) => {
-                let legit = reason.starts_with("has HOF calls")
-                    || reason.starts_with("scalar-only")
-                    || reason.starts_with("unsupported capture type")
-                    || reason.starts_with("graph too large")
-                    || reason.contains("Function call not yet supported");
-                if legit {
-                    JitVagOutcome::Unsupported
-                } else {
-                    JitVagOutcome::Bug(reason.clone())
-                }
-            }
-        }
-    }
 }

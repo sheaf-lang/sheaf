@@ -50,6 +50,8 @@ pub fn format_error(error: &SheafError) -> String {
             }
         }
         SheafError::Compile { message, location }
+        | SheafError::CompilerUnsupported { message, location, .. }
+        | SheafError::CompilerInvariant { message, location }
         | SheafError::InvalidSourceForm { message, location }
         | SheafError::InvalidShapeDimension { message, location } => {
             parts.push(format!("error: {}", message));

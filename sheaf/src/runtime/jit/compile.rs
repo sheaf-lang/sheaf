@@ -28,12 +28,12 @@ impl JitCompiler {
         let name = &func_def.name;
         // Cache-key construction performs shape analysis with call inlining.
         // Establish eligibility first, including the negative definition cache.
-        if !self.preflight_jit_eligibility(func_def, registry) {
-            let identity = function_definition_identity(func_def, registry);
-            return JitCompileOutcome::Unsupported(self.failed_definitions[&identity].clone());
+        if let Err(diagnostic) = self.preflight_jit_eligibility(func_def, registry) {
+            return diagnostic.into();
         }
         let Some(iree_compile) = self.iree_compile_path.clone() else {
-            return JitCompileOutcome::Failed("compiler toolchain unavailable".to_string());
+            return JitDiagnostic::Environment { message: "Compiler toolchain unavailable".into(),
+                hint: "Install curl and unzip, or set IREE_COMPILE." }.into();
         };
 
         // The session's active driver is the source of truth for compilation.
@@ -44,13 +44,13 @@ impl JitCompiler {
         // Success and failure caches use the same variant identity.
         let Some(cache_key) = cache_key_for_eligible_function(func_def, args, registry) else {
             return if func_def.body_compiled.is_none() {
-                JitCompileOutcome::Unsupported("no compiled function body".to_string())
+                JitCompileOutcome::Interpreted(InterpretedReason::NoCompiledBody)
             } else {
-                JitCompileOutcome::Failed("cannot compute JIT cache key".to_string())
+                JitCompileOutcome::Failed(JitDiagnostic::Internal("Cannot compute JIT cache key".into()))
             };
         };
         if let Some(reason) = self.failed_definitions.get(&cache_key.definition_hash) {
-            return JitCompileOutcome::Unsupported(reason.clone());
+            return reason.clone().into();
         }
 
         // (1) Success cache hit: the module is already loaded into the shared
@@ -64,7 +64,7 @@ impl JitCompiler {
         // (2) Failure cache hit: this exact (fn, shape) was tried before and
         // the compile failed. Don't retry.
         if let Some(reason) = self.failed_keys.get(&cache_key) {
-            return JitCompileOutcome::Failed(reason.clone());
+            return reason.clone().into();
         }
 
         // Skip scalar-only functions (no benefit from IREE)
@@ -75,10 +75,7 @@ impl JitCompiler {
             )
         });
         if !has_tensor {
-            self.failed_definitions
-                .insert(cache_key.definition_hash.clone(), "scalar-only args".to_string());
-            self.jit_fail(name, "scalar-only args");
-            return JitCompileOutcome::Unsupported("scalar-only args".to_string());
+            return JitCompileOutcome::Interpreted(InterpretedReason::ScalarOnly);
         }
 
         let module_name = module_name_for(name, &cache_key);
@@ -93,8 +90,9 @@ impl JitCompiler {
                     "ERROR jit: module fingerprint collision for {} (refusing to load)",
                     module_name
                 );
-                self.failed_keys.insert(cache_key, "module fingerprint collision".to_string());
-                return JitCompileOutcome::Failed("module fingerprint collision".to_string());
+                let diagnostic = JitDiagnostic::Internal("Module fingerprint collision".into());
+                self.failed_keys.insert(cache_key, diagnostic.clone());
+                return diagnostic.into();
             }
 
         // Reserve the variant without holding the catalogue lock during compilation.
@@ -118,15 +116,11 @@ impl JitCompiler {
             target_backend: &backend,
             cache_key: &cache_key,
         };
-        self.last_compile_failure = None;
         let sig = match self.compile_function(request) {
-            Some(x) => x,
-            None => {
-                // The reservation guard removes the in-flight marker.
-                let reason = self.last_compile_failure.take()
-                    .unwrap_or_else(|| "JIT compilation returned no module".to_string());
-                self.failed_keys.insert(cache_key, reason.clone());
-                return JitCompileOutcome::Failed(reason);
+            Ok(signature) => signature,
+            Err(diagnostic) => {
+                self.failed_keys.insert(cache_key, diagnostic.clone());
+                return diagnostic.into();
             }
         };
         let info = CompiledModuleInfo {
@@ -189,7 +183,7 @@ impl JitCompiler {
     fn compile_function(
         &mut self,
         request: CompileRequest<'_>,
-    ) -> Option<FunctionSignature> {
+    ) -> Result<FunctionSignature, JitDiagnostic> {
         let CompileRequest {
             iree_compile,
             func_def,
@@ -212,17 +206,10 @@ impl JitCompiler {
             lowered,
         )?;
 
-        if !self.compile_and_load_module(
-            &iree_compile,
-            name,
-            &emitted.mlir,
-            target_backend,
-            shared_session,
-        ) {
-            return None;
-        }
-
-        Some(emitted.signature)
+        self.compile_and_load_module(
+            &iree_compile, name, &emitted.mlir, target_backend, shared_session,
+        )?;
+        Ok(emitted.signature)
     }
 
     /// Infers the signature and lowers runtime argument layouts.
@@ -230,9 +217,10 @@ impl JitCompiler {
         &mut self,
         func_def: &FunctionDef,
         args: &[Value],
-    ) -> Option<PreparedFunction> {
+    ) -> Result<PreparedFunction, JitDiagnostic> {
         let name = &func_def.name;
-        let mut body = func_def.body_compiled.as_deref()?.clone();
+        let mut body = func_def.body_compiled.as_deref()
+            .ok_or(JitDiagnostic::Interpreted(InterpretedReason::NoCompiledBody))?.clone();
         let mut known_types: Vec<(String, StableHLOType)> = Vec::new();
         let mut param_index_maps = ParamIndexMaps::new();
         let mut constants: HashMap<(String, Vec<usize>), i64> = HashMap::new();
@@ -240,13 +228,7 @@ impl JitCompiler {
         for (param_name, arg_val) in func_def.params.iter().zip(args) {
             let ty = match value_to_stablehlo_type(arg_val) {
                 Ok(ty) => ty,
-                Err(e) => {
-                    self.jit_fail(
-                        name,
-                        &format!("arg '{}' has {}", param_name, e.short_message()),
-                    );
-                    return None;
-                }
+                Err(_) => return Err(JitDiagnostic::Interpreted(InterpretedReason::NonTensorArgument(param_name.clone()))),
             };
             if let Some(layout) = value_to_param_layout(param_name, arg_val) {
                 let imap = layout_to_index_map(&layout);
@@ -264,10 +246,7 @@ impl JitCompiler {
             &known_types,
         ) {
             Ok(signature) => signature,
-            Err(e) => {
-                self.jit_fail(name, &format!("signature inference: {}", e));
-                return None;
-            }
+            Err(error) => return Err(JitDiagnostic::from_codegen(error)),
         };
 
         for (param_name, ty) in &known_types {
@@ -279,7 +258,7 @@ impl JitCompiler {
         log_inferred_signature(name, &func_def.params, &signature, &param_index_maps);
         capture_argument_layouts(args, &mut signature);
 
-        Some(PreparedFunction {
+        Ok(PreparedFunction {
             body,
             signature,
             known_types,
@@ -295,7 +274,7 @@ impl JitCompiler {
         func_def: &FunctionDef,
         registry: &HashMap<String, FunctionDef>,
         prepared: PreparedFunction,
-    ) -> Option<LoweredFunction> {
+    ) -> Result<LoweredFunction, JitDiagnostic> {
         let PreparedFunction {
             mut body,
             signature,
@@ -338,8 +317,7 @@ impl JitCompiler {
         };
         body = self.preprocess_vag_lambda(&body, &preprocess_context);
         if let Some(err) = arity_err.into_inner() {
-            self.jit_fail(&func_def.name, &err.short_message());
-            return None;
+            return Err(JitDiagnostic::from_codegen(err));
         }
 
         body = resolve_static_constants(&body, &filtered_constants, &param_shapes, false);
@@ -348,13 +326,10 @@ impl JitCompiler {
             &param_shapes,
         ) {
             Ok(body) => body,
-            Err(e) => {
-                self.jit_fail(&func_def.name, &e.short_message());
-                return None;
-            }
+            Err(error) => return Err(JitDiagnostic::from_codegen(error)),
         };
 
-        Some(LoweredFunction {
+        Ok(LoweredFunction {
             body,
             signature,
             param_index_maps,
@@ -370,7 +345,7 @@ impl JitCompiler {
         registry: &HashMap<String, FunctionDef>,
         module_name: &str,
         lowered: LoweredFunction,
-    ) -> Option<EmittedFunction> {
+    ) -> Result<EmittedFunction, JitDiagnostic> {
         let LoweredFunction {
             body,
             mut signature,
@@ -406,14 +381,8 @@ impl JitCompiler {
 
         let (declaration, actual_return_ty, return_layout) = match codegen_result {
             Ok(Ok(result)) => result,
-            Ok(Err(e)) => {
-                self.jit_fail(&func_def.name, &format!("codegen: {}", e));
-                return None;
-            }
-            Err(_) => {
-                self.jit_fail(&func_def.name, "codegen: internal panic");
-                return None;
-            }
+            Ok(Err(error)) => return Err(JitDiagnostic::from_codegen(error)),
+            Err(payload) => return Err(JitDiagnostic::codegen_panic(payload)),
         };
         signature.return_type = actual_return_ty;
         signature.return_layout = return_layout;
@@ -443,7 +412,7 @@ impl JitCompiler {
 
         signature.captured_scalars = filtered_constants.into_iter()
             .map(|(path, value)| (path, value as f64)).collect();
-        Some(EmittedFunction { signature, mlir })
+        Ok(EmittedFunction { signature, mlir })
     }
 
     /// Reuses or compiles a VMFB and appends it to the shared runtime session.
@@ -454,7 +423,7 @@ impl JitCompiler {
         mlir: &str,
         target_backend: &str,
         shared_session: &std::sync::Arc<crate::runtime::iree_session::IreeSession>,
-    ) -> bool {
+    ) -> Result<(), JitDiagnostic> {
         use std::hash::{Hash, Hasher};
         let mut hasher = std::collections::hash_map::DefaultHasher::new();
         mlir.hash(&mut hasher);
@@ -486,32 +455,26 @@ impl JitCompiler {
                     data
                 }
                 Err(_) => {
-                    self.jit_fail(name, "failed to read cached compilation");
-                    return false;
+                    JIT_EXTERNAL_COMPILATIONS.fetch_add(1, Ordering::Relaxed);
+                    self.run_iree_compile(iree_compile, name, mlir, target_backend)?
                 }
             }
         } else {
             JIT_EXTERNAL_COMPILATIONS.fetch_add(1, Ordering::Relaxed);
-            let data = match self.run_iree_compile(iree_compile, name, mlir, target_backend) {
-                Some(data) => data,
-                None => {
-                    self.jit_fail(name, "iree-compile failed on all backends");
-                    return false;
-                }
-            };
-            let _ = std::fs::create_dir_all(&cache_dir);
-            let _ = std::fs::write(&cached_vmfb, &data);
-            update_manifest(&cache_dir, name, &content_hash);
+            let data = self.run_iree_compile(iree_compile, name, mlir, target_backend)?;
+            std::fs::create_dir_all(&cache_dir).map_err(|e| JitDiagnostic::io("Cannot create compilation cache", e))?;
+            std::fs::write(&cached_vmfb, &data).map_err(|e| JitDiagnostic::io("Cannot write compilation cache", e))?;
+            update_manifest(&cache_dir, name, &content_hash)
+                .map_err(|e| JitDiagnostic::io("Cannot write compilation manifest", e))?;
             data
         };
 
         JIT_MODULE_LOADS.fetch_add(1, Ordering::Relaxed);
         if let Err(e) = shared_session.load_vmfb(vmfb_data) {
             let _ = std::fs::remove_file(&cached_vmfb);
-            self.jit_fail(name, &format!("JIT load: {}", e));
-            return false;
+            return Err(JitDiagnostic::Internal(format!("Cannot load compiled module: {e}")));
         }
-        true
+        Ok(())
     }
 }
 
@@ -665,4 +628,51 @@ fn register_return_layout(signature: &mut FunctionSignature) {
 
 fn assemble_stablehlo_module(module_name: &str, declaration: String) -> String {
     StableHLOEmitter::emit_module_named(Some(module_name), &[declaration])
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::hash::{Hash, Hasher};
+
+    #[test]
+    fn unreadable_cached_vmfb_recompiles_in_an_isolated_process() {
+        const CHILD: &str = "SHEAF_CACHE_RECOVERY_CHILD";
+        if std::env::var_os(CHILD).is_none() {
+            let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
+            let directory = std::env::temp_dir().join(format!("sheaf-cache-recovery-{nonce}"));
+            std::fs::create_dir(&directory).unwrap();
+            let compiler = std::fs::canonicalize(std::env::var_os("IREE_COMPILE").unwrap()).unwrap();
+            let output = std::process::Command::new(std::env::current_exe().unwrap())
+                .args(["--exact", "runtime::jit::compile::tests::unreadable_cached_vmfb_recompiles_in_an_isolated_process", "--nocapture"])
+                .env(CHILD, "1").env("IREE_COMPILE", compiler).current_dir(&directory).output().unwrap();
+            assert!(output.status.success(), "{}\n{}\nfixture: {}",
+                String::from_utf8_lossy(&output.stdout), String::from_utf8_lossy(&output.stderr), directory.display());
+            assert!(String::from_utf8_lossy(&output.stdout).contains("1 passed"));
+            std::fs::remove_dir_all(directory).unwrap();
+            return;
+        }
+        crate::core::config::init(0, Some("cpu".into()), false);
+        let compiler = std::env::var("IREE_COMPILE").unwrap();
+        let name = "cache-recovery";
+        let backend = "llvm-cpu";
+        let codegen = CodeGenerator::new();
+        let (declaration, _, _) = codegen.emit_func_declaration_with_layout(
+            name, &CompiledExpr::Float(1.0), &[], &StableHLOType::scalar_f32(),
+        ).unwrap();
+        let mlir = assemble_stablehlo_module("cache_recovery", declaration);
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        mlir.hash(&mut hasher);
+        backend.hash(&mut hasher);
+        IREE_COMPILER_VERSION.hash(&mut hasher);
+        let hash = format!("{:016x}", hasher.finish());
+        let directory = std::path::Path::new("__sheaf__");
+        std::fs::create_dir_all(directory.join("cache-recovery.llvm_cpu.vmfb")).unwrap();
+        update_manifest(directory, name, &hash).unwrap();
+        let session = crate::runtime::iree_session::shared_session().unwrap();
+        let before = JIT_EXTERNAL_COMPILATIONS.load(Ordering::Relaxed);
+        let mut jit = JitCompiler::new();
+        jit.compile_and_load_module(&compiler, name, &mlir, backend, &session).unwrap();
+        assert_eq!(JIT_EXTERNAL_COMPILATIONS.load(Ordering::Relaxed), before + 1);
+    }
 }

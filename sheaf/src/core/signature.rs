@@ -5,7 +5,7 @@
 
 macro_rules! operations {
     ($($public:literal { $($id:ident => ($name:literal, [$($alias:literal),*])),* $(,)? })*) => {
-        #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+        #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
         pub enum OpId { $($($id,)*)* }
 
         impl OpId {

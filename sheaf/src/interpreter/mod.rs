@@ -559,7 +559,7 @@ fn eval_call(name: &str, args: &[CompiledExpr], env: &mut Env) -> Result<Value, 
         // and exposes the full call tree
         #[cfg(iree_runtime)]
         if env.tracer.is_none()
-            && let Some((prepared_def, prepared_args)) =
+            && let Ok((prepared_def, prepared_args)) =
                 specialize::prepare_function(&func_def, &pos_args, env)?.ready() {
             let func_def = &prepared_def;
             let pos_args = &prepared_args;

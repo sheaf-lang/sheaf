@@ -164,7 +164,7 @@ impl<'a> CodeGenerator<'a> {
         &mut self, name: &str, indices: &[usize], value: &CompiledExpr,
     ) -> SheafResult<()> {
         let Some(&(root, _)) = self.bindings.get(name) else {
-            return Err(crate::SheafError::Compile {
+            return Err(crate::SheafError::CompilerInvariant {
                 message: format!("static input references unknown parameter '{name}'"),
                 location: SourceLocation::unknown(),
             });
@@ -173,7 +173,7 @@ impl<'a> CodeGenerator<'a> {
         if indices.is_empty() {
             self.bind_symbol(name, reg, ty);
         } else if !self.emitter.replace_virtual_leaf(root, indices, reg, ty) {
-            return Err(crate::SheafError::Compile {
+            return Err(crate::SheafError::CompilerInvariant {
                 message: format!("invalid static input projection for parameter '{name}'"),
                 location: SourceLocation::unknown(),
             });
@@ -596,6 +596,15 @@ impl<'a> CodeGenerator<'a> {
                 }
             }
 
+            CompiledExpr::Repeat { .. } | CompiledExpr::While { .. } => {
+                use crate::core::jit_diagnostic::{Construct, LanguageForm};
+                let form = if matches!(expr, CompiledExpr::Repeat { .. }) { LanguageForm::Repeat } else { LanguageForm::While };
+                Err(SheafError::CompilerUnsupported {
+                    construct: Construct::Form(form),
+                    message: "This control-flow form is not supported by the compiler".into(),
+                    location: SourceLocation::unknown(),
+                })
+            }
             _ => Err(SheafError::Compile {
                 message: format!("Code generation not yet implemented for: {:?}", expr),
                 location: crate::core::error::SourceLocation::unknown(),

@@ -34,8 +34,13 @@ pub(super) fn eval_value_and_grad_call(
         use crate::runtime::jit::JitVagOutcome;
         match super::iree_dispatch::try_jit_vag(func, params, env) {
             JitVagOutcome::Success(result) => return result,
-            JitVagOutcome::Unsupported => {}
-            JitVagOutcome::Bug(reason) => return Err(runtime_error(format!(
+            JitVagOutcome::NotAttempted | JitVagOutcome::NotCompiled(
+                crate::core::jit_diagnostic::JitDiagnostic::Interpreted(_)
+                | crate::core::jit_diagnostic::JitDiagnostic::Unsupported(_, _)) => {}
+            JitVagOutcome::NotCompiled(crate::core::jit_diagnostic::JitDiagnostic::UserError(error)) => return Err(error),
+            JitVagOutcome::NotCompiled(crate::core::jit_diagnostic::JitDiagnostic::Environment { message, hint }) =>
+                return Err(runtime_error(format!("{message}\n  = hint: {hint}"))),
+            JitVagOutcome::NotCompiled(crate::core::jit_diagnostic::JitDiagnostic::Internal(reason)) => return Err(runtime_error(format!(
                 "value-and-grad: JIT compilation failed: {reason} \
                  (run with -vv for details). This is a bug in Sheaf.",
             ))),

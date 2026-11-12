@@ -7,6 +7,7 @@
 
 use crate::sheaf_msg;
 use crate::runtime::jit::JitVagOutcome;
+use crate::core::jit_diagnostic::JitDiagnostic;
 use crate::core::error::SheafError;
 use crate::interpreter::env::{runtime_error, Env};
 use crate::interpreter::value::{Dtype, Value};
@@ -145,15 +146,15 @@ pub(super) fn try_jit_vag(
     }
     let augmented_func = match super::specialize::prepare_vag(func, env) {
         Ok(preparation) => match preparation.ready() {
-            Some(function) => function,
-            None => return JitVagOutcome::Unsupported,
+            Ok(function) => function,
+            Err(diagnostic) => return JitVagOutcome::NotCompiled(diagnostic),
         },
         Err(error) => return JitVagOutcome::Success(Err(error)),
     };
 
     let jit = match env.jit_compiler.as_mut() {
         Some(j) => j,
-        None => return JitVagOutcome::Unsupported,
+        None => return JitVagOutcome::NotAttempted,
     };
 
     let iree_session = match crate::runtime::iree_session::shared_session() {
@@ -167,8 +168,8 @@ pub(super) fn try_jit_vag(
         &env.registry,
         &iree_session,
     ) {
-        Some(x) => x,
-        None => return jit.classify_vag_skip(),
+        Ok(compiled) => compiled,
+        Err(diagnostic) => return JitVagOutcome::NotCompiled(diagnostic),
     };
 
     if let Some(ref mut mp) = env.mem_profiler {
@@ -177,7 +178,9 @@ pub(super) fn try_jit_vag(
 
     let (fn_params, closure) = match &augmented_func {
         Value::Function { params: p, closure: c, .. } => (p, c),
-        _ => return JitVagOutcome::Unsupported,
+        _ => return JitVagOutcome::NotCompiled(crate::core::jit_diagnostic::JitDiagnostic::Internal(
+            "Prepared value-and-grad function is not a function".into())),
+
     };
 
     let mut args: Vec<Value> = Vec::new();
@@ -219,17 +222,17 @@ pub(super) fn try_jit_vag(
     })) {
         Ok(Some(v)) => v,
         Ok(None) => {
-            return JitVagOutcome::Success(Err(runtime_error(
-                "value-and-grad: result unpacking failed".to_string(),
-            )));
+            return JitVagOutcome::NotCompiled(JitDiagnostic::Internal(
+                "value-and-grad: result unpacking failed".into(),
+            ));
         }
         Err(e) => {
             let detail = e.downcast_ref::<String>().map(|s| s.as_str())
                 .or_else(|| e.downcast_ref::<&str>().copied())
                 .unwrap_or("unknown");
-            return JitVagOutcome::Success(Err(runtime_error(format!(
+            return JitVagOutcome::NotCompiled(JitDiagnostic::Internal(format!(
                 "value-and-grad: result unpacking panicked: {}", detail
-            ))));
+            )));
         }
     };
 

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 use crate::core::error::{SheafError, SheafResult};
+use crate::core::jit_diagnostic::{Construct, LanguageForm};
 use crate::core::expr::{BindingPattern, CompiledExpr};
 use crate::core::inference::{expr_is_tensor, infer_type_with_context};
 use crate::lowering::stablehlo::StableHLOType;
@@ -285,8 +286,9 @@ pub fn desugar_destructuring_lets(
                     BindingPattern::Destructure(names) => {
                         for name in &names {
                             if let BindingPattern::Destructure(_) = name {
-                                return Err(SheafError::Compile {
-                                    message: "Nested destructuring patterns are not yet supported"
+                                return Err(SheafError::CompilerUnsupported {
+                                    construct: Construct::Form(LanguageForm::Destructuring),
+                                    message: "Nested destructuring patterns are not supported by the compiler"
                                         .to_string(),
                                     location: crate::core::error::SourceLocation::unknown(),
                                 });
@@ -299,7 +301,8 @@ pub fn desugar_destructuring_lets(
                         let kind = kind_of(&value, symbol_types);
                         let len =
                             static_length_with_types(&value, symbol_types).ok_or_else(|| {
-                                SheafError::Compile {
+                                SheafError::CompilerUnsupported {
+                                    construct: Construct::Form(LanguageForm::Destructuring),
                                     message:
                                         "Destructuring source has a dynamic length that cannot be \
                                           resolved statically: it is neither a literal nor a typed \
@@ -310,7 +313,7 @@ pub fn desugar_destructuring_lets(
                             })?;
 
                         if len != names.len() {
-                            return Err(SheafError::Compile {
+                            return Err(SheafError::InvalidSourceForm {
                                 message: format!(
                                     "Destructuring arity mismatch: pattern has {} names, source has {} elements",
                                     names.len(),
@@ -338,7 +341,8 @@ pub fn desugar_destructuring_lets(
                                     }
                                 }
                                 DestructKind::Unknown => {
-                                    return Err(SheafError::Compile {
+                                    return Err(SheafError::CompilerUnsupported {
+                                        construct: Construct::Form(LanguageForm::Destructuring),
                                         message: "Destructuring the result of a runtime tensor of unknown shape is not supported".to_string(),
                                         location: crate::core::error::SourceLocation::unknown(),
                                     });

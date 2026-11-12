@@ -232,6 +232,144 @@ fn ellipsis_get_slices_the_last_axis_in_direct_vmfb() {
 }
 
 #[test]
+fn jit_diagnostics_preserve_source_categories() {
+    use sheaf_compiler::core::jit_diagnostic::{Construct, InterpretedReason, JitDiagnostic, LanguageForm, UnsupportedReason};
+    initialize_device();
+    let mut interpreter = interpreter_only();
+    interpreter.eval("(defn diagnostic-repeat [x] (repeat [i 2] [acc x] (+ acc x)))").unwrap();
+    let eager = interpreter.eval("(diagnostic-repeat [1.0 2.0])").unwrap();
+    compare_values(&eager, &interpreter.eval("[3.0 6.0]").unwrap(), "repeat/eager").unwrap();
+    let args = [interpreter.eval("[1.0 2.0]").unwrap()];
+    let session = shared_session().unwrap();
+    let mut jit = JitCompiler::new();
+    let function = interpreter.registry_get("diagnostic-repeat").unwrap();
+    for _ in 0..2 {
+        assert!(matches!(jit.try_jit_compile(function, &args, &interpreter.env().registry, &session),
+            JitCompileOutcome::Failed(JitDiagnostic::Unsupported(
+                UnsupportedReason::Construct(Construct::Form(LanguageForm::Repeat)), Some(_)))));
+    }
+    interpreter.eval("(defn diagnostic-label [x label] x)").unwrap();
+    let eager = interpreter.eval("(diagnostic-label [1.0 2.0] \"label\")").unwrap();
+    compare_values(&eager, &args[0], "non-tensor argument/eager").unwrap();
+    let labelled = [args[0].clone(), Value::String("label".into())];
+    assert!(matches!(jit.try_jit_compile(interpreter.registry_get("diagnostic-label").unwrap(),
+        &labelled, &interpreter.env().registry, &session),
+        JitCompileOutcome::Interpreted(InterpretedReason::NonTensorArgument(name)) if name == "label"));
+    interpreter.eval("(defn diagnostic-dimension [x] (reshape x [2.0]))").unwrap();
+    assert!(interpreter.eval("(diagnostic-dimension [1.0 2.0])").is_err());
+    for _ in 0..2 {
+        assert!(matches!(jit.try_jit_compile(interpreter.registry_get("diagnostic-dimension").unwrap(),
+            &args, &interpreter.env().registry, &session),
+            JitCompileOutcome::Failed(JitDiagnostic::UserError(
+                sheaf_compiler::SheafError::InvalidShapeDimension { .. }))));
+    }
+    interpreter.eval("(defn diagnostic-shape-parameter [x dims] (zeros dims))").unwrap();
+    let eager = interpreter.eval("(diagnostic-shape-parameter [0.0] '[2])").unwrap();
+    compare_values(&eager, &interpreter.eval("[0.0 0.0]").unwrap(), "shape parameter/eager").unwrap();
+    let dimensions = interpreter.eval("'[2]").unwrap();
+    assert!(matches!(jit.try_jit_compile(interpreter.registry_get("diagnostic-shape-parameter").unwrap(),
+        &[args[0].clone(), dimensions], &interpreter.env().registry, &session),
+        JitCompileOutcome::Failed(JitDiagnostic::Unsupported(
+            UnsupportedReason::Construct(Construct::Other("compiled code")), Some(_)))));
+}
+
+#[test]
+fn jit_diagnostics_vag_cache_keeps_each_functions_reason() {
+    use sheaf_compiler::core::jit_diagnostic::{Construct, InterpretedReason, JitDiagnostic, UnsupportedReason};
+    use sheaf_compiler::core::signature::OpId;
+    initialize_device();
+    let mut interpreter = interpreter_only();
+    interpreter.eval("(defn diagnostic-mapped [p] (sum (tensor (map (fn [v] (* v v)) p))))").unwrap();
+    let eager = interpreter.eval("((value-and-grad diagnostic-mapped) '[1.0 2.0])").unwrap();
+    let expected = Value::List(vec![Value::Float(5.0), Value::List(vec![Value::Float(2.0), Value::Float(4.0)])]);
+    compare_values(&eager, &expected, "mapped loss/eager").unwrap();
+    let function = interpreter.eval("diagnostic-mapped").unwrap();
+    let parameters = interpreter.eval("'[1.0 2.0]").unwrap();
+    let session = shared_session().unwrap();
+    let mut jit = JitCompiler::new();
+    let registry = &interpreter.env().registry;
+    for _ in 0..2 {
+        assert!(matches!(jit.try_jit_value_and_grad(&function, &parameters, registry, &session),
+            Err(JitDiagnostic::Unsupported(UnsupportedReason::Construct(Construct::Operation(OpId::Map)), None))));
+    }
+    let captured = interpreter.eval("(let [label \"capture\"] (fn [p] (+ (sum p) (len label))))").unwrap();
+    assert!(matches!(jit.try_jit_value_and_grad(&captured, &parameters, &interpreter.env().registry, &session),
+        Err(JitDiagnostic::Interpreted(InterpretedReason::NonTensorArgument(_)))));
+    let invalid = interpreter.eval("(fn [p] (+ (sum p) (sum (zeros [2.0]))))").unwrap();
+    assert!(matches!(jit.try_jit_value_and_grad(&invalid, &parameters, &interpreter.env().registry, &session),
+        Err(JitDiagnostic::UserError(sheaf_compiler::SheafError::InvalidShapeDimension { .. }))));
+    assert!(matches!(jit.try_jit_value_and_grad(&function, &parameters, &interpreter.env().registry, &session),
+        Err(JitDiagnostic::Unsupported(UnsupportedReason::Construct(Construct::Operation(OpId::Map)), None))));
+}
+
+#[test]
+fn jit_diagnostics_signature_failure_allows_the_vag_interpreter_fallback() {
+    use sheaf_compiler::core::jit_diagnostic::{Construct, JitDiagnostic, UnsupportedReason};
+    initialize_device();
+    for jit_enabled in [false, true] {
+        let mut interpreter = if jit_enabled { Interpreter::new() } else { interpreter_only() };
+        interpreter.eval("(defn inference_dead_branch [p]
+            (if true (sum (* p p)) (+ (zeros [2]) (zeros [3]))))").unwrap();
+        let input = interpreter.eval("[1.0 2.0]").unwrap();
+        let session = shared_session().unwrap();
+        let mut jit = JitCompiler::new();
+        let outcome = jit.try_jit_compile(interpreter.registry_get("inference_dead_branch").unwrap(),
+            std::slice::from_ref(&input), &interpreter.env().registry, &session);
+        assert!(matches!(outcome, JitCompileOutcome::Failed(JitDiagnostic::Unsupported(
+            UnsupportedReason::Construct(Construct::Other("compiled code")), Some(error)
+        )) if error.short_message().contains("broadcast")), "signature failure must not be a UserError");
+        let function = interpreter.eval("inference_dead_branch").unwrap();
+        let outcome = jit.try_jit_value_and_grad(&function, &input, &interpreter.env().registry, &session);
+        assert!(matches!(outcome, Err(JitDiagnostic::Unsupported(
+            UnsupportedReason::Construct(Construct::Other("compiled code")), Some(error)
+        )) if error.short_message().contains("broadcast")));
+        for _ in 0..2 {
+            let result = interpreter.eval("((value-and-grad inference_dead_branch) [1.0 2.0])").unwrap();
+            let expected = Value::List(vec![Value::Float(5.0), interpreter.eval("[2.0 4.0]").unwrap()]);
+            compare_values(&result, &expected, "signature failure/eager VAG").unwrap();
+        }
+    }
+}
+
+#[test]
+fn jit_diagnostics_hof_categories_distinguish_filter_from_map_and_sort() {
+    use sheaf_compiler::core::jit_diagnostic::{Construct, InterpretedReason, JitDiagnostic, UnsupportedReason};
+    use sheaf_compiler::core::signature::OpId;
+    initialize_device();
+    let mut interpreter = interpreter_only();
+    let input = interpreter.eval("'[3.0 1.0 2.0]").unwrap();
+    let session = shared_session().unwrap();
+    let mut jit = JitCompiler::new();
+    for (name, body, op, expected) in [
+        ("filter_loss", "(sum (tensor (filter (fn [v] (> v 1.0)) p)))", OpId::Filter, 5.0),
+        ("map_loss", "(sum (tensor (map (fn [v] (* v v)) p)))", OpId::Map, 14.0),
+        ("sort_loss", "(sum (tensor (sort p)))", OpId::Sort, 6.0),
+    ] {
+        interpreter.eval(&format!("(defn {name} [p] {body})")).unwrap();
+        let eager = interpreter.eval(&format!("({name} '[3.0 1.0 2.0])")).unwrap();
+        compare_values(&eager, &Value::Float(expected), "HOF/eager").unwrap();
+        let outcome = jit.try_jit_compile(interpreter.registry_get(name).unwrap(),
+            std::slice::from_ref(&input), &interpreter.env().registry, &session);
+        if op == OpId::Filter {
+            assert!(matches!(outcome, JitCompileOutcome::Interpreted(
+                InterpretedReason::DataDependent(Construct::Operation(OpId::Filter)))));
+        } else {
+            assert!(matches!(outcome, JitCompileOutcome::Failed(JitDiagnostic::Unsupported(
+                UnsupportedReason::Construct(Construct::Operation(actual)), None)) if actual == op));
+        }
+        let function = interpreter.eval(name).unwrap();
+        let outcome = jit.try_jit_value_and_grad(&function, &input, &interpreter.env().registry, &session);
+        if op == OpId::Filter {
+            assert!(matches!(outcome, Err(JitDiagnostic::Interpreted(
+                InterpretedReason::DataDependent(Construct::Operation(OpId::Filter))))));
+        } else {
+            assert!(matches!(outcome, Err(JitDiagnostic::Unsupported(
+                UnsupportedReason::Construct(Construct::Operation(actual)), None)) if actual == op));
+        }
+    }
+}
+
+#[test]
 fn shape_dimensions_reject_floats_in_interpreter_and_direct_vmfb() {
     initialize_device();
     let mut interpreter = interpreter_only();
@@ -910,6 +1048,15 @@ struct CompiledCall {
     signature: FunctionSignature,
 }
 
+fn diagnostic_text(diagnostic: &sheaf_compiler::core::jit_diagnostic::JitDiagnostic) -> String {
+    use sheaf_compiler::core::jit_diagnostic::JitDiagnostic;
+    match diagnostic {
+        JitDiagnostic::Unsupported(_, Some(error)) => error.to_string(),
+        JitDiagnostic::UserError(error) => error.to_string(),
+        other => format!("{other:?}"),
+    }
+}
+
 fn compile_call(
     interpreter: &Interpreter,
     name: &str,
@@ -924,10 +1071,10 @@ fn compile_call(
     let sig = match outcome {
         JitCompileOutcome::Compiled(signature) => signature,
         JitCompileOutcome::Failed(reason) => {
-            return Err(Failure::new(FailureKind::Compilation, format!("Failed: {reason}")));
+            return Err(Failure::new(FailureKind::Compilation, diagnostic_text(&reason)));
         }
-        JitCompileOutcome::Unsupported(reason) => {
-            return Err(Failure::new(FailureKind::Compilation, format!("Unsupported: {reason}")));
+        JitCompileOutcome::Interpreted(reason) => {
+            return Err(Failure::new(FailureKind::Compilation, format!("Interpreted: {reason:?}")));
         }
         JitCompileOutcome::InProgress => {
             return Err(Failure::new(FailureKind::Infrastructure, "variant still compiling"));
@@ -1270,7 +1417,7 @@ fn broadcast_gradient_reductions_match_their_target_shapes() {
         let outcome = jit.try_jit_compile(&function, &args, &interpreter.env().registry, &session);
         let Some(expected) = expected else {
             let JitCompileOutcome::Failed(reason) = outcome else { panic!("expected rejection: {outcome:?}") };
-            assert!(reason.contains("sum_to_shape: cannot reduce"), "{reason}");
+            assert!(diagnostic_text(&reason).contains("sum_to_shape: cannot reduce"), "{reason:?}");
             continue;
         };
         let JitCompileOutcome::Compiled(signature) = outcome else { panic!("expected compilation: {outcome:?}") };
@@ -1382,7 +1529,7 @@ fn tensor_operation_signatures() {
             compilation: Expectation::KnownFailure {
                 kind: FailureKind::Compilation,
                 reason: "codegen does not support flip with a positional axis yet",
-                detail_contains: "Function call not yet supported: flip (arity 2)",
+                detail_contains: "flip is not supported by the compiler with 2 arguments",
             },
             compiled: Expectation::Pass,
         },

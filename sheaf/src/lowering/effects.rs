@@ -10,7 +10,6 @@ const EFFECTFUL_BUILTINS: &[&str] = &["print", "io"];
 
 pub const HOF_BUILTINS: &[&str] = &[
     "map", "filter", "sort",
-    "grad", "jit",
 ];
 
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -72,6 +72,15 @@ pub enum SheafError {
         message: String,
         location: SourceLocation,
     },
+    CompilerUnsupported {
+        construct: super::jit_diagnostic::Construct,
+        message: String,
+        location: SourceLocation,
+    },
+    CompilerInvariant {
+        message: String,
+        location: SourceLocation,
+    },
 }
 
 impl fmt::Display for SheafError {
@@ -85,6 +94,8 @@ impl fmt::Display for SheafError {
                 )
             }
             SheafError::Compile { message, location }
+            | SheafError::CompilerUnsupported { message, location, .. }
+            | SheafError::CompilerInvariant { message, location }
             | SheafError::InvalidSourceForm { message, location }
             | SheafError::InvalidShapeDimension { message, location } => {
                 write!(
@@ -144,6 +155,12 @@ impl SheafError {
                 message,
                 location: loc.clone(),
             },
+            SheafError::CompilerUnsupported { construct, message, .. } => SheafError::CompilerUnsupported {
+                construct, message, location: loc.clone(),
+            },
+            SheafError::CompilerInvariant { message, .. } => SheafError::CompilerInvariant {
+                message, location: loc.clone(),
+            },
             SheafError::InvalidSourceForm { message, .. } => SheafError::InvalidSourceForm {
                 message,
                 location: loc.clone(),
@@ -168,6 +185,8 @@ impl SheafError {
     pub fn with_fallback_location(self, loc: &SourceLocation) -> Self {
         let existing = match &self {
             SheafError::Compile { location, .. }
+            | SheafError::CompilerUnsupported { location, .. }
+            | SheafError::CompilerInvariant { location, .. }
             | SheafError::InvalidSourceForm { location, .. }
             | SheafError::InvalidShapeDimension { location, .. } => Some(location),
             SheafError::Runtime { location, .. }
@@ -187,6 +206,8 @@ impl SheafError {
             SheafError::Parse { message, .. }
             | SheafError::Compile { message, .. }
             | SheafError::Runtime { message, .. }
+            | SheafError::CompilerUnsupported { message, .. }
+            | SheafError::CompilerInvariant { message, .. }
             | SheafError::InvalidSourceForm { message, .. }
             | SheafError::InvalidShapeDimension { message, .. } => Cow::Borrowed(message),
             SheafError::AutodiffMissingRule { operation, .. } => Cow::Owned(format!(

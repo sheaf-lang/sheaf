@@ -75,6 +75,7 @@ use crate::lowering::config::{
 };
 use crate::lowering::effects::{collect_effects, collect_hof_calls};
 use crate::lowering::jit_eligibility;
+use crate::core::jit_diagnostic::{Construct, GraphPhase, InterpretedReason, JitDiagnostic, UnsupportedReason};
 use crate::lowering::stablehlo::{Register, StableHLOEmitter};
 use crate::lowering::transforms::{
     extract_scalar_constants, filter_constants_for_shape_positions, lower_inlined_gets,
@@ -473,13 +474,10 @@ pub struct JitCompiler {
     iree_compile_path: Option<String>,
     target_backend: String,
     /// Definitions rejected independently of runtime argument shapes.
-    failed_definitions: HashMap<String, String>,
-    failed_vag: HashSet<String>,
+    failed_definitions: HashMap<String, JitDiagnostic>,
+    failed_vag: HashMap<String, JitDiagnostic>,
     /// Variants that failed compilation, with the original diagnostic.
-    failed_keys: HashMap<JitCacheKey, String>,
-    last_compile_failure: Option<String>,
-    last_vag_fail_reason: Option<String>,
-    last_vag_error: Option<SheafError>,
+    failed_keys: HashMap<JitCacheKey, JitDiagnostic>,
     /// Cache compiled VAG sessions: vag_key -> (session_idx, signature, param_names)
     vag_cache: HashMap<String, (String, FunctionSignature, Vec<String>)>,
     /// Definition identities already validated by the full compilation-key path.
@@ -678,11 +676,8 @@ impl JitCompiler {
             iree_compile_path,
             target_backend,
             failed_definitions: HashMap::new(),
-            failed_vag: HashSet::new(),
+            failed_vag: HashMap::new(),
             failed_keys: HashMap::new(),
-            last_compile_failure: None,
-            last_vag_fail_reason: None,
-            last_vag_error: None,
             vag_cache: HashMap::new(),
             definition_identities: HashMap::new(),
         }
@@ -777,17 +772,16 @@ impl JitCompiler {
         &mut self,
         func_def: &FunctionDef,
         registry: &HashMap<String, FunctionDef>,
-    ) -> bool {
+    ) -> Result<(), JitDiagnostic> {
         let identity = function_definition_identity(func_def, registry);
-        if self.failed_definitions.contains_key(&identity) {
-            return false;
+        if let Some(diagnostic) = self.failed_definitions.get(&identity) {
+            return Err(diagnostic.clone());
         }
-        if let Err(reason) = jit_eligibility(&func_def.name, registry) {
-            self.failed_definitions.insert(identity, reason.clone());
-            self.jit_fail(&func_def.name, &reason);
-            return false;
+        let result = jit_eligibility(&func_def.name, registry);
+        if let Err(diagnostic) = &result {
+            self.failed_definitions.insert(identity, diagnostic.clone());
         }
-        true
+        result
     }
 }
 
@@ -796,11 +790,20 @@ impl JitCompiler {
 pub enum JitCompileOutcome {
     Compiled(FunctionSignature),
     /// The function is not eligible for JIT compilation.
-    Unsupported(String),
-    /// Compilation was attempted but failed.
-    Failed(String),
+    Interpreted(InterpretedReason),
+    /// Compilation was attempted but did not produce a module.
+    Failed(JitDiagnostic),
     /// Another attempt is compiling this variant.
     InProgress,
+}
+
+impl From<JitDiagnostic> for JitCompileOutcome {
+    fn from(diagnostic: JitDiagnostic) -> Self {
+        match diagnostic {
+            JitDiagnostic::Interpreted(reason) => Self::Interpreted(reason),
+            other => Self::Failed(other),
+        }
+    }
 }
 
 /// Why the JIT skipped a value-and-grad call.
@@ -808,10 +811,8 @@ pub enum JitCompileOutcome {
 pub enum JitVagOutcome {
     /// JIT compiled and executed successfully, or had a runtime error.
     Success(Result<Value, SheafError>),
-    /// The pattern is unsupported by JIT; use the interpreter fallback.
-    Unsupported,
-    /// JIT failed for a supported pattern.
-    Bug(String),
+    NotCompiled(JitDiagnostic),
+    NotAttempted,
 }
 
 mod compile;
@@ -825,7 +826,7 @@ mod cache_key_tests {
     use super::{
         cache_key_for, cache_key_for_function, function_definition_identity,
         module_growth_warning, runtime_args_match, CompiledModuleInfo, JitCompileOutcome,
-        JitCompiler, JitVagOutcome,
+        JitCompiler,
     };
     use crate::core::ast::SheafValue;
     use crate::core::error::{SheafError, SourceLocation};
@@ -834,7 +835,8 @@ mod cache_key_tests {
     use crate::core::trace::value_to_stablehlo_type;
     use crate::interpreter::value::{Dtype, Value};
     use ndarray::ArrayD;
-    use std::collections::{BTreeMap, HashMap, HashSet};
+    use std::collections::{BTreeMap, HashMap};
+    use crate::core::jit_diagnostic::{Construct, InterpretedReason, JitDiagnostic, UnsupportedReason};
     use std::rc::Rc;
     use std::sync::Arc;
 
@@ -1147,68 +1149,24 @@ mod cache_key_tests {
 
     #[test]
     fn structured_vag_errors_do_not_hide_compiler_failures() {
-        let mut compiler = JitCompiler {
-            iree_compile_path: None,
-            target_backend: "llvm-cpu".to_string(),
-            failed_definitions: HashMap::new(),
-            failed_vag: HashSet::new(),
-            failed_keys: HashMap::new(),
-            last_compile_failure: None,
-            last_vag_fail_reason: Some("codegen failed".to_string()),
-            last_vag_error: Some(SheafError::AutodiffMissingGradientOutput {
-                symbol: "p_0".to_string(),
-            }),
-            vag_cache: HashMap::new(),
-            definition_identities: HashMap::new(),
-        };
-
-        assert!(matches!(
-            compiler.classify_vag_skip(),
-            JitVagOutcome::Success(Err(SheafError::AutodiffMissingGradientOutput { symbol }))
-                if symbol == "p_0"
-        ));
-        compiler.last_vag_error = Some(SheafError::InvalidShapeDimension {
-            message: "reshape: shape dimension is float (64.0), expected an integer".to_string(),
+        assert!(matches!(JitDiagnostic::from_codegen(SheafError::AutodiffMissingGradientOutput {
+            symbol: "p_0".into(),
+        }), JitDiagnostic::Internal(reason) if reason.contains("p_0")));
+        assert!(matches!(JitDiagnostic::from_codegen(SheafError::InvalidShapeDimension {
+            message: "reshape: shape dimension is float (64.0), expected an integer".into(),
             location: SourceLocation::unknown(),
-        });
-        assert!(matches!(
-            compiler.classify_vag_skip(),
-            JitVagOutcome::Success(Err(SheafError::InvalidShapeDimension { .. }))
-        ));
-        compiler.last_vag_error = None;
-        compiler.last_vag_fail_reason = Some("codegen: internal panic".to_string());
-        assert!(matches!(
-            compiler.classify_vag_skip(),
-            JitVagOutcome::Bug(reason) if reason == "codegen: internal panic"
-        ));
+        }), JitDiagnostic::UserError(SheafError::InvalidShapeDimension { .. })));
     }
 
     #[test]
     fn preserves_autodiff_missing_rule_in_vag_outcome() {
         let location = SourceLocation::new(4, 2, Rc::from("loss.shf"));
-        let compiler = JitCompiler {
-            iree_compile_path: None,
-            target_backend: "llvm-cpu".to_string(),
-            failed_definitions: HashMap::new(),
-            failed_vag: HashSet::new(),
-            failed_keys: HashMap::new(),
-            last_compile_failure: None,
-            last_vag_fail_reason: Some("codegen failed".to_string()),
-            last_vag_error: Some(SheafError::AutodiffMissingRule {
-                operation: "unknown".to_string(),
-                location: Some(location.clone()),
-            }),
-            vag_cache: HashMap::new(),
-            definition_identities: HashMap::new(),
-        };
-
-        assert!(matches!(
-            compiler.classify_vag_skip(),
-            JitVagOutcome::Success(Err(SheafError::AutodiffMissingRule {
-                operation,
-                location: Some(actual),
-            })) if operation == "unknown" && actual == location
-        ));
+        let diagnostic = JitDiagnostic::from_codegen(SheafError::AutodiffMissingRule {
+            operation: "unknown".into(), location: Some(location.clone()),
+        });
+        assert!(matches!(diagnostic, JitDiagnostic::UserError(SheafError::AutodiffMissingRule {
+            operation, location: Some(actual),
+        }) if operation == "unknown" && actual == location));
     }
 
     #[test]
@@ -1226,23 +1184,18 @@ mod cache_key_tests {
             iree_compile_path: None,
             target_backend: "llvm-cpu".to_string(),
             failed_definitions: HashMap::new(),
-            failed_vag: HashSet::new(),
+            failed_vag: HashMap::new(),
             failed_keys: HashMap::new(),
-            last_compile_failure: None,
-            last_vag_fail_reason: None,
-            last_vag_error: None,
             vag_cache: HashMap::new(),
             definition_identities: HashMap::new(),
         };
         let identity = function_definition_identity(&recursive, &registry);
 
-        assert!(!compiler.preflight_jit_eligibility(&recursive, &registry));
-        assert!(!compiler.preflight_jit_eligibility(&recursive, &registry));
+        assert!(compiler.preflight_jit_eligibility(&recursive, &registry).is_err());
+        assert!(compiler.preflight_jit_eligibility(&recursive, &registry).is_err());
         assert_eq!(compiler.failed_definitions.len(), 1);
-        assert_eq!(
-            compiler.failed_definitions.get(&identity).map(String::as_str),
-            Some("recursive call through 'recursive'")
-        );
+        assert!(matches!(compiler.failed_definitions.get(&identity),
+            Some(JitDiagnostic::Interpreted(InterpretedReason::RecursiveCall(name))) if name == "recursive"));
     }
 
     #[test]
@@ -1293,18 +1246,18 @@ mod cache_key_tests {
         for _ in 0..2 {
             assert!(matches!(
                 compiler.try_jit_compile(&recursive, &args, &registry, &session),
-                JitCompileOutcome::Unsupported(reason)
-                    if reason == "recursive call through 'recursive-outcome'"
+                JitCompileOutcome::Interpreted(InterpretedReason::RecursiveCall(name))
+                    if name == "recursive-outcome"
             ));
         }
 
         let ordinary = function("failed-outcome", body_no_shape_scalar());
         let registry = HashMap::from([(ordinary.name.clone(), ordinary.clone())]);
         let key = cache_key_for_function(&ordinary, &args, &registry).unwrap();
-        compiler.failed_keys.insert(key, "codegen: test failure".to_string());
+        compiler.failed_keys.insert(key, JitDiagnostic::Internal("codegen: test failure".into()));
         assert!(matches!(
             compiler.try_jit_compile(&ordinary, &args, &registry, &session),
-            JitCompileOutcome::Failed(reason) if reason == "codegen: test failure"
+            JitCompileOutcome::Failed(JitDiagnostic::Internal(reason)) if reason == "codegen: test failure"
         ));
     }
 
@@ -1506,8 +1459,8 @@ mod cache_key_tests {
         );
         assert!(matches!(
             outcome,
-            JitCompileOutcome::Failed(reason)
-                if reason.contains("append: first argument must be a list")
+            JitCompileOutcome::Failed(JitDiagnostic::Unsupported(_, Some(error)))
+                if error.short_message().contains("append: first argument must be a list")
         ));
     }
 
@@ -1588,21 +1541,165 @@ mod cache_key_tests {
         );
         assert!(matches!(
             outcome,
-            JitCompileOutcome::Failed(reason)
-                if reason.contains("get on dict/tuple requires type info")
+            JitCompileOutcome::Failed(JitDiagnostic::Unsupported(_, Some(error)))
+                if error.short_message().contains("get on dict/tuple requires type info")
         ));
+    }
+
+    fn known_clevr_internal(function: &str, cpu: bool, diagnostic: &JitDiagnostic) -> bool {
+        // IREE 3.10 crashes with --iree-opt-data-tiling; fixed in IREE 3.12.
+        // Remove this exception when migrating to IREE 3.12.
+        let cpu_segfault = cpu && function == "soft-filter" && matches!(diagnostic,
+            JitDiagnostic::Internal(message) if message.starts_with("iree-compile failed (signal: 11 (SIGSEGV)):"));
+        // #17: Codegen panics on out-of-bounds shape queries in a statically dead branch.
+        let dead_branch_panic = matches!(function, "left-of" | "spatial-op") && matches!(diagnostic,
+            JitDiagnostic::Internal(message) if message ==
+                "Codegen panicked: index out of bounds: the len is 1 but the index is 1");
+        cpu_segfault || dead_branch_panic
+    }
+
+    #[test]
+    fn known_clevr_exceptions_do_not_hide_other_failures() {
+        let segfault = JitDiagnostic::Internal("iree-compile failed (signal: 11 (SIGSEGV)): details".into());
+        assert!(known_clevr_internal("soft-filter", true, &segfault));
+        assert!(!known_clevr_internal("soft-filter", false, &segfault));
+        assert!(!known_clevr_internal("left-of", true, &segfault));
+        let panic = JitDiagnostic::Internal("Codegen panicked: index out of bounds: the len is 1 but the index is 1".into());
+        for cpu in [true, false] {
+            assert!(known_clevr_internal("left-of", cpu, &panic));
+            assert!(known_clevr_internal("spatial-op", cpu, &panic));
+            assert!(!known_clevr_internal("soft-filter", cpu, &panic));
+            assert!(!known_clevr_internal("above", cpu, &panic));
+        }
+        for message in ["Codegen panicked", "Codegen panicked: another panic",
+            "Codegen panicked: index out of bounds: the len is 2 but the index is 2"] {
+            assert!(!known_clevr_internal("left-of", true, &JitDiagnostic::Internal(message.into())));
+        }
+        assert!(!known_clevr_internal("left-of", true, &JitDiagnostic::UserError(
+            SheafError::InvalidShapeDimension { message: "float dimension".into(), location: SourceLocation::unknown() })));
+    }
+
+    #[test]
+    fn clevr_execution_keeps_internal_failures_out_of_all_compilation_caches() {
+        let device = std::env::var("SHEAF_SIGNATURE_DEVICE").unwrap_or_else(|_| "cpu".into());
+        let cpu = device == "cpu";
+        crate::core::config::init(0, Some(device), false);
+        let mut interpreter = crate::interpreter::eval::Interpreter::new();
+        interpreter.eval("(use \"./examples/clevr/data.shf\")").unwrap();
+        interpreter.eval("(use \"./examples/clevr/model.shf\")").unwrap();
+        interpreter.eval("(use \"./sheaf/tests/regressions.shf\")").unwrap();
+        interpreter.eval("(check-clevr)").unwrap();
+        let compiler = interpreter.env().jit_compiler.as_ref().unwrap();
+        for diagnostic in compiler.failed_definitions.values().chain(compiler.failed_vag.values()) {
+            assert!(!matches!(diagnostic, JitDiagnostic::Internal(_)), "{diagnostic:?}");
+        }
+        for (key, diagnostic) in &compiler.failed_keys {
+            if known_clevr_internal(&key.function_name, cpu, diagnostic) {
+                continue;
+            }
+            assert!(!matches!(diagnostic, JitDiagnostic::Internal(_)), "{diagnostic:?}");
+        }
+    }
+
+    #[test]
+    fn scalar_policy_does_not_disable_a_tensor_variant() {
+        let session = crate::runtime::iree_session::shared_session().unwrap();
+        let mut compiler = JitCompiler::new();
+        let function = function("scalar-policy", CompiledExpr::Symbol("x".into()));
+        let registry = HashMap::from([(function.name.clone(), function.clone())]);
+        assert!(matches!(compiler.try_jit_compile(&function, &[Value::Float(1.0)], &registry, &session),
+            JitCompileOutcome::Interpreted(InterpretedReason::ScalarOnly)));
+        assert!(matches!(compiler.try_jit_compile(&function, &[tensor_f32(vec![2], 1.0)], &registry, &session),
+            JitCompileOutcome::Compiled(_)));
+        assert!(compiler.failed_definitions.is_empty());
+    }
+
+    #[test]
+    fn missing_toolchain_is_environment_for_ordinary_and_vag_calls() {
+        let session = crate::runtime::iree_session::shared_session().unwrap();
+        let mut interpreter = crate::interpreter::eval::Interpreter::new();
+        interpreter.env_mut().jit_compiler = None;
+        interpreter.eval("(defn environment-test [x] (sum x))").unwrap();
+        let function = interpreter.registry_get("environment-test").unwrap();
+        let mut compiler = JitCompiler::new();
+        compiler.iree_compile_path = None;
+        let input = tensor_f32(vec![2], 1.0);
+        assert!(matches!(compiler.try_jit_compile(function, std::slice::from_ref(&input),
+            &interpreter.env().registry, &session), JitCompileOutcome::Failed(JitDiagnostic::Environment { .. })));
+        let function = interpreter.eval("environment-test").unwrap();
+        assert!(matches!(compiler.try_jit_value_and_grad(&function, &input, &interpreter.env().registry, &session),
+            Err(JitDiagnostic::Environment { .. })));
+    }
+
+    #[test]
+    fn vag_negative_cache_preserves_all_five_categories() {
+        use crate::core::signature::OpId;
+        let session = crate::runtime::iree_session::shared_session().unwrap();
+        let mut interpreter = crate::interpreter::eval::Interpreter::new();
+        interpreter.env_mut().jit_compiler = None;
+        let function = interpreter.eval("(fn [p] (sum (tensor (map (fn [v] (* v v)) p))))").unwrap();
+        let input = Value::List(vec![Value::Float(1.0), Value::Float(2.0)]);
+        let registry = &interpreter.env().registry;
+        let mut compiler = JitCompiler::new();
+        assert!(matches!(compiler.try_jit_value_and_grad(&function, &input, registry, &session),
+            Err(JitDiagnostic::Unsupported(UnsupportedReason::Construct(Construct::Operation(OpId::Map)), None))));
+        let key = compiler.failed_vag.keys().next().unwrap().clone();
+        let diagnostics = [
+            JitDiagnostic::Interpreted(InterpretedReason::RecursiveCall("recursive".into())),
+            JitDiagnostic::Unsupported(UnsupportedReason::Construct(Construct::Operation(OpId::Map)), None),
+            JitDiagnostic::UserError(SheafError::InvalidShapeDimension {
+                message: "float dimension".into(), location: SourceLocation::new(4, 3, "loss.shf".into()),
+            }),
+            JitDiagnostic::Environment { message: "toolchain unavailable".into(), hint: "Set IREE_COMPILE." },
+            JitDiagnostic::Internal("graph too large: this text does not determine the category".into()),
+        ];
+        for diagnostic in diagnostics {
+            let expected = format!("{diagnostic:?}");
+            compiler.failed_vag.insert(key.clone(), diagnostic);
+            compiler.failed_vag.insert("unrelated".into(), JitDiagnostic::Internal("unrelated failure".into()));
+            for _ in 0..2 {
+                let actual = compiler.try_jit_value_and_grad(&function, &input, registry, &session).unwrap_err();
+                assert_eq!(format!("{actual:?}"), expected);
+            }
+        }
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn compiler_process_errors_are_typed_at_their_source() {
+        use std::os::unix::fs::PermissionsExt;
+        let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
+        let directory = std::env::temp_dir().join(format!("sheaf-compiler-diagnostics-{nonce}"));
+        std::fs::create_dir(&directory).unwrap();
+        let executable = directory.join("compiler");
+        std::fs::write(&executable, "#!/bin/sh\necho 'graph too large' >&2\nexit 9\n").unwrap();
+        std::fs::set_permissions(&executable, std::fs::Permissions::from_mode(0o700)).unwrap();
+        let compiler = JitCompiler::new();
+        let input = "module {}";
+        assert!(matches!(compiler.run_iree_compile(executable.to_str().unwrap(), "diagnostic-exit", input, "llvm-cpu"),
+            Err(JitDiagnostic::Internal(message)) if message.contains('9') && message.contains("graph too large")));
+        let missing = directory.join("missing");
+        assert!(matches!(compiler.run_iree_compile(missing.to_str().unwrap(), "diagnostic-spawn", input, "llvm-cpu"),
+            Err(JitDiagnostic::Environment { hint, .. }) if !hint.is_empty()));
+        assert!(matches!(compiler.run_iree_compile(executable.to_str().unwrap(), "diagnostic-no-directory/input", input, "llvm-cpu"),
+            Err(JitDiagnostic::Environment { message, .. }) if message.contains("Cannot write compiler input")));
+        std::fs::remove_dir_all(directory).unwrap();
     }
 
     #[test]
     fn variant_failure_does_not_blacklist_a_definition() {
+        let session = crate::runtime::iree_session::shared_session().unwrap();
         let mut compiler = JitCompiler::new();
-        compiler.jit_fail("polymorphic", "shape-specific codegen failure");
-        assert_eq!(
-            compiler.last_compile_failure.as_deref(),
-            Some("shape-specific codegen failure")
-        );
+        let function = function("polymorphic", body_no_shape_scalar());
+        let registry = HashMap::from([(function.name.clone(), function.clone())]);
+        let small = [tensor_f32(vec![2], 1.0)];
+        let key = cache_key_for_function(&function, &small, &registry).unwrap();
+        compiler.failed_keys.insert(key, JitDiagnostic::Internal("injected failure".into()));
+        assert!(matches!(compiler.try_jit_compile(&function, &small, &registry, &session),
+            JitCompileOutcome::Failed(JitDiagnostic::Internal(_))));
+        let large = [tensor_f32(vec![3], 1.0)];
+        assert!(matches!(compiler.try_jit_compile(&function, &large, &registry, &session), JitCompileOutcome::Compiled(_)));
         assert!(compiler.failed_definitions.is_empty());
-        assert!(compiler.failed_keys.is_empty());
     }
 
     #[test]

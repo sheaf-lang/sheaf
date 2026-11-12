@@ -12,6 +12,7 @@ pub mod error;
 pub mod error_format;
 pub mod expr;
 pub mod inference;
+pub mod jit_diagnostic;
 pub mod macro_engine;
 pub mod parser;
 pub mod prelude;

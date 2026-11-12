@@ -4,6 +4,7 @@
 //! JIT call graph.
 
 use crate::core::expr::{CompiledExpr, FunctionDef};
+use crate::core::jit_diagnostic::{Construct, InterpretedReason, JitDiagnostic};
 use crate::lowering::effects::{collect_effects, collect_hof_calls};
 use std::collections::{HashMap, HashSet};
 
@@ -183,12 +184,12 @@ impl CallGraph {
 pub fn jit_eligibility(
     root: &str,
     registry: &HashMap<String, FunctionDef>,
-) -> Result<(), String> {
+) -> Result<(), JitDiagnostic> {
     let graph = CallGraph::from_registry(registry);
     let reach = graph.reachable(root);
 
     if reach.is_empty() {
-        return Err(format!("unknown function '{}'", root));
+        return Err(JitDiagnostic::Internal(format!("Unknown function '{root}' in the compilation registry")));
     }
 
     let cyclic = graph.nodes_in_cycles();
@@ -199,7 +200,7 @@ pub fn jit_eligibility(
     }
     for &r in &reach {
         if is_cyclic[r] {
-            return Err(format!("recursive call through '{}'", graph.name_of(r)));
+            return Err(JitDiagnostic::Interpreted(InterpretedReason::RecursiveCall(graph.name_of(r).into())));
         }
     }
 
@@ -220,18 +221,17 @@ pub fn jit_eligibility(
     if !effects.is_empty() {
         effects.sort();
         effects.dedup();
-        return Err(format!(
-            "has effects (transitive): {}",
-            effects.join(", ")
-        ));
+        let effects = effects.iter().map(|name| Construct::named(name)
+            .ok_or_else(|| JitDiagnostic::Internal(format!("Unknown effect '{name}'"))))
+            .collect::<Result<Vec<_>, _>>()?;
+        return Err(JitDiagnostic::Interpreted(InterpretedReason::Effects(effects)));
     }
     if !hofs.is_empty() {
         hofs.sort();
         hofs.dedup();
-        return Err(format!(
-            "has HOF calls (transitive): {}",
-            hofs.join(", ")
-        ));
+        let construct = Construct::named(&hofs[0])
+            .ok_or_else(|| JitDiagnostic::Internal(format!("Unknown higher-order operation '{}'", hofs[0])))?;
+        return Err(JitDiagnostic::from_hof(construct));
     }
 
     Ok(())
@@ -240,6 +240,7 @@ pub fn jit_eligibility(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::jit_diagnostic::UnsupportedReason;
     use crate::core::expr::FunctionDef;
     use crate::core::ast::SheafValue;
     use crate::core::error::SourceLocation;
@@ -309,7 +310,7 @@ mod tests {
         assert_eq!(cycles.len(), 2);
 
         let err = jit_eligibility("f", &registry).unwrap_err();
-        assert!(err.contains("recursive"), "missing recursion error: {}", err);
+        assert!(matches!(err, JitDiagnostic::Interpreted(InterpretedReason::RecursiveCall(_))));
     }
 
     #[test]
@@ -325,11 +326,8 @@ mod tests {
         registry.insert("g".to_string(), fn_def("g", g_body));
 
         let err = jit_eligibility("f", &registry).unwrap_err();
-        assert!(
-            err.contains("HOF") && err.contains("map"),
-            "expected transitive-HOF error mentioning 'map': {}",
-            err
-        );
+        assert!(matches!(err, JitDiagnostic::Unsupported(
+            UnsupportedReason::Construct(Construct::Operation(crate::core::signature::OpId::Map)), None)));
     }
 
     #[test]
@@ -358,7 +356,8 @@ mod tests {
         );
 
         let err = jit_eligibility("f", &registry).unwrap_err();
-        assert!(err.contains("print"), "missing transitive effect: {}", err);
+        assert!(matches!(err, JitDiagnostic::Interpreted(InterpretedReason::Effects(effects))
+            if effects == vec![Construct::Operation(crate::core::signature::OpId::Print)]));
     }
 
     #[test]
@@ -403,14 +402,13 @@ mod tests {
         assert!(direct.contains("g"));
 
         let err = jit_eligibility("f", &registry).unwrap_err();
-        assert!(err.contains("HOF") || err.contains("has effects"),
-            "top-level map must trigger HOF/error path: {}",
-            err);
+        assert!(matches!(err, JitDiagnostic::Unsupported(
+            UnsupportedReason::Construct(Construct::Operation(crate::core::signature::OpId::Map)), None)));
     }
 
     #[test]
     fn unknown_root_returns_error() {
         let registry = HashMap::new();
-        assert!(jit_eligibility("nope", &registry).is_err());
+        assert!(matches!(jit_eligibility("nope", &registry), Err(JitDiagnostic::Internal(_))));
     }
 }

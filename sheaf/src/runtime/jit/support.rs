@@ -146,7 +146,7 @@ pub(super) fn manifest_hash_matches(
 }
 
 /// Update the manifest with a new hash entry.
-pub(super) fn update_manifest(cache_dir: &std::path::Path, name: &str, hash: &str) {
+pub(super) fn update_manifest(cache_dir: &std::path::Path, name: &str, hash: &str) -> std::io::Result<()> {
     let manifest_path = cache_dir.join("manifest.json");
     let mut manifest: serde_json::Map<String, serde_json::Value> =
         std::fs::read_to_string(&manifest_path)
@@ -157,8 +157,5 @@ pub(super) fn update_manifest(cache_dir: &std::path::Path, name: &str, hash: &st
         name.to_string(),
         serde_json::Value::String(hash.to_string()),
     );
-    let _ = std::fs::write(
-        &manifest_path,
-        serde_json::to_string_pretty(&manifest).unwrap(),
-    );
+    std::fs::write(&manifest_path, serde_json::to_string_pretty(&manifest)?)
 }

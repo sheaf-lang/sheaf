@@ -110,28 +110,15 @@ pub(super) enum Preparation<T> {
 }
 
 impl<T> Preparation<T> {
-    pub(super) fn ready(self) -> Option<T> {
-        match self {
-            Self::Ready(value) => Some(value),
-            Self::UnboundGlobal(name) => {
-                if crate::core::config::verbosity() > 0 {
-                    crate::sheaf_msg!("jit: skipped (unbound module symbol: {})", name);
-                }
-                None
-            }
-            Self::RecursiveGlobal(name) => {
-                if crate::core::config::verbosity() > 0 {
-                    crate::sheaf_msg!("jit: skipped (recursive call through '{}')", name);
-                }
-                None
-            }
-            Self::GeneratedHigherOrderClosure => {
-                if crate::core::config::verbosity() > 0 {
-                    crate::sheaf_msg!("jit: skipped (generated higher-order closure)");
-                }
-                None
-            }
-        }
+    pub(super) fn ready(self) -> Result<T, crate::core::jit_diagnostic::JitDiagnostic> {
+        use crate::core::jit_diagnostic::{InterpretedReason as Reason, JitDiagnostic};
+        let reason = match self {
+            Self::Ready(value) => return Ok(value),
+            Self::UnboundGlobal(name) => Reason::UninitializedGlobal(name),
+            Self::RecursiveGlobal(name) => Reason::RecursiveCall(name),
+            Self::GeneratedHigherOrderClosure => Reason::GeneratedClosure,
+        };
+        Err(JitDiagnostic::Interpreted(reason))
     }
 
     #[cfg(test)]
