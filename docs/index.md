@@ -1,23 +1,31 @@
 ---
 hide:
+  - navigation
   - toc
+  - footer
 ---
 
-<div style="text-align: center; margin-bottom: 3rem;" class="intro-text">
+<div class="hero" markdown="1">
 
-<div style="display: flex; align-items: center; justify-content: center; gap: 1rem; margin-bottom: 2rem;">
-  <img src="images/sheaf-dark.png" alt="Sheaf" style="height: 5.5rem;">
-  <h1 style="margin: 0; font-size: 4.5rem; font-weight: 500; color: black;">Sheaf</h1>
+<div class="hero-title">
+  <img src="images/sheaf-dark.png#only-light" alt="">
+  <img src="images/sheaf-light.png#only-dark" alt="">
+  <h1>Sheaf</h1>
 </div>
 
-<h2 style="max-width: 36rem; margin-left: auto; margin-right: auto; margin-top: 1rem;">A functional language for differentiable computation</h2>
+<h2>A functional language for differentiable computation</h2>
 
-<p  style="text-align: center; size: 1rem; max-width: 40rem; margin-left: auto; margin-right: auto; margin-top: 1rem;"  markdown="1">
+<p markdown="1">
 
 Sheaf brings Clojure’s code-as-data to machine learning, with models as
 inspectable, composable, and compiled data structures.
 
 </p>
+
+<div class="hero-actions" markdown="1">
+[Get started](quickstart.md){ .md-button .md-button--primary }
+[GitHub](https://github.com/sheaf-lang/sheaf){ .md-button }
+</div>
 
 </div>
 
@@ -50,7 +58,7 @@ inspectable, composable, and compiled data structures.
 
 </div>
 
-## **Neural Networks as Math**
+## Neural Networks as Math
 
 <div class="flex-section" markdown="1">
 <div markdown="1">
@@ -96,7 +104,7 @@ value-and-grad and compiled automatically for CPU or GPU.
 
 </div>
 
-## **Models as Data**
+## Models as Data
 
 <div class="flex-section" markdown="1">
 <div markdown="1">
@@ -126,7 +134,7 @@ architecture variants from a single template.
 </div>
 </div>
 
-## **Observability**
+## Observability
 
 <div class="flex-section" markdown="1">
 <div markdown="1">
@@ -144,7 +152,7 @@ attributes wall time to each function in the call tree.
 
 === "Tracer"
 
-    ```css
+    ```text
     ├─ [train-step] dict(keys:["l1", "l2"]), f32[4x2] [min:0.00e0 max:1.00e0] (32B), f32[4x1] [min:0.00e0 max:1.00e0] (16B), 0.700000
     │ ├─ [forward] f32[4x2] [min:0.00e0 max:1.00e0] (32B), dict(keys:["l1", "l2"])
     │ │ ├─ [relu] f32[4x8] [min:-1.37e0 max:2.33e0] (128B)
@@ -157,7 +165,7 @@ attributes wall time to each function in the call tree.
 
 === "Guards"
 
-    ```css
+    ```text
     $ sheaf train.shf --guard no-nan
     Step 1 | Loss: 0.306990
     Step 2 | Loss: 0.500000
@@ -178,7 +186,7 @@ attributes wall time to each function in the call tree.
 
 === "Profiler"
 
-    ```css
+    ```text
     Profiler: 3.78s wall
 
     Function                          Calls      Total       Self   Avg/call
@@ -213,7 +221,7 @@ attributes wall time to each function in the call tree.
 </div>
 </div>
 
-## **Compact by Construction**
+## Compact by Construction
 
 <div class="flex-section">
 <div markdown="1">
@@ -228,40 +236,38 @@ sampling code. Deploy size is the minimal runtime required to train and run a
 model on a CUDA GPU.
 
 </div>
-<div>
-<div>
-<div style="margin-bottom: 1.5rem;">
-  <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.4rem;"><span><strong>Code size</strong> (GPT-4 tokens)</span></div>
-  <div style="display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.2rem;">
-    <span style="font-size: 0.78rem; width: 80px; color: #666;">Sheaf</span>
-    <div style="flex: 1; background: #e8e8e8; border-radius: 6px; height: 20px; overflow: hidden;"><div style="background: rgb(255, 110, 66); width: 34%; height: 100%; border-radius: 6px;"></div></div>
-    <span style="font-size: 0.78rem; width: 80px; text-align: right;">2,542</span>
+<div class="bar-chart">
+  <div class="bar-group">
+    <div class="bar-title"><strong>Code size</strong> (GPT-4 tokens)</div>
+    <div class="bar-row">
+      <span class="bar-label">Sheaf</span>
+      <div class="bar-track"><div class="bar bar--sheaf" style="width: 34%;"></div></div>
+      <span class="bar-value">2,542</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-label">PyTorch</span>
+      <div class="bar-track"><div class="bar bar--pytorch" style="width: 100%;"></div></div>
+      <span class="bar-value">7,486</span>
+    </div>
   </div>
-  <div style="display: flex; align-items: center; gap: 0.8rem;">
-    <span style="font-size: 0.78rem; width: 80px; color: #666;">PyTorch</span>
-    <div style="flex: 1; background: #e8e8e8; border-radius: 6px; height: 20px; overflow: hidden;"><div style="background: #612156; width: 93%; height: 100%; border-radius: 6px;"></div></div>
-    <span style="font-size: 0.78rem; width: 80px; text-align: right;">7,486</span>
+  <div class="bar-group">
+    <div class="bar-title"><strong>Deploy size</strong></div>
+    <div class="bar-row">
+      <span class="bar-label">Sheaf</span>
+      <div class="bar-track"><div class="bar bar--sheaf" style="width: 0.2%;"></div></div>
+      <span class="bar-value">4 MB</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-label">PyTorch</span>
+      <div class="bar-track"><div class="bar bar--pytorch" style="width: 100%;"></div></div>
+      <span class="bar-value">~2.4 GB</span>
+    </div>
   </div>
-</div>
-<div style="margin-bottom: 1.5rem;">
-  <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.4rem;"><span><strong>Deploy size</strong></span></div>
-  <div style="display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.2rem;">
-    <span style="font-size: 0.78rem; width: 80px; color: #666;">Sheaf</span>
-    <div style="flex: 1; background: #e8e8e8; border-radius: 6px; height: 20px; overflow: hidden;"><div style="background: rgb(255, 110, 66); width: 2%; height: 100%; border-radius: 6px; min-width: 6px;"></div></div>
-    <span style="font-size: 0.78rem; width: 80px; text-align: right;">4 MB</span>
-  </div>
-  <div style="display: flex; align-items: center; gap: 0.8rem;">
-    <span style="font-size: 0.78rem; width: 80px; color: #666;">PyTorch</span>
-    <div style="flex: 1; background: #e8e8e8; border-radius: 6px; height: 20px; overflow: hidden;"><div style="background: #612156; width: 98%; height: 100%; border-radius: 6px;"></div></div>
-    <span style="font-size: 0.78rem; width: 80px; text-align: right;">~2.4 GB</span>
-  </div>
-</div>
-<div style="font-size: 0.7rem; color: #888; margin-top: 0.5rem;">GPT-2 124M · model + training loop + sampler · token count via tiktoken · Sheaf binary includes GPU runtime.</div>
-</div>
+  <div class="bar-note">GPT-2 124M · model + training loop + sampler · token count via tiktoken · Sheaf binary includes GPU runtime.</div>
 </div>
 </div>
 
-## **Native Runtime**
+## Native Runtime
 
 <div class="flex-section" markdown="1">
 <div markdown="1">
@@ -292,6 +298,6 @@ $ du -h *
 
 ---
 
-<div style="text-align: center; margin-bottom: 3rem;" class="intro-text" markdown="1">
-[Get started](quickstart.md){ .md-button }
+<div class="hero-actions" markdown="1">
+[Get started](quickstart.md){ .md-button .md-button--primary }
 </div>

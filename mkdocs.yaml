@@ -1,0 +1,91 @@
+site_name: Sheaf
+site_url: https://sheaf-lang.org
+repo_url: https://github.com/sheaf-lang/sheaf
+edit_uri: edit/main/docs/
+
+use_directory_urls: true
+exclude_docs: |
+  index-v1.md
+  why-lisp.md
+  rationale-draft.md
+  design/
+  logo/
+  overrides/
+
+plugins:
+  search: {}
+
+copyright: © 2025-2026 Damien Boureille · MIT License
+
+extra:
+  generator: false
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/sheaf-lang/sheaf
+      name: Sheaf on GitHub
+
+markdown_extensions:
+  - admonition
+  - md_in_html
+  - attr_list
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      use_pygments: true
+      pygments_lang_class: true
+  - pymdownx.superfences:
+      preserve_tabs: true
+
+theme:
+  name: material
+  custom_dir: docs/overrides
+  logo: images/sheaf-light.png
+  favicon: images/favicon.png
+  font:
+    code: Fira Code
+  palette:
+    - media: "(prefers-color-scheme)"
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.footer
+    - content.code.copy
+    - content.code.annotate
+
+extra_css:
+  - stylesheets/extra.css
+
+extra_javascript:
+  - javascripts/favicon.js
+  - javascripts/clean-url.js
+
+nav:
+  - Documentation:
+      - Quick Start: quickstart.md
+      - Rationale: rationale.md
+      - Starting with Sheaf: starting.md
+      - Key Concepts: key-concepts.md
+      - Data types: types.md
+      - Version history: changelog.md
+      - Roadmap: roadmap.md
+  - Reference:
+      - Builtins: reference.md
