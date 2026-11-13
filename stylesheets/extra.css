@@ -18,7 +18,7 @@
     /* Darker orange, passes WCAG AA on white and on #f5f5f5 */
     --md-accent-fg-color: #c2410c;
     --md-accent-fg-color--transparent: rgba(194, 65, 12, 0.1);
-    --md-typeset-a-color: var(--sheaf-primary);
+    --md-typeset-a-color: #c2410c;
 
     --sheaf-heading: black;
     --sheaf-nav-active: var(--sheaf-primary);

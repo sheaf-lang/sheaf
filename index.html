@@ -389,7 +389,7 @@
   <span class="md-ellipsis">
     
   
-    Quick Start
+    Get started
   
 
     
@@ -692,10 +692,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#a-functional-language-for-differentiable-computation" class="md-nav__link">
+  <a href="#a-functional-language-for-machine-learning" class="md-nav__link">
     <span class="md-ellipsis">
       
-        A functional language for differentiable computation
+        A functional language for machine learning
       
     </span>
   </a>
@@ -807,11 +807,11 @@
   <img src="images/sheaf-light.png#only-dark" alt="">
   <h1 id="sheaf">Sheaf</h1>
 </div>
-<h2 id="a-functional-language-for-differentiable-computation">A functional language for differentiable computation</h2>
+<h2 id="a-functional-language-for-machine-learning">A functional language for machine learning</h2>
 <p>
 
 Sheaf brings Clojure’s code-as-data to machine learning, with models as
-inspectable, composable, and compiled data structures.
+inspectable, composable, and compiled data structures — without Python.
 
 </p>
 <div class="hero-actions">
@@ -887,7 +887,8 @@ value-and-grad and compiled automatically for CPU or GPU.</p>
 parameter groups. Even structural operations like pruning, freezing, or weight
 sharing are expressed as regular data transformations.</p>
 <p>Sheaf brings compile-time macros to the computation graph itself, generating
-architecture variants from a single template.</p>
+architecture variants from a single template. This is the main reason Sheaf is
+a Lisp: code and models share the same representation.</p>
 </div>
 <div>
 <div class="language-clojure highlight"><pre><span></span><code><span class="c1">;; Grow a model: add a layer at runtime</span>
@@ -983,8 +984,8 @@ Function                          Calls      Total       Self   Avg/call
 <div class="flex-section">
 <div markdown="1">
 
-The complete NanoGPT implementation in Sheaf is 2,542 tokens, while the
-equivalent PyTorch is 7,486 — a 66% context reduction. Sheaf's uniform syntax
+The complete NanoGPT implementation in Sheaf is 2,922 tokens, while the
+equivalent PyTorch is 7,486 — a 61% context reduction. Sheaf's uniform syntax
 keeps the code concise and unambiguous.
 <br/><br/>
 
@@ -998,8 +999,8 @@ model on a CUDA GPU.
     <div class="bar-title"><strong>Code size</strong> (GPT-4 tokens)</div>
     <div class="bar-row">
       <span class="bar-label">Sheaf</span>
-      <div class="bar-track"><div class="bar bar--sheaf" style="width: 34%;"></div></div>
-      <span class="bar-value">2,542</span>
+      <div class="bar-track"><div class="bar bar--sheaf" style="width: 39%;"></div></div>
+      <span class="bar-value">2,922</span>
     </div>
     <div class="bar-row">
       <span class="bar-label">PyTorch</span>
@@ -1028,7 +1029,8 @@ model on a CUDA GPU.
 <div class="flex-section">
 <div>
 <p>Sheaf is written in Rust. The complete runtime with GPU backends ships as a
-single 4 MB executable.</p>
+single 4 MB executable. The same script runs on Apple Silicon through Metal,
+on NVIDIA GPUs through CUDA, and on CPU.</p>
 <p>The compiler toolchain is downloaded on first use and is not required to run a
 compiled model.</p>
 </div>

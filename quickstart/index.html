@@ -23,7 +23,7 @@
     
     
       
-        <title>Quick Start - Sheaf</title>
+        <title>Get started - Sheaf</title>
       
     
     
@@ -60,7 +60,7 @@
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="Sheaf" />
 
-<meta property="og:title" content="Quick Start - Sheaf" />
+<meta property="og:title" content="Get started - Sheaf" />
 
 <meta
     property="og:description"
@@ -91,7 +91,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#quick-start" class="md-skip">
+        <a href="#get-started" class="md-skip">
           Skip to content
         </a>
       
@@ -126,7 +126,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Quick Start
+              Get started
             
           </span>
         </div>
@@ -405,7 +405,7 @@
   <span class="md-ellipsis">
     
   
-    Quick Start
+    Get started
   
 
     
@@ -423,7 +423,7 @@
   <span class="md-ellipsis">
     
   
-    Quick Start
+    Get started
   
 
     
@@ -895,7 +895,7 @@
   
 
 
-<h1 id="quick-start">Quick Start</h1>
+<h1 id="get-started">Get started</h1>
 <p>Sheaf ships as a single native binary with no runtime dependencies.</p>
 <h2 id="installation">Installation</h2>
 <p>Download the binary for your platform from the <a href="https://github.com/sheaf-lang/sheaf/releases">releases page</a>:</p>
@@ -903,31 +903,31 @@
 <thead>
 <tr>
 <th>Platform</th>
-<th>Binary</th>
+<th>Archive</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>macOS (Apple Silicon)</td>
-<td><code>sheaf-macos-aarch64</code></td>
+<td><code>sheaf-macos-aarch64.tar.gz</code></td>
 </tr>
 <tr>
 <td>Linux x86_64</td>
-<td><code>sheaf-linux-x86_64</code></td>
+<td><code>sheaf-linux-x86_64.tar.gz</code></td>
 </tr>
 <tr>
 <td>Linux aarch64</td>
-<td><code>sheaf-linux-aarch64</code></td>
+<td><code>sheaf-linux-aarch64.tar.gz</code></td>
 </tr>
 </tbody>
 </table>
-<p>Make the binary executable and move it to your PATH:</p>
-<div class="language-bash highlight"><pre><span></span><code>chmod<span class="w"> </span>+x<span class="w"> </span>sheaf-macos-aarch64
-mv<span class="w"> </span>sheaf-macos-aarch64<span class="w"> </span>/usr/local/bin/sheaf
+<p>Extract the archive and move the binary to your PATH:</p>
+<div class="language-bash highlight"><pre><span></span><code>tar<span class="w"> </span>xzf<span class="w"> </span>sheaf-macos-aarch64.tar.gz
+mv<span class="w"> </span>sheaf<span class="w"> </span>/usr/local/bin/sheaf
 </code></pre></div>
 <h2 id="repl">REPL</h2>
 <p>Run <code>sheaf</code> with no arguments to start the interactive console:</p>
-<div class="language-text highlight"><pre><span></span><code>Sheaf 2.0.0 (:h for help)
+<div class="language-text highlight"><pre><span></span><code>Sheaf 2.3.0 (:h for help)
 sheaf&gt; (+ 1 2)
 =&gt; 3
 sheaf&gt; (map (fn [x] (* x x)) [1 2 3 4])
@@ -938,17 +938,24 @@ sheaf&gt; (map (fn [x] (* x x)) [1 2 3 4])
 <p>To run a program, pass the source file to <code>sheaf</code>:</p>
 <div class="language-bash highlight"><pre><span></span><code>sheaf<span class="w"> </span>run.shf
 </code></pre></div>
+<p>Sheaf picks a GPU when one is available: Metal on Apple Silicon, CUDA on NVIDIA.
+Use <code>--device</code> to choose explicitly, for example <code>--device cpu</code>.</p>
+<p>Compiled functions are cached in a <code>__sheaf__</code> directory next to the script.
+The first compilation downloads the IREE compiler to <code>~/.sheaf/toolchain/</code>,
+which takes a moment. Later runs reuse both.</p>
 <h2 id="examples">Examples</h2>
-<p>Download the examples archive from the <a href="https://github.com/sheaf-lang/sheaf/releases">releases page</a> (<a href="https://github.com/sheaf-lang/sheaf/releases/download/v2.0.0-rc1/sheaf-examples.tar.gz">direct link</a>). Each example is self-contained:</p>
-<div class="language-bash highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>examples/mlp
-sheaf<span class="w"> </span>run.shf
+<p>Download the examples archive from the <a href="https://github.com/sheaf-lang/sheaf/releases">releases page</a> (<a href="https://github.com/sheaf-lang/sheaf/releases/latest/download/sheaf-examples.tar.gz">direct link</a>). Each example is self-contained. NanoGPT comes with pretrained weights, so you
+can generate Shakespeare-like text right away:</p>
+<div class="language-bash highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>examples/nanogpt
+sheaf<span class="w"> </span>sample.shf
 </code></pre></div>
 <p>Available examples:</p>
 <ul>
 <li><strong><a href="https://github.com/sheaf-lang/sheaf/tree/main/examples/clevr">CLEVR</a></strong>: A neuro-symbolic model for visual question answering</li>
 <li><strong><a href="https://github.com/sheaf-lang/sheaf/tree/main/examples/hydra">Hydra</a></strong>: A self-modifying model that grows during training</li>
+<li><strong><a href="https://github.com/sheaf-lang/sheaf/tree/main/examples/macros">Macros</a></strong>: Two networks generated from the same layer list</li>
 <li><strong><a href="https://github.com/sheaf-lang/sheaf/tree/main/examples/mlp">MLP</a></strong>: "Hello World" example of a small multi-layer network to solve XOR</li>
-<li><strong><a href="https://github.com/sheaf-lang/sheaf/tree/main/examples/nanoGPT">NanoGPT</a></strong>: A port of Karpathy's nanoGPT in Sheaf</li>
+<li><strong><a href="https://github.com/sheaf-lang/sheaf/tree/main/examples/nanogpt">NanoGPT</a></strong>: A port of Karpathy's nanoGPT in Sheaf</li>
 </ul>
 <h2 id="ai-assistant-bootstrap">AI assistant bootstrap</h2>
 <p><code>sheaf init-ai</code> generates a context file in the current directory. Provide this file to Claude Code, Cursor, Copilot, or any other assistant to get code generation, code completion, and debugging help.</p>
