@@ -62,11 +62,7 @@ pub fn trace_function_signature(
         })
         .collect();
 
-    let mut registry = compiler.registry.clone();
-    for function in registry.values_mut() {
-        function.vmfb_module_name = None;
-    }
-    let mut env = Env::with_registry(registry);
+    let mut env = Env::with_registry(compiler.registry.clone());
     register_builtins(&mut env);
     register_trace_overrides(&mut env);
 

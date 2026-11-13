@@ -19,8 +19,6 @@ pub mod iree_session;
 pub mod jit;
 #[cfg(iree_runtime)]
 pub mod toolchain;
-#[cfg(iree_runtime)]
-pub mod vmfb_loader;
 
 pub fn report_jit_profile() {
     #[cfg(iree_runtime)]

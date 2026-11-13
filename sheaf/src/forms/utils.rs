@@ -225,11 +225,6 @@ impl SpecialForm for UseForm {
                 },
             })?;
 
-        // Track which functions exist before compiling the module
-        #[cfg(iree_runtime)]
-        let pre_fns: std::collections::HashSet<String> =
-            compiler.registry.keys().cloned().collect();
-
         // Keep the scopes and control flow surrounding imported initializers.
         fn has_initializer(expr: &CompiledExpr) -> bool {
             if matches!(expr, CompiledExpr::Def { .. }) { return true; }
@@ -241,18 +236,6 @@ impl SpecialForm for UseForm {
         for expr in &exprs {
             let compiled = compiler.compile(expr)?;
             if has_initializer(&compiled) { defs.push(compiled); }
-        }
-
-        // Try to load companion VMFB for the imported module
-        #[cfg(iree_runtime)]
-        {
-            let new_fns: Vec<String> = compiler
-                .registry
-                .keys()
-                .filter(|k| !pre_fns.contains(*k))
-                .cloned()
-                .collect();
-            crate::runtime::vmfb_loader::try_load_vmfb(compiler, &resolved, &new_fns);
         }
 
         // Restore previous current_dir

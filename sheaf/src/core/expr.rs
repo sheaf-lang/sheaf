@@ -82,12 +82,6 @@ pub struct CompilerContext {
     /// Directory of the file currently being compiled (for relative use paths)
     pub current_dir: Option<PathBuf>,
 
-    /// When true, skip VMFB loading (used during sheaf build --trace-with)
-    pub disable_vmfb: bool,
-
-    /// Directories already checked for VMFB loading (prevents duplicate warnings)
-    pub checked_vmfb_dirs: HashSet<PathBuf>,
-
     /// Macro expansion engine
     pub macro_engine: MacroEngine,
 
@@ -106,8 +100,6 @@ pub struct FunctionDef {
     /// Code registered by def is not a runtime binding until its initializer runs.
     pub requires_initialization: bool,
     pub signature: Option<crate::core::inference::FunctionSignature>,
-    /// IREE module name used for qualified dispatch.
-    pub vmfb_module_name: Option<String>,
     /// Known parameter types from annotations (shape annotations + traced layouts).
     /// Used by the tracing compiler to create dummy inputs.
     pub known_param_types: Vec<(String, crate::lowering::stablehlo::StableHLOType)>,
@@ -116,7 +108,7 @@ pub struct FunctionDef {
 }
 
 impl FunctionDef {
-    /// Compiler identity and original AST body for manifest validation.
+    /// Compiler identity and original AST body for JIT cache keys.
     /// Source locations do not affect compiled output and are excluded.
     pub fn body_hash(&self) -> String {
         canonical_ast_hash(&self.body)
@@ -278,8 +270,6 @@ impl CompilerContext {
             loaded_modules: HashSet::new(),
             prelude_modules: HashSet::new(),
             current_dir: None,
-            disable_vmfb: false,
-            checked_vmfb_dirs: HashSet::new(),
             macro_engine: MacroEngine::new(),
             allow_internal_ops: false,
         }

@@ -306,7 +306,6 @@ impl SpecialForm for DefnForm {
                 body_compiled,
                 requires_initialization: initialization.is_some(),
                 signature: signature_opt.filter(|_| initialization.is_none()),
-                vmfb_module_name: None,
                 known_param_types,
                 compile_error: compile_err,
             },
@@ -364,7 +363,6 @@ impl SpecialForm for DefForm {
                 body_compiled: Some(body.clone()),
                 requires_initialization: true,
                 signature: None,
-                vmfb_module_name: None,
                 known_param_types: Vec::new(),
                 compile_error: None,
             });

@@ -35,6 +35,14 @@ sheaf_integration_test(
         "SHEAF_TEST_BINARY": "$(rootpath //sheaf:bin)",
     },
 )
+sheaf_integration_test(
+    name = "legacy_aot_tests",
+    data = ["//sheaf:bin", "@iree_compiler//:iree-compile"],
+    env = {
+        "IREE_COMPILE": "$(rootpath @iree_compiler//:iree-compile)",
+        "SHEAF_TEST_BINARY": "$(rootpath //sheaf:bin)",
+    },
+)
 sheaf_integration_test(name = "compiler_tests")
 sheaf_integration_test(
     name = "interpreter_tests",
@@ -199,6 +207,7 @@ test_suite(
         ":nanogpt_state_tests",
         ":regression_runtime_dtypes",
         ":interpreter_tests",
+        ":legacy_aot_tests",
         ":mem_attribution",
         ":parser_tests",
         ":polymorphic_jit_reuse",

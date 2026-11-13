@@ -265,7 +265,6 @@ mod tests {
             body_compiled: Some(body.into()),
             requires_initialization: false,
             signature: None,
-            vmfb_module_name: None,
             known_param_types: Vec::new(),
             compile_error: None,
         }

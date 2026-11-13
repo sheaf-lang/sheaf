@@ -48,44 +48,19 @@ pub(super) fn try_iree_dispatch(
     if let Err(error) = validate_device_dtypes(args) {
         return Some(Err(error));
     }
-    let aot_variant = match func_def.signature.as_ref() {
-        Some(signature)
-            if crate::runtime::iree_session::args_match_signature(args, &signature.param_types)
-                && crate::runtime::iree_session::check_shapes_match(
-                    args,
-                    &signature.param_types,
-                )
-                .is_ok() =>
-        {
-            match crate::runtime::iree_session::initialized_shared_session() {
-                Some(session) => {
-                    match session.precompiled_module_for(&func_def.name, &func_def.body_hash()) {
-                        Ok(module_name) => module_name.map(|name| (name, signature.clone())),
-                        Err(e) => return Some(Err(e)),
-                    }
-                }
-                None => None,
-            }
-        }
-        _ => None,
+    let jit = env.jit_compiler.as_mut()?;
+    let info = if let Some(info) = jit.module_for_args(func_def, args) {
+        info
+    } else {
+        let key = crate::runtime::jit::cache_key_for_function(
+            func_def,
+            args,
+            &env.registry,
+        )?;
+        jit.module_for_key(&key, func_def)?
     };
-    let (full_name, sig) = match aot_variant {
-        Some((module_name, signature)) => (dispatch_name(&module_name, &func_def.name), signature),
-        None => {
-            let jit = env.jit_compiler.as_mut()?;
-            let info = if let Some(info) = jit.module_for_args(func_def, args) {
-                info
-            } else {
-                let key = crate::runtime::jit::cache_key_for_function(
-                    func_def,
-                    args,
-                    &env.registry,
-                )?;
-                jit.module_for_key(&key, func_def)?
-            };
-            (jit_dispatch_name(&info, &func_def.name), info.sig)
-        }
-    };
+    let full_name = jit_dispatch_name(&info, &func_def.name);
+    let sig = info.sig;
 
     let iree_session = match crate::runtime::iree_session::shared_session() {
         Ok(session) => session,

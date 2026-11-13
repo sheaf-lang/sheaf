@@ -36,12 +36,6 @@ pub fn eval_source_with_path(
     for expr in &exprs {
         compiled.push(compiler.compile(expr)?);
     }
-    #[cfg(iree_runtime)]
-    if let Some(path) = file_path {
-        let all_fns: Vec<String> = compiler.registry.keys().cloned().collect();
-        crate::runtime::vmfb_loader::try_load_vmfb(&mut compiler, path, &all_fns);
-    }
-
     let mut env = Env::with_registry(compiler.registry.clone());
     register_builtins(&mut env);
     let mut last = Value::Nil;
@@ -74,12 +68,6 @@ pub fn eval_source_with_tracing(
     let mut compiled = Vec::new();
     for expr in &exprs {
         compiled.push(compiler.compile(expr)?);
-    }
-
-    #[cfg(iree_runtime)]
-    if let Some(path) = file_path {
-        let all_fns: Vec<String> = compiler.registry.keys().cloned().collect();
-        crate::runtime::vmfb_loader::try_load_vmfb(&mut compiler, path, &all_fns);
     }
 
     let mut env = Env::with_registry(compiler.registry.clone());
@@ -147,12 +135,6 @@ fn eval_source_with_blame_internal(
     let mut compiled = Vec::new();
     for expr in &exprs {
         compiled.push(compiler.compile(expr)?);
-    }
-
-    #[cfg(iree_runtime)]
-    if let Some(path) = file_path {
-        let all_fns: Vec<String> = compiler.registry.keys().cloned().collect();
-        crate::runtime::vmfb_loader::try_load_vmfb(&mut compiler, path, &all_fns);
     }
 
     let mut env = Env::with_registry(compiler.registry.clone());
