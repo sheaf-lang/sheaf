@@ -23,59 +23,12 @@
       <link rel="icon" href="../images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
-     
+    
       
         <title>Starting with Sheaf - Sheaf</title>
       
     
-<link rel="icon" type="image/png" href="../images/favicon.png" />
-<meta name="robots" content="index, follow" />
-<meta property="og:image" content="../images/sheaf-dark.png" />
-<meta name="twitter:card" content="summary_large_image" />
-<meta
-    property="og:title"
-    content="Sheaf - A functional language for machine learning. Inspired by Clojure, JIT-compiled to native GPU code."
-/>
-<meta
-    property="og:description"
-    content="Inspired by Clojure. Designed from the ground up for machine learning. Compiles to native GPU code."
-/>
-<link
-    href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&display=swap"
-    rel="stylesheet"
-/>
-<style>
-    /* Replace mkdocs logo with custom logo - header */
-    .md-header__button.md-logo {
-        background-image: url("../images/sheaf-light.png");
-        background-size: contain;
-        background-repeat: no-repeat;
-        background-position: center;
-    }
-
-    .md-header__button.md-logo img,
-    .md-header__button.md-logo svg {
-        opacity: 0;
-    }
-
-    /* Replace mkdocs logo with custom logo - sidebar (responsive menu) */
-    .md-nav__title {
-        background-image: url("../images/sheaf-light.png");
-        background-size: 64px 64px;
-        background-repeat: no-repeat;
-        background-position: center;
-        padding-left: 30px !important;
-        font-size: 0 !important;
-        height: 24px !important;
-    }
-
-    .md-nav__title img,
-    .md-nav__title svg {
-        opacity: 0;
-    }
-</style>
-
-     
+    
       <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
       
         
@@ -85,424 +38,6 @@
 
 
     
-<style>
-    /* === GLOBAL STYLES (all pages) === */
-
-    /* === COLOR PALETTE #418d95ff, #421168 === */
-    :root {
-        --sheaf-primary: #612156;
-        --md-primary-fg-color: #421168;
-        --md-primary-fg-color--light: #5a1a8c;
-        --md-primary-fg-color--dark: #2d0b4a;
-        --md-code-font: "Fira Code";
-        --md-code-font-family: "Fira Code", monospace;
-    }
-
-    /* Override primary color from Material theme */
-    .md-header,
-    .md-tabs,
-    .md-nav__link--active,
-    .md-nav__item:target > .md-nav__link,
-    a {
-        --md-primary-fg-color: var(--sheaf-primary) !important;
-    }
-
-    .md-header {
-        background-color: var(--sheaf-primary) !important;
-    }
-
-    .md-tabs {
-        background-color: var(--sheaf-primary) !important;
-    }
-
-    .md-nav__link:hover {
-        color: var(--sheaf-primary) !important;
-    }
-
-    .md-nav__link--active {
-        color: var(--sheaf-primary) !important;
-        border-color: var(--sheaf-primary) !important;
-    }
-
-    .md-typeset a:not(.md-button) {
-        color: rgb(255, 110, 66) !important;
-    }
-
-    a:hover {
-        opacity: 0.8;
-    }
-
-    .md-footer {
-        background-color: #410136;
-        font-size: 0.5rem !important;
-    }
-
-    .md-footer__inner {
-        justify-content: center !important;
-        margin: 0 auto !important;
-    }
-
-    .md-footer__inner,
-    .md-footer span,
-    .md-footer div {
-        font-size: 0.6rem !important;
-    }
-
-    /* Reduce TOC (right sidebar) width */
-    .md-sidebar--secondary {
-        width: 10rem;
-    }
-
-    /* Optionally reduce left sidebar too */
-    .md-sidebar--primary {
-        width: 10rem;
-    }
-
-    /* Code styling */
-    code,
-    pre,
-    .highlight {
-        font-family: "Fira Code", monospace !important;
-        text-shadow: 0.25px 0 0 currentColor;
-    }
-
-    /* Inline code only (not in code blocks) */
-    .md-typeset p code,
-    .md-typeset li code,
-    .md-typeset table code {
-        font-size: 0.7rem !important;
-    }
-
-    .highlight {
-        color: black;
-        font-size: 0.9rem;
-        font-weight: 400;
-        line-height: 1.4;
-        text-shadow: 0.1px 0 0 currentColor;
-        background-color: #f5f5f5 !important;
-        border-radius: 0.9rem;
-        padding: 0.75rem !important;
-        overflow-x: auto;
-    }
-
-    /* Sheaf/Lisp syntax highlighting */
-    .language-sheaf .k {
-        color: #d73a49;
-    } /* Keywords */
-    .language-sheaf .n {
-        color: #24292e;
-    } /* Names */
-    .language-sheaf .s {
-        color: #032f62;
-    } /* Strings */
-    .language-sheaf .m {
-        color: #005cc5;
-    } /* Numbers */
-    .language-sheaf .c {
-        color: #6a737d;
-    } /* Comments */
-
-    /* Pygments theme for code blocks */
-    .highlight .c {
-        color: #6a737d;
-        font-style: italic;
-    } /* Comment */
-    .highlight .k {
-        color: #d73a49;
-        font-weight: bold;
-    } /* Keyword */
-    .highlight .n {
-        color: #24292e;
-    } /* Name */
-    .highlight .s {
-        color: #032f62;
-    } /* String */
-    .highlight .m {
-        color: #005cc5;
-    } /* Number */
-    .highlight .nb {
-        color: #6f42c1;
-    } /* Name.Builtin */
-    .highlight .p {
-        color: #24292e;
-    } /* Punctuation */
-
-    /* Hero section: 2 columns, 50/50 split */
-    .flex-section-header {
-        width: 95% !important;
-        margin: 1rem auto 4rem auto !important;
-        padding-left: 2rem !important;
-        padding-right: 2rem !important;
-        padding-bottom: 3rem;
-        background-color: #f5f5f5 !important;
-        border-radius: 0.9rem !important;
-        display: flex !important;
-        gap: 2rem !important;
-        align-items: flex-start !important;
-        font-size: inherit !important;
-    }
-
-    .flex-section-header > div {
-        flex: 0 0 50% !important;
-        padding: 0 1rem !important;
-        margin-top: -1rem;
-        margin-right: -1rem;
-        min-width: 0 !important;
-    }
-
-    /* Flex section layout (replaces old feature-columns tables) */
-    .flex-section {
-        display: flex;
-        gap: 2rem;
-        padding: 1rem 0;
-        margin: 1rem 0 3rem 0;
-        align-items: center;
-        font-size: 0.9rem !important;
-    }
-
-    /* Center single code block vertically (only if it's the only code child) */
-    .flex-section > *:last-child:has(.highlight):only-of-type {
-        display: flex;
-        align-items: center;
-    }
-
-    .flex-section > * {
-        flex: 1;
-    }
-
-    .flex-section > *:first-child {
-        flex: 0 0 33.33%;
-        padding-right: 1rem;
-    }
-
-    .flex-section > *:last-child {
-        flex: 0 0 66.67%;
-        min-width: 0; /* Allow flex child to shrink below content size */
-        overflow: hidden;
-    }
-
-    .flex-section .highlight {
-        margin: 0 !important;
-        padding: 0.75rem !important;
-    }
-
-    .flex-section .highlight {
-        overflow-x: auto !important;
-        max-width: 100% !important;
-        width: 100% !important;
-        box-sizing: border-box !important;
-    }
-
-    .flex-section .highlight code {
-        line-height: 1.5 !important;
-    }
-
-    .flex-section pre {
-        margin: 0 !important;
-        overflow-x: auto !important;
-        max-width: 100% !important;
-        box-sizing: border-box !important;
-    }
-
-    /* Flex grid styling (for markdown content in flex containers) */
-    div[style*="display: flex"] {
-        font-size: 0.9rem;
-        margin: 1rem 0;
-    }
-
-    div[style*="display: flex"] code {
-        font-size: 0.85rem;
-    }
-
-    div[style*="display: flex"] pre {
-        font-size: 0.85rem;
-    }
-
-    /* === RESPONSIVE DESIGN === */
-    /* Mobile landscape mode: force flex sections to stack */
-    @media (orientation: landscape) and (max-height: 500px) {
-        /* Simple approach: just disable flex layout */
-        .flex-section-header {
-            display: block !important;
-            padding: 1rem !important;
-        }
-
-        .flex-section-header > div {
-            margin-bottom: 1rem !important;
-        }
-
-        .flex-section {
-            display: block !important;
-            padding: 0 !important;
-            margin: 1rem 0 !important;
-        }
-
-        .flex-section > * {
-            margin-bottom: 1rem !important;
-            padding: 0 !important;
-        }
-
-        /* Reduce text and code size for landscape */
-        .highlight {
-            font-size: 0.7rem !important;
-        }
-
-        .highlight code {
-            font-size: 0.7rem !important;
-        }
-    }
-
-    @media (max-width: 768px) {
-        /* Force mobile viewport */
-        body,
-        html {
-            overflow-x: hidden !important;
-            width: 100% !important;
-            max-width: 100% !important;
-        }
-
-        .md-container,
-        .md-main,
-        .md-content {
-            width: 100% !important;
-            max-width: 100% !important;
-            overflow-x: hidden !important;
-        }
-
-        .md-content__inner {
-            width: calc(100vw - 1.5rem) !important;
-            max-width: calc(100vw - 1.5rem) !important;
-            padding-left: 0.75rem !important;
-            padding-right: 0.75rem !important;
-            overflow-x: hidden !important;
-            box-sizing: border-box !important;
-        }
-
-        /* Force ALL direct children to fit viewport */
-        .md-content__inner > * {
-            width: 100% !important;
-            max-width: 100% !important;
-            box-sizing: border-box !important;
-        }
-
-        /* Fix tabs overflow on mobile */
-        .tabbed-set {
-            width: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-
-        .tabbed-labels,
-        .tabbed-labels--linked {
-            width: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            transform: none !important;
-            display: flex !important;
-            overflow-x: auto !important;
-            -webkit-overflow-scrolling: touch !important;
-            position: relative !important;
-        }
-
-        .tabbed-labels > * {
-            flex-shrink: 0 !important;
-        }
-
-        .tabbed-content {
-            margin: 0 !important;
-            padding: 0 !important;
-            width: 100% !important;
-        }
-
-        /* Mobile navigation drawer */
-        .md-nav--primary {
-            display: block !important;
-        }
-
-        /* Mobile navigation drawer header background */
-        .md-nav__title {
-            background-color: var(--sheaf-primary) !important;
-        }
-
-        .flex-section {
-            flex-direction: column !important;
-            padding: 1rem !important;
-        }
-
-        .flex-section-header {
-            width: 100% !important;
-            flex-direction: column !important;
-        }
-
-        .flex-section-header > div {
-            flex: 0 0 100% !important;
-            padding: 1rem 0 !important;
-        }
-
-        .flex-section > *:last-child:has(.highlight):only-of-type {
-            flex-direction: column !important;
-            width: 100% !important;
-        }
-
-        .flex-section .highlight {
-            width: auto !important;
-            min-width: 0 !important;
-            max-width: 100% !important;
-            box-sizing: border-box !important;
-            overflow-x: auto;
-            margin: 0 !important;
-        }
-
-        .highlight {
-            font-size: 0.75rem !important;
-            margin: 0 !important;
-            padding: 0.5rem !important;
-        }
-
-        /* Ensure all content inside mobile container fits viewport */
-        .md-content__inner > * {
-            width: 100% !important;
-            max-width: calc(100vw - 1.5rem) !important;
-            box-sizing: border-box !important;
-        }
-
-        /* Force parent containers too - but not the navigation */
-        .md-content .flex-section > div {
-            width: 100% !important;
-            min-width: 0 !important;
-            max-width: 100% !important;
-        }
-
-        /* Force all code containers */
-        pre,
-        code {
-            width: auto !important;
-            max-width: 100% !important;
-            box-sizing: border-box !important;
-            overflow-x: auto !important;
-            white-space: pre !important;
-            word-wrap: normal !important;
-        }
-
-        .highlight code {
-            font-size: 0.75rem !important;
-        }
-
-        pre {
-            max-width: 100% !important;
-            overflow-x: auto !important;
-            padding: 0.5rem !important;
-        }
-
-        .md-footer__inner {
-            justify-content: center !important;
-        }
-    }
-</style>
-
- 
     
       
     
@@ -511,8 +46,8 @@
         
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
-        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CFira+Code:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Fira Code"}</style>
       
     
     
@@ -524,15 +59,32 @@
 
     
     
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Sheaf" />
+
+<meta property="og:title" content="Starting with Sheaf - Sheaf" />
+
+<meta
+    property="og:description"
+    content="Inspired by Clojure. Designed from the ground up for machine learning. Compiles to native GPU code."
+/>
+
+<meta property="og:url" content="https://sheaf-lang.org/starting/" />
+
+<meta property="og:image" content="https://sheaf-lang.org/images/sheaf-dark.png" />
+<meta name="twitter:card" content="summary" />
+
   </head>
   
   
     
     
+      
     
     
     
-    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="deep-orange">
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
   
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
@@ -550,7 +102,7 @@
       
     </div>
     
-     
+    
       
 
   
@@ -584,7 +136,43 @@
     </div>
     
       
+        <form class="md-header__option" data-md-component="palette">
+  
     
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme)" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9zM20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12zm-9.15 3.96h2.3L12 9z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to system preference"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="Switch to system preference" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
     
     
     
@@ -691,33 +279,13 @@
   
 
       
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../blog/6/" class="md-tabs__link">
-          
-  
-  
-  Blog
-
-        </a>
-      </li>
-    
-  
-
-      
     </ul>
   </div>
 </nav>
     
   
 </header>
-     
+    
     <div class="md-container" data-md-component="container">
       
       
@@ -1274,231 +842,6 @@
     
   
     Builtins
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
-        
-          
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Blog
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Blog
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../blog/6/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Symbolic Autodiff Hits a Wall
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../blog/5/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Catching PyTorch's Performance
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../blog/4/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    A Single Binary ML Framework
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../blog/3/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Ditching Enzyme: A Case for Symbolic Autodiff in Sheaf V2
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../blog/2/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Picking a language for Sheaf's Compiler
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../blog/1/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    On the Future of Sheaf
   
 
     
@@ -2151,25 +1494,74 @@ commands.</em></p>
         
       </main>
       
-<footer class="md-footer">
-    <div
-        class="md-footer__inner md-grid"
-        style="
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-        "
-    >
-        <img
-            src="../images/sheaf-light.png"
-            alt="Logo"
-            style="height: 24px"
-        />
-        <span>| © 2025-2026 Damien Boureille</span>
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../rationale/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Rationale">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Rationale
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../key-concepts/" class="md-footer__link md-footer__link--next" aria-label="Next: Key Concepts">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Key Concepts
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  <img class="md-copyright__logo" src="../images/sheaf-light.png" alt="" />
+  
+  <span class="md-copyright__highlight">© 2025-2026 Damien Boureille · MIT License</span>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+    <a href="https://github.com/sheaf-lang/sheaf" target="_blank" rel="noopener" title="Sheaf on GitHub" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
     </div>
+  </div>
 </footer>
-
+      
     </div>
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
@@ -2179,12 +1571,12 @@ commands.</em></p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.tabs.sticky", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.footer", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
       
-        <script src="../javascripts/fix-drawer.js"></script>
+        <script src="../javascripts/favicon.js"></script>
       
         <script src="../javascripts/clean-url.js"></script>
       

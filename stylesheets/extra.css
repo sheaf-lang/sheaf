@@ -1,43 +1,392 @@
-/* Fix drawer visibility - force display on all screen sizes */
+/* === Palette === */
 
-/* Desktop: show tabs */
-@media screen and (min-width: 60em) {
-    .md-tabs {
-        display: block !important;
-    }
+/* Material sets its own color variables on body[data-md-color-scheme], so
+   ours have to be declared on the same selectors to take effect. */
 
-    .md-header__button[for="__drawer"] {
-        display: none !important;
+:root {
+    --sheaf-primary: #612156;
+    --sheaf-primary-dark: #410136;
+    /* Brand orange, for decoration only (too light for text on white) */
+    --sheaf-orange: #ff6e42;
+
+    --md-primary-fg-color: var(--sheaf-primary);
+    --md-primary-fg-color--light: #7d3a71;
+    --md-primary-fg-color--dark: var(--sheaf-primary-dark);
+}
+
+[data-md-color-scheme="default"] {
+    /* Darker orange, passes WCAG AA on white and on #f5f5f5 */
+    --md-accent-fg-color: #c2410c;
+    --md-accent-fg-color--transparent: rgba(194, 65, 12, 0.1);
+    --md-typeset-a-color: var(--sheaf-primary);
+
+    --sheaf-heading: black;
+    --sheaf-nav-active: var(--sheaf-primary);
+    --sheaf-track: #e8e8e8;
+    --sheaf-bar-pytorch: var(--sheaf-primary);
+
+    --sheaf-hl-comment: #6a737d;
+    --sheaf-hl-keyword: #d73a49;
+    --sheaf-hl-name: #24292e;
+    --sheaf-hl-string: #032f62;
+    --sheaf-hl-number: #005cc5;
+    --sheaf-hl-builtin: #6f42c1;
+}
+
+[data-md-color-scheme="slate"] {
+    /* Purple tint for the dark background */
+    --md-hue: 290deg;
+    --md-accent-fg-color: var(--sheaf-orange);
+    --md-accent-fg-color--transparent: rgba(255, 110, 66, 0.1);
+    --md-typeset-a-color: var(--sheaf-orange);
+
+    --sheaf-heading: var(--md-default-fg-color);
+    --sheaf-nav-active: var(--sheaf-orange);
+    --sheaf-track: hsla(var(--md-hue), 15%, 26%, 1);
+    --sheaf-bar-pytorch: #9b4a8c;
+
+    --sheaf-hl-comment: #8b949e;
+    --sheaf-hl-keyword: #ff7b72;
+    --sheaf-hl-name: #c9d1d9;
+    --sheaf-hl-string: #a5d6ff;
+    --sheaf-hl-number: #79c0ff;
+    --sheaf-hl-builtin: #d2a8ff;
+}
+
+/* === Header and navigation === */
+
+.md-tabs__link {
+    font-size: 0.75rem;
+}
+
+.md-nav__item .md-nav__link--active,
+.md-nav__link[href]:hover {
+    color: var(--sheaf-nav-active);
+}
+
+.md-typeset a:not(.md-button):hover {
+    opacity: 0.8;
+}
+
+@media screen and (min-width: 76.25em) {
+    .md-sidebar--primary,
+    .md-sidebar--secondary {
+        width: 10rem;
     }
 }
 
-/* Mobile/Tablet: fix drawer z-index and visibility */
-@media screen and (max-width: 59.9375em) {
+/* === Footer === */
 
-    /* When drawer checkbox is checked, force sidebar to be visible */
-    [data-md-toggle="drawer"]:checked~.md-container .md-sidebar--primary {
-        transform: translateX(0) !important;
-        visibility: visible !important;
-        display: block !important;
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 12.1rem !important;
-        height: 100vh !important;
-        z-index: 200 !important;
-        background-color: var(--sheaf-primary) !important;
+.md-footer-meta {
+    background-color: var(--sheaf-primary-dark);
+}
+
+.md-copyright {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+/* .md-footer-meta also carries .md-typeset, whose img rule must be beaten */
+.md-typeset .md-copyright__logo {
+    height: 1.2rem;
+    width: auto;
+    max-width: none;
+}
+
+/* === Code blocks === */
+
+.highlight {
+    color: var(--md-code-fg-color);
+    font-size: 0.9rem;
+    font-weight: 400;
+    line-height: 1.4;
+    background-color: var(--md-code-bg-color);
+    border-radius: 0.9rem;
+    padding: 0.75rem;
+    overflow-x: auto;
+}
+
+.md-typeset p code,
+.md-typeset li code,
+.md-typeset table code {
+    font-size: 0.7rem;
+}
+
+.md-typeset .tabbed-labels > label {
+    font-size: 0.75rem;
+}
+
+/* Pygments colors */
+.highlight .c {
+    color: var(--sheaf-hl-comment);
+    font-style: italic;
+} /* Comment */
+.highlight .k {
+    color: var(--sheaf-hl-keyword);
+    font-weight: bold;
+} /* Keyword */
+.highlight .n,
+.highlight .p {
+    color: var(--sheaf-hl-name);
+} /* Name, Punctuation */
+.highlight .s {
+    color: var(--sheaf-hl-string);
+} /* String */
+.highlight .m {
+    color: var(--sheaf-hl-number);
+} /* Number */
+.highlight .nb {
+    color: var(--sheaf-hl-builtin);
+} /* Name.Builtin */
+
+/* === Homepage === */
+
+.hero {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.hero-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.hero-title img {
+    height: 5.5rem;
+}
+
+.md-typeset .hero-title h1 {
+    margin: 0;
+    font-size: 4.5rem;
+    font-weight: 500;
+    color: var(--sheaf-heading);
+}
+
+.md-typeset .hero h2 {
+    max-width: 36rem;
+    margin: 1rem auto;
+    font-size: 1.5rem;
+}
+
+.md-typeset .hero > p {
+    max-width: 40rem;
+    margin: 1rem auto;
+    font-size: 1.15rem;
+}
+
+.md-typeset .hero-actions {
+    text-align: center;
+    margin: 2rem 0 3rem;
+}
+
+.md-typeset .hero-actions p {
+    margin: 0;
+}
+
+.md-typeset .hero-actions .md-button {
+    margin: 0.3rem 0.4rem;
+}
+
+/* Section titles, homepage only */
+.md-content__inner:has(.hero) > h2 {
+    font-weight: 500;
+    color: var(--sheaf-heading);
+    margin: 3rem 0 1.2rem;
+}
+
+/* Two columns: 1/3 text, 2/3 code */
+.flex-section {
+    display: flex;
+    gap: 2rem;
+    margin: 0 0 3rem;
+    align-items: flex-start;
+    font-size: 0.9rem;
+}
+
+.flex-section > :first-child {
+    flex: 0 0 33.33%;
+    padding-right: 1rem;
+}
+
+.flex-section > :last-child {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+.flex-section > div > :first-child {
+    margin-top: 0;
+}
+
+.flex-section .highlight {
+    margin: 0;
+    padding: 0.75rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.flex-section .highlight code {
+    line-height: 1.5;
+}
+
+.flex-section pre {
+    margin: 0;
+}
+
+/* "For ML Researchers" / "For Agentic AI" card */
+.flex-section.flex-section-header {
+    padding: 0 2rem 1.5rem;
+    margin-bottom: 4rem;
+    background-color: var(--md-code-bg-color);
+    border-radius: 0.9rem;
+}
+
+.flex-section.flex-section-header > div {
+    flex: 1 1 0;
+    padding: 0;
+    min-width: 0;
+}
+
+.md-typeset .flex-section-header h2 {
+    margin-top: 1.5rem;
+}
+
+/* Bar chart */
+.bar-group {
+    margin-bottom: 1.5rem;
+}
+
+.bar-title {
+    font-size: 0.85rem;
+    margin-bottom: 0.4rem;
+}
+
+.bar-row {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 0.3rem;
+}
+
+.bar-label,
+.bar-value {
+    flex: 0 0 4rem;
+    font-size: 0.78rem;
+}
+
+.bar-label {
+    color: var(--md-default-fg-color--light);
+}
+
+.bar-value {
+    text-align: right;
+}
+
+.bar-track {
+    flex: 1;
+    height: 20px;
+    background: var(--sheaf-track);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.bar {
+    height: 100%;
+    min-width: 6px;
+    border-radius: 6px;
+}
+
+.bar--sheaf {
+    background: var(--sheaf-orange);
+}
+
+.bar--pytorch {
+    background: var(--sheaf-bar-pytorch);
+}
+
+.bar-note {
+    font-size: 0.7rem;
+    color: var(--md-default-fg-color--light);
+    margin-top: 0.5rem;
+}
+
+/* The outlined button uses the primary purple, unreadable on slate */
+[data-md-color-scheme="slate"] .md-typeset .md-button:not(.md-button--primary) {
+    color: var(--md-default-fg-color);
+    border-color: var(--md-default-fg-color--light);
+}
+
+[data-md-color-scheme="slate"] .md-typeset .md-button:not(.md-button--primary):hover {
+    color: var(--md-accent-bg-color);
+    border-color: var(--md-accent-fg-color);
+}
+
+/* === Responsive === */
+
+/* Phones in landscape: stack the columns */
+@media (orientation: landscape) and (max-height: 500px) {
+    .flex-section,
+    .flex-section.flex-section-header {
+        display: block;
+        padding: 1rem;
     }
 
-    /* Overlay must be visible and below drawer */
-    [data-md-toggle="drawer"]:checked~.md-overlay {
-        opacity: 1 !important;
-        visibility: visible !important;
-        z-index: 199 !important;
+    .flex-section > * {
+        margin-bottom: 1rem;
+        padding: 0;
     }
 
-    /* Ensure drawer content is visible */
-    .md-sidebar--primary .md-sidebar__scrollwrap {
-        overflow-y: auto !important;
-        visibility: visible !important;
+    .highlight,
+    .highlight code {
+        font-size: 0.7rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .md-content__inner {
+        overflow-x: hidden;
+    }
+
+    .md-typeset .hero-title h1 {
+        font-size: 3rem;
+    }
+
+    .hero-title img {
+        height: 3.5rem;
+    }
+
+    .flex-section,
+    .flex-section.flex-section-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .flex-section.flex-section-header {
+        padding: 0 1rem 1rem;
+    }
+
+    .flex-section > :first-child,
+    .flex-section > :last-child,
+    .flex-section.flex-section-header > div {
+        flex: 1 1 auto;
+        width: 100%;
+        padding: 0;
+    }
+
+    .highlight,
+    .highlight code {
+        font-size: 0.75rem;
+    }
+
+    .highlight {
+        padding: 0.5rem;
+    }
+
+    .tabbed-labels {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
 }
