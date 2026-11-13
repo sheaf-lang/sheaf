@@ -636,11 +636,13 @@ impl IreeSession {
                     iree_hal_buffer_view_release(bv);
                     ref_.ptr = std::ptr::null_mut();
                     iree_vm_ref_release(&mut ref_);
-                    if iree_status_is_ok(status) {
-                        results.push(decode_scalar_value(dtype, raw));
-                    } else {
-                        results.push(Value::Float(0.0));
+                    if !iree_status_is_ok(status) {
+                        let message = status_message(status);
+                        iree_status_free(status);
+                        iree_vm_list_release(output_list);
+                        return Err(iree_err(&format!("failed to read a scalar result: {message}")));
                     }
+                    results.push(decode_scalar_value(dtype, raw));
                 } else {
                     let db = Arc::new(DeviceBufferInner::new(
                         bv,
@@ -712,6 +714,21 @@ impl Drop for IreeSession {
             }
         }
     }
+}
+
+/// Format an IREE status for an error message, without consuming it.
+unsafe fn status_message(status: iree_status_t) -> String {
+    let mut buffer = [0u8; 1024];
+    let mut length = 0usize;
+    unsafe {
+        iree_status_format(status, buffer.len(), buffer.as_mut_ptr().cast(), &mut length);
+    }
+    // A truncated message keeps its first characters before the null terminator.
+    let length = length.min(buffer.len() - 1);
+    if length == 0 {
+        return "unknown IREE error".to_string();
+    }
+    String::from_utf8_lossy(&buffer[..length]).into_owned()
 }
 
 #[cfg(test)]

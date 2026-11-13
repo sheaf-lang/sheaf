@@ -278,6 +278,12 @@ unsafe extern "C" {
     ) -> iree_status_t;
 
     // Status debug
+    pub fn iree_status_format(
+        status: iree_status_t,
+        buffer_capacity: usize,
+        buffer: *mut std::ffi::c_char,
+        out_buffer_length: *mut usize,
+    ) -> bool;
     pub fn iree_status_fprint(file: *mut c_void, status: iree_status_t);
     pub fn iree_status_free(status: iree_status_t);
 
