@@ -1,9 +1,9 @@
 """Repository rule fetching the Bazel-native IREE runtime pinned by Cargo.toml."""
 
 _IREE_SOURCES = {
-    "3.10.0": struct(
-        commit = "ae97779f59a81bc56f804927be57749bb22548fa",
-        sha256 = "61cb9bc07ecdd578c30e02a41fa34d4a7dc3dc94d0dc8a6043456726b4db2b8c",
+    "3.12.0": struct(
+        commit = "2b05c5dbb2f2ecb27c0d3941e80ee8d2f16e890d",
+        sha256 = "8920c8457d71a48322b7258bc0776d734f2e44a87c3b68031bbfb19299cd3ee5",
     ),
 }
 
@@ -68,10 +68,8 @@ def _iree_source_repository_impl(repository_ctx):
         repository_ctx.read("build_tools/third_party/vulkan_headers/BUILD.overlay"),
     )
 
-    _replace(
-        repository_ctx,
-        "build_tools/bazel/build_defs.oss.bzl",
-        "load(\"@llvm-project//mlir:tblgen.bzl\", \"gentbl_cc_library\", \"gentbl_filegroup\", \"td_library\")\n",
+    repository_ctx.file(
+        "build_tools/bazel/runtime_only_tblgen.bzl",
         """def gentbl_cc_library(**kwargs):
     fail("compiler targets are not available in the runtime-only IREE repository")
 
@@ -80,8 +78,13 @@ def gentbl_filegroup(**kwargs):
 
 def td_library(**kwargs):
     fail("compiler targets are not available in the runtime-only IREE repository")
-
 """,
+    )
+    _replace(
+        repository_ctx,
+        "build_tools/bazel/build_defs.oss.bzl",
+        "load(\"@llvm-project//mlir:tblgen.bzl\", \"gentbl_cc_library\", \"gentbl_filegroup\", \"td_library\")\n",
+        "load(\"//build_tools/bazel:runtime_only_tblgen.bzl\", \"gentbl_cc_library\", \"gentbl_filegroup\", \"td_library\")\n",
     )
     _replace(
         repository_ctx,
@@ -168,6 +171,26 @@ filegroup(
         "//third_party/vulkan_headers:vulkan_headers",
     )
 
+    isa_build = "runtime/src/iree/vm/bytecode/isa/BUILD.bazel"
+    _replace(
+        repository_ctx,
+        isa_build,
+        "        \"//build_tools/scripts:generate_vm_isa.py\",\n    ],",
+        "    ],\n    tools = [\"//build_tools/scripts:generate_vm_isa\"],",
+    )
+    _replace(
+        repository_ctx,
+        isa_build,
+        "        \"python3\",\n        \"$(rootpath //build_tools/scripts:generate_vm_isa.py)\",",
+        "        \"$(execpath //build_tools/scripts:generate_vm_isa)\",",
+    )
+    _replace(
+        repository_ctx,
+        isa_build,
+        "$(rootpath isa.json)",
+        "$(execpath isa.json)",
+    )
+
     _add_metal_build_files(repository_ctx)
 
 def _add_metal_build_files(repository_ctx):
@@ -198,11 +221,14 @@ objc_library(
         "Metal",
     ],
     deps = [
+        "//runtime/src/iree/async",
+        "//runtime/src/iree/async/util:proactor_pool",
         "//runtime/src/iree/base",
         "//runtime/src/iree/base:core_headers",
         "//runtime/src/iree/base/internal",
         "//runtime/src/iree/base/internal:arena",
         "//runtime/src/iree/base/internal/flatcc:parsing",
+        "//runtime/src/iree/base/threading",
         "//runtime/src/iree/hal",
         "//runtime/src/iree/hal/drivers/metal/builtin",
         "//runtime/src/iree/hal/utils:deferred_command_buffer",
@@ -253,7 +279,7 @@ iree_runtime_cc_library(
     deps = [
         "//runtime/src/iree/base",
         "//runtime/src/iree/base:core_headers",
-        "//runtime/src/iree/base/internal:flags",
+        "//runtime/src/iree/base/tooling:flags",
         "//runtime/src/iree/hal",
         "//runtime/src/iree/hal/drivers/metal",
     ],

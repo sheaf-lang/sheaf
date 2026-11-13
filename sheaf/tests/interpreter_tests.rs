@@ -143,6 +143,33 @@ fn test_all_yaml() {
 }
 
 #[test]
+fn vag_layer_norm_matches_analytic_loss_and_gradient() {
+    use sheaf_compiler::interpreter::value::Value;
+
+    let result = eval_exprs("((value-and-grad (fn [x]
+        (sum (* (layer-norm x {:gamma [2.0 1.0] :beta [0.0 0.0]} -1)
+                (layer-norm x {:gamma [2.0 1.0] :beta [0.0 0.0]} -1))))) [3.0 5.0])").unwrap();
+    let Value::List(values) = result else { panic!("expected loss and gradient") };
+    assert_eq!(values.len(), 2);
+    let loss = values[0].to_tensor().unwrap();
+    let gradient = values[1].to_tensor().unwrap();
+    assert_eq!(loss.shape(), &[] as &[usize]);
+    assert_eq!(gradient.shape(), &[2]);
+
+    // For d = (x1 - x0)/2, loss = 5*d^2/(d^2 + eps); here d = 1.
+    let eps = 1e-5_f64;
+    let expected_loss = 5.0 / (1.0 + eps);
+    let slope = 5.0 * eps / (1.0 + eps).powi(2);
+    // The small gradient subtracts O(5) intermediates rounded to f32.
+    let tolerance = 5.0 * f64::from(f32::EPSILON);
+    assert!((f64::from(loss[[]]) - expected_loss).abs() <= tolerance, "loss: {loss:?}");
+    for (actual, expected) in gradient.iter().zip([-slope, slope]) {
+        assert!((f64::from(*actual) - expected).abs() <= tolerance,
+            "gradient: {gradient:?}, expected [{}, {}]", -slope, slope);
+    }
+}
+
+#[test]
 fn test_guard_no_nan() {
     use sheaf_compiler::interpreter::apply_guard_check;
     use sheaf_compiler::interpreter::value::Value;

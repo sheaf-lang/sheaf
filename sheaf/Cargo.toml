@@ -34,7 +34,7 @@ blas-src = { version = "0.10", features = ["accelerate"] }
 ndarray = { version = "0.16" }
 
 [package.metadata]
-iree-version = "3.10.0"
+iree-version = "3.12.0"
 
 [profile.release]
 opt-level = 3
