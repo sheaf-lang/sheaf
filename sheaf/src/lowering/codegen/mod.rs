@@ -250,6 +250,10 @@ impl<'a> CodeGenerator<'a> {
             CompiledExpr::Integer(n) => Some(*n as f64),
             CompiledExpr::Float(f) => Some(*f),
             CompiledExpr::Boolean(b) => Some(if *b { 1.0 } else { 0.0 }),
+            CompiledExpr::Symbol(sym) => {
+                let (reg, _) = self.bindings.get(sym.as_str())?;
+                self.emitter.known_scalar_value(reg)
+            }
             CompiledExpr::FunctionCall { name, args, .. } => {
                 match name.as_str() {
                     "ndim" if args.len() == 1 => {

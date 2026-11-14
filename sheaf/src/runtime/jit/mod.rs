@@ -1545,31 +1545,6 @@ mod cache_key_tests {
         ));
     }
 
-    fn known_clevr_internal(function: &str, diagnostic: &JitDiagnostic) -> bool {
-        // #17: Codegen panics on out-of-bounds shape queries in a statically dead branch.
-        matches!(function, "left-of" | "spatial-op") && matches!(diagnostic,
-            JitDiagnostic::Internal(message) if message ==
-                "Codegen panicked: index out of bounds: the len is 1 but the index is 1")
-    }
-
-    #[test]
-    fn known_clevr_exceptions_do_not_hide_other_failures() {
-        let segfault = JitDiagnostic::Internal("iree-compile failed (signal: 11 (SIGSEGV)): details".into());
-        assert!(!known_clevr_internal("soft-filter", &segfault));
-        assert!(!known_clevr_internal("left-of", &segfault));
-        let panic = JitDiagnostic::Internal("Codegen panicked: index out of bounds: the len is 1 but the index is 1".into());
-        assert!(known_clevr_internal("left-of", &panic));
-        assert!(known_clevr_internal("spatial-op", &panic));
-        assert!(!known_clevr_internal("soft-filter", &panic));
-        assert!(!known_clevr_internal("above", &panic));
-        for message in ["Codegen panicked", "Codegen panicked: another panic",
-            "Codegen panicked: index out of bounds: the len is 2 but the index is 2"] {
-            assert!(!known_clevr_internal("left-of", &JitDiagnostic::Internal(message.into())));
-        }
-        assert!(!known_clevr_internal("left-of", &JitDiagnostic::UserError(
-            SheafError::InvalidShapeDimension { message: "float dimension".into(), location: SourceLocation::unknown() })));
-    }
-
     #[test]
     fn clevr_execution_keeps_internal_failures_out_of_all_compilation_caches() {
         let device = std::env::var("SHEAF_SIGNATURE_DEVICE").unwrap_or_else(|_| "cpu".into());
@@ -1585,10 +1560,7 @@ mod cache_key_tests {
         for diagnostic in compiler.failed_definitions.values().chain(compiler.failed_vag.values()) {
             assert!(!matches!(diagnostic, JitDiagnostic::Internal(_)), "{diagnostic:?}");
         }
-        for (key, diagnostic) in &compiler.failed_keys {
-            if known_clevr_internal(&key.function_name, diagnostic) {
-                continue;
-            }
+        for diagnostic in compiler.failed_keys.values() {
             assert!(!matches!(diagnostic, JitDiagnostic::Internal(_)), "{diagnostic:?}");
         }
     }

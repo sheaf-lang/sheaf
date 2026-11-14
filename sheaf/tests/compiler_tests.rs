@@ -351,3 +351,38 @@ fn test_destructure_arity_mismatch_returns_compile_error() {
         msg
     );
 }
+
+fn codegen_rank1(source: &str, fn_name: &str, return_shape: Vec<i64>) -> sheaf_compiler::SheafResult<String> {
+    let exprs = parse(source, "<test>").unwrap();
+    let mut ctx = CompilerContext::new();
+    for e in &exprs {
+        ctx.compile(e).unwrap();
+    }
+    let func_def = ctx.registry.get(fn_name).unwrap().clone();
+    let body = func_def.body_compiled.as_deref().unwrap().clone();
+    let param_types = vec![sheaf_compiler::StableHLOType::f32_tensor(vec![3_i64])];
+    let return_type = sheaf_compiler::StableHLOType::f32_tensor(return_shape);
+    let codegen = CodeGenerator::with_function_params(&ctx.registry, &func_def.params, &param_types);
+    let (decl, _ty) = codegen.emit_func_declaration(fn_name, &body, &param_types, &return_type)?;
+    Ok(StableHLOEmitter::emit_module(&[decl]))
+}
+
+#[test]
+fn test_let_bound_ndim_folds_dead_branch() {
+    // The else branch asks for axis 1 of a rank-1 tensor. It must be folded
+    // away through the let binding instead of reaching gen_shape (#17).
+    let mlir = codegen_rank1(
+        "(defn column [x] (let [n (ndim x)] (if (== n 1) (reshape x '[-1 1]) (reshape x [-1 (shape x 1)]))))",
+        "column",
+        vec![3, 1],
+    )
+    .expect("column should compile for a rank-1 tensor");
+    assert!(mlir.contains("tensor<3x1xf32>"));
+}
+
+#[test]
+fn test_shape_axis_out_of_bounds_is_an_error() {
+    let result = codegen_rank1("(defn bad [x] (+ x (shape x 3)))", "bad", vec![3]);
+    let err = result.expect_err("an out-of-bounds axis must be a compile error");
+    assert!(err.short_message().contains("out of bounds"), "got: {}", err.short_message());
+}

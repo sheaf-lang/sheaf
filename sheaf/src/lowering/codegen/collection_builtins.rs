@@ -89,7 +89,14 @@ impl<'a> CodeGenerator<'a> {
                 }
             };
             if let Some(ax) = ax_val {
-                let idx = if ax < 0 { (dims.len() as i64 + ax) as usize } else { ax as usize };
+                let rank = dims.len() as i64;
+                if ax < -rank || ax >= rank {
+                    return Err(SheafError::Compile {
+                        message: format!("shape: axis {ax} out of bounds for {rank}D tensor"),
+                        location: crate::core::error::SourceLocation::unknown(),
+                    });
+                }
+                let idx = if ax < 0 { (rank + ax) as usize } else { ax as usize };
                 let dim_val = dims[idx] as f64;
                 let reg = self.emitter.emit_constant_f32(dim_val);
                 self.emitter.set_known_scalar(reg, dim_val);
