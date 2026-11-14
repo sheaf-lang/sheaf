@@ -170,6 +170,12 @@ filegroup(
         "@vulkan_headers",
         "//third_party/vulkan_headers:vulkan_headers",
     )
+    _replace(
+        repository_ctx,
+        "runtime/src/iree/hal/drivers/vulkan/util/BUILD.bazel",
+        "@vulkan_headers",
+        "//third_party/vulkan_headers:vulkan_headers",
+    )
 
     isa_build = "runtime/src/iree/vm/bytecode/isa/BUILD.bazel"
     _replace(
