@@ -689,6 +689,9 @@ impl JitCompiler {
         if backend == "cuda" {
             // IREE const-eval fails when a CUDA container has no visible CPU queue.
             cmd.arg("--iree-opt-const-eval=false");
+            // Since IREE 3.12, the reduction vector distribution pipeline fails
+            // on a sum of a scaled tensor ("failed to distribute").
+            cmd.arg("--iree-codegen-llvmgpu-use-reduction-vector-distribution=false");
             if let Some(target) = detect_cuda_target() {
                 cmd.arg(format!("--iree-cuda-target={}", target));
             }
