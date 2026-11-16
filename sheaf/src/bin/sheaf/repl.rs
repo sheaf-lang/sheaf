@@ -12,6 +12,7 @@ use rustyline::{Editor, Helper};
 use sheaf_compiler::forms::special_forms_registry;
 use sheaf_compiler::interpreter::eval::Interpreter;
 use sheaf_compiler::core::color;
+use sheaf_compiler::core::signature::OpId;
 use sheaf_compiler::interpreter::value::Value;
 use std::borrow::Cow;
 use std::collections::HashSet;
@@ -212,7 +213,7 @@ impl SheafHelper {
         }
         let mut sorted: Vec<String> = set
             .into_iter()
-            .filter(|name| !name.starts_with("@-"))
+            .filter(|name| OpId::resolve(name).is_none_or(|op| op.is_public()))
             .collect();
         sorted.sort();
         self.names = sorted;
@@ -590,6 +591,34 @@ mod tests {
     use super::*;
     use ndarray::{ArrayD, IxDyn};
     use std::sync::Arc;
+
+    #[test]
+    fn completion_respects_operation_visibility() {
+        let mut interp = Interpreter::new();
+        for &op in OpId::ALL {
+            for name in std::iter::once(op.name()).chain(op.aliases().iter().copied()) {
+                interp.env_mut().set(name, Value::Nil);
+            }
+        }
+        for name in ["user-value", "__user-value", "@-user-value"] {
+            interp.env_mut().set(name, Value::Nil);
+        }
+        let mut helper = SheafHelper::new();
+        helper.refresh(&interp);
+
+        for &op in OpId::ALL {
+            for name in std::iter::once(op.name()).chain(op.aliases().iter().copied()) {
+                assert_eq!(
+                    helper.names.iter().any(|candidate| candidate == name),
+                    op.is_public(),
+                    "unexpected completion visibility for {name}",
+                );
+            }
+        }
+        for name in ["user-value", "__user-value", "@-user-value"] {
+            assert!(helper.names.iter().any(|candidate| candidate == name));
+        }
+    }
 
     #[test]
     fn repl_prefix_is_applied_to_every_output_line() {
