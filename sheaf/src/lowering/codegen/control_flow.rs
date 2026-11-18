@@ -322,6 +322,7 @@ impl<'a> CodeGenerator<'a> {
         };
 
         let (n, kind) = match &coll_ty {
+            StableHLOType::Tuple(types, _) if types.is_empty() => (0, ElemKind::VecTuple(Vec::new())),
             StableHLOType::Tuple(types, _) if !types.is_empty() => {
                 if types.iter().all(|t| matches!(t, StableHLOType::Tuple(..))) {
                     (types.len(), ElemKind::VecTuple(types.clone()))
@@ -381,7 +382,7 @@ impl<'a> CodeGenerator<'a> {
                 }
             });
 
-        let mut last_scan_result: Option<(Register, StableHLOType)> = None;
+        let mut scan_outputs = Vec::new();
 
         for i in 0..n {
             let (elem_reg, elem_ty) = match &kind {
@@ -433,38 +434,78 @@ impl<'a> CodeGenerator<'a> {
 
             let (step_reg, step_ty) = result?;
             if is_scan {
-                match &step_ty {
+                let (next_carry, output) = match &step_ty {
                     StableHLOType::Tuple(elems, _) if elems.len() == 2 => {
-                        let carry_elem_ty = elems[0].clone();
-                        carry_reg = self.emitter.emit_get_tuple_element(
-                            &step_reg, &step_ty, 0, &carry_elem_ty,
-                        );
-                        carry_ty = carry_elem_ty;
-                        last_scan_result = Some((step_reg, step_ty));
+                        let carry = self.emitter.emit_get_tuple_element(&step_reg, &step_ty, 0, &elems[0]);
+                        let output = self.emitter.emit_get_tuple_element(&step_reg, &step_ty, 1, &elems[1]);
+                        ((carry, elems[0].clone()), (output, elems[1].clone()))
                     }
-                    _ => {
-                        carry_reg = step_reg;
-                        carry_ty = step_ty.clone();
-                        let unit_ty = StableHLOType::Tuple(vec![], None);
-                        let (unit_reg, _) = self.emitter.emit_tuple(&[], &[]);
-                        let (wrapped_reg, wrapped_ty) = self.emitter.emit_tuple(
-                            &[carry_reg, unit_reg],
-                            &[carry_ty.clone(), unit_ty],
-                        );
-                        last_scan_result = Some((wrapped_reg, wrapped_ty));
+                    StableHLOType::Tensor { shape, .. }
+                        if shape.first() == Some(&2)
+                            && (shape.len() >= 2
+                                || (!matches!(carry_ty, StableHLOType::Tuple(..)) && carry_ty.shape().is_empty())) =>
+                    {
+                        (self.emitter.emit_index_axis0(&step_reg, &step_ty, 0),
+                         self.emitter.emit_index_axis0(&step_reg, &step_ty, 1))
                     }
-                }
+                    _ => return Err(SheafError::Compile {
+                        message: "scan: fn must return [new-carry output]".to_string(),
+                        location: crate::core::error::SourceLocation::unknown(),
+                    }),
+                };
+                carry_reg = next_carry.0;
+                carry_ty = next_carry.1;
+                scan_outputs.push(output);
             } else {
                 carry_reg = step_reg;
                 carry_ty = step_ty;
             }
         }
 
-        // `first(scan(...))` needs the full carry/output pair.
-        if is_scan && let Some(result) = last_scan_result {
-            return Ok(result);
+        if is_scan {
+            let (outputs_reg, outputs_ty) = self.stack_scan_outputs(&scan_outputs)?;
+            return Ok(self.emitter.emit_tuple(&[carry_reg, outputs_reg], &[carry_ty, outputs_ty]));
         }
         Ok((carry_reg, carry_ty))
+    }
+
+    fn stack_scan_outputs(
+        &mut self,
+        outputs: &[(Register, StableHLOType)],
+    ) -> SheafResult<(Register, StableHLOType)> {
+        let Some((_, output_ty)) = outputs.first() else {
+            return Ok(self.emitter.emit_tuple(&[], &[]));
+        };
+        if outputs.iter().any(|(_, ty)| ty != output_ty) {
+            return Err(SheafError::Compile {
+                message: "scan: output shape, dtype and structure must remain constant across steps".to_string(),
+                location: crate::core::error::SourceLocation::unknown(),
+            });
+        }
+        if let StableHLOType::Tuple(types, keys) = output_ty {
+            let mut registers = Vec::with_capacity(types.len());
+            let mut stacked_types = Vec::with_capacity(types.len());
+            for (index, ty) in types.iter().enumerate() {
+                let field_outputs: Vec<_> = outputs.iter().map(|(reg, output_ty)| {
+                    (self.emitter.emit_get_tuple_element(reg, output_ty, index, ty), ty.clone())
+                }).collect();
+                let (reg, ty) = self.stack_scan_outputs(&field_outputs)?;
+                registers.push(reg);
+                stacked_types.push(ty);
+            }
+            let (reg, _) = self.emitter.emit_tuple(&registers, &stacked_types);
+            return Ok((reg, StableHLOType::Tuple(stacked_types, keys.clone())));
+        }
+        let mut shape = vec![1];
+        shape.extend_from_slice(output_ty.shape());
+        let mut registers = Vec::with_capacity(outputs.len());
+        let mut types = Vec::with_capacity(outputs.len());
+        for (reg, ty) in outputs {
+            let (reg, ty) = self.emitter.emit_reshape(reg, ty, &shape);
+            registers.push(reg);
+            types.push(ty);
+        }
+        Ok(self.emitter.emit_concatenate(&registers, &types, 0))
     }
 
     /// Returns the collection length and element extraction strategy.

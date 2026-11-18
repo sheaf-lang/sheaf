@@ -17,6 +17,8 @@ pub mod tracer;
 pub mod value;
 #[cfg(test)]
 mod capture_tests;
+#[cfg(all(test, iree_runtime))]
+mod scan_tests;
 
 use crate::core::ast::SheafValue;
 use crate::core::expr::{BindingPattern, CompiledExpr, CompilerContext};
