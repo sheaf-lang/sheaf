@@ -29,10 +29,10 @@ def _sheaf_example_impl(ctx):
     link_commands = []
     for file, destination in links:
         link_commands.extend([
-            "mkdir -p \"$workdir/%s\"" % _shell_quote(destination.rpartition("/")[0] or "."),
-            "ln -sfn \"$(resolve_runfile %s)\" \"$workdir/%s\"" % (
+            "mkdir -p \"$workdir\"/%s" % _shell_quote(destination.rpartition("/")[0] or "."),
+            "ln -sfn \"$(resolve_runfile %s)\" \"$workdir\"/%s" % (
                 _shell_quote(_runfile_path(ctx, file)),
-                destination,
+                _shell_quote(destination),
             ),
         ])
 
