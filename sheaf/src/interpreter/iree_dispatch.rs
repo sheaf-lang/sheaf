@@ -13,6 +13,10 @@ use crate::interpreter::env::{runtime_error, Env};
 use crate::interpreter::value::{Dtype, Value};
 use std::collections::BTreeMap;
 
+pub(super) fn handle_jit_diagnostic(diagnostic: JitDiagnostic, function: &str) -> Result<(), SheafError> {
+    diagnostic.handle(function)
+}
+
 pub(super) fn validate_device_dtypes(args: &[Value]) -> Result<(), SheafError> {
     let is_metal = crate::core::config::device_override() == Some("metal")
         || crate::runtime::iree_session::IreeSession::cached_target_backend()

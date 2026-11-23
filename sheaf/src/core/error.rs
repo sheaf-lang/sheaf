@@ -60,6 +60,8 @@ pub enum SheafError {
     AutodiffMissingGradientOutput {
         symbol: String,
     },
+    /// JIT diagnostic already formatted without generic runtime hints.
+    Jit { message: String },
     /// IO error
     Io(String),
     /// Invalid source forms cannot be retained as AST-only macro helpers.
@@ -143,6 +145,7 @@ impl fmt::Display for SheafError {
                 "autodiff error: missing gradient output for symbol '{}'",
                 symbol
             ),
+            SheafError::Jit { message } => write!(f, "{}", message),
             SheafError::Io(msg) => write!(f, "io error: {}", msg),
         }
     }
@@ -206,6 +209,7 @@ impl SheafError {
             SheafError::Parse { message, .. }
             | SheafError::Compile { message, .. }
             | SheafError::Runtime { message, .. }
+            | SheafError::Jit { message }
             | SheafError::CompilerUnsupported { message, .. }
             | SheafError::CompilerInvariant { message, .. }
             | SheafError::InvalidSourceForm { message, .. }

@@ -46,10 +46,10 @@ _sheaf_program_test = rule(
     },
 )
 
-def sheaf_program_test(name, expression, data = [], device = "cpu", **kwargs):
+def sheaf_program_test(name, expression, data = [], device = "cpu", jit_strict = False, **kwargs):
     _sheaf_program_test(
         name = name,
-        args = ["--device", device, "-c", expression],
+        args = (["--jit-strict"] if jit_strict else []) + ["--device", device, "-c", expression],
         data = ["regressions.shf"] + data,
         tags = [device],
         **kwargs

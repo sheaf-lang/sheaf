@@ -579,14 +579,21 @@ fn eval_call(name: &str, args: &[CompiledExpr], env: &mut Env) -> Result<Value, 
                         return Err(error);
                     }
                 };
-                if let crate::runtime::jit::JitCompileOutcome::Compiled(_) =
-                    jit.try_jit_compile(func_def, pos_args, &env.registry, &shared_session)
-                {
-                    recompiled = true;
-                    if let Some(result) = iree_dispatch::try_iree_dispatch(func_def, pos_args, env) {
-                        if let Some(ref mut p) = env.profiler { p.exit(); }
-                        return result;
+                match jit.try_jit_compile(func_def, pos_args, &env.registry, &shared_session) {
+                    crate::runtime::jit::JitCompileOutcome::Compiled(_) => {
+                        recompiled = true;
+                        if let Some(result) = iree_dispatch::try_iree_dispatch(func_def, pos_args, env) {
+                            if let Some(ref mut p) = env.profiler { p.exit(); }
+                            return result;
+                        }
                     }
+                    crate::runtime::jit::JitCompileOutcome::Failed(diagnostic) => {
+                        if let Err(error) = iree_dispatch::handle_jit_diagnostic(diagnostic, &func_def.name) {
+                            if let Some(ref mut p) = env.profiler { p.exit(); }
+                            return Err(error);
+                        }
+                    }
+                    _ => {}
                 }
             }
 

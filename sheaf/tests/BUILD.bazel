@@ -93,6 +93,7 @@ sheaf_program_test(
 
 sheaf_program_test(
     name = "regression_hydra",
+    jit_strict = True,
     expression = """
 (use \"./examples/hydra/hydra.shf\")
 (use \"./sheaf/tests/regressions.shf\")
@@ -104,6 +105,7 @@ sheaf_program_test(
 
 sheaf_program_test(
     name = "regression_clevr",
+    jit_strict = True,
     expression = """
 (use \"./examples/clevr/data.shf\")
 (use \"./examples/clevr/model.shf\")
@@ -121,6 +123,7 @@ sheaf_program_test(
 
 sheaf_program_test(
     name = "regression_clevr_training",
+    jit_strict = True,
     expression = """
 (use "./examples/clevr/data.shf")
 (use "./examples/clevr/model.shf")
@@ -152,6 +155,7 @@ sheaf_program_test(
 
 sheaf_program_test(
     name = "regression_macros",
+    jit_strict = True,
     expression = """
 (use \"./sheaf/tests/regressions.shf\")
 (check-macros)

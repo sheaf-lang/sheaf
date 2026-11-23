@@ -920,6 +920,26 @@ fn builtin_registration_uses_catalogue_names_and_aliases() {
 }
 
 #[test]
+fn jit_strict_cli_and_notice_dedup() {
+    let binary = std::env::var_os("SHEAF_TEST_BINARY").expect("declared Bazel binary");
+    let expression = "(defn limited [x] (+ x (sum (tensor (map (fn [v] (* v v)) '[1.0 2.0]))))) (limited (ones [2])) (limited (ones [2]))";
+    for strict in [false, true] {
+        let mut command = std::process::Command::new(&binary);
+        command.args(["--device", "cpu", "-c", expression]);
+        if strict { command.arg("--jit-strict"); }
+        let output = command.output().expect("execute declared Bazel binary");
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert_eq!(output.status.success(), !strict, "{stderr}");
+        assert_eq!(stderr.matches("limited: JIT does not support map").count(), 1, "{stderr}");
+    }
+    let output = std::process::Command::new(&binary).args([
+        "--device", "cpu", "--jit-strict", "-c",
+        "(defn intentional [x] (do (print \"allowed\") (+ x 1))) (intentional (ones [2]))",
+    ]).output().expect("execute declared Bazel binary");
+    assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
+}
+
+#[test]
 fn print_alias_signatures() {
     let binary = std::env::var_os("SHEAF_TEST_BINARY").expect("declared Bazel binary");
     let mut errors = Vec::new();

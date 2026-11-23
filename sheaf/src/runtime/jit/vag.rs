@@ -703,23 +703,27 @@ impl JitCompiler {
         }
         let output = cmd.output();
 
-        if crate::core::config::verbosity() >= 2 {
-            let debug_mlir = cache_dir.join(format!("{}-debug.mlir", safe_name));
-            let _ = std::fs::rename(&mlir_path, &debug_mlir);
-            sheaf_msg!("jit: {} | saved {}", name, debug_mlir.display());
-        } else {
-            let _ = std::fs::remove_file(&mlir_path);
-        }
-
         let output = output.map_err(|e| JitDiagnostic::Environment {
             message: format!("Cannot execute iree-compile: {e}"),
             hint: "Check the toolchain installation or set IREE_COMPILE.",
         })?;
         let result = if output.status.success() {
+            if crate::core::config::verbosity() >= 2 {
+                let debug_mlir = cache_dir.join(format!("{}-debug.mlir", safe_name));
+                let _ = std::fs::rename(&mlir_path, &debug_mlir);
+                sheaf_msg!("jit: {} | saved {}", name, debug_mlir.display());
+            } else {
+                let _ = std::fs::remove_file(&mlir_path);
+            }
             std::fs::read(&vmfb_path).map_err(|e| JitDiagnostic::io("Cannot read compiler output", e))
         } else {
-            Err(JitDiagnostic::Internal(format!("iree-compile failed ({}): {}",
-                output.status, String::from_utf8_lossy(&output.stderr).trim())))
+            let device = match backend {
+                "metal-spirv" => "metal",
+                "llvm-cpu" => "cpu",
+                "vulkan-spirv" => "vulkan",
+                other => other,
+            };
+            Err(JitDiagnostic::backend(name, device, &String::from_utf8_lossy(&output.stderr), mlir_path))
         };
         let _ = std::fs::remove_file(&vmfb_path);
         result

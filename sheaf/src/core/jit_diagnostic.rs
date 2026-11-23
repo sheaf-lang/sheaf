@@ -57,9 +57,69 @@ pub enum JitDiagnostic {
     UserError(SheafError),
     Environment { message: String, hint: &'static str },
     Internal(String),
+    Backend { function: String, device: String, errors: Vec<String>, mlir_path: std::path::PathBuf },
 }
 
 impl JitDiagnostic {
+    pub fn backend(function: &str, device: &str, stderr: &str, mlir_path: std::path::PathBuf) -> Self {
+        let errors = stderr.lines().filter_map(|line| line.find("error:").map(|index| (line, index)))
+            .take(3).map(|(line, index)| {
+                // Keep the line and column of "<path>:<line>:<column>: error:", not the path.
+                let mut parts = line[..index].trim_end().trim_end_matches(':').rsplitn(3, ':');
+                let (column, row) = (parts.next().unwrap_or(""), parts.next().unwrap_or(""));
+                let position = if !row.is_empty() && [row, column].iter().all(|n| n.chars().all(|c| c.is_ascii_digit()))
+                    { format!("{row}:{column}: ") } else { String::new() };
+                let line = format!("{position}{}", &line[index..]);
+                if line.chars().count() > 200 { format!("{}...", line.chars().take(197).collect::<String>()) } else { line }
+            }).collect();
+        Self::Backend { function: function.into(), device: device.into(), errors, mlir_path }
+    }
+
+    pub fn handle(self, function: &str) -> Result<(), SheafError> {
+        self.handle_with_strict(function, super::config::jit_strict())
+    }
+
+    fn handle_with_strict(self, function: &str, strict: bool) -> Result<(), SheafError> {
+        let message = match self {
+            Self::Interpreted(_) => return Ok(()),
+            Self::Unsupported(reason, error) => {
+                let detail = error.map(|error| format!(": {}", error.short_message())).unwrap_or_default();
+                let message = match reason {
+                    UnsupportedReason::Construct(Construct::Operation(op)) =>
+                        format!("{function}: JIT does not support {}{detail}", op.name()),
+                    UnsupportedReason::Construct(Construct::Form(form)) =>
+                        format!("{function}: JIT does not support {}{detail}", format!("{form:?}").to_lowercase()),
+                    UnsupportedReason::Construct(Construct::Other(_)) =>
+                        format!("{function}: cannot be compiled{detail}"),
+                    UnsupportedReason::GraphLimit { phase, nodes, limit } =>
+                        format!("{function}: {phase:?} graph has {nodes} nodes (limit {limit})"),
+                };
+                if !strict {
+                    static NOTICES: std::sync::OnceLock<std::sync::Mutex<std::collections::HashSet<String>>> =
+                        std::sync::OnceLock::new();
+                    let mut notices = NOTICES.get_or_init(Default::default).lock().expect("JIT notices lock poisoned");
+                    if first_notice(&mut notices, &message) {
+                        crate::sheaf_msg!("{}", message);
+                    }
+                    return Ok(());
+                }
+                message
+            }
+            Self::UserError(error) => return Err(error),
+            Self::Environment { message, hint } => format!("{message}\n  = hint: {hint}"),
+            Self::Internal(reason) => format!("{function}: JIT compilation failed: {reason}. This is a bug in Sheaf."),
+            Self::Backend { function, device, errors, mlir_path } => {
+                let mut message = format!("IREE could not compile {function} for {device}. This may be an IREE limitation or a bug in Sheaf's code generation.");
+                for error in errors {
+                    message.push_str(&format!("\n  {error}"));
+                }
+                message.push_str(&format!("\n  MLIR: {}", mlir_path.display()));
+                message
+            }
+        };
+        Err(SheafError::Jit { message })
+    }
+
     pub fn from_hof(construct: Construct) -> Self {
         match construct {
             Construct::Operation(OpId::Filter) => Self::Interpreted(InterpretedReason::DataDependent(construct)),
@@ -93,10 +153,36 @@ impl JitDiagnostic {
     }
 }
 
+fn first_notice(notices: &mut std::collections::HashSet<String>, message: &str) -> bool {
+    notices.insert(message.to_string())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::core::error::SourceLocation;
+
+    #[test]
+    fn notices_are_deduplicated_by_function_and_reason() {
+        let mut notices = std::collections::HashSet::new();
+        assert!(first_notice(&mut notices, "f: map"));
+        assert!(!first_notice(&mut notices, "f: map"));
+        assert!(first_notice(&mut notices, "g: map"));
+        assert!(first_notice(&mut notices, "f: sort"));
+    }
+
+    #[test]
+    fn strict_rejects_unsupported_but_allows_interpreted() {
+        let diagnostic = unsupported_map();
+        assert!(diagnostic.clone().handle_with_strict("f", false).is_ok());
+        let error = diagnostic.handle_with_strict("f", true).unwrap_err();
+        assert_eq!(error.short_message(), "f: JIT does not support map");
+        assert!(JitDiagnostic::Interpreted(InterpretedReason::ScalarOnly).handle_with_strict("f", true).is_ok());
+    }
+
+    fn unsupported_map() -> JitDiagnostic {
+        JitDiagnostic::from_hof(Construct::Operation(OpId::Map))
+    }
 
     fn location() -> SourceLocation { SourceLocation::new(7, 3, "model.shf".into()) }
 

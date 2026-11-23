@@ -115,6 +115,7 @@ pub fn format_error(error: &SheafError) -> String {
                 symbol
             ));
         }
+        SheafError::Jit { message } => parts.push(format!("error: {}", message)),
         SheafError::Io(msg) => {
             parts.push(format!("io error: {}", msg));
         }

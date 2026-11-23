@@ -1636,12 +1636,27 @@ mod cache_key_tests {
         let directory = std::env::temp_dir().join(format!("sheaf-compiler-diagnostics-{nonce}"));
         std::fs::create_dir(&directory).unwrap();
         let executable = directory.join("compiler");
-        std::fs::write(&executable, "#!/bin/sh\necho 'graph too large' >&2\nexit 9\n").unwrap();
+        std::fs::write(&executable, format!("#!/bin/sh\necho 'vector IR noise' >&2\necho '/tmp/input.mlir:12:5: error: broadcast {}' >&2\necho 'error: second' >&2\necho 'error: third' >&2\necho 'error: fourth' >&2\nexit 9\n", "x".repeat(400))).unwrap();
         std::fs::set_permissions(&executable, std::fs::Permissions::from_mode(0o700)).unwrap();
         let compiler = JitCompiler::new();
         let input = "module {}";
-        assert!(matches!(compiler.run_iree_compile(executable.to_str().unwrap(), "diagnostic-exit", input, "llvm-cpu"),
-            Err(JitDiagnostic::Internal(message)) if message.contains('9') && message.contains("graph too large")));
+        let diagnostic = compiler.run_iree_compile(executable.to_str().unwrap(), "diagnostic-exit", input, "llvm-cpu").unwrap_err();
+        let JitDiagnostic::Backend { ref mlir_path, ref errors, .. } = diagnostic else {
+            panic!("expected backend failure: {diagnostic:?}");
+        };
+        assert_eq!(std::fs::read_to_string(mlir_path).unwrap(), input);
+        assert_eq!(errors.len(), 3);
+        assert!(errors[0].starts_with("12:5: error: broadcast"), "{errors:?}");
+        assert!(errors.iter().all(|line| line.chars().count() <= 200));
+        let path = mlir_path.clone();
+        let error = diagnostic.handle("diagnostic-exit").unwrap_err();
+        let formatted = crate::core::error_format::format_error(&error);
+        assert!(formatted.contains("IREE could not compile diagnostic-exit for cpu."));
+        assert!(formatted.contains(&path.display().to_string()));
+        assert!(!formatted.contains("hint:"));
+        assert!(!formatted.contains("vector IR noise"));
+        assert!(!formatted.contains("fourth"));
+        std::fs::remove_file(path).unwrap();
         let missing = directory.join("missing");
         assert!(matches!(compiler.run_iree_compile(missing.to_str().unwrap(), "diagnostic-spawn", input, "llvm-cpu"),
             Err(JitDiagnostic::Environment { hint, .. }) if !hint.is_empty()));

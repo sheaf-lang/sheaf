@@ -27,6 +27,7 @@ fn main() {
     let mut verbosity: u8 = 0;
     let mut device: Option<String> = None;
     let mut jit_profile = false;
+    let mut jit_strict = false;
     let mut blame = false;
     let mut trace_enabled = false;
     let mut trace_scope: Option<Vec<String>> = None;
@@ -49,6 +50,7 @@ fn main() {
                 }
             }
             "--jit-profile" => jit_profile = true,
+            "--jit-strict" => jit_strict = true,
             "--blame" => blame = true,
             "--mem-profile" => mem_profile = true,
             "--trace" => {
@@ -77,7 +79,7 @@ fn main() {
         exit(1);
     }
 
-    sheaf_compiler::core::config::init(verbosity, device, jit_profile);
+    sheaf_compiler::core::config::init_with_jit_strict(verbosity, device, jit_profile, jit_strict);
 
     let first_positional = remaining.iter().position(|a| !a.starts_with('-'));
 
@@ -153,6 +155,7 @@ Advanced options:
     --device DEVICE        Run on specific device: cpu, metal, cuda, vulkan (default: auto)
     -v / -vv               Verbose JIT output (-vv for full MLIR dumps)
     --jit-profile          Show JIT dispatch timing breakdown
+    --jit-strict           Fail on unsupported JIT compilation instead of interpreting
 
 Examples:
     sheaf script.shf
