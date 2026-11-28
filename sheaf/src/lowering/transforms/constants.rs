@@ -63,6 +63,27 @@ fn resolve_constants_rec(
                 loc: loc.clone(),
             }
         }
+        CompiledExpr::FunctionCall { name, args, loc }
+            if (name == "len" || name == "count") && args.len() == 1 =>
+        {
+            let value = resolve_constants_rec(&args[0], constants, locals, shapes, skip_lambda);
+            let length = match &value {
+                CompiledExpr::Tuple(elements) | CompiledExpr::Vector(elements) => Some(elements.len()),
+                CompiledExpr::Quoted(value) => match value.as_ref() {
+                    crate::core::ast::SheafValue::Vector(elements, _)
+                    | crate::core::ast::SheafValue::List(elements, _) => Some(elements.len()),
+                    _ => None,
+                },
+                _ => try_infer_shape(&value, shapes)
+                    .and_then(|shape| shape.first().copied())
+                    .and_then(|length| usize::try_from(length).ok()),
+            };
+            if let Some(length) = length.and_then(|length| i64::try_from(length).ok()) {
+                CompiledExpr::Integer(length)
+            } else {
+                CompiledExpr::FunctionCall { name: name.clone(), args: vec![value], loc: loc.clone() }
+            }
+        }
         CompiledExpr::FunctionCall { name, args, loc } if name == "get" && args.len() == 2 => {
             let recv = resolve_constants_rec(&args[0], constants, locals, shapes, skip_lambda);
             let idx = resolve_constants_rec(&args[1], constants, locals, shapes, skip_lambda);
@@ -171,7 +192,7 @@ fn resolve_constants_rec(
                     skip_lambda,
                 );
                 match &resolved {
-                    CompiledExpr::Integer(_) | CompiledExpr::Float(_) => {
+                    CompiledExpr::Integer(_) | CompiledExpr::Float(_) | CompiledExpr::Quoted(_) => {
                         if let BindingPattern::Simple(k_str) = k {
                             scoped_locals.insert(k_str.clone(), resolved.clone());
                         }
@@ -323,6 +344,9 @@ fn resolve_constants_rec(
                 .map(|e| resolve_constants_rec(e, constants, locals, shapes, skip_lambda))
                 .collect(),
         ),
+        CompiledExpr::Dict(_) | CompiledExpr::Tuple(_) => expr.map_children(
+            |child| resolve_constants_rec(child, constants, locals, shapes, skip_lambda),
+        ),
         other => other.clone(),
     }
 }
@@ -363,7 +387,7 @@ fn extract_scalars_rec(
 
 fn constant_vector_elements(expr: &CompiledExpr) -> Option<&[CompiledExpr]> {
     match expr {
-        CompiledExpr::Vector(elements) => Some(elements),
+        CompiledExpr::Vector(elements) | CompiledExpr::Tuple(elements) => Some(elements),
         CompiledExpr::FunctionCall { name, args, .. }
             if name == "cast" && args.len() == 2
                 && matches!(&args[1], CompiledExpr::Keyword(dtype) if dtype == "i32") =>
@@ -650,6 +674,11 @@ fn try_infer_sequence_element_shape(
 }
 
 fn try_fold_arithmetic(name: &str, args: &[CompiledExpr]) -> Option<CompiledExpr> {
+    if args.len() > 2 && matches!(name, "+" | "-" | "*" | "minimum" | "maximum") {
+        return args[1..].iter().try_fold(args[0].clone(), |left, right| {
+            try_fold_arithmetic(name, &[left, right.clone()])
+        });
+    }
     if args.len() != 2 {
         return None;
     }
@@ -658,6 +687,8 @@ fn try_fold_arithmetic(name: &str, args: &[CompiledExpr]) -> Option<CompiledExpr
             "+" => a.checked_add(*b),
             "-" => a.checked_sub(*b),
             "*" => a.checked_mul(*b),
+            "minimum" => Some((*a).min(*b)),
+            "maximum" => Some((*a).max(*b)),
             "//" if *b != 0 => a.checked_div(*b).and_then(|quotient| {
                 let remainder = a.checked_rem(*b)?;
                 if remainder != 0 && (*a < 0) != (*b < 0) {
@@ -681,6 +712,8 @@ fn try_fold_arithmetic(name: &str, args: &[CompiledExpr]) -> Option<CompiledExpr
         "+" => a + b,
         "-" => a - b,
         "*" => a * b,
+        "minimum" => a.min(b),
+        "maximum" => a.max(b),
         "/" => a / b,
         "//" => (a / b).floor(),
         _ => return None,

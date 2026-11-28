@@ -92,6 +92,8 @@ fn classify_vectors_rec(
             }
             CompiledExpr::Tuple(elems_classified)
         }
+        CompiledExpr::Dict(entries) => CompiledExpr::Dict(entries.into_iter()
+            .map(|(key, value)| (key, classify_vectors_rec(value, symbol_types))).collect()),
         CompiledExpr::Tuple(elems) => {
             let mut elems_classified = Vec::with_capacity(elems.len());
             for e in elems {
@@ -167,7 +169,6 @@ fn classify_vectors_rec(
         | CompiledExpr::Nil
         | CompiledExpr::String(_)
         | CompiledExpr::Keyword(_)
-        | CompiledExpr::Dict(_)
         | CompiledExpr::Quoted(_)
         | CompiledExpr::FunctionRef(_)
         | CompiledExpr::GlobalRef(_)
@@ -194,6 +195,11 @@ fn is_inline_value_and_grad(expr: &CompiledExpr) -> bool {
     )
 }
 
+fn is_pair_result(expr: &CompiledExpr) -> bool {
+    is_inline_value_and_grad(expr) || matches!(expr,
+        CompiledExpr::FunctionCall { name, args, .. } if name == "top_k" && args.len() == 2)
+}
+
 /// Classify a destructuring source.
 enum DestructKind {
     Tuple,
@@ -205,7 +211,8 @@ enum DestructKind {
 fn kind_of(expr: &CompiledExpr, symbol_types: &HashMap<String, StableHLOType>) -> DestructKind {
     match expr {
         CompiledExpr::Tuple(_) => DestructKind::Tuple,
-        expr if is_inline_value_and_grad(expr) => DestructKind::Tuple,
+        expr if random_split_length(expr).is_some() => DestructKind::Tuple,
+        expr if is_pair_result(expr) => DestructKind::Tuple,
         CompiledExpr::Vector(_) => DestructKind::Vector1D,
         CompiledExpr::Let { body, .. } => kind_of(body, symbol_types),
         CompiledExpr::Do(exprs) => exprs
@@ -227,6 +234,18 @@ fn kind_of(expr: &CompiledExpr, symbol_types: &HashMap<String, StableHLOType>) -
     }
 }
 
+pub(super) fn random_split_length(expr: &CompiledExpr) -> Option<usize> {
+    let CompiledExpr::FunctionCall { name, args, .. } = expr else { return None };
+    if name != "random-split" { return None }
+    match args.as_slice() {
+        [_] => Some(2),
+        [_, CompiledExpr::Integer(n)] if (0..=4294967296).contains(n) => Some(*n as usize),
+        [_, CompiledExpr::Float(n)] if n.is_finite() && n.fract() == 0.0
+            && (0.0..=4294967296.0).contains(n) => Some(*n as usize),
+        _ => None,
+    }
+}
+
 /// Return the statically known length of a destructuring source.
 fn static_length_with_types(
     expr: &CompiledExpr,
@@ -235,7 +254,8 @@ fn static_length_with_types(
     match expr {
         CompiledExpr::Vector(elems) => Some(elems.len()),
         CompiledExpr::Tuple(elems) => Some(elems.len()),
-        expr if is_inline_value_and_grad(expr) => Some(2),
+        expr if random_split_length(expr).is_some() => random_split_length(expr),
+        expr if is_pair_result(expr) => Some(2),
         CompiledExpr::Let { body, .. } => static_length_with_types(body, symbol_types),
         CompiledExpr::Do(exprs) => exprs
             .last()
@@ -426,6 +446,9 @@ pub fn desugar_destructuring_lets(
                 .map(|e| desugar_destructuring_lets(e, symbol_types))
                 .collect::<SheafResult<_>>()?,
         )),
+        CompiledExpr::Dict(entries) => Ok(CompiledExpr::Dict(entries.into_iter()
+            .map(|(key, value)| Ok((key, desugar_destructuring_lets(value, symbol_types)?)))
+            .collect::<SheafResult<_>>()?)),
         other => Ok(other),
     }
 }

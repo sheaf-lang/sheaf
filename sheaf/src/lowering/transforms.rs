@@ -6,6 +6,8 @@
 mod constants;
 mod dict_layout;
 mod reduce;
+mod map;
+pub use map::unroll_maps;
 mod tuples;
 
 pub(crate) use constants::{collect_shape_gtes, filter_constants_for_shape_positions};

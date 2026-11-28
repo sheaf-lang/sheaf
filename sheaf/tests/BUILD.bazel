@@ -79,6 +79,7 @@ sheaf_integration_test(name = "shared_session")
 
 sheaf_program_test(
     name = "regression_mlp",
+    jit_strict = True,
     expression = """
 (use \"./examples/mlp/training.shf\")
 (use \"./sheaf/tests/regressions.shf\")
@@ -140,6 +141,7 @@ sheaf_program_test(
 
 sheaf_program_test(
     name = "regression_nanogpt",
+    jit_strict = True,
     expression = """
 (use \"./examples/nanogpt/train.shf\")
 (use \"./sheaf/tests/regressions.shf\")

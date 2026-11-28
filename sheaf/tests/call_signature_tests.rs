@@ -154,6 +154,52 @@ fn static_integer_arguments_and_dict_fields_are_exact_in_vmfb() {
 }
 
 #[test]
+fn shape_derived_random_bounds_and_top_k_match_the_interpreter() {
+    initialize_device();
+    let mut interpreter = interpreter_only();
+    interpreter.eval("(defn static_batch [data key block-size batch-size]
+        (let [starts (random-randint key [batch-size] 0 (- (len data) block-size 1))
+              offsets (arange block-size)
+              idx (+ (reshape starts [batch-size 1]) (reshape offsets [1 block-size]))]
+          {:x (get data idx) :y (get data (+ idx 1))}))
+        (defn static_top_k [x k]
+          (let [[values indices] (top_k x (minimum k (len x)))]
+            {:values values :first-value (get values 0) :first-index (float (get indices 0))}))").unwrap();
+    for (name, sources, call) in [
+        ("static_batch", vec!["(cast (arange 16) :f32)", "(random-key 42)", "3", "2"],
+            "(static_batch (cast (arange 16) :f32) (random-key 42) 3 2)"),
+        ("static_top_k", vec!["[0.2 0.8 0.3 0.5]", "3"],
+            "(static_top_k [0.2 0.8 0.3 0.5] 3)"),
+    ] {
+        let args = sources.iter().map(|source| interpreter.eval(source).unwrap()).collect::<Vec<_>>();
+        let expected = interpreter.eval(call).unwrap();
+        let actual = compile_call(&interpreter, name, &args).unwrap().execute(&args).unwrap();
+        compare_values(&actual, &expected, name).unwrap();
+    }
+}
+
+#[test]
+fn integer_list_data_remains_dynamic_in_the_same_vmfb() {
+    initialize_device();
+    let mut interpreter = interpreter_only();
+    interpreter.eval("(defn dynamic_token_list [x ids] (+ x (get ids 0)))").unwrap();
+    let x = interpreter.eval("[10.0 20.0]").unwrap();
+    let first = [x.clone(), interpreter.eval("'[1 2]").unwrap()];
+    let second = [x, interpreter.eval("'[4 8]").unwrap()];
+    let compiled = compile_call(&interpreter, "dynamic_token_list", &first).unwrap();
+    let reused = compile_call(&interpreter, "dynamic_token_list", &second).unwrap();
+    assert_eq!(compiled.qualified_name, reused.qualified_name);
+    for (module, args, call, expected) in [
+        (compiled, &first, "(dynamic_token_list [10.0 20.0] '[1 2])", "[11.0 21.0]"),
+        (reused, &second, "(dynamic_token_list [10.0 20.0] '[4 8])", "[14.0 24.0]"),
+    ] {
+        let eager = interpreter.eval(call).unwrap();
+        compare_values(&eager, &interpreter.eval(expected).unwrap(), "dynamic list/eager").unwrap();
+        compare_values(&module.execute(args).unwrap(), &eager, "dynamic list/same VMFB").unwrap();
+    }
+}
+
+#[test]
 fn float_arguments_and_dict_fields_remain_dynamic_in_vmfb() {
     initialize_device();
     let mut interpreter = interpreter_only();
@@ -353,6 +399,8 @@ fn jit_diagnostics_hof_categories_distinguish_filter_from_map_and_sort() {
         if op == OpId::Filter {
             assert!(matches!(outcome, JitCompileOutcome::Interpreted(
                 InterpretedReason::DataDependent(Construct::Operation(OpId::Filter)))));
+        } else if op == OpId::Map {
+            assert!(matches!(outcome, JitCompileOutcome::Interpreted(InterpretedReason::ScalarOnly)));
         } else {
             assert!(matches!(outcome, JitCompileOutcome::Failed(JitDiagnostic::Unsupported(
                 UnsupportedReason::Construct(Construct::Operation(actual)), None)) if actual == op));
@@ -1684,11 +1732,7 @@ fn tensor_operation_signatures() {
             body: "(let [[k1 k2] (random-split key)] (zeros '[2]))",
             expected: "(zeros '[2])",
             interpreted: Expectation::Pass,
-            compilation: Expectation::KnownFailure {
-                kind: FailureKind::Compilation,
-                reason: "random-split result length is lost before destructuring",
-                detail_contains: "Destructuring source has a dynamic length",
-            },
+            compilation: Expectation::Pass,
             compiled: Expectation::Pass,
         },
     ];

@@ -9,6 +9,20 @@ use crate::core::expr::CompiledExpr;
 use crate::core::error::{SheafError, SheafResult};
 use super::CodeGenerator;
 
+fn indexed_scalar_type(ty: StableHLOType) -> StableHLOType {
+    if !ty.shape().is_empty() { return ty }
+    use crate::core::dtype::ElementType;
+    match ty.element_type() {
+        Some(ElementType::F32) => StableHLOType::ScalarF32,
+        Some(ElementType::F16) => StableHLOType::ScalarF16,
+        Some(ElementType::BF16) => StableHLOType::ScalarBF16,
+        Some(ElementType::F64) => StableHLOType::ScalarF64,
+        Some(ElementType::I64) => StableHLOType::ScalarI64,
+        Some(ElementType::Bool) => StableHLOType::ScalarI1,
+        _ => ty,
+    }
+}
+
 impl<'a> CodeGenerator<'a> {
     pub(super) fn generate_collection_builtin(
         &mut self,
@@ -372,7 +386,7 @@ impl<'a> CodeGenerator<'a> {
                                 .and_then(|values| values.get(index))).copied() {
                             self.known_integers.insert(reg, value);
                         }
-                        Ok((reg, ty))
+                        Ok((reg, indexed_scalar_type(ty)))
                     }
                     CompiledExpr::Symbol(s) | CompiledExpr::Keyword(s) if s == "..." => {
                         if args.len() >= 3 {
@@ -434,7 +448,7 @@ impl<'a> CodeGenerator<'a> {
                             let (squeezed_reg, squeezed_ty) = self.emitter.emit_reshape(
                                 &gathered_reg, &gathered_ty, &squeezed_shape,
                             );
-                            Ok((squeezed_reg, squeezed_ty))
+                            Ok((squeezed_reg, indexed_scalar_type(squeezed_ty)))
                         }
                     }
                 }

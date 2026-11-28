@@ -321,6 +321,16 @@ impl JitCompiler {
         }
 
         body = resolve_static_constants(&body, &filtered_constants, &param_shapes, false);
+        if collect_hof_calls(&body).iter().any(|name| name == "map") {
+            body = crate::lowering::transforms::unroll_maps(&body, &known_types);
+            body = crate::autodiff::inline_function_calls(&body, registry);
+            body = resolve_static_constants(&body, &filtered_constants, &param_shapes, false);
+        }
+        if let Some(name) = collect_hof_calls(&body).first() {
+            let construct = crate::core::jit_diagnostic::Construct::named(name)
+                .ok_or_else(|| JitDiagnostic::Internal(format!("Unknown higher-order operation '{name}'")))?;
+            return Err(JitDiagnostic::from_hof(construct));
+        }
         body = match crate::lowering::transforms::lower_tuples_and_destructuring(
             body,
             &param_shapes,

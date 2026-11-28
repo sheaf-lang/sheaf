@@ -251,7 +251,7 @@ run_example () {
 
     log_info "→ $group/$entry  (device=$DEVICE, timeout=${timeout}s)"
 
-    local -a sheaf_args=(--device "$DEVICE")
+    local -a sheaf_args=(--jit-strict --device "$DEVICE")
     # NanoGPT model and training functions must compile instead of falling back.
     if [[ "$validator" == "nanoGPT-sample" || "$validator" == "nanoGPT-train" || "$validator" == "nanoGPT-resume" ]]; then
         sheaf_args+=(-v)
@@ -326,7 +326,7 @@ run_example () {
             fi
             val_out="$( cd "$workdir" && \
                 timeout --foreground 30 \
-                    "$SHEAF_BIN" --device "$DEVICE" -c \
+                    "$SHEAF_BIN" --jit-strict --device "$DEVICE" -c \
                     '(use examples-checks) (print (check-nanoGPT-train "." "out" "err"))' \
                     2>"$base_log.validator.stderr" )"
             v_exit=$?

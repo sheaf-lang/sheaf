@@ -425,6 +425,12 @@ impl StableHLOEmitter {
 
         let indices_int_ty = StableHLOType::i32_tensor(indices_shape.to_vec());
         let indices_int_reg = self.emit_convert(indices, indices_ty, &indices_int_ty);
+        // Keep index generation outside the gather's element loops.
+        let materialized_indices = self.fresh_register();
+        self.body.push(format!(
+            "    {} = stablehlo.optimization_barrier {} : {}",
+            materialized_indices.to_mlir(), indices_int_reg.to_mlir(), indices_int_ty.to_mlir(),
+        ));
 
         let mut reshaped_shape: Vec<i64> = indices_shape.to_vec();
         reshaped_shape.push(1);
@@ -433,7 +439,7 @@ impl StableHLOEmitter {
         self.body.push(format!(
             "    {} = stablehlo.reshape {} : ({}) -> {}",
             indices_3d_reg.to_mlir(),
-            indices_int_reg.to_mlir(),
+            materialized_indices.to_mlir(),
             indices_int_ty.to_mlir(),
             indices_3d_ty.to_mlir(),
         ));

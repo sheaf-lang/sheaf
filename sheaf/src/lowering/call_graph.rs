@@ -214,7 +214,8 @@ pub fn jit_eligibility(
             effects.push(s.name);
         }
         for h in collect_hof_calls(body) {
-            hofs.push(h);
+            // Map eligibility depends on the specialized collection length.
+            if h != "map" { hofs.push(h); }
         }
     }
 
@@ -316,7 +317,7 @@ mod tests {
     fn transitive_hof_is_rejected() {
         let f_body = call("g", sym("x"));
         let g_body = CompiledExpr::FunctionCall {
-            name: "map".to_string(),
+            name: "sort".to_string(),
             args: vec![sym("x"), sym("x")],
             loc: None,
         };
@@ -326,7 +327,7 @@ mod tests {
 
         let err = jit_eligibility("f", &registry).unwrap_err();
         assert!(matches!(err, JitDiagnostic::Unsupported(
-            UnsupportedReason::Construct(Construct::Operation(crate::core::signature::OpId::Map)), None)));
+            UnsupportedReason::Construct(Construct::Operation(crate::core::signature::OpId::Sort)), None)));
     }
 
     #[test]
@@ -400,9 +401,8 @@ mod tests {
         assert!(direct.contains("map"));
         assert!(direct.contains("g"));
 
-        let err = jit_eligibility("f", &registry).unwrap_err();
-        assert!(matches!(err, JitDiagnostic::Unsupported(
-            UnsupportedReason::Construct(Construct::Operation(crate::core::signature::OpId::Map)), None)));
+        // The specialized lowering decides whether this map can be unrolled.
+        assert!(jit_eligibility("f", &registry).is_ok());
     }
 
     #[test]

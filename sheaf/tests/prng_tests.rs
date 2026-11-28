@@ -16,10 +16,13 @@ struct Vmfb {
 
 impl Vmfb {
     fn compile(interpreter: &Interpreter, name: &str, key: &Value) -> Self {
+        Self::compile_args(interpreter, name, std::slice::from_ref(key))
+    }
+
+    fn compile_args(interpreter: &Interpreter, name: &str, args: &[Value]) -> Self {
         let function = interpreter.registry_get(name).unwrap();
         let registry = &interpreter.env().registry;
         let session = shared_session().unwrap();
-        let args = std::slice::from_ref(key);
         let signature = match JitCompiler::new().try_jit_compile(function, args, registry, &session) {
             JitCompileOutcome::Compiled(signature) => signature,
             outcome => panic!("{name}: expected compilation, got {outcome:?}"),
@@ -29,9 +32,13 @@ impl Vmfb {
     }
 
     fn call(&self, key: &Value) -> Value {
+        self.call_args(std::slice::from_ref(key))
+    }
+
+    fn call_args(&self, args: &[Value]) -> Value {
         // A direct VMFB call cannot fall back to the interpreter.
         let sig = &self.signature;
-        let mut result = self.session.call_typed_device(&self.name, std::slice::from_ref(key), &sig.return_type).unwrap();
+        let mut result = self.session.call_typed_device(&self.name, args, &sig.return_type).unwrap();
         if !sig.arg_type_layouts.is_empty() {
             result = reconstruct_jit_result(result, &sig.return_type, &sig.arg_type_layouts);
         }
@@ -56,8 +63,16 @@ fn compare(actual: &Value, expected: &Value, tolerance: f32) {
             assert_eq!(a.len(), e.len());
             for (a, e) in a.iter().zip(e.iter()) { compare(a, e, tolerance); }
         }
+        (Value::Dict(a), Value::Dict(e)) => {
+            assert_eq!(a.keys().collect::<Vec<_>>(), e.keys().collect::<Vec<_>>());
+            for (key, value) in a { compare(value, &e[key], tolerance); }
+        }
         (_, Value::Int(n)) if actual.to_f32().is_some() => {
             assert_eq!(actual.to_f32().unwrap(), *n as f32);
+        }
+        (_, Value::Float(n)) if actual.to_f32().is_some() => {
+            let actual = actual.to_f32().unwrap();
+            assert!((actual - *n).abs() <= tolerance * (1.0 + n.abs()));
         }
         _ => panic!("unexpected results: {actual:?}, {expected:?}"),
     }
@@ -72,6 +87,10 @@ fn interpreter_vmfb_prng_parity() {
     interpreter.eval("(def input-key (random-key 42)) (def child-key (random-key 0))").unwrap();
     let initial = interpreter.eval("input-key").unwrap();
     let mut cases = vec![
+        ("inlined_shape_argument".to_string(), "(let [sample (fn [k dims] (random-normal k dims))] (sample key '[2 8]))".to_string(), 2e-5),
+        ("destructure_split".to_string(), "(let [[a b] (random-split key 2)] [a b])".to_string(), 0.0),
+        ("map_split_dicts".to_string(), "(let [keys (random-split key 3)] (map (fn [k] {:sample (random-uniform k '[2])}) keys))".to_string(), 0.0),
+        ("map_static_vector".to_string(), "(map (fn [n] (+ (sum key) n)) [1 2 3])".to_string(), 0.0),
         ("literal_key".to_string(), "(random-key -1)".to_string(), 0.0),
         ("float_seed".to_string(), "(random-key -1.0)".to_string(), 0.0),
         ("float_bounds".to_string(), "(random-randint key '[7] -3.0 7.0)".to_string(), 0.0),
@@ -107,6 +126,22 @@ fn interpreter_vmfb_prng_parity() {
             compare(&vmfb.call(&key), &expected, *tolerance);
         }
     }
+
+    interpreter.eval("(defn split_static_count [key n]
+        (let [[a b c] (random-split key n)] [a b c]))").unwrap();
+    let args = vec![initial.clone(), Value::Int(3)];
+    interpreter.env_mut().set_global("input-key", initial.clone());
+    let expected = interpreter.eval("(split_static_count input-key 3)").unwrap();
+    let vmfb = Vmfb::compile_args(&interpreter, "split_static_count", &args);
+    compare(&vmfb.call_args(&args), &expected, 0.0);
+
+    let sample = &cases.iter().find(|(name, _, _)| name == "random_uniform_4").unwrap().1;
+    let device_sample = sample.call(&initial);
+    assert!(matches!(&device_sample, Value::DeviceBuffer(_)));
+    interpreter.env_mut().set_global("device-sample", device_sample);
+    let zeros = interpreter.eval("(tree-map-zeros {:weight device-sample})").unwrap();
+    let expected = interpreter.eval("{:weight (zeros '[257])}").unwrap();
+    compare(&zeros, &expected, 0.0);
 
     // CPU -> device -> CPU, then device -> another VMFB, with identical child keys.
     let key = interpreter.eval("(random-key -1)").unwrap();
